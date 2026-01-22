@@ -63,8 +63,8 @@ void AT3CharacterBase::Move(const FVector2D& Value)
 		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
-		AddMovementInput(ForwardDirection, Value.Y);
-		AddMovementInput(RightDirection, Value.X);
+		AddMovementInput(ForwardDirection, Value.X);
+		AddMovementInput(RightDirection, Value.Y);
 	}
 }
 
