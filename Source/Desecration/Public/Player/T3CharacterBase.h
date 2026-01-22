@@ -79,19 +79,19 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stat")
 	float CurrentStamina;
 
-	UPROPERTY(EditAnywhere, Category = "Stat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float StaminaRegenRate = 25.f; // 스태미나 초당 회복량
 
-	UPROPERTY(EditAnywhere, Category = "Stat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float MaxMana = 100.f;
 
-	UPROPERTY(VisibleAnywhere, Category = "Stat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float CurrentMana;
 
-	UPROPERTY(EditAnywhere, Category = "Stat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float CriticalChance = 0.1f;  // 크확
 
-	UPROPERTY(EditAnywhere, Category = "Stat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float CriticalDamage = 1.5f;  // 크뎀
 
 public:
