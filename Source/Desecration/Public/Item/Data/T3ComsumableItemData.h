@@ -5,6 +5,18 @@
 #include "T3ItemBaseData.h"
 #include "T3ComsumableItemData.generated.h"
 
+UENUM(BlueprintType)
+enum class EEffectType : uint8
+{
+	None,
+	HP,
+	MP,
+	Power,
+	Defense,
+	Speed,
+	Berserk
+};
+
 USTRUCT(BlueprintType)
 struct FT3ComsumableItemData : public FTableRowBase
 {
@@ -12,6 +24,9 @@ struct FT3ComsumableItemData : public FTableRowBase
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
 	FT3ItemBaseData ItemData;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "EffectType")
+	EEffectType EffectType;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Comsumable")
 	float BuffValue; // 초기 버프 수치
