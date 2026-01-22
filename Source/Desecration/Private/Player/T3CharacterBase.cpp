@@ -11,6 +11,8 @@
 
 AT3CharacterBase::AT3CharacterBase()
 {
+	PrimaryActorTick.bCanEverTick = true;
+	
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
 	bUseControllerRotationPitch = false;
@@ -50,6 +52,21 @@ void AT3CharacterBase::BeginPlay()
 		true
 	);
 
+}
+
+void AT3CharacterBase::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	
+	float CurrentAccelerationSq = GetCharacterMovement()->GetCurrentAcceleration().Size();
+	PlayerInputState.bWantsToMove = CurrentAccelerationSq > KINDA_SMALL_NUMBER;
+	
+	float CurrentGroundSpeedSq = GetVelocity().Size2D();
+	const float MoveThreshold = 3.0f;
+	
+	PlayerInputState.bIsMoving = CurrentGroundSpeedSq > (MoveThreshold);
+	
+	PlayerInputState.CurrentSpeed = CurrentGroundSpeedSq;
 }
 
 
