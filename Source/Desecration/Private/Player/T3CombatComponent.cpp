@@ -9,6 +9,7 @@
 #include "Player/T3CharacterBase.h"
 #include "Player/T3PlayerController.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 
 
 UT3CombatComponent::UT3CombatComponent()
@@ -176,12 +177,13 @@ void UT3CombatComponent::UpdateTargetUI(AActor* Target, bool bIsVisible)
 }
 
 
-// 전투 로직
+// ========== 전투 로직 ===============
 
 // 피격 로직
 void UT3CombatComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
-	if (Damage <= 0.f || !OwnerChar) return;
+	if (Damage <= 0.f || !OwnerChar || CurrentState == ECharacterCombatState::Dead) return;
+	if (!DamageCauser || !DamageType) return;
 
 	// 최종 데미지 계산
 	float FinalDamage = CalculateFinalDamage(Damage, DamageType);
@@ -190,38 +192,64 @@ void UT3CombatComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage,
 	float NewHP = OwnerChar->GetCurrentHP() - FinalDamage;
 	OwnerChar->SetCurrentHP(NewHP);
 	
-	if (FinalDamage <= 0.f && CurrentState == ECharacterCombatState::Parrying)
+	// 사망 판정
+	if (NewHP <= 0.f)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("Parry Success!"));
+		CurrentState = ECharacterCombatState::Dead;
+		// 사망 로직 실행
+		return;
 	}
 
-	else if (FinalDamage <= 0.f && CurrentState == ECharacterCombatState::Parrying)
+	// 리액션 분기
+
+	// 회피 성공 시 아무것도 안 함
+	if (CurrentState == ECharacterCombatState::Dodge && FinalDamage <= 0.f) return;
+
+	// 패링 시
+	 if (FinalDamage <= 0.f && CurrentState == ECharacterCombatState::Parrying)
 	{
-		// 패링 성공 연출 호출
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("Parry Success!"));
+		// 패링 효과 연출
+		 GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("Parry Success!"));
+		 return;
 	}
+
+	 // 막기 시
 	else if (FinalDamage < Damage && CurrentState == ECharacterCombatState::Blocking)
 	{
-		// 막기 성공 연출
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow, TEXT("Block Success!"));
-	}
+		// 막기 효과 연출
+		 GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow, TEXT("Block Success!"));
+
+		 // 막기 성공 시 스태미너 50 차감
+		 float NewStamina = FMath::Max(0.f, OwnerChar->GetCurrentStamina() - 50.f);
+		 OwnerChar->SetCurrentStamina(NewStamina);
+		 return;
+	 }
+
+	 // 위 조건들에 해당 안 되면 피격방향 계산 후 ENUM 도출
+	 EHitDirection HitDir = CalculateHitDirection(DamageCauser->GetActorLocation());
 }
 
 // 피격 데미지 계산
 float UT3CombatComponent::CalculateFinalDamage(float IncomingDamage, const class UDamageType* DamageType)
 {
-	// 1. 즉사 공격 확인
+
+	// 즉사 공격은 어떤 상황이든 예외 없이 최우선 사망
 	if (DamageType->IsA(UT3DamageType_InstantDeath::StaticClass()))
 	{
 		return 9999.f;
 	}
 
-	// 2. 패링 상태인 경우
+	// 1. 회피 상태 (무적)
+	if (CurrentState == ECharacterCombatState::Dodge)
+	{
+		return 0.f;
+	}
+
+	// 2. 패링 상태
 	if (CurrentState == ECharacterCombatState::Parrying)
 	{
 		// 패링 불가 공격인지 확인
-		if (DamageType->IsA(UT3DamageType_Unparryable::StaticClass()) ||
-			DamageType->IsA(UT3DamageType_Unblockable::StaticClass()))
+		if (DamageType->IsA(UT3DamageType_Unparryable::StaticClass()))
 		{
 			return IncomingDamage; // 패링 실패, 생으로 맞음
 		}
@@ -236,10 +264,43 @@ float UT3CombatComponent::CalculateFinalDamage(float IncomingDamage, const class
 		{
 			return IncomingDamage; // 가드 뚫림
 		}
-		return IncomingDamage * 0.2f; // 데미지 80% 경감
+		return IncomingDamage * 0.1f; // 데미지 90% 경감
 	}
 
+
+
+
 	return IncomingDamage; // 일반 상태 피격
+}
+
+// 피격 방향 로직
+EHitDirection UT3CombatComponent::CalculateHitDirection(const FVector& HitLocation)
+{
+	if (!OwnerChar) return EHitDirection::Front;
+
+	// 캐릭터 위치에서 공격 위치로의 방향 벡터 (평면상의 계산을 위해 Z값 무시)
+	FVector OwnerLoc = OwnerChar->GetActorLocation();
+	FVector TargetLoc = HitLocation;
+	OwnerLoc.Z = TargetLoc.Z = 0.f;
+
+	FVector ToHit = (TargetLoc - OwnerLoc).GetSafeNormal();
+	FVector Forward = OwnerChar->GetActorForwardVector();
+	FVector Right = OwnerChar->GetActorRightVector();
+
+	// 1. 앞/뒤 판정 (내적)
+	// 결과값: 1에 가까우면 앞, -1에 가까우면 뒤
+	float ForwardDot = FVector::DotProduct(Forward, ToHit);
+
+	// 2. 좌/우 판정 (내적)
+	// 결과값: 1에 가까우면 우측, -1에 가까우면 좌측
+	float RightDot = FVector::DotProduct(Right, ToHit);
+
+	// 각도를 기준으로 4방향 분할 (45도 기준)
+	if (ForwardDot >= 0.5f) return EHitDirection::Front;
+	if (ForwardDot <= -0.5f) return EHitDirection::Back;
+
+	// 앞뒤가 아닐 때 우측 혹은 좌측
+	return (RightDot >= 0.f) ? EHitDirection::Right : EHitDirection::Left;
 }
 
 // 공격 로직
