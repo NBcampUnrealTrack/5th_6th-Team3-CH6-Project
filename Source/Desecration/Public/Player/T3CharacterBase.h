@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "T3PlayerInputState.h"
 #include "T3CharacterBase.generated.h"
 
 class USpringArmComponent;
@@ -133,6 +134,9 @@ protected:
 	// 스테미나 회복 주기
 	float StaminaRegenInterval = 0.1f;
 	FTimerHandle StaminaRegenTimerHandle;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "PlayerInputState")
+	FT3PlayerInputState PlayerInputState;
 
 private:
 	// 내부 수치 계산 및 제한(Clamp)용 로직
