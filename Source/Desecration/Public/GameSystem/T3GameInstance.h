@@ -24,6 +24,11 @@ class DESECRATION_API UT3GameInstance : public UGameInstance
 public:
 	virtual void Init() override;
 	
+private:
+	//최초 설정값 생성
+	void MakeFirstSettings();
+	
+public:
 	//저장된 게임
 	FObjectPtr<UT3SaveGame> LoadGame();
 	

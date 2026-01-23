@@ -25,6 +25,38 @@ void UT3GameInstance::Init()
 	SavedGameData = UGameplayStatics::LoadGameFromSlot(SAVE_GAME_NAME, 0);
 }
 
+void UT3GameInstance::MakeFirstSettings()
+{
+	//현 모니터의 최고 크기에 전체 창모드를 기본으로
+	FIntPoint MaxResolution;
+	if (TArray<FIntPoint> Resolutions; UKismetSystemLibrary::GetSupportedFullscreenResolutions(Resolutions))
+	{
+		MaxResolution = Resolutions.Last();
+		ET3Resolution SuitableValue = static_cast<ET3Resolution>(MaxResolution.X * 10000 + MaxResolution.Y);
+		CurrentSettings->Resolution = SuitableValue;
+		CurrentSettings->ScreenMode = ET3ScreenMode::WindowedFullscreen;
+	}
+	else//최대 해상도 확인 실패시 최소 해상도에 창모드로
+	{
+		MaxResolution = FIntPoint(800, 600);
+		CurrentSettings->Resolution = ET3Resolution::W800H600;
+		CurrentSettings->ScreenMode = ET3ScreenMode::Windowed;
+	}
+	UserSettings->SetScreenResolution(MaxResolution);
+	
+	//전체 창모드를 기본으로
+	
+	UserSettings->SetFullscreenMode(EWindowMode::Type::WindowedFullscreen);
+	
+	//화면 모드, 해상도 적용
+	UserSettings->ApplySettings(true);
+	
+	//효과음, 배경음 모두 0.8을 기본으로
+	CurrentSettings->SoundEffectsVolume = 0.8f;
+	CurrentSettings->BackgroundVolume = 0.8f;
+}
+
+
 FObjectPtr<UT3SaveGame> UT3GameInstance::LoadGame()
 {
 	return SavedGameData;
