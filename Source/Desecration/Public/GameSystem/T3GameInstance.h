@@ -5,13 +5,15 @@
 #include "SettingEnums.h"
 #include "T3GameInstance.generated.h"
 
-class AT3SaveGame;
+class UT3SaveGame;
 
 //설정값을 저장하는 구조체
 struct FSettings
 {
 	EResolution Resolution;
 	EScreenMode ScreenMode;
+	float SoundEffectsVolume;
+	float BackgroundVolume;
 };
 
 UCLASS()
@@ -23,21 +25,21 @@ public:
 	virtual void Init() override;
 	
 	//저장된 게임
-	FObjectPtr<AT3SaveGame> LoadGame();
+	FObjectPtr<UT3SaveGame> LoadGame();
 	
 	//게임 저장하기 (true : 저장 성공)
 	//TODO : 게임 저장을 위한 매개변수 추가
 	bool SaveGame();
 	
 	//현재 설정
-	FORCEINLINE FSettings GetCurrentSettings() const { return CurrentSettings; }
+	FORCEINLINE TSharedPtr<FSettings> GetCurrentSettings() const { return CurrentSettings; }
 
 private:
 	//현재 설정
-	FSettings CurrentSettings;
+	TSharedPtr<FSettings> CurrentSettings;
 	
 	//저장된 게임 데이터
-	FObjectPtr<AT3SaveGame> SavedGameData;
+	FObjectPtr<UT3SaveGame> SavedGameData;
 	
 	const FString SAVE_GAME_NAME = TEXT("SaveSlot1");
 };
