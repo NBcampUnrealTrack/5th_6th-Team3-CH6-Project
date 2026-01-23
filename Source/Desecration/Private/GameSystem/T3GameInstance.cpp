@@ -35,6 +35,17 @@ bool UT3GameInstance::SaveGame()
 	return UGameplayStatics::SaveGameToSlot(SavedGameData, SAVE_GAME_NAME, 0);
 }
 
+void UT3GameInstance::SetResolution(ET3Resolution Resolution)
+{
+	CurrentSettings->Resolution;
+	
+	//ET3Resolution의 각 항목은 [가로 * 10000 + 세로]인 값을 가진다.
+	int32 Width = static_cast<int>(Resolution) / 10000;
+	int32 Height = static_cast<int>(Resolution) % 10000;
+	UserSettings->SetScreenResolution(FInt32Point(Width, Height));
+	UserSettings->ApplySettings(true);
+}
+
 void UT3GameInstance::SetScreenMode(ET3ScreenMode ScreenMode)
 {
 	CurrentSettings->ScreenMode = ScreenMode;

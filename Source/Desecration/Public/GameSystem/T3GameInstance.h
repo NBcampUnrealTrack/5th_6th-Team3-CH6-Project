@@ -31,6 +31,9 @@ public:
 	//TODO : 게임 저장을 위한 매개변수 추가
 	bool SaveGame();
 	
+	//해상도 설정하기
+	void SetResolution(ET3Resolution Resolution);
+	
 	//화면 모드 설정하기
 	void SetScreenMode(ET3ScreenMode ScreenMode);
 	
