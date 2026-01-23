@@ -22,10 +22,22 @@ class DESECRATION_API UT3GameInstance : public UGameInstance
 public:
 	virtual void Init() override;
 	
+	//저장된 게임
+	FObjectPtr<AT3SaveGame> LoadGame();
+	
+	//게임 저장하기 (true : 저장 성공)
+	//TODO : 게임 저장을 위한 매개변수 추가
+	bool SaveGame();
+	
 	//현재 설정
 	FORCEINLINE FSettings GetCurrentSettings() const { return CurrentSettings; }
 
 private:
 	//현재 설정
 	FSettings CurrentSettings;
+	
+	//저장된 게임 데이터
+	FObjectPtr<AT3SaveGame> SavedGameData;
+	
+	const FString SAVE_GAME_NAME = TEXT("SaveSlot1");
 };
