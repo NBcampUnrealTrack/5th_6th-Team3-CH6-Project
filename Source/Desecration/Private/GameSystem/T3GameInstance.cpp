@@ -22,7 +22,7 @@ void UT3GameInstance::Init()
 		return;
 	}
 	
-	SavedGameData = UGameplayStatics::LoadGameFromSlot(SAVE_GAME_NAME, 0);
+	SavedGameData = Cast<UT3SaveGame>(UGameplayStatics::LoadGameFromSlot(SAVE_GAME_NAME, 0));
 }
 
 void UT3GameInstance::MakeFirstSettings()
@@ -43,10 +43,6 @@ void UT3GameInstance::MakeFirstSettings()
 		CurrentSettings->ScreenMode = ET3ScreenMode::Windowed;
 	}
 	UserSettings->SetScreenResolution(MaxResolution);
-	
-	//전체 창모드를 기본으로
-	
-	UserSettings->SetFullscreenMode(EWindowMode::Type::WindowedFullscreen);
 	
 	//화면 모드, 해상도 적용
 	UserSettings->ApplySettings(true);

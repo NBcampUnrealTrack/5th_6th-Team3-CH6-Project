@@ -30,7 +30,7 @@ private:
 	
 public:
 	//저장된 게임
-	FObjectPtr<UT3SaveGame> LoadGame();
+	TObjectPtr<UT3SaveGame> LoadGame();
 	
 	//게임 저장하기 (true : 저장 성공)
 	//TODO : 게임 저장을 위한 매개변수 추가
@@ -54,7 +54,7 @@ private:
 	TObjectPtr<UGameUserSettings> UserSettings;
 	
 	//저장된 게임 데이터
-	FObjectPtr<UT3SaveGame> SavedGameData;
+	TObjectPtr<UT3SaveGame> SavedGameData;
 	
 	const FString SAVE_GAME_NAME = TEXT("SaveSlot1");
 };
