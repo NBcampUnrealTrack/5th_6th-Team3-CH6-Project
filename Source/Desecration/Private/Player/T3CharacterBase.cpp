@@ -1,4 +1,4 @@
-﻿// T3CharacterBase.cpp
+// T3CharacterBase.cpp
 
 
 #include "Player/T3CharacterBase.h"
@@ -8,10 +8,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Player/T3CombatComponent.h"
-
-// 아이템 컴포넌트 추가 후 주석 해제
-//#include "Item/Component/T3InventoryComponent"
-//#include "Item/Component/T3ItemComponent"
+#include "Item/Component/T3InventoryComponent.h"
+#include "Item/Component/T3ItemUseComponent.h"
 
 
 
@@ -44,9 +42,8 @@ AT3CharacterBase::AT3CharacterBase()
 
 	CombatComponent = CreateDefaultSubobject<UT3CombatComponent>(TEXT("CombatComponent"));
 
-	// 아이템 컴포넌트 추가 후 주석 해제
-	//InventoryComponent = CreateDefaultSubobject<UT3InventoryComponent>(TEXT("InventoryComponent")); 
-	//ItemUseComponent = CreateDefaultSubobject<UT3ItemUseComponent>(TEXT("ItemUseComponent"));
+	InventoryComponent = CreateDefaultSubobject<UT3InventoryComponent>(TEXT("InventoryComponent")); 
+	ItemUseComponent = CreateDefaultSubobject<UT3ItemUseComponent>(TEXT("ItemUseComponent"));
 }
 
 void AT3CharacterBase::BeginPlay()
