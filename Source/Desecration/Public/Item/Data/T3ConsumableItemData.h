@@ -3,7 +3,7 @@
 #include "CoreMinimal.h"
 #include "Engine/DataTable.h"
 #include "T3ItemBaseData.h"
-#include "T3ComsumableItemData.generated.h"
+#include "T3ConsumableItemData.generated.h"
 
 UENUM(BlueprintType)
 enum class EEffectType : uint8
@@ -18,7 +18,7 @@ enum class EEffectType : uint8
 };
 
 USTRUCT(BlueprintType)
-struct FT3ComsumableItemData : public FTableRowBase
+struct FT3ConsumableItemData : public FTableRowBase
 {
 	GENERATED_BODY()
 	
