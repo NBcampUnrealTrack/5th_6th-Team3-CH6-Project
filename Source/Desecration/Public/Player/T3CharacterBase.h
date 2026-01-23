@@ -1,4 +1,4 @@
-﻿﻿// T3CharacterBase.h
+﻿// T3CharacterBase.h
 
 #pragma once
 
@@ -13,7 +13,7 @@ class USpringArmComponent;
 class UCameraComponent;
 class UT3CombatComponent;
 class UDataTable;
-class UT3InventoryComponent;
+class UT3InventoryComponent; 
 class UT3ItemUseComponent;
 
 UCLASS()
@@ -22,14 +22,14 @@ class DESECRATION_API AT3CharacterBase : public ACharacter
 	GENERATED_BODY()
 
 public:
-	AT3CharacterBase();
+AT3CharacterBase();
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory|Data")
-	TObjectPtr <UDataTable> ItemDataTable;
+UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory|Data") 
+TObjectPtr <UDataTable> ItemDataTable;
 
 protected:
 	virtual void BeginPlay() override;
-	virtual void Tick(float DeltaTime) override;
+	virtual void Tick( float DeltaTime ) override;
 
 
 protected:
@@ -46,7 +46,7 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "PlayerInputState")
 	FT3PlayerInputState PlayerInputState;
-
+	
 
 	FORCEINLINE TObjectPtr <USpringArmComponent> GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE TObjectPtr <UCameraComponent> GetFollowCamera() const { return FollowCamera; }
@@ -61,7 +61,7 @@ public:
 	void OnAttack();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
-	TObjectPtr<UT3InventoryComponent> InventoryComponent;
+	TObjectPtr<UT3InventoryComponent> InventoryComponent; 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TObjectPtr<UT3ItemUseComponent> ItemUseComponent;
 
@@ -154,7 +154,7 @@ protected:
 	// 스테미나 회복 주기
 	float StaminaRegenInterval = 0.1f;
 	FTimerHandle StaminaRegenTimerHandle;
-
+	
 	UFUNCTION(BlueprintPure)
 	ERollDirection GetRollDirection(float Angle) const;
 

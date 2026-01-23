@@ -1,11 +1,11 @@
-﻿// T3MonsterBase.h
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Engine/DataTable.h"
-#include "T3MonsterBase.generated.h"
+#include "DesecrationMonsterBase.generated.h"
 
 USTRUCT(BlueprintType)
 struct FMonsterStats : public FTableRowBase
@@ -21,14 +21,16 @@ public:
 };
 
 UCLASS()
-class DESECRATION_API AT3MonsterBase : public ACharacter
+class DESECRATION_API ADesecrationMonsterBase : public ACharacter
 {
 	GENERATED_BODY()
 
 public:
-	AT3MonsterBase();
+	// Sets default values for this character's properties
+	ADesecrationMonsterBase();
 
 protected:
+	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
@@ -36,18 +38,11 @@ protected:
 	void OnDeath();
 
 public:
+	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "AI")
-	void PerformAttack();
-
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "AI")
-	void PerformAttackCheck();
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	TArray<UAnimMontage*> AttackMontages;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Monster|Stats")
