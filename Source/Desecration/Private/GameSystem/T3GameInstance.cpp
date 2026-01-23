@@ -51,4 +51,10 @@ void UT3GameInstance::SetScreenMode(ET3ScreenMode ScreenMode)
 	CurrentSettings->ScreenMode = ScreenMode;
 	UserSettings->SetFullscreenMode(static_cast<EWindowMode::Type>(ScreenMode));
 	UserSettings->ApplySettings(true);
+	
+#if WITH_EDITOR
+	//화면 모드 변경은 에디터에서 알 수 없기 때문에 로그로 표시
+	const FString LogOutValue = UEnum::GetValueAsString(ScreenMode);
+	UE_LOG(LogTemp, Warning, TEXT("화면 모드 변경 : %s"), *LogOutValue);
+#endif
 }
