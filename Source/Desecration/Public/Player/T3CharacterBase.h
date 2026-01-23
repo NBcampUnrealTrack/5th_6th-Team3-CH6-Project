@@ -13,8 +13,8 @@ class USpringArmComponent;
 class UCameraComponent;
 class UT3CombatComponent;
 class UDataTable;
-//class UT3InventoryComponent; 
-//class UT3ItemUseComponent;
+class UT3InventoryComponent; 
+class UT3ItemUseComponent;
 
 UCLASS()
 class DESECRATION_API AT3CharacterBase : public ACharacter
@@ -60,12 +60,10 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnAttack();
 
-
-	// 아이템 관련 컴포넌트
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
-	//TObjectPtr<UT3InventoryComponent> InventoryComponent; 
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
-	//TObjectPtr<UT3ItemUseComponent> ItemUseComponent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
+	TObjectPtr<UT3InventoryComponent> InventoryComponent; 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
+	TObjectPtr<UT3ItemUseComponent> ItemUseComponent;
 
 
 
