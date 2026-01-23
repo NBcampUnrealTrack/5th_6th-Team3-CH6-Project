@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "T3PlayerInputState.h"
+#include "InputActionValue.h"
 #include "T3CharacterBase.generated.h"
 
 class USpringArmComponent;
@@ -45,6 +46,9 @@ public:
 
 	void Move(const FVector2D& Value);
 	void Look(const FVector2D& Value);
+	void Roll(const FInputActionValue& Value);
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnRollTriggered();
 
 
 
@@ -138,6 +142,9 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "PlayerInputState")
 	FT3PlayerInputState PlayerInputState;
+	
+	UFUNCTION(BlueprintPure)
+	ERollDirection GetRollDirection(float Angle) const;
 
 private:
 	// 내부 수치 계산 및 제한(Clamp)용 로직
