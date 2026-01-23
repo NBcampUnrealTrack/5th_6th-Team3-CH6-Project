@@ -5,6 +5,7 @@
 #include "GameFramework/PlayerController.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Engine/OverlapResult.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Player/T3DamageTypes.h"
 #include "Player/T3CharacterBase.h"
 #include "Player/T3PlayerController.h"
@@ -62,6 +63,7 @@ void UT3CombatComponent::ToggleLockOn()
 	if (CurrentTarget)
 	{
 		bIsLockOn = true;
+		OwnerChar->PlayerInputState.bIsLockOn = true;
 		OwnerPC->SetIgnoreLookInput(true);
 		SetComponentTickEnabled(true);
 	}
@@ -154,6 +156,7 @@ void UT3CombatComponent::ResetLockOn()
 {
 	UpdateTargetUI(CurrentTarget, false);
 	bIsLockOn = false;
+	OwnerChar->PlayerInputState.bIsLockOn = false;
 	CurrentTarget = nullptr;
 
 	if (OwnerPC)
