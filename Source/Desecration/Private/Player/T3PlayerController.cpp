@@ -32,9 +32,11 @@ void AT3PlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AT3PlayerController::Input_Look);
 
 		EnhancedInputComponent->BindAction(LockOnAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_LockOn);
-		EnhancedInputComponent->BindAction(BlockingAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_Block);
+		EnhancedInputComponent->BindAction(BlockingAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_BlockStart);
+		EnhancedInputComponent->BindAction(BlockingAction, ETriggerEvent::Completed, this, &AT3PlayerController::Input_BlockEnd);
 		EnhancedInputComponent->BindAction(RollingAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_Roll);
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_Interact);
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AT3PlayerController::Input_Attack);
 	}
 }
 
@@ -63,27 +65,31 @@ void AT3PlayerController::Input_LockOn(const FInputActionValue& Value)
 {
 	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
 	{
-		if (auto* Combat = T3Char->GetCombatComponent())
+		if (UT3CombatComponent* Combat = T3Char->GetCombatComponent())
 		{
 			Combat->ToggleLockOn();
 		}
 	}
 }
 
-void AT3PlayerController::Input_Block(const FInputActionValue& Value)
+void AT3PlayerController::Input_BlockStart(const FInputActionValue& Value)
 {
 	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
 	{
-		if (auto* Combat = T3Char->GetCombatComponent())
+		if (UT3CombatComponent* Combat = T3Char->GetCombatComponent())
 		{
-			if (Combat->GetCurrentState() != ECharacterCombatState::Blocking)
-			{
-				Combat->StartBlock();
-			}
-			else
-			{
-				Combat->EndBlock();
-			}
+			Combat->StartBlock();
+		}
+	}
+}
+
+void AT3PlayerController::Input_BlockEnd(const FInputActionValue& Value)
+{
+	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
+	{
+		if (UT3CombatComponent* Combat = T3Char->GetCombatComponent())
+		{
+			Combat->EndBlock();
 		}
 	}
 }
@@ -92,7 +98,10 @@ void AT3PlayerController::Input_Block(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_Roll(const FInputActionValue& Value)
 {
-	// TODO: 캐릭터의 구르기 로직 연결
+	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
+	{
+		T3Char->Roll(Value);
+	}
 }
 
 void AT3PlayerController::Input_Interact(const FInputActionValue& Value)
@@ -102,5 +111,11 @@ void AT3PlayerController::Input_Interact(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_Attack(const FInputActionValue& Value)
 {
-	// TODO: 공격 시스템 연결
+	if (AT3CharacterBase* T3Char= Cast<AT3CharacterBase>(GetPawn()))
+	{
+		if (UT3CombatComponent* Combat = T3Char->GetCombatComponent())
+		{
+			Combat->Attack();
+		}
+	}
 }

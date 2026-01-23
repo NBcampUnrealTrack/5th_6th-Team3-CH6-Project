@@ -6,11 +6,19 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Player/T3CombatComponent.h"
+
+// 아이템 컴포넌트 추가 후 주석 해제
+//#include "Item/Component/T3InventoryComponent"
+//#include "Item/Component/T3ItemComponent"
+
 
 
 AT3CharacterBase::AT3CharacterBase()
 {
+	PrimaryActorTick.bCanEverTick = true;
+	
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
 	bUseControllerRotationPitch = false;
@@ -18,7 +26,7 @@ AT3CharacterBase::AT3CharacterBase()
 	bUseControllerRotationRoll = false;
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
-	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f); 
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, -1.0f, 0.0f); 
 	GetCharacterMovement()->JumpZVelocity = 500.f;
 	GetCharacterMovement()->AirControl = 0.35f;
 	GetCharacterMovement()->MaxWalkSpeed = 500.f;
@@ -35,6 +43,10 @@ AT3CharacterBase::AT3CharacterBase()
 	FollowCamera->bUsePawnControlRotation = false;
 
 	CombatComponent = CreateDefaultSubobject<UT3CombatComponent>(TEXT("CombatComponent"));
+
+	// 아이템 컴포넌트 추가 후 주석 해제
+	//InventoryComponent = CreateDefaultSubobject<UT3InventoryComponent>(TEXT("InventoryComponent")); 
+	//ItemUseComponent = CreateDefaultSubobject<UT3ItemUseComponent>(TEXT("ItemUseComponent"));
 }
 
 void AT3CharacterBase::BeginPlay()
@@ -52,6 +64,21 @@ void AT3CharacterBase::BeginPlay()
 
 }
 
+void AT3CharacterBase::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	
+	float CurrentAccelerationSq = GetCharacterMovement()->GetCurrentAcceleration().Size();
+	PlayerInputState.bWantsToMove = CurrentAccelerationSq > KINDA_SMALL_NUMBER;
+	
+	float CurrentGroundSpeedSq = GetVelocity().Size2D();
+	const float MoveThreshold = 3.0f;
+	
+	PlayerInputState.bIsMoving = CurrentGroundSpeedSq > (MoveThreshold);
+	
+	PlayerInputState.CurrentSpeed = CurrentGroundSpeedSq;
+}
+
 
 void AT3CharacterBase::Move(const FVector2D& Value)
 {
@@ -62,6 +89,21 @@ void AT3CharacterBase::Move(const FVector2D& Value)
 
 		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+		
+		FVector WorldDirection = GetLastMovementInputVector();
+		if (!WorldDirection.IsZero())
+		{
+			FRotator TargetRot = WorldDirection.Rotation();
+			FRotator CurrentRot = GetActorRotation();
+			
+			FRotator DeltaRot = UKismetMathLibrary::NormalizedDeltaRotator(TargetRot, CurrentRot);
+			
+			PlayerInputState.InputYawOffset = DeltaRot.Yaw;
+		}
+		else
+		{
+			PlayerInputState.InputYawOffset = 0.0f;
+		}
 
 		AddMovementInput(ForwardDirection, Value.X);
 		AddMovementInput(RightDirection, Value.Y);
@@ -72,6 +114,34 @@ void AT3CharacterBase::Look(const FVector2D& Value)
 {
 	AddControllerYawInput(Value.X);
 	AddControllerPitchInput(Value.Y);
+}
+
+void AT3CharacterBase::Roll(const FInputActionValue& Value)
+{
+	if (PlayerInputState.bWantsToRoll == false)
+	{
+		PlayerInputState.bWantsToRoll = true;
+		
+		float CurrentAngle = PlayerInputState.InputYawOffset;
+		PlayerInputState.RollDirection = GetRollDirection(CurrentAngle);
+		
+		OnRollTriggered();
+	}
+}
+
+ERollDirection AT3CharacterBase::GetRollDirection(float Angle) const
+{
+	if (GetLastMovementInputVector().IsZero()) return ERollDirection::Neutral;
+	
+	if (Angle >= -22.5f && Angle < 22.5f) return ERollDirection::Forward;
+	if (Angle >= 22.5f && Angle < 67.5f) return ERollDirection::ForwardRight;
+	if (Angle >= 67.5f && Angle < 112.5f) return ERollDirection::Right;
+	if (Angle >= 112.5f && Angle < 157.5f) return ERollDirection::BackRight;
+	if (Angle >= -67.5f && Angle < -22.5f) return ERollDirection::ForwardLeft;
+	if (Angle >= -112.5f && Angle < -67.5f) return ERollDirection::Left;
+	if (Angle >= -157.5f && Angle < -112.5f) return ERollDirection::BackLeft;
+
+	return ERollDirection::Back;
 }
 
 // 회복 함수
@@ -102,7 +172,6 @@ void AT3CharacterBase::RestoreMP(float Amount)
 
 	AddMP(Amount);
 }
-
 
 // 내부 수치 합산 및 제한 로직
 void AT3CharacterBase::AddHP(float Amount)
