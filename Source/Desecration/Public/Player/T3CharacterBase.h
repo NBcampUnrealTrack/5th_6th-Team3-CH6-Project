@@ -40,6 +40,9 @@ protected:
 	TObjectPtr<UT3CombatComponent> CombatComponent;
 
 public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "PlayerInputState")
+	FT3PlayerInputState PlayerInputState;
+	
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	FORCEINLINE UT3CombatComponent* GetCombatComponent() const { return CombatComponent; }
@@ -139,9 +142,6 @@ protected:
 	// 스테미나 회복 주기
 	float StaminaRegenInterval = 0.1f;
 	FTimerHandle StaminaRegenTimerHandle;
-	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "PlayerInputState")
-	FT3PlayerInputState PlayerInputState;
 	
 	UFUNCTION(BlueprintPure)
 	ERollDirection GetRollDirection(float Angle) const;
