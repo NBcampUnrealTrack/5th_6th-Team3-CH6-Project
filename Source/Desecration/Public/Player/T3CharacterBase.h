@@ -5,6 +5,10 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "T3PlayerInputState.h"
+<<<<<<< HEAD
+=======
+#include "InputActionValue.h"
+>>>>>>> 43b15c454719d4d94517067631e29cd9ad2947c7
 #include "T3CharacterBase.generated.h"
 
 
@@ -28,6 +32,7 @@ TObjectPtr <UDataTable> ItemDataTable;
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void Tick( float DeltaTime ) override;
 
 
 protected:
@@ -41,12 +46,32 @@ protected:
 	TObjectPtr<UT3CombatComponent> CombatComponent;
 
 public:
+<<<<<<< HEAD
+=======
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "PlayerInputState")
+	FT3PlayerInputState PlayerInputState;
+	
+
+>>>>>>> 43b15c454719d4d94517067631e29cd9ad2947c7
 	FORCEINLINE TObjectPtr <USpringArmComponent> GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE TObjectPtr <UCameraComponent> GetFollowCamera() const { return FollowCamera; }
 	FORCEINLINE TObjectPtr <UT3CombatComponent> GetCombatComponent() const { return CombatComponent; }
 
 	void Move(const FVector2D& Value);
 	void Look(const FVector2D& Value);
+	void Roll(const FInputActionValue& Value);
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnRollTriggered();
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnAttack();
+
+
+	// 아이템 관련 컴포넌트
+	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
+	//TObjectPtr<UT3InventoryComponent> InventoryComponent; 
+	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
+	//TObjectPtr<UT3ItemUseComponent> ItemUseComponent;
 
 
 	// 아이템 관련 컴포넌트
@@ -145,8 +170,13 @@ protected:
 	float StaminaRegenInterval = 0.1f;
 	FTimerHandle StaminaRegenTimerHandle;
 	
+<<<<<<< HEAD
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "PlayerInputState")
 	FT3PlayerInputState PlayerInputState;
+=======
+	UFUNCTION(BlueprintPure)
+	ERollDirection GetRollDirection(float Angle) const;
+>>>>>>> 43b15c454719d4d94517067631e29cd9ad2947c7
 
 private:
 	// 내부 수치 계산 및 제한(Clamp)용 로직
