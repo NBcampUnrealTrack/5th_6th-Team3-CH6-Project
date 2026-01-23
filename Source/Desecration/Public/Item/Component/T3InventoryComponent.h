@@ -3,9 +3,11 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Engine/DataTable.h"
-#include "InventoryComponent.generated.h"
+#include "T3InventoryComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
+
+class AT3CharacterBase;
 
 USTRUCT(BlueprintType)
 struct FInventorySlot
@@ -20,17 +22,22 @@ struct FInventorySlot
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class DESECRATION_API UInventoryComponent : public UActorComponent
+class DESECRATION_API UT3InventoryComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:	
-	UInventoryComponent();
+	UT3InventoryComponent();
 
-protected:
-	virtual void BeginPlay() override;
-
-public:
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void AddItem(FName ItemName);
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void UseItem(int32 SlotIndex);
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void DropItem(int32 SlotIndex);
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TArray<FInventorySlot> Items;
 	
@@ -40,12 +47,10 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Inventory")
 	FOnInventoryUpdated OnInventoryUpdated;
 	
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void AddItem(FName ItemName);
+protected:
+	virtual void BeginPlay() override;
 	
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void UseItem(int32 SlotIndex);
-	
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void DropItem(int32 SlotIndex);
+private:
+	UPROPERTY()
+	AT3CharacterBase* OwnerCharacter;
 };

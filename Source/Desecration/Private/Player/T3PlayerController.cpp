@@ -6,8 +6,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "Player/T3CharacterBase.h"
 #include "Player/T3CombatComponent.h"
-
-
+#include "Blueprint/UserWidget.h"
 
 void AT3PlayerController::BeginPlay()
 {
@@ -19,6 +18,13 @@ void AT3PlayerController::BeginPlay()
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
+	}
+	
+	if (IsValid(MainInventoryWidgetClass))
+	{
+		MainInventoryWidget = CreateWidget<UUserWidget>(this, MainInventoryWidgetClass);
+		
+		MainInventoryWidget->AddToViewport();
 	}
 }
 
@@ -37,6 +43,8 @@ void AT3PlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(RollingAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_Roll);
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_Interact);
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AT3PlayerController::Input_Attack);
+	
+		EnhancedInputComponent->BindAction(InventoryAction, ETriggerEvent::Started, this, &AT3PlayerController::ToggleInventoryInput);
 	}
 }
 
@@ -116,6 +124,19 @@ void AT3PlayerController::Input_Attack(const FInputActionValue& Value)
 		if (UT3CombatComponent* Combat = T3Char->GetCombatComponent())
 		{
 			Combat->Attack();
+		}
+	}
+}
+
+void AT3PlayerController::ToggleInventoryInput()
+{
+	if (IsValid(MainInventoryWidget))
+	{
+		FName const FunctionName = TEXT("ToggleInventoryWindow");
+		
+		if (UFunction* Function = MainInventoryWidget->FindFunction(FunctionName))
+		{
+			MainInventoryWidget->ProcessEvent(Function, nullptr);
 		}
 	}
 }
