@@ -68,15 +68,15 @@ void AT3CharacterBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-	float CurrentAccelerationSq = GetCharacterMovement()->GetCurrentAcceleration().Size();
-	PlayerInputState.bWantsToMove = CurrentAccelerationSq > KINDA_SMALL_NUMBER;
+	float CurrentAcceleration = GetCharacterMovement()->GetCurrentAcceleration().Size();
+	PlayerInputState.bWantsToMove = CurrentAcceleration > KINDA_SMALL_NUMBER;
 	
-	float CurrentGroundSpeedSq = GetVelocity().Size2D();
+	float CurrentGroundSpeed = GetVelocity().Size2D();
 	const float MoveThreshold = 3.0f;
 	
-	PlayerInputState.bIsMoving = CurrentGroundSpeedSq > (MoveThreshold);
+	PlayerInputState.bIsMoving = CurrentGroundSpeed > (MoveThreshold);
 	
-	PlayerInputState.CurrentSpeed = CurrentGroundSpeedSq;
+	PlayerInputState.CurrentSpeed = CurrentGroundSpeed;
 }
 
 
