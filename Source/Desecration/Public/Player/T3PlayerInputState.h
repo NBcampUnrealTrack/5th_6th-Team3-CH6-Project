@@ -6,7 +6,7 @@
 #include "T3PlayerInputState.generated.h"
 
 UENUM(BlueprintType)
-enum class EDodgeDirection : uint8
+enum class ERollDirection : uint8
 {
 	Forward,
 	ForwardRight,
@@ -28,7 +28,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	bool bWantsToMove = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
-	bool bWantsToDodge = false;
+	bool bWantsToRoll = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	bool bIsMoving = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
@@ -43,6 +43,9 @@ public:
 	float FallingSpeed = 0.0f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
-	EDodgeDirection DodgeDirection = EDodgeDirection::Neutral;
+	ERollDirection RollDirection = ERollDirection::Neutral;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
+	float InputYawOffset = 0.0f;
 	
 };

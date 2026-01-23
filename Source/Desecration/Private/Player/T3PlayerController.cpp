@@ -92,7 +92,10 @@ void AT3PlayerController::Input_Block(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_Roll(const FInputActionValue& Value)
 {
-	// TODO: 캐릭터의 구르기 로직 연결
+	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
+	{
+		T3Char->Roll(Value);
+	}
 }
 
 void AT3PlayerController::Input_Interact(const FInputActionValue& Value)
