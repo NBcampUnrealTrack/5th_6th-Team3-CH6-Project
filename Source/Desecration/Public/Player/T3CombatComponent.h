@@ -49,6 +49,8 @@ public:
 	// 막기/패링
 	void StartBlock();
 	void EndBlock();
+	
+	void Attack();
 
 	UFUNCTION(BlueprintCallable)
 	void SetParryingEnabled(bool bEnabled);

@@ -35,6 +35,7 @@ void AT3PlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(BlockingAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_Block);
 		EnhancedInputComponent->BindAction(RollingAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_Roll);
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_Interact);
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AT3PlayerController::Input_Attack);
 	}
 }
 
@@ -105,5 +106,11 @@ void AT3PlayerController::Input_Interact(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_Attack(const FInputActionValue& Value)
 {
-	// TODO: 공격 시스템 연결
+	if (AT3CharacterBase* T3Char= Cast<AT3CharacterBase>(GetPawn()))
+	{
+		if (auto* Combat = T3Char->GetCombatComponent())
+		{
+			Combat->Attack();
+		}
+	}
 }

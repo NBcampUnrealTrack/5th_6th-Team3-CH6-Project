@@ -52,6 +52,8 @@ public:
 	void Roll(const FInputActionValue& Value);
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnRollTriggered();
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnAttack();
 
 
 
