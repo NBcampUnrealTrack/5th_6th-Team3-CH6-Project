@@ -38,9 +38,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	bool bIsFalling = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
+	bool bIsBlocking = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	float CurrentSpeed = 0.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	float FallingSpeed = 0.0f;
+	
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	ERollDirection RollDirection = ERollDirection::Neutral;
