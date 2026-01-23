@@ -4,7 +4,7 @@
 
 //해상도 목록
 UENUM()
-enum class EResolution
+enum class ET3Resolution
 {
 	W800H600 = 8000600,
 	W1024H768 = 10240768,
@@ -22,7 +22,7 @@ enum class EResolution
 
 //화면 모드
 UENUM()
-enum class EScreenMode
+enum class ET3ScreenMode
 {
 	Fullscreen,
 	WindowedFullscreen,

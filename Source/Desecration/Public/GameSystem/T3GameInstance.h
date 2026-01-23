@@ -10,8 +10,8 @@ class UT3SaveGame;
 //설정값을 저장하는 구조체
 struct FSettings
 {
-	EResolution Resolution;
-	EScreenMode ScreenMode;
+	ET3Resolution Resolution;
+	ET3ScreenMode ScreenMode;
 	float SoundEffectsVolume;
 	float BackgroundVolume;
 };
