@@ -106,12 +106,12 @@ void UT3InventoryComponent::UseItem(int32 SlotIndex)
 		return;
 	}
 	
-	bool bUsed = OwnerCharacter->ItemUseComponent->ApplyConsumableItem(*ItemRow);
-	
-	if (!bUsed)
-	{
-		return;
-	}
+	// bool bUsed = OwnerCharacter->ItemUseComponent->ApplyConsumableItem(*ItemRow);
+	//
+	// if (!bUsed)
+	// {
+	// 	return;
+	// }
 	
 	Items[SlotIndex].ItemStack--;
 
