@@ -1,0 +1,58 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Components/ActorComponent.h"
+#include "T3ItemUseComponent.generated.h"
+
+struct FT3ConsumableItemData;
+class AT3CharacterBase;
+
+UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
+class DESECRATION_API UT3ItemUseComponent : public UActorComponent
+{
+	GENERATED_BODY()
+
+public:
+	UT3ItemUseComponent();
+	
+protected:
+	virtual void BeginPlay() override;
+	
+private:
+	void EndPowerPotionEffect();
+	void EndDefensePotionEffect();
+	void EndSpeedPotionEffect();
+	void EndBerserkPotionEffect();
+	
+	void EndPowerPotionCoolTime();
+	void EndDefensePotionCoolTime();
+	void EndSpeedPotionCoolTime();
+	void EndBerserkPotionCoolTime();
+	
+	float PendingPowerValue;
+	float PendingDefenseValue;
+	float PendingSpeedValue;
+	float PendingBerserkPowerValue;
+	float PendingBerserkDefenseValue;
+	
+	uint8 bIsPowerPotionActive : 1;
+	uint8 bIsDefensePotionActive : 1;
+	uint8 bIsSpeedPotionActive : 1;
+	uint8 bIsBerserkPotionActive : 1;
+	
+	FTimerHandle PowerPotionActiveTimerHandle;
+	FTimerHandle DefensePotionActiveTimerHandle;
+	FTimerHandle SpeedPotionActiveTimerHandle;
+	FTimerHandle BerserkPotionActiveTimerHandle;
+	
+	FTimerHandle PowerPotionCoolTimerHandle;
+	FTimerHandle DefensePotionCoolTimerHandle;
+	FTimerHandle SpeedPotionCoolTimerHandle;
+	FTimerHandle BerserkPotionCoolTimerHandle;
+
+	UPROPERTY()
+	AT3CharacterBase* OwnerCharacter;
+
+public:
+	bool ApplyConsumableItem(const FT3ConsumableItemData& ItemData);
+};
