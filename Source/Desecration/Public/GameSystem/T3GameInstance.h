@@ -31,12 +31,19 @@ public:
 	//TODO : 게임 저장을 위한 매개변수 추가
 	bool SaveGame();
 	
+	//화면 모드 설정하기
+	void SetScreenMode(ET3ScreenMode ScreenMode);
+	
 	//현재 설정
 	FORCEINLINE TSharedPtr<FSettings> GetCurrentSettings() const { return CurrentSettings; }
 
 private:
 	//현재 설정
 	TSharedPtr<FSettings> CurrentSettings;
+	
+	//엔진의 게임 설정
+	UPROPERTY()
+	TObjectPtr<UGameUserSettings> UserSettings;
 	
 	//저장된 게임 데이터
 	FObjectPtr<UT3SaveGame> SavedGameData;
