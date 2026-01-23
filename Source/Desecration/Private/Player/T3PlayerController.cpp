@@ -65,7 +65,7 @@ void AT3PlayerController::Input_LockOn(const FInputActionValue& Value)
 {
 	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
 	{
-		if (auto* Combat = T3Char->GetCombatComponent())
+		if (UT3CombatComponent* Combat = T3Char->GetCombatComponent())
 		{
 			Combat->ToggleLockOn();
 		}
@@ -76,7 +76,7 @@ void AT3PlayerController::Input_BlockStart(const FInputActionValue& Value)
 {
 	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
 	{
-		if (auto* Combat = T3Char->GetCombatComponent())
+		if (UT3CombatComponent* Combat = T3Char->GetCombatComponent())
 		{
 			Combat->StartBlock();
 		}
@@ -87,7 +87,7 @@ void AT3PlayerController::Input_BlockEnd(const FInputActionValue& Value)
 {
 	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
 	{
-		if (auto* Combat = T3Char->GetCombatComponent())
+		if (UT3CombatComponent* Combat = T3Char->GetCombatComponent())
 		{
 			Combat->EndBlock();
 		}
@@ -113,7 +113,7 @@ void AT3PlayerController::Input_Attack(const FInputActionValue& Value)
 {
 	if (AT3CharacterBase* T3Char= Cast<AT3CharacterBase>(GetPawn()))
 	{
-		if (auto* Combat = T3Char->GetCombatComponent())
+		if (UT3CombatComponent* Combat = T3Char->GetCombatComponent())
 		{
 			Combat->Attack();
 		}
