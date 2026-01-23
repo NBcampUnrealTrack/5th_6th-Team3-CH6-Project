@@ -22,6 +22,7 @@ void UT3ItemUseComponent::BeginPlay()
 	
 	OwnerCharacter = Cast<AT3CharacterBase>(GetOwner());
 }
+
 void UT3ItemUseComponent::EndPowerPotionEffect()
 {
 	OwnerCharacter->SetAttackPower(OwnerCharacter->GetAttackPower() / PendingPowerValue);
@@ -43,11 +44,11 @@ void UT3ItemUseComponent::EndSpeedPotionEffect()
 
 void UT3ItemUseComponent::EndBerserkPotionEffect()
 {
-	OwnerCharacter->SetAttackPower(OwnerCharacter->GetAttackPower() / PendingPowerValue);
-	OwnerCharacter->SetDefense(OwnerCharacter->GetDefense() * PendingDefenseValue);
+	OwnerCharacter->SetAttackPower(OwnerCharacter->GetAttackPower() / PendingBerserkPowerValue);
+	OwnerCharacter->SetDefense(OwnerCharacter->GetDefense() * PendingBerserkDefenseValue);
 	
-	PendingPowerValue = 0.f;
-	PendingDefenseValue = 0.f;
+	PendingBerserkPowerValue = 0.f;
+	PendingBerserkDefenseValue = 0.f;
 	UE_LOG(LogTemp, Error, TEXT("광전사 포션 종료. 현재 공격력: %f, 방어력: %f"), OwnerCharacter->GetAttackPower(), OwnerCharacter->GetDefense());
 }
 
@@ -185,11 +186,11 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 			{
 				bIsBerserkPotionActive = true;
 				
-				PendingPowerValue = ItemData.BuffValue;
-				PendingDefenseValue = ItemData.DebuffValue;
+				PendingBerserkPowerValue = ItemData.BuffValue;
+				PendingBerserkDefenseValue = ItemData.DebuffValue;
 			
-				OwnerCharacter->SetAttackPower(OwnerCharacter->GetAttackPower() * PendingPowerValue);
-				OwnerCharacter->SetDefense(OwnerCharacter->GetDefense() * PendingDefenseValue);
+				OwnerCharacter->SetAttackPower(OwnerCharacter->GetAttackPower() * PendingBerserkPowerValue);
+				OwnerCharacter->SetDefense(OwnerCharacter->GetDefense() / PendingBerserkDefenseValue);
 			
 				UE_LOG(LogTemp, Warning, TEXT("[%s] 사용. 현재 공격력: %f, 방어력: %f"), *ItemData.ItemData.Name.ToString(), OwnerCharacter->GetAttackPower(), OwnerCharacter->GetDefense());
 
