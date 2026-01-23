@@ -19,6 +19,12 @@ enum class ERollDirection : uint8
 	Neutral
 };
 
+UENUM(BlueprintType)
+enum class ECharacterClass : uint8
+{
+	Faladin,
+};
+
 USTRUCT(BlueprintType)
 struct DESECRATION_API FT3PlayerInputState
 {
@@ -40,6 +46,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	bool bIsBlocking = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
+	bool bIsAttacking = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
+	bool bCanAttack = true;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
+	float ComboCount = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	float CurrentSpeed = 0.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	float FallingSpeed = 0.0f;
@@ -47,6 +59,8 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	ERollDirection RollDirection = ERollDirection::Neutral;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
+	ECharacterClass CharacterClass = ECharacterClass::Faladin;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	float InputYawOffset = 0.0f;

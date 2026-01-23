@@ -34,12 +34,21 @@ void UT3CombatComponent::StartBlock()
 {
 	if (CurrentState != ECharacterCombatState::Idle) return;
 	CurrentState = ECharacterCombatState::Blocking;
+	OwnerChar->PlayerInputState.bIsBlocking = true;
+	OwnerChar->GetCharacterMovement()->MaxWalkSpeed = 200.0f;
 	// 여기서 몽타주 재생 로직 추가 (CharacterDataAsset 활용)
 }
 
 void UT3CombatComponent::EndBlock()
 {
 	CurrentState = ECharacterCombatState::Idle;
+	OwnerChar->PlayerInputState.bIsBlocking = false;
+	OwnerChar->GetCharacterMovement()->MaxWalkSpeed = 500.0f;
+}
+
+void UT3CombatComponent::Attack()
+{
+	OwnerChar->OnAttack();
 }
 
 void UT3CombatComponent::SetParryingEnabled(bool bEnabled)
