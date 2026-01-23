@@ -9,6 +9,11 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Player/T3CombatComponent.h"
 
+// 아이템 컴포넌트 추가 후 주석 해제
+//#include "Item/Component/T3InventoryComponent"
+//#include "Item/Component/T3ItemComponent"
+
+
 
 AT3CharacterBase::AT3CharacterBase()
 {
@@ -38,6 +43,10 @@ AT3CharacterBase::AT3CharacterBase()
 	FollowCamera->bUsePawnControlRotation = false;
 
 	CombatComponent = CreateDefaultSubobject<UT3CombatComponent>(TEXT("CombatComponent"));
+
+	// 아이템 컴포넌트 추가 후 주석 해제
+	//InventoryComponent = CreateDefaultSubobject<UT3InventoryComponent>(TEXT("InventoryComponent")); 
+	//ItemUseComponent = CreateDefaultSubobject<UT3ItemUseComponent>(TEXT("ItemUseComponent"));
 }
 
 void AT3CharacterBase::BeginPlay()

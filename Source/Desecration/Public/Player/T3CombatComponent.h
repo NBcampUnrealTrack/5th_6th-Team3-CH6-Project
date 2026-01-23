@@ -14,7 +14,9 @@ enum class ECharacterCombatState : uint8
 {
 	Idle,
 	Blocking,
-	Parrying
+	Parrying,
+	Dodge,
+	Dead
 };
 
 // 노티파이용 ENUM
@@ -25,6 +27,16 @@ enum class ECombatWindowType : uint8
 	Parry      UMETA(DisplayName = "Parry Window"),
 	Invincible UMETA(DisplayName = "Invincible Window"),
 	Attack     UMETA(DisplayName = "Attack Collision")
+};
+
+// 피격 방향 ENUM
+UENUM(BlueprintType)
+enum class EHitDirection : uint8
+{
+	Front   UMETA(DisplayName = "Front"),
+	Back    UMETA(DisplayName = "Back"),
+	Left    UMETA(DisplayName = "Left"),
+	Right   UMETA(DisplayName = "Right")
 };
 
 
@@ -63,6 +75,7 @@ public:
 
 	// 공격 함수
 	void RequestAttackDamage(AActor* TargetActor, float DamageAmount, TSubclassOf<class UDamageType> DamageTypeClass);
+
 private:
 	// 상태별 데미지 경감 로직
 	float CalculateFinalDamage(float IncomingDamage, const class UDamageType* DamageType);
@@ -93,5 +106,10 @@ private:
 
 	float SearchRadius = 1000.f;
 	float InterpSpeed = 10.f;
+
+
+protected:
+	// 방향 계산 함수
+	EHitDirection CalculateHitDirection(const FVector& HitLocation);
 
 };

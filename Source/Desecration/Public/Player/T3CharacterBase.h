@@ -8,10 +8,13 @@
 #include "InputActionValue.h"
 #include "T3CharacterBase.generated.h"
 
+
 class USpringArmComponent;
 class UCameraComponent;
 class UT3CombatComponent;
 class UDataTable;
+class UT3InventoryComponent; 
+class UT3ItemUseComponent;
 
 UCLASS()
 class DESECRATION_API AT3CharacterBase : public ACharacter
@@ -40,12 +43,14 @@ protected:
 	TObjectPtr<UT3CombatComponent> CombatComponent;
 
 public:
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "PlayerInputState")
 	FT3PlayerInputState PlayerInputState;
 	
-	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
-	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
-	FORCEINLINE UT3CombatComponent* GetCombatComponent() const { return CombatComponent; }
+
+	FORCEINLINE TObjectPtr <USpringArmComponent> GetCameraBoom() const { return CameraBoom; }
+	FORCEINLINE TObjectPtr <UCameraComponent> GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE TObjectPtr <UT3CombatComponent> GetCombatComponent() const { return CombatComponent; }
 
 	void Move(const FVector2D& Value);
 	void Look(const FVector2D& Value);
@@ -54,6 +59,12 @@ public:
 	void OnRollTriggered();
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnAttack();
+
+	// 아이템 관련 컴포넌트
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
+	TObjectPtr<UT3InventoryComponent> InventoryComponent; 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
+	TObjectPtr<UT3ItemUseComponent> ItemUseComponent;
 
 
 
@@ -79,19 +90,19 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stat")
 	float CurrentStamina;
 
-	UPROPERTY(EditAnywhere, Category = "Stat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float StaminaRegenRate = 25.f; // 스태미나 초당 회복량
 
-	UPROPERTY(EditAnywhere, Category = "Stat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float MaxMana = 100.f;
 
-	UPROPERTY(VisibleAnywhere, Category = "Stat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float CurrentMana;
 
-	UPROPERTY(EditAnywhere, Category = "Stat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float CriticalChance = 0.1f;  // 크확
 
-	UPROPERTY(EditAnywhere, Category = "Stat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float CriticalDamage = 1.5f;  // 크뎀
 
 public:
@@ -153,5 +164,6 @@ private:
 	void AddHP(float Amount);
 	void AddMP(float Amount);
 	void AddStamina(float Amount);
+
 
 };
