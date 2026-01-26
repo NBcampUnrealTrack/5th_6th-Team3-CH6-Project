@@ -1,4 +1,4 @@
-﻿// T3CharacterBase.cpp
+// T3CharacterBase.cpp
 
 
 #include "Player/T3CharacterBase.h"
