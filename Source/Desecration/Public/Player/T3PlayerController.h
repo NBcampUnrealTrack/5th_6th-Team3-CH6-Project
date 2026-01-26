@@ -9,6 +9,7 @@
 
 class UInputMappingContext;
 class UInputAction;
+class UUserWidget;
 
 UCLASS()
 class DESECRATION_API AT3PlayerController : public APlayerController
@@ -43,15 +44,26 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> AttackAction;
 
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> InventoryAction;
+
+	UPROPERTY(EditDefaultsOnly, Category="UI")
+	TSubclassOf<UUserWidget> MainInventoryWidgetClass;
+	
+	UPROPERTY(BlueprintReadOnly, Category="UI")
+	TObjectPtr<UUserWidget> MainInventoryWidget;
+	
 private:
 	void Input_Move(const FInputActionValue& Value);
 	void Input_Look(const FInputActionValue& Value);
 
 	void Input_LockOn(const FInputActionValue& Value);
-	void Input_Block(const FInputActionValue& Value);
+	void Input_BlockStart(const FInputActionValue& Value);
+	void Input_BlockEnd(const FInputActionValue& Value);
 	void Input_Roll(const FInputActionValue& Value);
 	void Input_Interact(const FInputActionValue& Value);
 
 	void Input_Attack(const FInputActionValue& Value);
 
+	void ToggleInventoryInput();
 };
