@@ -10,10 +10,11 @@ class UT3SaveGame;
 //설정값을 저장하는 구조체
 struct FSettings
 {
-	ET3Resolution Resolution;
-	ET3ScreenMode ScreenMode;
-	float SoundEffectsVolume;
-	float BackgroundVolume;
+	ET3Resolution Resolution;//해상도
+	ET3ScreenMode ScreenMode;//화면모드
+	float SoundEffectsVolume;//효과음
+	float BackgroundVolume;//배경음
+	float MouseSensitivity;//마우스 감도
 };
 
 UCLASS()
@@ -54,6 +55,7 @@ private:
 	TObjectPtr<UGameUserSettings> UserSettings;
 	
 	//저장된 게임 데이터
+	UPROPERTY()
 	TObjectPtr<UT3SaveGame> SavedGameData;
 	
 	const FString SAVE_GAME_NAME = TEXT("SaveSlot1");
