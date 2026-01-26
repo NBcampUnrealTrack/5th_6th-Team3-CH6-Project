@@ -50,6 +50,8 @@ void UT3GameInstance::MakeFirstSettings()
 	//효과음, 배경음 모두 0.8을 기본으로
 	CurrentSettings->SoundEffectsVolume = 0.8f;
 	CurrentSettings->BackgroundVolume = 0.8f;
+	//마우스 감도는 0.5를 기본으로
+	CurrentSettings->MouseSensitivity = 0.5f;
 }
 
 
