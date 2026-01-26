@@ -105,22 +105,29 @@ void AT3DamageTestActor::ExecuteTestAttack()
 
     if (bHit)
     {
+        // 핵심: 이번 공격 프레임에서 이미 맞은 액터를 저장할 바구니
+        TSet<AActor*> HitActors;
+
         for (auto& Hit : HitResults)
         {
             AActor* Target = Hit.GetActor();
-            // 플레이어(CharacterBase)인지 확인
-            if (Target && Target->IsA(AT3CharacterBase::StaticClass()))
+
+            // 1. 타겟 유효성 확인 
+            // 2. T3CharacterBase인지 확인 
+            // 3. ★이미 이 바구니(Set)에 들어있는지 확인★
+            if (IsValid(Target) && Target->IsA(AT3CharacterBase::StaticClass()) && !HitActors.Contains(Target))
             {
-                // 3. 실제 데미지 전달 -> 플레이어의 CombatComponent::HandleTakeAnyDamage가 실행됨
+                // 바구니에 추가해서 중복 타격 방지
+                HitActors.Add(Target);
+
                 UGameplayStatics::ApplyDamage(
                     Target,
-                    TestDamageAmount, // 에디터에서 설정한 값
+                    TestDamageAmount,
                     GetInstigatorController(),
                     this,
-                    DamageTypeClass // 에디터에서 설정한 타입 (Unblockable 등)
+                    DamageTypeClass
                 );
 
-                // 타격 성공 디버그
                 DrawDebugString(GetWorld(), Hit.ImpactPoint, TEXT("HIT PLAYER!"), nullptr, FColor::Red, 1.0f);
             }
         }

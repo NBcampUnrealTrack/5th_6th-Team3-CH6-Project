@@ -27,8 +27,8 @@ void UT3ANS_Combat::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceB
             case ECombatWindowType::Parry:
                 Combat->SetParryingEnabled(true);
                 break;
-            case ECombatWindowType::Invincible:
-                // Combat->SetInvincible(true); // 추후 구현 시
+            case ECombatWindowType::Dodge:
+                Combat->SetDodgingEnabled(true);
                 break;
             case ECombatWindowType::Attack:
                 Combat->SetAttackDetectionEnabled(true, AttackDamageMultiflier, DamageTypeClass);
@@ -53,8 +53,8 @@ void UT3ANS_Combat::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBas
             case ECombatWindowType::Parry:
                 Combat->SetParryingEnabled(false);
                 break;
-            case ECombatWindowType::Invincible:
-                // Combat->SetInvincible(false);
+            case ECombatWindowType::Dodge:
+                Combat->SetDodgingEnabled(false);
                 break;
             case ECombatWindowType::Attack:
                 Combat->SetAttackDetectionEnabled(false);

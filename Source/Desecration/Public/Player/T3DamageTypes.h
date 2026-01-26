@@ -13,23 +13,23 @@ class DESECRATION_API UT3DamageType_Base : public UDamageType
 	GENERATED_BODY()
 };
 
-// 2. 패링 불가 (막기만 가능)
+// 2. 패링 불가 (막기/ 패링 불가)
 UCLASS()
 class DESECRATION_API UT3DamageType_Unparryable : public UT3DamageType_Base
 {
 	GENERATED_BODY()
 };
 
-//  3. 가드 불가 (막기/패링 모두 무시)
+//  3. 가드 불가 (패링 가능)
 UCLASS()
 class DESECRATION_API UT3DamageType_Unblockable : public UT3DamageType_Base
 {
 	GENERATED_BODY()
 };
 
-// 4. 즉사 공격
+// 4. 회피 불가 (회피/막기/패링 불가)
 UCLASS()
-class DESECRATION_API UT3DamageType_InstantDeath : public UT3DamageType_Base
+class DESECRATION_API UT3DamageType_Undodgable : public UT3DamageType_Base
 {
 	GENERATED_BODY()
 };

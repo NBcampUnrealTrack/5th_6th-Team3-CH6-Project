@@ -27,7 +27,9 @@ void UT3CombatComponent::BeginPlay()
 	{
 		OwnerPC = OwnerChar->GetController<APlayerController>();
 		OwnerChar->OnTakeAnyDamage.AddDynamic(this, &UT3CombatComponent::HandleTakeAnyDamage);
+		CurrentState = ECharacterCombatState::Idle; // 생성시 캐릭터 상태 초기화
 	}
+
 }
 
 // --- 막기 로직 ---
@@ -53,13 +55,32 @@ void UT3CombatComponent::EndBlock()
 
 void UT3CombatComponent::Attack()
 {
+	if(OwnerChar->GetCurrentStamina() > 10.f) // 스태미나 10 이하면 공격 불가
 	OwnerChar->OnAttack();
+	// 공격 시 스태미너 10 소모
+	OwnerChar->SetCurrentStamina(OwnerChar->GetCurrentStamina() - 10.f);
 }
 
 void UT3CombatComponent::SetParryingEnabled(bool bEnabled)
 {
 	if (CurrentState == ECharacterCombatState::Idle) return;
 	CurrentState = bEnabled ? ECharacterCombatState::Parrying : ECharacterCombatState::Blocking;
+}
+
+void UT3CombatComponent::SetDodgingEnabled(bool bEnabled)
+{
+	if (bEnabled)
+	{
+		CurrentState = ECharacterCombatState::Dodge;
+	}
+	else
+	{
+		// 현재가 Dodge일 때만 해제
+		if (CurrentState == ECharacterCombatState::Dodge)
+		{
+			CurrentState = ECharacterCombatState::Idle;
+		}
+	}
 }
 
 
@@ -84,7 +105,7 @@ void UT3CombatComponent::ToggleLockOn()
 		UpdateTargetUI(CurrentTarget, true);
 
 		OwnerChar->GetCharacterMovement()->bOrientRotationToMovement = false;
-		OwnerChar->bUseControllerRotationYaw = true;
+		OwnerChar->GetCharacterMovement()->bUseControllerDesiredRotation = true;
 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("LockOn"));
 	}
 }
@@ -93,12 +114,30 @@ void UT3CombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (bIsLockOn && CurrentTarget && OwnerPC)
+	// 1. 유효성 검사 (타겟이 사라졌는지 확인)
+	if (!bIsLockOn || !IsValid(CurrentTarget) || !OwnerChar || !OwnerPC)
 	{
-		FRotator LookAtRot = UKismetMathLibrary::FindLookAtRotation(OwnerChar->GetActorLocation(), CurrentTarget->GetActorLocation());
-		FRotator NewRot = FMath::RInterpTo(OwnerPC->GetControlRotation(), LookAtRot, DeltaTime, InterpSpeed);
-		OwnerPC->SetControlRotation(NewRot);
+		ResetLockOn();
+		return;
 	}
+
+	// 2. 거리 체크 (일정 거리 이상 멀어지면 해제)
+	float Distance = FVector::Dist(OwnerChar->GetActorLocation(), CurrentTarget->GetActorLocation());
+	const float MaxLockOnDistance = 2000.f;
+
+	if (Distance > MaxLockOnDistance)
+	{
+		ResetLockOn();
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Target Out of Range - LockOn Released"));
+		return;
+	}
+
+	// 3. 바라보기 로직 (기존 로직)
+	FRotator LookAtRot = UKismetMathLibrary::FindLookAtRotation(OwnerChar->GetActorLocation(), CurrentTarget->GetActorLocation());
+
+
+	// 컨트롤러 회전 적용
+	OwnerPC->SetControlRotation(LookAtRot);
 }
 
 AActor* UT3CombatComponent::FindBestTarget()
@@ -185,7 +224,7 @@ void UT3CombatComponent::ResetLockOn()
 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("LockOff"));
 
 		OwnerChar->GetCharacterMovement()->bOrientRotationToMovement = true;
-		OwnerChar->bUseControllerRotationYaw = false;
+		OwnerChar->GetCharacterMovement()->bUseControllerDesiredRotation = false;
 	}
 
 	SetComponentTickEnabled(false); // 틱 중지하여 자원 절약
@@ -272,10 +311,10 @@ void UT3CombatComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage,
 float UT3CombatComponent::CalculateFinalDamage(float IncomingDamage, const class UDamageType* DamageType)
 {
 
-	// 즉사 공격은 어떤 상황이든 예외 없이 최우선 사망
-	if (DamageType->IsA(UT3DamageType_InstantDeath::StaticClass()))
+	// 어떤 상황이든 예외 없이 데미지
+	if (DamageType->IsA(UT3DamageType_Undodgable::StaticClass()))
 	{
-		return 9999.f;
+		return IncomingDamage;
 	}
 
 	// 1. 회피 상태 (무적)
@@ -298,8 +337,8 @@ float UT3CombatComponent::CalculateFinalDamage(float IncomingDamage, const class
 	// 3. 막기 상태인 경우
 	if (CurrentState == ECharacterCombatState::Blocking)
 	{
-		// 막기 불가 공격인지 확인
-		if (DamageType->IsA(UT3DamageType_Unblockable::StaticClass()))
+		// 막기 불가 공격 또는 패링 불가 공격인 경우
+		if (DamageType->IsA(UT3DamageType_Unblockable::StaticClass()) || DamageType->IsA(UT3DamageType_Unparryable::StaticClass()))
 		{
 			return IncomingDamage; // 가드 뚫림
 		}
@@ -440,4 +479,5 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 		OwnerChar,          // 데미지 유발자
 		DamageTypeClass        // 데미지 타입 
 	);
+
 }

@@ -25,7 +25,7 @@ enum class ECombatWindowType : uint8
 {
 	None,
 	Parry      UMETA(DisplayName = "Parry Window"),
-	Invincible UMETA(DisplayName = "Invincible Window"),
+	Dodge UMETA(DisplayName = "Invincible Window"),
 	Attack     UMETA(DisplayName = "Attack Collision")
 };
 
@@ -69,6 +69,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetParryingEnabled(bool bEnabled);
 
+	UFUNCTION(BlueprintCallable)
+	void SetDodgingEnabled(bool bEnabled);
+
 
 
 	// 록온
@@ -97,7 +100,7 @@ private:
 	TObjectPtr<class APlayerController> OwnerPC;
 
 	// 상태 변수
-	ECharacterCombatState CurrentState = ECharacterCombatState::Idle;
+	ECharacterCombatState CurrentState;
 
 	// 록온 변수
 	bool bIsLockOn = false;
@@ -108,8 +111,8 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Combat|LockOn")
 	FName TargetTag = FName("Enemy");
 
-	float SearchRadius = 1000.f;
-	float InterpSpeed = 10.f;
+	float SearchRadius = 2000.f;
+	float InterpSpeed = 20.f;
 
 
 

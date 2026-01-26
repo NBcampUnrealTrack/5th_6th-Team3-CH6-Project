@@ -1,4 +1,4 @@
-// T3CharacterBase.cpp
+﻿// T3CharacterBase.cpp
 
 
 #include "Player/T3CharacterBase.h"
@@ -31,6 +31,7 @@ AT3CharacterBase::AT3CharacterBase()
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	CurrentHP = MaxHP;
+	CurrentStamina = MaxStamina;
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
@@ -133,9 +134,6 @@ void AT3CharacterBase::Roll(const FInputActionValue& Value)
 		
 		float CurrentAngle = PlayerInputState.InputYawOffset;
 		PlayerInputState.RollDirection = GetRollDirection(CurrentAngle);
-		
-		// 0.5초간 무적 상태 활성화 
-		SetIsInvincible(true, 0.5f);
 
 		OnRollTriggered();
 	}
@@ -161,6 +159,12 @@ ERollDirection AT3CharacterBase::GetRollDirection(float Angle) const
 // 스테미너 자연 회복
 void AT3CharacterBase::RegenerateStamina()
 {
+
+	if (CombatComponent->GetCurrentState() == ECharacterCombatState::Dodge)
+	{
+		return;
+	}
+
 	if (CurrentStamina < MaxStamina)
 	{
 		AddStamina(StaminaRegenRate * StaminaRegenInterval);
@@ -174,7 +178,6 @@ void AT3CharacterBase::RestoreHP(float HealAmount)
 
 	AddHP(HealAmount);
 
-	UE_LOG(LogTemp, Log, TEXT("HP Restored: %f / Current: %f"), HealAmount, CurrentHP);
 }
 
 // 호출용 마나 회복 함수
@@ -186,7 +189,7 @@ void AT3CharacterBase::RestoreMP(float Amount)
 }
 
 // 호출용 이동속도 버프 함수 (이동속도 배율, 지속시간)
-void AT3CharacterBase::SetMoveSpeedTemporary(float NewSpeed, float Duration)
+void AT3CharacterBase::SetMoveSpeedTemporary(float NewSpeedMultiflier, float Duration)
 {
 	if (!GetCharacterMovement()) return;
 
@@ -202,7 +205,7 @@ void AT3CharacterBase::SetMoveSpeedTemporary(float NewSpeed, float Duration)
 	}
 
 	// 속도 적용
-	GetCharacterMovement()->MaxWalkSpeed *= NewSpeed;
+	GetCharacterMovement()->MaxWalkSpeed *= NewSpeedMultiflier;
 
 	if (Duration > 0.f)
 	{
@@ -240,31 +243,6 @@ void AT3CharacterBase::SetMoveSpeed(float NewSpeed)
 	if (auto* Movement = GetCharacterMovement())
 	{
 		Movement->MaxWalkSpeed = NewSpeed;
-	}
-}
-
-void AT3CharacterBase::SetIsInvincible(bool bNewInvincible, float Duration)
-{
-	// 기존 타이머가 돌고 있다면 안전하게 취소
-	GetWorldTimerManager().ClearTimer(InvincibleTimerHandle);
-
-	bIsInvincible = bNewInvincible;
-
-	if (bIsInvincible)
-	{
-		UE_LOG(LogTemp, Log, TEXT("무적 활성화"));
-
-		if (Duration > 0.f)
-		{
-			GetWorldTimerManager().SetTimer(InvincibleTimerHandle, FTimerDelegate::CreateLambda([this]()
-				{
-					SetIsInvincible(false); // 람다를 사용하여 간결하게 해제 함수 호출
-				}), Duration, false);
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Log, TEXT("무적 비활성화."));
 	}
 }
 

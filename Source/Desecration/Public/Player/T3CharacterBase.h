@@ -104,12 +104,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float CriticalDamage = 1.5f;  // 크뎀
 
-	// 무적 상태 여부
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	bool bIsInvincible = false;
-
-	// 타이머 핸들 (무적 해제용)
-	FTimerHandle InvincibleTimerHandle;
 
 public:
 	// 7개 스탯 + 이동속도 Get / Set 함수
@@ -152,17 +146,7 @@ public:
 
 	// 이동 속도 버프 함수
 	UFUNCTION(BlueprintCallable, Category = "Stat")
-	void SetMoveSpeedTemporary(float NewSpeed, float Duration);
-
-
-	// 무적 관련
-	// 무적 상태 가져오기
-	UFUNCTION(BlueprintCallable, Category = "Stat")
-	FORCEINLINE bool GetIsInvincible() const { return bIsInvincible; }
-
-	// 무적 상태 설정 함수
-	UFUNCTION(BlueprintCallable, Category = "Stat")
-	void SetIsInvincible(bool bNewInvincible, float Duration = 0.f);
+	void SetMoveSpeedTemporary(float NewSpeedMultiflier, float Duration);
 
 
 	// 액티브 회복 함수
