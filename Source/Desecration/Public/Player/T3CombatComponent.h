@@ -63,13 +63,9 @@ public:
 	void EndBlock();
 	
 	void Attack();
-	// 공격 판정 활성화/비활성화 (Notify에서 호출용)
-	void SetAttackDetectionEnabled(bool bEnabled, float InDamageMutifly = 1.f, TSubclassOf<UDamageType> InType = nullptr);
 
 	UFUNCTION(BlueprintCallable)
 	void SetParryingEnabled(bool bEnabled);
-
-
 
 	// 록온
 	void ToggleLockOn();
@@ -112,27 +108,8 @@ private:
 	float InterpSpeed = 10.f;
 
 
-
-	// ======== 공격 관련 ============
-
-	void ExecuteAttackTrace();
-
-	FTimerHandle AttackTraceTimerHandle;
-
-	// 무기 메시에 설정한 소켓 이름
-	FName WeaponStartSocket = FName("Start_Socket");
-	FName WeaponEndSocket = FName("End_Socket");
-
-	UPROPERTY()
-	TArray<TObjectPtr<AActor>> HitActors;
-
-	// 노티파이별 데미지
-	float CurrentAttackDamage;
-	TSubclassOf<UDamageType> CurrentDamageType;
-
 protected:
 	// 방향 계산 함수
 	EHitDirection CalculateHitDirection(const FVector& HitLocation);
-
 
 };

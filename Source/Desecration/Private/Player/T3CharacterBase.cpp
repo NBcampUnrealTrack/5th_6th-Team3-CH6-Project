@@ -30,7 +30,6 @@ AT3CharacterBase::AT3CharacterBase()
 	GetCharacterMovement()->MaxWalkSpeed = 500.f;
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
-	CurrentHP = MaxHP;
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
@@ -116,27 +115,13 @@ void AT3CharacterBase::Look(const FVector2D& Value)
 
 void AT3CharacterBase::Roll(const FInputActionValue& Value)
 {
-	if (GetCurrentStamina() < 20.f) return; // 스태미나 부족 시 실행 불가
-	
 	if (PlayerInputState.bWantsToRoll == false)
 	{
-
-		// 스태미나 20 차감 및 설정
-		float NewStamina = FMath::Max(0.f, GetCurrentStamina() - 20.f);
-		SetCurrentStamina(NewStamina);
-
-		// 현재 스태미너 로그 출력
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green,
-			FString::Printf(TEXT("Dodge! Remaining Stamina: %.1f / %.1f"), NewStamina, GetMaxStamina()));
-		
 		PlayerInputState.bWantsToRoll = true;
 		
 		float CurrentAngle = PlayerInputState.InputYawOffset;
 		PlayerInputState.RollDirection = GetRollDirection(CurrentAngle);
 		
-		// 0.5초간 무적 상태 활성화 
-		SetIsInvincible(true, 0.5f);
-
 		OnRollTriggered();
 	}
 }
@@ -183,89 +168,6 @@ void AT3CharacterBase::RestoreMP(float Amount)
 	if (Amount <= 0.f) return;
 
 	AddMP(Amount);
-}
-
-// 호출용 이동속도 버프 함수 (이동속도 배율, 지속시간)
-void AT3CharacterBase::SetMoveSpeedTemporary(float NewSpeed, float Duration)
-{
-	if (!GetCharacterMovement()) return;
-
-	// 기존에 돌고 있던 복구 타이머가 있다면 취소 (새로운 버프/디버프 갱신)
-	if (GetWorldTimerManager().IsTimerActive(SpeedResetTimerHandle))
-	{
-		GetWorldTimerManager().ClearTimer(SpeedResetTimerHandle);
-	}
-	else
-	{
-		// 처음 속도를 바꾸는 것이라면 현재 속도를 저장해둠
-		OriginalMoveSpeed = GetCharacterMovement()->MaxWalkSpeed;
-	}
-
-	// 속도 적용
-	GetCharacterMovement()->MaxWalkSpeed *= NewSpeed;
-
-	if (Duration > 0.f)
-	{
-		// Duration 후에 ResetMoveSpeed 호출
-		GetWorldTimerManager().SetTimer(
-			SpeedResetTimerHandle,
-			this,
-			&AT3CharacterBase::ResetMoveSpeed,
-			Duration,
-			false
-		);
-	}
-}
-
-void AT3CharacterBase::ResetMoveSpeed()
-{
-	if (GetCharacterMovement())
-	{
-		GetCharacterMovement()->MaxWalkSpeed = OriginalMoveSpeed;
-		UE_LOG(LogTemp, Log, TEXT("MoveSpeed Restored to: %f"), OriginalMoveSpeed);
-	}
-}
-
-float AT3CharacterBase::GetMoveSpeed() const
-{
-	if (GetCharacterMovement())
-	{
-		return GetCharacterMovement()->MaxWalkSpeed;
-	}
-	return 0.f;
-}
-
-void AT3CharacterBase::SetMoveSpeed(float NewSpeed)
-{
-	if (auto* Movement = GetCharacterMovement())
-	{
-		Movement->MaxWalkSpeed = NewSpeed;
-	}
-}
-
-void AT3CharacterBase::SetIsInvincible(bool bNewInvincible, float Duration)
-{
-	// 기존 타이머가 돌고 있다면 안전하게 취소
-	GetWorldTimerManager().ClearTimer(InvincibleTimerHandle);
-
-	bIsInvincible = bNewInvincible;
-
-	if (bIsInvincible)
-	{
-		UE_LOG(LogTemp, Log, TEXT("무적 활성화"));
-
-		if (Duration > 0.f)
-		{
-			GetWorldTimerManager().SetTimer(InvincibleTimerHandle, FTimerDelegate::CreateLambda([this]()
-				{
-					SetIsInvincible(false); // 람다를 사용하여 간결하게 해제 함수 호출
-				}), Duration, false);
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Log, TEXT("무적 비활성화."));
-	}
 }
 
 // 내부 수치 합산 및 제한 로직

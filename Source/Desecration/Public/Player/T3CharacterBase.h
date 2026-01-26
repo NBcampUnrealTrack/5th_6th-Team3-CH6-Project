@@ -104,15 +104,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float CriticalDamage = 1.5f;  // 크뎀
 
-	// 무적 상태 여부
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	bool bIsInvincible = false;
-
-	// 타이머 핸들 (무적 해제용)
-	FTimerHandle InvincibleTimerHandle;
-
 public:
-	// 7개 스탯 + 이동속도 Get / Set 함수
+	// 7개 스탯 Get / Set 함수
 
 	// HP
 	FORCEINLINE float GetMaxHP() const { return MaxHP; }
@@ -143,26 +136,6 @@ public:
 	FORCEINLINE float GetCriticalDamage() const { return CriticalDamage; }
 	FORCEINLINE void SetCriticalDamage(float NewDamage) { CriticalDamage = NewDamage; }
 
-	// Speed
-	UFUNCTION(BlueprintCallable, Category = "Stat")
-	FORCEINLINE float GetMoveSpeed() const;
-
-	UFUNCTION(BlueprintCallable, Category = "Stat")
-	void SetMoveSpeed(float NewSpeed);
-
-	// 이동 속도 버프 함수
-	UFUNCTION(BlueprintCallable, Category = "Stat")
-	void SetMoveSpeedTemporary(float NewSpeed, float Duration);
-
-
-	// 무적 관련
-	// 무적 상태 가져오기
-	UFUNCTION(BlueprintCallable, Category = "Stat")
-	FORCEINLINE bool GetIsInvincible() const { return bIsInvincible; }
-
-	// 무적 상태 설정 함수
-	UFUNCTION(BlueprintCallable, Category = "Stat")
-	void SetIsInvincible(bool bNewInvincible, float Duration = 0.f);
 
 
 	// 액티브 회복 함수
@@ -191,10 +164,5 @@ private:
 	void AddMP(float Amount);
 	void AddStamina(float Amount);
 
-	// 속도 복구용 함수
-	void ResetMoveSpeed();
-	FTimerHandle SpeedResetTimerHandle;
-	// 복구할 원본 속도 저장
-	float OriginalMoveSpeed;
 
 };

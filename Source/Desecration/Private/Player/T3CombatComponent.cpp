@@ -10,7 +10,7 @@
 #include "Player/T3CharacterBase.h"
 #include "Player/T3PlayerController.h"
 #include "Kismet/GameplayStatics.h"
-#include "Player/T3DamageTestActor.h"
+#include "Kismet/KismetMathLibrary.h"
 
 
 UT3CombatComponent::UT3CombatComponent()
@@ -33,13 +33,10 @@ void UT3CombatComponent::BeginPlay()
 // --- 막기 로직 ---
 void UT3CombatComponent::StartBlock()
 {
-	if (OwnerChar->GetCurrentStamina() < 50.f) return GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("You Need Stamina."));
 	if (CurrentState != ECharacterCombatState::Idle) return;
 	CurrentState = ECharacterCombatState::Blocking;
 	OwnerChar->PlayerInputState.bIsBlocking = true;
 	OwnerChar->GetCharacterMovement()->MaxWalkSpeed = 200.0f;
-
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("BlockingMode"));
 	// 여기서 몽타주 재생 로직 추가 (CharacterDataAsset 활용)
 }
 
@@ -48,7 +45,6 @@ void UT3CombatComponent::EndBlock()
 	CurrentState = ECharacterCombatState::Idle;
 	OwnerChar->PlayerInputState.bIsBlocking = false;
 	OwnerChar->GetCharacterMovement()->MaxWalkSpeed = 500.0f;
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("BlockingModeOff"));
 }
 
 void UT3CombatComponent::Attack()
@@ -61,7 +57,6 @@ void UT3CombatComponent::SetParryingEnabled(bool bEnabled)
 	if (CurrentState == ECharacterCombatState::Idle) return;
 	CurrentState = bEnabled ? ECharacterCombatState::Parrying : ECharacterCombatState::Blocking;
 }
-
 
 // --- 록온 로직 ---
 void UT3CombatComponent::ToggleLockOn()
@@ -81,11 +76,6 @@ void UT3CombatComponent::ToggleLockOn()
 		OwnerChar->PlayerInputState.bIsLockOn = true;
 		OwnerPC->SetIgnoreLookInput(true);
 		SetComponentTickEnabled(true);
-		UpdateTargetUI(CurrentTarget, true);
-
-		OwnerChar->GetCharacterMovement()->bOrientRotationToMovement = false;
-		OwnerChar->bUseControllerRotationYaw = true;
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("LockOn"));
 	}
 }
 
@@ -183,9 +173,6 @@ void UT3CombatComponent::ResetLockOn()
 	{
 		OwnerPC->ResetIgnoreLookInput(); // 마우스 입력 다시 허용
 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("LockOff"));
-
-		OwnerChar->GetCharacterMovement()->bOrientRotationToMovement = true;
-		OwnerChar->bUseControllerRotationYaw = false;
 	}
 
 	SetComponentTickEnabled(false); // 틱 중지하여 자원 절약
@@ -194,11 +181,11 @@ void UT3CombatComponent::ResetLockOn()
 // 록온 타겟 위에 록온 위젯 생성
 void UT3CombatComponent::UpdateTargetUI(AActor* Target, bool bIsVisible)
 {
-	AT3DamageTestActor* Enemy = Cast<AT3DamageTestActor>(Target);
-	if (Enemy)
-	{
-		Enemy->SetLockOnWidgetVisible(bIsVisible);
-	}
+	//AAICharacter* Enemy = Cast<AAICharacter>(Target);
+	//if (Enemy)
+	//{
+	//	Enemy->SetLockOnWidgetVisible(bIsVisible);
+	//}
 }
 
 
@@ -210,49 +197,12 @@ void UT3CombatComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage,
 	if (Damage <= 0.f || !OwnerChar || CurrentState == ECharacterCombatState::Dead) return;
 	if (!DamageCauser || !DamageType) return;
 
-	// 1. [디버그] 공격자 정보 및 데미지 타입 확인
-	FString TypeName = DamageType ? DamageType->GetClass()->GetName() : TEXT("Normal");
-	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::White,
-		FString::Printf(TEXT("Hit by: %s | Original Damage: %.1f | Type: %s"),
-			*DamageCauser->GetName(), Damage, *TypeName));
-
 	// 최종 데미지 계산
 	float FinalDamage = CalculateFinalDamage(Damage, DamageType);
 
-	// 3. [상태별 로그 출력]
-	if (FinalDamage <= 0.f)
-	{
-		if (CurrentState == ECharacterCombatState::Dodge)
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Result: [EVADE] - Invincible Frame!"));
-		
-		else if (CurrentState == ECharacterCombatState::Parrying)
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("Result: [PARRY] - Success!"));
-		return;
-	}
-	else if (CurrentState == ECharacterCombatState::Blocking)
-	{
-		// 1. 스태미나 50 차감
-		float NewStamina = FMath::Max(0.f, OwnerChar->GetCurrentStamina() - 50.f);
-		OwnerChar->SetCurrentStamina(NewStamina);
-
-		// 2. 결과 출력
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
-			FString::Printf(TEXT("Remaining Stamina: %.1f"), NewStamina));
-		
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow,
-			FString::Printf(TEXT("Result: [BLOCK] - Reduced Damage: %.1f"), FinalDamage));
-	}
-
-
-
-	// 4. 실제 체력 차감 및 상태 보고
-	float NewHP = FMath::Max(0.f, OwnerChar->GetCurrentHP() - FinalDamage);
+	// 체력 깎이는 로직
+	float NewHP = OwnerChar->GetCurrentHP() - FinalDamage;
 	OwnerChar->SetCurrentHP(NewHP);
-
-	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red,
-		FString::Printf(TEXT("HP Status: %.1f / %.1f"), NewHP, OwnerChar->GetMaxHP()));
-
-
 	
 	// 사망 판정
 	if (NewHP <= 0.f)
@@ -262,10 +212,33 @@ void UT3CombatComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage,
 		return;
 	}
 
-	 // 5. 피격 방향 계산 및 출력
+	// 리액션 분기
+
+	// 회피 성공 시 아무것도 안 함
+	if (CurrentState == ECharacterCombatState::Dodge && FinalDamage <= 0.f) return;
+
+	// 패링 시
+	 if (FinalDamage <= 0.f && CurrentState == ECharacterCombatState::Parrying)
+	{
+		// 패링 효과 연출
+		 GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("Parry Success!"));
+		 return;
+	}
+
+	 // 막기 시
+	else if (FinalDamage < Damage && CurrentState == ECharacterCombatState::Blocking)
+	{
+		// 막기 효과 연출
+		 GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow, TEXT("Block Success!"));
+
+		 // 막기 성공 시 스태미너 50 차감
+		 float NewStamina = FMath::Max(0.f, OwnerChar->GetCurrentStamina() - 50.f);
+		 OwnerChar->SetCurrentStamina(NewStamina);
+		 return;
+	 }
+
+	 // 위 조건들에 해당 안 되면 피격방향 계산 후 ENUM 도출
 	 EHitDirection HitDir = CalculateHitDirection(DamageCauser->GetActorLocation());
-	 FString DirName = StaticEnum<EHitDirection>()->GetNameStringByValue((int64)HitDir);
-	 GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Orange, FString::Printf(TEXT("Hit Direction: [%s]"), *DirName));
 }
 
 // 피격 데미지 계산
@@ -342,97 +315,12 @@ EHitDirection UT3CombatComponent::CalculateHitDirection(const FVector& HitLocati
 	return (RightDot >= 0.f) ? EHitDirection::Right : EHitDirection::Left;
 }
 
-
 // 공격 로직
-
-// 노티파이를 통해 공격 탐지
-void UT3CombatComponent::SetAttackDetectionEnabled(bool bEnabled, float InDamageMultiflier, TSubclassOf<UDamageType> InType)
-{
-	if (bEnabled && OwnerChar)
-	{
-		HitActors.Empty();
-		CurrentAttackDamage = InDamageMultiflier * OwnerChar->GetAttackPower();
-		CurrentDamageType = InType;
-		GetWorld()->GetTimerManager().SetTimer(AttackTraceTimerHandle, this, &UT3CombatComponent::ExecuteAttackTrace, 0.01f, true);
-	}
-	else
-	{
-		GetWorld()->GetTimerManager().ClearTimer(AttackTraceTimerHandle);
-	}
-}
-
-// 캐릭터에 붙어있는 소켓 트레이스로 공격 실행
-void UT3CombatComponent::ExecuteAttackTrace()
-{
-	if (!OwnerChar) return;
-
-	UStaticMeshComponent* WeaponMesh = Cast<UStaticMeshComponent>(OwnerChar->GetDefaultSubobjectByName(TEXT("WeaponMesh")));
-
-	if (!WeaponMesh)
-	{
-		TArray<UStaticMeshComponent*> MeshComps;
-		OwnerChar->GetComponents<UStaticMeshComponent>(MeshComps);
-		for (UStaticMeshComponent* Mesh : MeshComps)
-		{
-			if (Mesh->GetName() == TEXT("WeaponMesh"))
-			{
-				WeaponMesh = Mesh;
-				break;
-			}
-		}
-	}
-
-	if (!WeaponMesh)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("WeaponMesh Not Found!"));
-		return;
-	}
-
-	FVector Start = WeaponMesh->GetSocketLocation(TEXT("Start_Socket"));
-	FVector End = WeaponMesh->GetSocketLocation(TEXT("End_Socket"));
-
-	TArray<FHitResult> HitResults;
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(OwnerChar);
-
-	// 구체 트레이스
-	bool bHit = GetWorld()->SweepMultiByChannel(
-		HitResults,
-		Start,
-		End,
-		FQuat::Identity,
-		ECC_Pawn,
-		FCollisionShape::MakeSphere(15.f),
-		Params
-	);
-
-	// 디버그 라인 그리기
-	DrawDebugCapsule(GetWorld(), (Start + End) * 0.5f, FVector::Distance(Start, End) * 0.5f + 15.f, 15.f,
-		FRotationMatrix::MakeFromZ(End - Start).ToQuat(), FColor::Red, false, 0.5f);
-
-	if (bHit)
-	{
-		for (const FHitResult& Hit : HitResults)
-		{
-			AActor* Target = Hit.GetActor();
-			if (Target && !HitActors.Contains(Target))
-			{
-				HitActors.Add(Target);
-
-				// 데미지 전달
-				RequestAttackDamage(Target, CurrentAttackDamage, CurrentDamageType);
-
-				// 타격 성공 로그
-				GEngine->AddOnScreenDebugMessage(-1, 0.5f, FColor::Yellow, TEXT("Attack Hit!"));
-			}
-		}
-	}
-}
-
 void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAmount, TSubclassOf<UDamageType> DamageTypeClass)
 {
 	if (!TargetActor || !OwnerChar || !OwnerPC) return;
 
+	// 이 함수가 실행되면 TargetActor 내부의 HandleTakeAnyDamage가 자동으로 호출됩니다.
 	UGameplayStatics::ApplyDamage(
 		TargetActor, 
 		DamageAmount, 
