@@ -47,7 +47,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Input")
 	TObjectPtr<UInputAction> InventoryAction;
 
-	UPROPERTY(BlueprintReadOnly, Category="Input")
+	UPROPERTY(EditAnywhere, Category="Input")
 	TObjectPtr<UInputAction> InputTest;
 	
 	UPROPERTY(EditDefaultsOnly, Category="UI")
