@@ -25,6 +25,14 @@ enum class ECharacterClass : uint8
 	Faladin,
 };
 
+UENUM(BlueprintType)
+enum class EGaitState : uint8
+{
+	Idle,
+	Walk,
+	Run
+};
+
 USTRUCT(BlueprintType)
 struct DESECRATION_API FT3PlayerInputState
 {
@@ -61,6 +69,8 @@ public:
 	ERollDirection RollDirection = ERollDirection::Neutral;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	ECharacterClass CharacterClass = ECharacterClass::Faladin;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
+	EGaitState T3GaitState = EGaitState::Idle;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	float InputYawOffset = 0.0f;
