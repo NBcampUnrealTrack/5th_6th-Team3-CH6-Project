@@ -55,6 +55,7 @@ private:
 	TObjectPtr<UGameUserSettings> UserSettings;
 	
 	//저장된 게임 데이터
+	UPROPERTY()
 	TObjectPtr<UT3SaveGame> SavedGameData;
 	
 	const FString SAVE_GAME_NAME = TEXT("SaveSlot1");
