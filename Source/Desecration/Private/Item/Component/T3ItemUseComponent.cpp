@@ -14,12 +14,12 @@ bIsPowerPotionActive(false),
 bIsDefensePotionActive(false),
 bIsSpeedPotionActive(false),
 bIsBerserkPotionActive(false),
-RecoverHPInterval(0.f),
+RecoverHPInterval(0.05f),
 RecoverHPTickCount(0.f),
 RecoverHPPerTick(0.f),
 RecoverHPAmount(0.f),
 AccumulatedRecoverHP(0.f),
-RecoverMPInterval(0.f),
+RecoverMPInterval(0.05f),
 RecoverMPTickCount(0.f),
 RecoverMPPerTick(0.f),
 RecoverMPAmount(0.f),
@@ -157,7 +157,6 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 				
 				RecoverHPAmount = ItemData.BuffValue; // + 포션 수치 강화된 값
 			
-				RecoverHPInterval = 0.1f;
 				RecoverHPTickCount = ItemData.ActiveTime / RecoverHPInterval;
 				RecoverHPPerTick = RecoverHPAmount / RecoverHPTickCount;
 			
@@ -194,7 +193,6 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 				
 				RecoverMPAmount = ItemData.BuffValue; // + 포션 수치 강화된 값
 			
-				RecoverMPInterval = 0.1f;
 				RecoverMPTickCount = ItemData.ActiveTime / RecoverMPInterval;
 				RecoverMPPerTick = RecoverMPAmount / RecoverMPTickCount;
 			
