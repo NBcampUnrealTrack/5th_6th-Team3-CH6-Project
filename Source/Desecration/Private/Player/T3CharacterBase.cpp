@@ -76,6 +76,8 @@ void AT3CharacterBase::Tick(float DeltaTime)
 	PlayerInputState.bIsMoving = CurrentGroundSpeed > (MoveThreshold);
 	
 	PlayerInputState.CurrentSpeed = CurrentGroundSpeed;
+	PlayerInputState.bIsInAir = GetCharacterMovement()->IsFalling();
+
 }
 
 

@@ -58,7 +58,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	bool bIsLockOn = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
-	bool bIsFalling = false;
+	bool bIsInAir = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	bool bIsBlocking = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
@@ -76,7 +76,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	ERollDirection RollDirection = ERollDirection::Neutral;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
-	ECharacterClass CharacterClass = ECharacterClass::Faladin;
+	ECharacterClass CharacterClass = ECharacterClass::Paladin;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	EGaitState T3GaitState = EGaitState::Idle;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
