@@ -40,13 +40,16 @@ public:
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "AI")
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "AI|Combat")
 	void PerformAttack();
 
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "AI")
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "AI|Combat")
 	void PerformAttackCheck();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI|Combat")
+	bool bPerformAttackEnded;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI|Combat")
 	TArray<UAnimMontage*> AttackMontages;
 
 protected:
