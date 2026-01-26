@@ -30,7 +30,15 @@ enum class EGaitState : uint8
 {
 	Idle,
 	Walk,
-	Run
+	Run,
+};
+
+UENUM(BlueprintType)
+enum class ECombatState : uint8
+{
+	ToCombat,
+	ToGeneral,
+	None
 };
 
 USTRUCT(BlueprintType)
@@ -71,6 +79,8 @@ public:
 	ECharacterClass CharacterClass = ECharacterClass::Faladin;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	EGaitState T3GaitState = EGaitState::Idle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
+	ECombatState T3CombatState = ECombatState::None;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	float InputYawOffset = 0.0f;

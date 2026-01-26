@@ -43,7 +43,8 @@ void AT3PlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(RollingAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_Roll);
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_Interact);
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AT3PlayerController::Input_Attack);
-	
+		EnhancedInputComponent->BindAction(InputTest, ETriggerEvent::Triggered, this, &AT3PlayerController::Input_Test);
+		
 		EnhancedInputComponent->BindAction(InventoryAction, ETriggerEvent::Started, this, &AT3PlayerController::ToggleInventoryInput);
 	}
 }
@@ -115,6 +116,24 @@ void AT3PlayerController::Input_Roll(const FInputActionValue& Value)
 void AT3PlayerController::Input_Interact(const FInputActionValue& Value)
 {
 	// TODO: 상호작용 시스템 연결
+}
+
+void AT3PlayerController::Input_Test(const FInputActionValue& Value)
+{
+	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
+	{
+		if (T3Char->PlayerInputState.bIsCombatState == false)
+		{
+			T3Char->PlayerInputState.bIsCombatState = true;
+			T3Char->PlayerInputState.T3CombatState = ECombatState::ToCombat;
+		}
+		else
+		{
+			T3Char->PlayerInputState.bIsCombatState = false;
+			T3Char->PlayerInputState.T3CombatState = ECombatState::ToGeneral;
+		}
+		
+	}
 }
 
 void AT3PlayerController::Input_Attack(const FInputActionValue& Value)
