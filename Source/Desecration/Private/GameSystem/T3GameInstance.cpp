@@ -67,7 +67,7 @@ bool UT3GameInstance::SaveGame()
 
 void UT3GameInstance::SetResolution(ET3Resolution Resolution)
 {
-	CurrentSettings->Resolution;
+	CurrentSettings->Resolution = Resolution;
 	
 	//ET3Resolution의 각 항목은 [가로 * 10000 + 세로]인 값을 가진다.
 	int32 Width = static_cast<int>(Resolution) / 10000;
