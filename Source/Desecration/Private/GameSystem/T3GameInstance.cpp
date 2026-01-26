@@ -53,7 +53,7 @@ void UT3GameInstance::MakeFirstSettings()
 }
 
 
-FObjectPtr<UT3SaveGame> UT3GameInstance::LoadGame()
+TObjectPtr<UT3SaveGame> UT3GameInstance::LoadGame()
 {
 	return SavedGameData;
 }
