@@ -46,6 +46,9 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "AI")
 	void PerformAttackCheck();
 
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "AI")
+	void PerformAttackEnded();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	TArray<UAnimMontage*> AttackMontages;
 
