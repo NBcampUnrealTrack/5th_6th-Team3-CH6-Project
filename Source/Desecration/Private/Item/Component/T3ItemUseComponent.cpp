@@ -8,10 +8,22 @@ PendingDefenseValue(0.f),
 PendingSpeedValue(0.f),
 PendingBerserkPowerValue(0.f),
 PendingBerserkDefenseValue(0.f),
+bIsHPPotionActive(false),
+bIsMPPotionActive(false),
 bIsPowerPotionActive(false),
 bIsDefensePotionActive(false),
 bIsSpeedPotionActive(false),
-bIsBerserkPotionActive(false)
+bIsBerserkPotionActive(false),
+RecoverHPInterval(0.f),
+RecoverHPTickCount(0.f),
+RecoverHPPerTick(0.f),
+RecoverHPAmount(0.f),
+AccumulatedRecoverHP(0.f),
+RecoverMPInterval(0.f),
+RecoverMPTickCount(0.f),
+RecoverMPPerTick(0.f),
+RecoverMPAmount(0.f),
+AccumulatedRecoverMP(0.f)
 {
 	PrimaryComponentTick.bCanEverTick = false;
 }
@@ -52,6 +64,19 @@ void UT3ItemUseComponent::EndBerserkPotionEffect()
 	UE_LOG(LogTemp, Error, TEXT("광전사 포션 종료. 현재 공격력: %f, 방어력: %f"), OwnerCharacter->GetAttackPower(), OwnerCharacter->GetDefense());
 }
 
+void UT3ItemUseComponent::EndHPPotionCoolTime()
+{
+	bIsHPPotionActive = false;
+	
+	UE_LOG(LogTemp, Error, TEXT("체력 포션을 사용할 수 있습니다."));
+}
+
+void UT3ItemUseComponent::EndMPPotionCoolTime()
+{
+	bIsMPPotionActive = false;
+	UE_LOG(LogTemp, Error, TEXT("마나 포션을 사용할 수 있습니다."));
+}
+
 void UT3ItemUseComponent::EndPowerPotionCoolTime()
 {
 	bIsPowerPotionActive = false;
@@ -80,19 +105,117 @@ void UT3ItemUseComponent::EndBerserkPotionCoolTime()
 	UE_LOG(LogTemp, Error, TEXT("광전사 포션을 사용할 수 있습니다."));
 }
 
+void UT3ItemUseComponent::RecoverHPTick()
+{
+	float RemainAmount = RecoverHPAmount - AccumulatedRecoverHP;
+	float ApplyAmount = FMath::Min(RecoverHPPerTick, RemainAmount);
+	
+	OwnerCharacter->RestoreHP(ApplyAmount);
+	AccumulatedRecoverHP += ApplyAmount;
+	
+	UE_LOG(LogTemp, Log, TEXT("체력 [%.1f] 회복"), ApplyAmount);
+
+	if (AccumulatedRecoverHP >= RecoverHPAmount)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(RecoverHPTimerHandle);
+		UE_LOG(LogTemp, Log, TEXT("현재 캐릭터의 체력 : %.1f"), OwnerCharacter->GetCurrentHP());
+	}
+}
+
+void UT3ItemUseComponent::RecoverMPTick()
+{
+	float RemainAmount = RecoverMPAmount - AccumulatedRecoverMP;
+	float ApplyAmount = FMath::Min(RecoverMPPerTick, RemainAmount);
+	
+	OwnerCharacter->RestoreMP(ApplyAmount);
+	AccumulatedRecoverMP += ApplyAmount;
+	
+	UE_LOG(LogTemp, Log, TEXT("마나 [%.1f] 회복"), ApplyAmount);
+
+	if (AccumulatedRecoverMP >= RecoverMPAmount)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(RecoverMPTimerHandle);
+		UE_LOG(LogTemp, Log, TEXT("현재 캐릭터의 마나 : %.1f"), OwnerCharacter->GetCurrentMana());
+	}
+}
+
 bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemData)
 {
 	switch (ItemData.EffectType)
 	{
 	case EEffectType::HP:
 		{
-			OwnerCharacter->RestoreHP(ItemData.BuffValue);
-			return true;
+			if (bIsHPPotionActive)
+			{
+				UE_LOG(LogTemp, Error, TEXT("[%s]은 쿨타임 입니다."), *ItemData.ItemData.Name.ToString()); // 쿨타임 계산 로직 필요하면 나중에 추가예정
+	
+				return false;
+			}
+			else
+			{
+				bIsHPPotionActive = true;
+				
+				RecoverHPAmount = ItemData.BuffValue; // + 포션 수치 강화된 값
+			
+				RecoverHPInterval = 0.1f;
+				RecoverHPTickCount = ItemData.ActiveTime / RecoverHPInterval;
+				RecoverHPPerTick = RecoverHPAmount / RecoverHPTickCount;
+			
+				AccumulatedRecoverHP = 0.f;
+			
+				GetWorld()->GetTimerManager().SetTimer(
+					RecoverHPTimerHandle,
+					this,
+					&UT3ItemUseComponent::RecoverHPTick,
+					RecoverHPInterval,
+					true);
+			
+				GetWorld()->GetTimerManager().SetTimer(
+					HPPotionCoolTimerHandle,
+					this,
+					&UT3ItemUseComponent::EndHPPotionCoolTime,
+					ItemData.CoolTime,
+					false);
+			
+				return true;
+			}
 		}
 	case EEffectType::MP:
 		{
-			OwnerCharacter->RestoreMP(ItemData.BuffValue);
-			return true;
+			if (bIsMPPotionActive)
+			{
+				UE_LOG(LogTemp, Error, TEXT("[%s]은 쿨타임 입니다."), *ItemData.ItemData.Name.ToString()); // 쿨타임 계산 로직 필요하면 나중에 추가예정
+
+				return false;
+			}
+			else
+			{
+				bIsMPPotionActive = true;
+				
+				RecoverMPAmount = ItemData.BuffValue; // + 포션 수치 강화된 값
+			
+				RecoverMPInterval = 0.1f;
+				RecoverMPTickCount = ItemData.ActiveTime / RecoverMPInterval;
+				RecoverMPPerTick = RecoverMPAmount / RecoverMPTickCount;
+			
+				AccumulatedRecoverMP = 0.f;
+			
+				GetWorld()->GetTimerManager().SetTimer(
+					RecoverMPTimerHandle,
+					this,
+					&UT3ItemUseComponent::RecoverMPTick,
+					RecoverMPInterval,
+					true);
+			
+				GetWorld()->GetTimerManager().SetTimer(
+					MPPotionCoolTimerHandle,
+					this,
+					&UT3ItemUseComponent::EndMPPotionCoolTime,
+					ItemData.CoolTime,
+					false);
+			
+				return true;
+			}
 		}
 	case EEffectType::Power:
 		{
