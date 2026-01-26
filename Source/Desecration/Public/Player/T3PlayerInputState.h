@@ -22,7 +22,7 @@ enum class ERollDirection : uint8
 UENUM(BlueprintType)
 enum class ECharacterClass : uint8
 {
-	Faladin,
+	Paladin,
 };
 
 UENUM(BlueprintType)
