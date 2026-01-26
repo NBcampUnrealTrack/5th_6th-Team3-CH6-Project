@@ -125,12 +125,10 @@ void AT3PlayerController::Input_Test(const FInputActionValue& Value)
 		if (T3Char->PlayerInputState.bIsCombatState == false)
 		{
 			T3Char->PlayerInputState.bIsCombatState = true;
-			T3Char->PlayerInputState.T3CombatState = ECombatState::ToCombat;
 		}
 		else
 		{
 			T3Char->PlayerInputState.bIsCombatState = false;
-			T3Char->PlayerInputState.T3CombatState = ECombatState::ToGeneral;
 		}
 		
 	}
