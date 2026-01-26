@@ -4,7 +4,13 @@
 #include "Player/T3ANS_Combat.h"
 #include "Player/T3CharacterBase.h"
 #include "Player/T3CombatComponent.h"
+#include "Player/T3DamageTypes.h"
 
+
+UT3ANS_Combat::UT3ANS_Combat()
+{
+    DamageTypeClass = UT3DamageType_Base::StaticClass();
+}
 
 void UT3ANS_Combat::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
@@ -25,7 +31,7 @@ void UT3ANS_Combat::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceB
                 // Combat->SetInvincible(true); // 추후 구현 시
                 break;
             case ECombatWindowType::Attack:
-                // Combat->EnableAttackCollision(true); // 추후 구현 시
+                Combat->SetAttackDetectionEnabled(true, AttackDamageMultiflier, DamageTypeClass);
                 break;
             }
         }
@@ -51,7 +57,7 @@ void UT3ANS_Combat::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBas
                 // Combat->SetInvincible(false);
                 break;
             case ECombatWindowType::Attack:
-                // Combat->EnableAttackCollision(false);
+                Combat->SetAttackDetectionEnabled(false);
                 break;
             }
         }
