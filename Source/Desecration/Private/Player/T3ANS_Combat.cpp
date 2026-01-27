@@ -32,6 +32,10 @@ void UT3ANS_Combat::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceB
                 break;
             case ECombatWindowType::Attack:
                 Combat->SetAttackDetectionEnabled(true, AttackDamageMultiflier, DamageTypeClass);
+                Combat->ConsumeStamina(10.f);
+                break;
+            case ECombatWindowType::PrevenRegen:
+                Char->bCanRegenStamina = false;
                 break;
             }
         }
@@ -58,6 +62,9 @@ void UT3ANS_Combat::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBas
                 break;
             case ECombatWindowType::Attack:
                 Combat->SetAttackDetectionEnabled(false);
+                break;
+            case ECombatWindowType::PrevenRegen:
+                Char->bCanRegenStamina = true;
                 break;
             }
         }

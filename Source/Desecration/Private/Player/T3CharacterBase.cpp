@@ -117,19 +117,15 @@ void AT3CharacterBase::Look(const FVector2D& Value)
 
 void AT3CharacterBase::Roll(const FInputActionValue& Value)
 {
+	TObjectPtr<UT3CombatComponent> Combat = GetCombatComponent();
 	if (GetCurrentStamina() < 20.f) return; // 스태미나 부족 시 실행 불가
 	
 	if (PlayerInputState.bWantsToRoll == false)
 	{
 
-		// 스태미나 20 차감 및 설정
-		float NewStamina = FMath::Max(0.f, GetCurrentStamina() - 20.f);
-		SetCurrentStamina(NewStamina);
+		// 스태미나 20 차감
+		Combat->ConsumeStamina(20);
 
-		// 현재 스태미너 로그 출력
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green,
-			FString::Printf(TEXT("Dodge! Remaining Stamina: %.1f / %.1f"), NewStamina, GetMaxStamina()));
-		
 		PlayerInputState.bWantsToRoll = true;
 		
 		float CurrentAngle = PlayerInputState.InputYawOffset;
@@ -159,11 +155,7 @@ ERollDirection AT3CharacterBase::GetRollDirection(float Angle) const
 // 스테미너 자연 회복
 void AT3CharacterBase::RegenerateStamina()
 {
-
-	if (CombatComponent->GetCurrentState() == ECharacterCombatState::Dodge)
-	{
-		return;
-	}
+	if (!CombatComponent || !bCanRegenStamina) return;
 
 	if (CurrentStamina < MaxStamina)
 	{

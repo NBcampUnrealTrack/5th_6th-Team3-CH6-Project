@@ -122,6 +122,7 @@ public:
 	FORCEINLINE float GetMaxStamina() const { return MaxStamina; }
 	FORCEINLINE float GetCurrentStamina() const { return CurrentStamina; }
 	void SetCurrentStamina(float NewStamina) { CurrentStamina = FMath::Clamp(NewStamina, 0.f, MaxStamina); }
+	bool bCanRegenStamina = true;
 
 	// Attack
 	FORCEINLINE float GetAttackPower() const { return AttackPower; }
