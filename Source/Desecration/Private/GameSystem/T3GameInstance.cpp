@@ -55,7 +55,6 @@ void UT3GameInstance::MakeFirstSettings()
 	CurrentSettings->MouseSensitivity = 1.0f;
 }
 
-
 TObjectPtr<UT3SaveGame> UT3GameInstance::LoadGame()
 {
 	return SavedGameData;
@@ -100,4 +99,11 @@ void UT3GameInstance::SetBackgroundVolume(const float Volume)
 {
 	SoundClassBGM->Properties.Volume = Volume;
 	CurrentSettings->BackgroundVolume = Volume;
+}
+
+void UT3GameInstance::SetGraphicQuality(const EGraphicQuality GraphicQuality)
+{
+	CurrentSettings->GraphicQuality = GraphicQuality;
+	UserSettings->SetOverallScalabilityLevel(static_cast<int32>(GraphicQuality));
+	UserSettings->ApplySettings(true);
 }

@@ -12,6 +12,7 @@ struct FSettings
 {
 	ET3Resolution Resolution;//해상도
 	ET3ScreenMode ScreenMode;//화면모드
+	EGraphicQuality GraphicQuality;//그래픽 퀄리티
 	float SoundEffectsVolume;//효과음
 	float BackgroundVolume;//배경음
 	float MouseSensitivity;//마우스 감도
@@ -48,6 +49,9 @@ public:
 	
 	//배경음 설정하기
 	void SetBackgroundVolume(float Volume);
+	
+	//그래픽 설정하기
+	void SetGraphicQuality(const EGraphicQuality GraphicQuality);
 	
 	//현재 설정
 	FORCEINLINE TSharedPtr<FSettings> GetCurrentSettings() const { return CurrentSettings; }
