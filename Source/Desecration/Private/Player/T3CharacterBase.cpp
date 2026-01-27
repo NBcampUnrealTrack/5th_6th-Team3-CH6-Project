@@ -79,7 +79,24 @@ void AT3CharacterBase::Tick(float DeltaTime)
 	PlayerInputState.bIsMoving = CurrentGroundSpeed > MoveThreshold;
 	PlayerInputState.CurrentSpeed = CurrentGroundSpeed;
 	PlayerInputState.bIsInAir = GetCharacterMovement()->IsFalling();
+}
 
+void AT3CharacterBase::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
+{
+	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
+	
+	bool bCurrentOnGround = GetCharacterMovement()->IsMovingOnGround();
+	
+	if (PrevMovementMode == MOVE_Falling && bCurrentOnGround)
+	{
+		PlayerInputState.bIsJustLanded = true;
+		
+		FTimerHandle LandTimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(LandTimerHandle, [this]()
+		{
+			PlayerInputState.bIsJustLanded = false;
+		}, 0.2f, false);
+	}
 }
 
 
