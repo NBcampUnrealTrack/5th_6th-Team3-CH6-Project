@@ -5,6 +5,7 @@
 #include "Player/T3CharacterBase.h"
 #include "Player/T3CombatComponent.h"
 #include "Player/T3DamageTypes.h"
+#include "Player/T3Paladin_Weapon.h"
 
 
 UT3ANS_Combat::UT3ANS_Combat()
@@ -32,6 +33,10 @@ void UT3ANS_Combat::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceB
                 break;
             case ECombatWindowType::Attack:
                 Combat->SetAttackDetectionEnabled(true, AttackDamageMultiflier, DamageTypeClass);
+                Combat->ConsumeStamina(10.f);
+                break;
+            case ECombatWindowType::PrevenRegen:
+                Char->bCanRegenStamina = false;
                 break;
             }
         }
@@ -58,6 +63,9 @@ void UT3ANS_Combat::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBas
                 break;
             case ECombatWindowType::Attack:
                 Combat->SetAttackDetectionEnabled(false);
+                break;
+            case ECombatWindowType::PrevenRegen:
+                Char->bCanRegenStamina = true;
                 break;
             }
         }

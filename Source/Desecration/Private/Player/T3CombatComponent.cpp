@@ -55,10 +55,11 @@ void UT3CombatComponent::EndBlock()
 
 void UT3CombatComponent::Attack()
 {
-	if(OwnerChar->GetCurrentStamina() > 10.f) // 스태미나 10 이하면 공격 불가
-	OwnerChar->OnAttack();
-	// 공격 시 스태미너 10 소모
-	OwnerChar->SetCurrentStamina(OwnerChar->GetCurrentStamina() - 10.f);
+	if (OwnerChar->GetCurrentStamina() > 10.f) // 스태미나 10 이하면 공격 불가
+		// 공격 시 스태미너 10 소모
+	{
+		OwnerChar->OnAttack();
+	}
 }
 
 void UT3CombatComponent::SetParryingEnabled(bool bEnabled)
@@ -271,13 +272,8 @@ void UT3CombatComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage,
 	else if (CurrentState == ECharacterCombatState::Blocking)
 	{
 		// 1. 스태미나 50 차감
-		float NewStamina = FMath::Max(0.f, OwnerChar->GetCurrentStamina() - 50.f);
-		OwnerChar->SetCurrentStamina(NewStamina);
+		ConsumeStamina(50.f);
 
-		// 2. 결과 출력
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
-			FString::Printf(TEXT("Remaining Stamina: %.1f"), NewStamina));
-		
 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow,
 			FString::Printf(TEXT("Result: [BLOCK] - Reduced Damage: %.1f"), FinalDamage));
 	}
@@ -389,13 +385,16 @@ void UT3CombatComponent::SetAttackDetectionEnabled(bool bEnabled, float InDamage
 {
 	if (bEnabled && OwnerChar)
 	{
+		CurrentState = ECharacterCombatState::Attacking;
 		HitActors.Empty();
 		CurrentAttackDamage = InDamageMultiflier * OwnerChar->GetAttackPower();
 		CurrentDamageType = InType;
 		GetWorld()->GetTimerManager().SetTimer(AttackTraceTimerHandle, this, &UT3CombatComponent::ExecuteAttackTrace, 0.01f, true);
+
 	}
 	else
 	{
+		CurrentState = ECharacterCombatState::Idle;
 		GetWorld()->GetTimerManager().ClearTimer(AttackTraceTimerHandle);
 	}
 }
@@ -480,4 +479,17 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 		DamageTypeClass        // 데미지 타입 
 	);
 
+}
+
+// 스태미나 소모 함수
+void UT3CombatComponent::ConsumeStamina(float Amount)
+{
+	if (OwnerChar && OwnerChar->GetCurrentStamina() >= Amount)
+	{
+		float NewStamina = OwnerChar->GetCurrentStamina() - Amount;
+		OwnerChar->SetCurrentStamina(NewStamina);
+
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
+			FString::Printf(TEXT("Remaining Stamina: %.1f"), OwnerChar->GetCurrentStamina()));
+	}
 }

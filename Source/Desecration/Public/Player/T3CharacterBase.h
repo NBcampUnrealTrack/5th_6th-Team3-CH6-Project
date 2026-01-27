@@ -119,10 +119,12 @@ public:
 	FORCEINLINE float GetCurrentMana() const { return CurrentMana; }
 	void SetCurrentMana(float NewMana) { CurrentMana = FMath::Clamp(NewMana, 0.f, MaxMana); }
 
+
 	// Stamina
 	FORCEINLINE float GetMaxStamina() const { return MaxStamina; }
 	FORCEINLINE float GetCurrentStamina() const { return CurrentStamina; }
 	void SetCurrentStamina(float NewStamina) { CurrentStamina = FMath::Clamp(NewStamina, 0.f, MaxStamina); }
+	bool bCanRegenStamina = true;
 
 	// Attack
 	FORCEINLINE float GetAttackPower() const { return AttackPower; }

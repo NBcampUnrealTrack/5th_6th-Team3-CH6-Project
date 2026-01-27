@@ -16,6 +16,7 @@ enum class ECharacterCombatState : uint8
 	Blocking,
 	Parrying,
 	Dodge,
+	Attacking,
 	Dead
 };
 
@@ -25,8 +26,10 @@ enum class ECombatWindowType : uint8
 {
 	None,
 	Parry      UMETA(DisplayName = "Parry Window"),
-	Dodge UMETA(DisplayName = "Invincible Window"),
-	Attack     UMETA(DisplayName = "Attack Collision")
+	Dodge UMETA(DisplayName = "Dodge Window"),
+	Attack     UMETA(DisplayName = "Attack Collision"),
+	PrevenRegen UMETA(DisplayName = "PrevenRegen")
+	
 };
 
 // 피격 방향 ENUM
@@ -82,6 +85,9 @@ public:
 
 	// 공격 함수
 	void RequestAttackDamage(AActor* TargetActor, float DamageAmount, TSubclassOf<class UDamageType> DamageTypeClass);
+
+	// 스태미너 소모 함수
+	void ConsumeStamina(float Amount);
 
 private:
 	// 상태별 데미지 경감 로직
