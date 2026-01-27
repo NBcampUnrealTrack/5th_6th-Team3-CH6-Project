@@ -28,6 +28,7 @@ enum class ECharacterClass : uint8
 UENUM(BlueprintType)
 enum class EGaitState : uint8
 {
+	Idle,
 	Walk,
 	Run
 };
