@@ -5,6 +5,7 @@
 #include "Player/T3CharacterBase.h"
 #include "Player/T3CombatComponent.h"
 #include "Player/T3DamageTypes.h"
+#include "Player/T3Paladin_Weapon.h"
 
 
 UT3ANS_Combat::UT3ANS_Combat()
