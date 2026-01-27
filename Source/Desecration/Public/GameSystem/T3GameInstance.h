@@ -58,5 +58,13 @@ private:
 	UPROPERTY()
 	TObjectPtr<UT3SaveGame> SavedGameData;
 	
+	//효과음
+	UPROPERTY(EditDefaultsOnly, Category = "Sound Class", meta = (AllowPrivateAccess = true))
+	TObjectPtr<USoundClass> SoundClassSE;
+	
+	//배경음
+	UPROPERTY(EditDefaultsOnly, Category = "Sound Class", meta = (AllowPrivateAccess = true))
+	TObjectPtr<USoundClass> SoundClassBGM;
+	
 	const FString SAVE_GAME_NAME = TEXT("SaveSlot1");
 };
