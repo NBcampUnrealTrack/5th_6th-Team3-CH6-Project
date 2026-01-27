@@ -33,7 +33,7 @@ enum class ET3ScreenMode
 UENUM()
 enum class EGraphicQuality
 {
-	Low,//제일 낮음
+	Low = 0,//제일 낮음
 	Medium,
 	High,
 	Epic,
