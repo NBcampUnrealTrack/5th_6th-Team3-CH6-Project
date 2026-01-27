@@ -43,6 +43,12 @@ public:
 	//화면 모드 설정하기
 	void SetScreenMode(ET3ScreenMode ScreenMode);
 	
+	//효과음 설정하기
+	void SetSoundEffectsVolume(float Volume);
+	
+	//배경음 설정하기
+	void SetBackgroundVolume(float Volume);
+	
 	//현재 설정
 	FORCEINLINE TSharedPtr<FSettings> GetCurrentSettings() const { return CurrentSettings; }
 

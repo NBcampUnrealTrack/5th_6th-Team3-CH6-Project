@@ -3,6 +3,7 @@
 #include "GameFramework/GameUserSettings.h"
 #include "GameSystem/T3SaveGame.h"
 #include "Kismet/GameplayStatics.h"
+#include "Sound/SoundClass.h"
 
 void UT3GameInstance::Init()
 {
@@ -87,4 +88,16 @@ void UT3GameInstance::SetScreenMode(ET3ScreenMode ScreenMode)
 	const FString LogOutValue = UEnum::GetValueAsString(ScreenMode);
 	UE_LOG(LogTemp, Warning, TEXT("화면 모드 변경 : %s"), *LogOutValue);
 #endif
+}
+
+void UT3GameInstance::SetSoundEffectsVolume(const float Volume)
+{
+	SoundClassSE->Properties.Volume = Volume;
+	CurrentSettings->SoundEffectsVolume = Volume;
+}
+
+void UT3GameInstance::SetBackgroundVolume(const float Volume)
+{
+	SoundClassBGM->Properties.Volume = Volume;
+	CurrentSettings->BackgroundVolume = Volume;
 }
