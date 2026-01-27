@@ -6,6 +6,7 @@
 #include "T3InventoryComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCooldownUpdated, FName, ItemID, float, RemainingTime);
 
 class AT3CharacterBase;
 
@@ -19,15 +20,6 @@ struct FInventorySlot
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory Slot")
 	int32 ItemStack = 0;
-	
-	UPROPERTY()
-	bool bIsCooldown = false;
-
-	UPROPERTY()
-	float CooldownStartTime = 0.f;
-	
-	UPROPERTY()
-	float CooldownDuration = 0.f;
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -46,12 +38,12 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void DropItem(int32 SlotIndex);
-
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	float GetCooldownProgress(int32 SlotIndex);
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	bool HasItem(int32 SlotIndex);
+	float GetCooldownProgressByItemID(FName ItemID);
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	float GetItemCooldownTime(FName ItemID);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TArray<FInventorySlot> Items;
@@ -62,10 +54,22 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Inventory")
 	FOnInventoryUpdated OnInventoryUpdated;
 	
+	UPROPERTY(BlueprintAssignable, Category = "Inventory")
+	FOnCooldownUpdated OnCooldownUpdated;
 protected:
 	virtual void BeginPlay() override;
 	
 private:
 	UPROPERTY()
 	AT3CharacterBase* OwnerCharacter;
+	
+	UPROPERTY()
+	TMap<FName, float> ItemCooldownStartTimes;
+    
+	UPROPERTY()
+	TMap<FName, float> ItemCooldownDurations;
+	
+	FTimerHandle CooldownUpdateTimerHandle;
+	
+	void UpdateCooldowns();
 };

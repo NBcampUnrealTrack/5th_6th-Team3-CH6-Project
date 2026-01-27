@@ -113,9 +113,18 @@ void UT3InventoryComponent::UseItem(int32 SlotIndex)
 		return;
 	}
 	
-	Items[SlotIndex].bIsCooldown = true;
-	Items[SlotIndex].CooldownStartTime = GetWorld()->GetTimeSeconds();
-	Items[SlotIndex].CooldownDuration = ItemRow->CoolTime;
+	ItemCooldownStartTimes.Add(ItemIDToUse, GetWorld()->GetTimeSeconds());
+	ItemCooldownDurations.Add(ItemIDToUse, ItemRow->CoolTime);
+	
+	if (!GetWorld()->GetTimerManager().IsTimerActive(CooldownUpdateTimerHandle))
+	{
+		GetWorld()->GetTimerManager().SetTimer(
+			CooldownUpdateTimerHandle,
+			this,
+			&UT3InventoryComponent::UpdateCooldowns,
+			0.1f,
+			true);
+	}
 	
 	Items[SlotIndex].ItemStack--;
 
@@ -136,30 +145,83 @@ void UT3InventoryComponent::DropItem(int32 SlotIndex)
 {
 }
 
-float UT3InventoryComponent::GetCooldownProgress(int32 SlotIndex)
+float UT3InventoryComponent::GetCooldownProgressByItemID(FName ItemID)
 {
-	if (!Items.IsValidIndex(SlotIndex) || Items[SlotIndex].ItemID == NAME_None)
-	{
-		return 0.0f;
-	}
-
-	if (Items[SlotIndex].CooldownDuration <= 0.0f)
+	if (ItemID == NAME_None)
 	{
 		return 1.0f;
 	}
-
-	float Elapsed = GetWorld()->GetTimeSeconds() - Items[SlotIndex].CooldownStartTime;
-	float Progress = FMath::Clamp(Elapsed / Items[SlotIndex].CooldownDuration, 0.0f, 1.0f);
-
-	if (Progress >= 1.0f)
+    
+	float* StartTime = ItemCooldownStartTimes.Find(ItemID);
+	float* Duration = ItemCooldownDurations.Find(ItemID);
+    
+	if (!StartTime || !Duration || *Duration <= 0.0f)
 	{
-		Items[SlotIndex].bIsCooldown = false;
+		return 1.0f;
 	}
-
+    
+	float Elapsed = GetWorld()->GetTimeSeconds() - *StartTime;
+	float Progress = FMath::Clamp(Elapsed / *Duration, 0.0f, 1.0f);
+    
+	// if (Progress >= 1.0f)
+	// {
+	// 	ItemCooldownStartTimes.Remove(ItemID);
+	// 	ItemCooldownDurations.Remove(ItemID);
+	// }
+    
 	return Progress;
 }
 
-bool UT3InventoryComponent::HasItem(int32 SlotIndex)
+float UT3InventoryComponent::GetItemCooldownTime(FName ItemID)
 {
-	return Items.IsValidIndex(SlotIndex) && Items[SlotIndex].ItemID != NAME_None;
+	if (ItemID == NAME_None || !IsValid(OwnerCharacter) || !IsValid(OwnerCharacter->ItemDataTable))
+	{
+		return 0.0f;
+	}
+    
+	FT3ConsumableItemData* ItemRow = 
+		OwnerCharacter->ItemDataTable->FindRow<FT3ConsumableItemData>(ItemID, TEXT("GetItemCooldownTime"));
+    
+	if (!ItemRow)
+	{
+		return 0.0f;
+	}
+    
+	return ItemRow->CoolTime;
+}
+
+void UT3InventoryComponent::UpdateCooldowns()
+{
+	bool bHasActiveCooldowns = false;
+    
+	for (auto& Pair : ItemCooldownStartTimes)
+	{
+		FName ItemID = Pair.Key;
+		float* Duration = ItemCooldownDurations.Find(ItemID);
+        
+		if (!Duration)
+		{
+			continue;
+		}
+        
+		float Elapsed = GetWorld()->GetTimeSeconds() - Pair.Value;
+		float Remaining = FMath::Max(0.0f, *Duration - Elapsed);
+        
+		OnCooldownUpdated.Broadcast(ItemID, Remaining);
+        
+		if (Remaining > 0.0f)
+		{
+			bHasActiveCooldowns = true;
+		}
+		else
+		{
+			ItemCooldownStartTimes.Remove(ItemID);
+			ItemCooldownDurations.Remove(ItemID);
+		}
+	}
+    
+	if (!bHasActiveCooldowns)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(CooldownUpdateTimerHandle);
+	}
 }
