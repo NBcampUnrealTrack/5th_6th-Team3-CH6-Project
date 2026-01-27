@@ -6,13 +6,13 @@
 UT3InventoryComponent::UT3InventoryComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
+	
+	Items.SetNum(InventorySize);
 }
 
 void UT3InventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	Items.SetNum(InventorySize);
 	
 	OwnerCharacter = Cast<AT3CharacterBase>(GetOwner());
 }
@@ -113,6 +113,10 @@ void UT3InventoryComponent::UseItem(int32 SlotIndex)
 		return;
 	}
 	
+	Items[SlotIndex].bIsCooldown = true;
+	Items[SlotIndex].CooldownStartTime = GetWorld()->GetTimeSeconds();
+	Items[SlotIndex].CooldownDuration = ItemRow->CoolTime;
+	
 	Items[SlotIndex].ItemStack--;
 
 	UE_LOG(LogTemp, Log, TEXT("[%s]를 1개 사용했습니다. 현재 개수: %d"), *Items[SlotIndex].ItemID.ToString(), Items[SlotIndex].ItemStack)
@@ -130,4 +134,32 @@ void UT3InventoryComponent::UseItem(int32 SlotIndex)
 
 void UT3InventoryComponent::DropItem(int32 SlotIndex)
 {
+}
+
+float UT3InventoryComponent::GetCooldownProgress(int32 SlotIndex)
+{
+	if (!Items.IsValidIndex(SlotIndex) || Items[SlotIndex].ItemID == NAME_None)
+	{
+		return 0.0f;
+	}
+
+	if (Items[SlotIndex].CooldownDuration <= 0.0f)
+	{
+		return 1.0f;
+	}
+
+	float Elapsed = GetWorld()->GetTimeSeconds() - Items[SlotIndex].CooldownStartTime;
+	float Progress = FMath::Clamp(Elapsed / Items[SlotIndex].CooldownDuration, 0.0f, 1.0f);
+
+	if (Progress >= 1.0f)
+	{
+		Items[SlotIndex].bIsCooldown = false;
+	}
+
+	return Progress;
+}
+
+bool UT3InventoryComponent::HasItem(int32 SlotIndex)
+{
+	return Items.IsValidIndex(SlotIndex) && Items[SlotIndex].ItemID != NAME_None;
 }

@@ -19,6 +19,15 @@ struct FInventorySlot
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory Slot")
 	int32 ItemStack = 0;
+	
+	UPROPERTY()
+	bool bIsCooldown = false;
+
+	UPROPERTY()
+	float CooldownStartTime = 0.f;
+	
+	UPROPERTY()
+	float CooldownDuration = 0.f;
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -37,6 +46,12 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void DropItem(int32 SlotIndex);
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	float GetCooldownProgress(int32 SlotIndex);
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	bool HasItem(int32 SlotIndex);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TArray<FInventorySlot> Items;
