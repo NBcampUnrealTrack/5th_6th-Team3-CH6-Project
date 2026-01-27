@@ -79,6 +79,15 @@ void AT3CharacterBase::Tick(float DeltaTime)
 	PlayerInputState.bIsMoving = CurrentGroundSpeed > MoveThreshold;
 	PlayerInputState.CurrentSpeed = CurrentGroundSpeed;
 	PlayerInputState.bIsInAir = GetCharacterMovement()->IsFalling();
+	
+	if (CurrentGroundSpeed > 400.0f)
+	{
+		PlayerInputState.T3GaitState = EGaitState::Run;
+	}
+	else
+	{
+		PlayerInputState.T3GaitState = EGaitState::Walk;
+	}
 }
 
 void AT3CharacterBase::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
