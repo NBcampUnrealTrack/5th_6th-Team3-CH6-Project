@@ -70,7 +70,7 @@ void AT3CharacterBase::Tick(float DeltaTime)
 	float CurrentGroundSpeed = GetVelocity().Size2D();
 	
 	FVector InputVector = GetLastMovementInputVector();
-	float FutureSpeed = InputVector.Size2D() * (GetCharacterMovement()->MaxWalkSpeed);
+	float FutureSpeed = FMath::Min(InputVector.Size2D(), 1.0f) * (GetCharacterMovement()->MaxWalkSpeed);
 	
 	PlayerInputState.bWantsToMove = (InputVector.Size()>KINDA_SMALL_NUMBER) && (FutureSpeed >= (CurrentGroundSpeed +100));
 	
