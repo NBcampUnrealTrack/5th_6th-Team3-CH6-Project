@@ -56,8 +56,8 @@ void UT3PlayerEquipmentComponent::EquipWeapon(UT3TestItemInstance* NewItem)
     // 1. 슬롯에 아이템 등록
     WeaponInstance = NewItem;
 
-    // 2. 비주얼 갱신
-    UpdateWeaponVisuals();
+    // 2. 비주얼 갱신 (캐릭터팀에서 처리 예정)
+    // UpdateWeaponVisuals();
     RefreshStats();
 
     // 로그 출력
@@ -74,8 +74,8 @@ void UT3PlayerEquipmentComponent::EquipArmor(UT3TestItemInstance* NewItem)
     // 1. 방어구 인스턴스 교체
     ArmorInstance = NewItem;
 
-    // 2. 상태 갱신 (비주얼/스탯)
-    UpdateArmorVisuals();
+    // 2. 상태 갱신 (캐릭터팀에서 비주얼 처리 예정)
+    // UpdateArmorVisuals();
 
     RefreshStats();
 
@@ -342,18 +342,21 @@ bool UT3PlayerEquipmentComponent::TryUpgrade(ET3EquipmentType TargetType, int32 
     // 4. 적용
     TargetItem->CurrentLevel = NextLevel;
 
-    // 5. 비주얼 갱신
-    if (TargetType == ET3EquipmentType::Weapon)
-    {
-        UpdateWeaponVisuals();
-    }
-    else
-    {
-        UpdateArmorVisuals();
-        UE_LOG(LogDesecration, Log, TEXT("방어구 강화 성공! (현재 방어력: %f)"), GetCurrentDefensePower());
-    }
+    // 5. 비주얼 갱신 (캐릭터팀에서 처리 예정)
+    // if (TargetType == ET3EquipmentType::Weapon)
+    // {
+    //     UpdateWeaponVisuals();
+    // }
+    // else
+    // {
+    //     UpdateArmorVisuals();
+    // }
 
     RefreshStats();
+
+    UE_LOG(LogDesecration, Log, TEXT("장비 강화 성공! %s Lv.%d"),
+        TargetType == ET3EquipmentType::Weapon ? TEXT("무기") : TEXT("방어구"),
+        NextLevel);
 
     return true;
 }
