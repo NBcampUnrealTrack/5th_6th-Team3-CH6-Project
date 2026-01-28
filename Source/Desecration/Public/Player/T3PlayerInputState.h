@@ -22,7 +22,7 @@ enum class ERollDirection : uint8
 UENUM(BlueprintType)
 enum class ECharacterClass : uint8
 {
-	Faladin,
+	Paladin,
 };
 
 UENUM(BlueprintType)
@@ -50,13 +50,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	bool bIsLockOn = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
-	bool bIsFalling = false;
+	bool bIsInAir = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	bool bIsBlocking = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	bool bIsAttacking = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	bool bCanAttack = true;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
+	bool bIsJustLanded = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	float ComboCount = 0.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
@@ -68,7 +70,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	ERollDirection RollDirection = ERollDirection::Neutral;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
-	ECharacterClass CharacterClass = ECharacterClass::Faladin;
+	ECharacterClass CharacterClass = ECharacterClass::Paladin;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	EGaitState T3GaitState = EGaitState::Idle;
 	
