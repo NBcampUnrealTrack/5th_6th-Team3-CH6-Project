@@ -4,37 +4,31 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "EquipmentTypes.h"
-#include "TestItemInstance.h"
-#include "PlayerEquipmentComponent.generated.h"
+#include "Equipment/T3EquipmentTypes.h"
+#include "Equipment/T3TestItemInstance.h"
+#include "T3PlayerEquipmentComponent.generated.h"
 
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class DESECRATION_API UPlayerEquipmentComponent : public UActorComponent
+class DESECRATION_API UT3PlayerEquipmentComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:    
-	UPlayerEquipmentComponent();
-	
+public:
+	UT3PlayerEquipmentComponent();
+
 protected:
 	virtual void BeginPlay() override;
-	
+
 public:
 	// ==========================================================
 	// 설정 (에디터에서 할당)
 	// ==========================================================
-	UPROPERTY(EditDefaultsOnly, Category = "Data|Weapon")
-	TObjectPtr<UDataTable> WeaponBaseTable;
+	UPROPERTY(EditDefaultsOnly, Category = "Data")
+	TObjectPtr<UDataTable> WeaponTable;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Data|Weapon")
-	TObjectPtr<UDataTable> WeaponGrowthTable;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Data|Armor")
-	TObjectPtr<UDataTable> ArmorBaseTable;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Data|Armor")
-	TObjectPtr<UDataTable> ArmorGrowthTable;
+	UPROPERTY(EditDefaultsOnly, Category = "Data")
+	TObjectPtr<UDataTable> ArmorTable;
 
 	// 초기 장비 ID
 	UPROPERTY(EditDefaultsOnly, Category = "Setup")
@@ -48,12 +42,12 @@ public:
 	// ==========================================================
 	// 무기 (나중에 인벤토리에서 이리로 옮겨옴)
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "State")
-	TObjectPtr<UTestItemInstance> WeaponInstance;
+	TObjectPtr<UT3TestItemInstance> WeaponInstance;
 
 	// 방어구
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "State")
-	TObjectPtr<UTestItemInstance> ArmorInstance;
-	
+	TObjectPtr<UT3TestItemInstance> ArmorInstance;
+
 	// 실제로 월드에 보여지는 액터 (메쉬, 이펙트 껍데기)
 	UPROPERTY(VisibleInstanceOnly, Category = "Visual")
 	TObjectPtr<AActor> SpawnedWeaponActor;
@@ -63,15 +57,15 @@ public:
 	// ==========================================================
 	// 무기를 장착하는 함수 (객체를 받아서 처리)
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
-	void EquipWeapon(UTestItemInstance* NewItem);
-	
+	void EquipWeapon(UT3TestItemInstance* NewItem);
+
 	// [신규] 방어구 장착 (이게 없어서 안 됐던 것!)
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
-	void EquipArmor(UTestItemInstance* NewItem);
-	
+	void EquipArmor(UT3TestItemInstance* NewItem);
+
 	// [통합] 강화 함수
 	UFUNCTION(BlueprintCallable, Category = "Upgrade")
-	bool TryUpgrade(EEquipmentType TargetType, int32 MaxAllowedLevel);
+	bool TryUpgrade(ET3EquipmentType TargetType, int32 MaxAllowedLevel);
 
 	UFUNCTION(BlueprintCallable, Category = "Stats")
 	float GetCurrentAttackPower() const { return CurrentAttackPower; }
@@ -83,13 +77,17 @@ public:
 	// [신규] 룬 데이터 테이블
 	UPROPERTY(EditDefaultsOnly, Category = "Data|Rune")
 	TObjectPtr<UDataTable> RuneTable;
-	
+
+	// 장비당 최대 룬 소켓 개수
+	UPROPERTY(EditDefaultsOnly, Category = "Data|Rune")
+	int32 MaxRuneSockets = 3;
+
 	// [신규] 룬 장착 기능
 	UFUNCTION(BlueprintCallable, Category = "Rune")
-	bool TrySocketRune(UTestItemInstance* TargetItem, FName RuneID);
-	
+	bool TrySocketRune(UT3TestItemInstance* TargetItem, FName RuneID);
+
 protected:
-	
+
 	// [신규] 실제로 계산된 스탯 값을 저장하는 캐시 변수
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Stats")
 	float CurrentAttackPower;
@@ -102,14 +100,14 @@ private:
 	void UpdateWeaponVisuals();
 
 	void UpdateArmorVisuals(); // 방어구 외형/스탯 갱신용
-	
+
 	// [신규] 내부적으로 스탯을 다시 계산하고 변수를 업데이트하는 함수
 	void RefreshStats();
 
 	// [이동] 기존의 무거운 로직은 여기로 숨깁니다.
 	float CalculateWeaponPower() const;
 	float CalculateArmorPower() const;
-	
-    // 룬 보너스 합산 헬퍼
-    float CalculateRuneTotalBonus(const UTestItemInstance* Item, ERuneStatType StatType) const;
+
+	// 룬 보너스 합산 헬퍼
+	float CalculateRuneTotalBonus(const UT3TestItemInstance* Item, ET3RuneStatType StatType) const;
 };

@@ -1,4 +1,4 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Public/Equipment/TestItemInstance.h"
+#include "Equipment/T3EquipmentTypes.h"
