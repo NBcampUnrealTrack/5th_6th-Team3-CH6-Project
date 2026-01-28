@@ -15,6 +15,7 @@ class UT3CombatComponent;
 class UDataTable;
 class UT3InventoryComponent; 
 class UT3ItemUseComponent;
+class UT3CharacterDataAsset;
 
 UCLASS()
 class DESECRATION_API AT3CharacterBase : public ACharacter
@@ -31,7 +32,9 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void Tick( float DeltaTime ) override;
 	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
-
+	
+	UPROPERTY(EditAnywhere, Category = "Character Data")
+	TObjectPtr<class UT3CharacterDataAsset> CharacterData;
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
@@ -42,6 +45,8 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	TObjectPtr<UT3CombatComponent> CombatComponent;
+
+	void ApplyCharacterData(UT3CharacterDataAsset* Data);
 
 public:
 
@@ -184,4 +189,6 @@ private:
 	// 복구할 원본 속도 저장
 	float OriginalMoveSpeed;
 
+
+	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* InstigatedBy, AActor* DamageCauser) override;
 };
