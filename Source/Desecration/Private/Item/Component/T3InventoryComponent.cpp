@@ -43,7 +43,7 @@ void UT3InventoryComponent::AddItem(FName ItemName)
 		return;
 	}
 
-	for (int32 i = 0; i < Items.Num(); i++)
+	for (int32 i = 0; i < Items.Num(); i++) // 슬롯에 추가 할 아이템이 이미 있는지 확인
 	{
 		if (Items[i].ItemID == ItemName)
 		{
@@ -54,7 +54,10 @@ void UT3InventoryComponent::AddItem(FName ItemName)
 			OnInventoryUpdated.Broadcast();
 			return;
 		}
-
+	}
+	
+	for (int32 i = 0; i < Items.Num(); i++)
+	{
 		if (Items[i].ItemID == NAME_None)
 		{
 			Items[i].ItemID = ItemName;
@@ -164,6 +167,7 @@ float UT3InventoryComponent::GetCooldownProgressByItemID(FName ItemID)
 void UT3InventoryComponent::UpdateCooldowns()
 {
 	bool bHasActiveCooldowns = false;
+	TArray<FName> ItemsToRemove; // 제거할 항목들을 저장할 배열
     
 	for (auto& Pair : ItemCooldownStartTimes)
 	{
@@ -186,9 +190,15 @@ void UT3InventoryComponent::UpdateCooldowns()
 		}
 		else
 		{
-			ItemCooldownStartTimes.Remove(ItemID);
-			ItemCooldownDurations.Remove(ItemID);
+			ItemsToRemove.Add(ItemID); // 제거 목록에 추가만 함
 		}
+	}
+	
+	// 순회가 끝난 후 제거
+	for (FName ItemID : ItemsToRemove)
+	{
+		ItemCooldownStartTimes.Remove(ItemID);
+		ItemCooldownDurations.Remove(ItemID);
 	}
     
 	if (!bHasActiveCooldowns)
