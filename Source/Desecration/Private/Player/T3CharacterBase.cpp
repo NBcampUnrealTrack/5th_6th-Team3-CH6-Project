@@ -10,6 +10,8 @@
 #include "Player/T3CombatComponent.h"
 #include "Item/Component/T3InventoryComponent.h"
 #include "Item/Component/T3ItemUseComponent.h"
+#include "Player/T3CharacterDataAsset.h"
+#include "Player/T3DamageTypes.h"
 
 
 
@@ -51,6 +53,11 @@ AT3CharacterBase::AT3CharacterBase()
 void AT3CharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (CharacterData)
+	{
+		ApplyCharacterData(CharacterData);
+	}
 
 	// 스태미너 자동 회복
 		GetWorldTimerManager().SetTimer(
@@ -113,6 +120,41 @@ void AT3CharacterBase::OnMovementModeChanged(EMovementMode PrevMovementMode, uin
 	}
 }
 
+
+void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)
+{
+	if (!Data) return;
+
+	// 1. 외형 변경
+	if (GetMesh() && Data->CharacterMesh)
+	{
+		GetMesh()->SetSkeletalMesh(Data->CharacterMesh);
+	}
+
+	// 2. 무기 장착 (CombatComponent에게 위임)
+	if (CombatComponent)
+	{
+		CombatComponent->InitializeWeapons(Data->WeaponMap);
+	}
+
+	// 3. 스탯 설정
+	MaxHP = Data->MaxHealth;
+	CurrentHP = MaxHP;
+
+	// 4. 스킬 컴포넌트 부착
+	if (Data->SkillComponent)
+	{
+		UActorComponent* ExistingComp = GetComponentByClass(Data->SkillComponent);
+		if (!ExistingComp)
+		{
+			UActorComponent* NewSkillComp = NewObject<UActorComponent>(this, Data->SkillComponent);
+			if (NewSkillComp)
+			{
+				NewSkillComp->RegisterComponent();
+			}
+		}
+	}
+}
 
 void AT3CharacterBase::Move(const FVector2D& Value)
 {
@@ -287,4 +329,25 @@ void AT3CharacterBase::AddMP(float Amount)
 void AT3CharacterBase::AddStamina(float Amount)
 {
 	CurrentStamina = FMath::Clamp(CurrentStamina + Amount, 0.f, MaxStamina);
+}
+
+float AT3CharacterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* InstigatedBy, AActor* DamageCauser)
+{
+	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, InstigatedBy, DamageCauser);
+
+	EHitIntensity ReceivedIntensity = EHitIntensity::Light;
+	if (DamageEvent.GetTypeID() == FT3DamageEvent::ClassID)
+	{
+		const FT3DamageEvent* T3Event = static_cast<const FT3DamageEvent*>(&DamageEvent);
+		ReceivedIntensity = T3Event->HitIntensity;
+	}
+
+	if (CombatComponent)
+	{
+		const UDamageType* DamageTypePtr = DamageEvent.DamageTypeClass ? DamageEvent.DamageTypeClass->GetDefaultObject<UDamageType>() : nullptr;
+
+		CombatComponent->ExecuteHitLogic(DamageCauser, ActualDamage, DamageTypePtr, InstigatedBy, ReceivedIntensity);
+	}
+
+	return ActualDamage;
 }
