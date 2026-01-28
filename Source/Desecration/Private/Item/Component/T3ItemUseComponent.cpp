@@ -9,8 +9,6 @@ PendingDefenseValue(0.f),
 OriginalDefenseValue(0.f),
 PendingSpeedValue(0.f),
 PendingBerserkPowerValue(0.f),
-OriginalBerserkPowerValue(0.f),
-OriginalBerserkDefenseValue(0.f),
 PendingBerserkDefenseValue(0.f),
 bIsHPPotionActive(false),
 bIsMPPotionActive(false),
@@ -46,7 +44,6 @@ void UT3ItemUseComponent::EndPowerPotionEffect()
 	if (bIsBerserkPotionActive)
 	{
 		OwnerCharacter->SetAttackPower(OriginalPowerValue * PendingBerserkPowerValue);
-		OriginalBerserkPowerValue = OriginalPowerValue;
 	}
 	
 	PendingPowerValue = 0.f;
@@ -61,14 +58,6 @@ void UT3ItemUseComponent::EndDefensePotionEffect()
 	// 원본 값으로 복원 (부동소수점 오차 방지)
 	OwnerCharacter->SetDefense(OriginalDefenseValue);
 	
-	// 광전사 포션이 활성화되어 있으면 광전사 포션의 원본 값도 업데이트
-	// (타이머 콜백에서 안전하게 확인)
-	bool bBerserkActive = bIsBerserkPotionActive;
-	if (bBerserkActive)
-	{
-		OriginalBerserkDefenseValue = OriginalDefenseValue;
-	}
-	
 	PendingDefenseValue = 0.f;
 	OriginalDefenseValue = 0.f;
 	UE_LOG(LogTemp, Error, TEXT("방어력 포션 종료. 현재 방어력: %f"), OwnerCharacter->GetDefense());
@@ -82,14 +71,12 @@ void UT3ItemUseComponent::EndSpeedPotionEffect()
 void UT3ItemUseComponent::EndBerserkPotionEffect()
 {
 	// 원본 값으로 복원 (부동소수점 오차 방지)
-	OwnerCharacter->SetAttackPower(OriginalBerserkPowerValue);
-	OwnerCharacter->SetDefense(OriginalBerserkDefenseValue);
+	// OwnerCharacter->SetAttackPower(OriginalBerserkPowerValue);
+	// OwnerCharacter->SetDefense(OriginalBerserkDefenseValue);
 	
 	bIsBerserkPotionActive = false;
 	PendingBerserkPowerValue = 0.f;
 	PendingBerserkDefenseValue = 0.f;
-	OriginalBerserkPowerValue = 0.f;
-	OriginalBerserkDefenseValue = 0.f;
 	UE_LOG(LogTemp, Error, TEXT("광전사 포션 종료. 현재 공격력: %f, 방어력: %f"), OwnerCharacter->GetAttackPower(), OwnerCharacter->GetDefense());
 }
 
@@ -298,7 +285,7 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 				
 				if (bIsBerserkPotionActive)
 				{
-					OriginalPowerValue = OriginalBerserkPowerValue;
+					// OriginalPowerValue = OriginalBerserkPowerValue;
 				}
 				else
 				{
@@ -344,7 +331,7 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 				
 				if (bIsBerserkPotionActive)
 				{
-					OriginalDefenseValue = OriginalBerserkDefenseValue;
+					// OriginalDefenseValue = OriginalBerserkDefenseValue;
 				}
 				else
 				{
@@ -397,20 +384,20 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 				
 				if (bIsPowerPotionActive)
 				{
-					OriginalBerserkPowerValue = OriginalPowerValue;
+					// OriginalBerserkPowerValue = OriginalPowerValue;
 				}
 				else
 				{
-					OriginalBerserkPowerValue = OwnerCharacter->GetAttackPower();
+					//OriginalBerserkPowerValue = OwnerCharacter->GetAttackPower();
 				}
 				
 				if (bIsDefensePotionActive)
 				{
-					OriginalBerserkDefenseValue = OriginalDefenseValue;
+					//OriginalBerserkDefenseValue = OriginalDefenseValue;
 				}
 				else
 				{
-					OriginalBerserkDefenseValue = OwnerCharacter->GetDefense();
+					//OriginalBerserkDefenseValue = OwnerCharacter->GetDefense();
 				}
 			
 				OwnerCharacter->SetAttackPower(OwnerCharacter->GetAttackPower() * PendingBerserkPowerValue);
