@@ -2,43 +2,50 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "AIController.h"
+#include "CoreMinimal.h"
 #include "Perception/AIPerceptionTypes.h"
 #include "T3MonsterController.generated.h"
 
+
 class UAISenseConfig_Sight;
+class UAISenseConfig_Damage;
 
 /**
- * 
+ *
  */
 UCLASS()
-class DESECRATION_API AT3MonsterController : public AAIController
-{
-	GENERATED_BODY()
-	
+class DESECRATION_API AT3MonsterController : public AAIController {
+  GENERATED_BODY()
+
 public:
-	AT3MonsterController();
+  AT3MonsterController();
 
 protected:
-	virtual void OnPossess(APawn* InPawn) override;
+  virtual void OnPossess(APawn *InPawn) override;
 
-	UFUNCTION()
-	void OnTargetDetected(AActor* Actor, FAIStimulus Stimulus);
+  UFUNCTION()
+  void OnTargetDetected(AActor *Actor, FAIStimulus Stimulus);
 
 protected:
-	// AI Perception Component
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
-	class UAIPerceptionComponent* AIPerception;
+  // AI Perception Component
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+  class UAIPerceptionComponent *AIPerception;
 
-	// Sight Sense Config
-	class UAISenseConfig_Sight* SightConfig;
+  // Sight Sense Config
+  class UAISenseConfig_Sight *SightConfig;
 
-	// Behavior Tree Asset
-	UPROPERTY(EditDefaultsOnly, Category = "AI")
-	class UBehaviorTree* BehaviorTreeAsset;
+  // Damage Sense Config
+  class UAISenseConfig_Damage *DamageConfig;
 
-	// Blackboard Key for Target
-	UPROPERTY(EditDefaultsOnly, Category = "AI")
-	FName BBKey_TargetActor;
+  // Behavior Tree Asset
+  UPROPERTY(EditDefaultsOnly, Category = "AI")
+  class UBehaviorTree *BehaviorTreeAsset;
+
+  // Blackboard Key for Target
+  UPROPERTY(EditDefaultsOnly, Category = "AI")
+  FName BBKey_TargetActor;
+
+  UPROPERTY(EditDefaultsOnly, Category = "AI")
+  FName BBKey_LastKnownLocation;
 };

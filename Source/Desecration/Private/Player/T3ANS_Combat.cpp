@@ -4,7 +4,7 @@
 #include "Player/T3ANS_Combat.h"
 #include "Player/T3CharacterBase.h"
 #include "Player/T3CombatComponent.h"
-#include "Player/T3DamageTypes.h"
+#include "Player/T3WeaponBase.h"
 
 
 UT3ANS_Combat::UT3ANS_Combat()
@@ -21,6 +21,7 @@ void UT3ANS_Combat::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceB
     if (AT3CharacterBase* Char = Cast<AT3CharacterBase>(MeshComp->GetOwner()))
     {
         if (UT3CombatComponent* Combat = Char->GetCombatComponent())
+            if (AT3WeaponBase* Weapon = Combat->GetWeaponBySlot(EEquipSlot::RightHand))
         {
             switch (StatusType)
             {
@@ -31,7 +32,11 @@ void UT3ANS_Combat::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceB
                 Combat->SetDodgingEnabled(true);
                 break;
             case ECombatWindowType::Attack:
-                Combat->SetAttackDetectionEnabled(true, AttackDamageMultiflier, DamageTypeClass);
+                Weapon->SetWeaponCollisionEnabled(true, AttackDamageMultiflier,DamageTypeClass, AttackIntensity);
+                Combat->ConsumeStamina(10.f);
+                break;
+            case ECombatWindowType::PrevenRegen:
+                Char->bCanRegenStamina = false;
                 break;
             }
         }
@@ -47,6 +52,7 @@ void UT3ANS_Combat::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBas
     if (AT3CharacterBase* Char = Cast<AT3CharacterBase>(MeshComp->GetOwner()))
     {
         if (UT3CombatComponent* Combat = Char->GetCombatComponent())
+            if (AT3WeaponBase* Weapon = Combat->GetWeaponBySlot(EEquipSlot::RightHand))
         {
             switch (StatusType)
             {
@@ -57,7 +63,10 @@ void UT3ANS_Combat::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBas
                 Combat->SetDodgingEnabled(false);
                 break;
             case ECombatWindowType::Attack:
-                Combat->SetAttackDetectionEnabled(false);
+                Weapon->SetWeaponCollisionEnabled(false);
+                break;
+            case ECombatWindowType::PrevenRegen:
+                Char->bCanRegenStamina = true;
                 break;
             }
         }

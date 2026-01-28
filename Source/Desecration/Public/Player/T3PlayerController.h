@@ -47,6 +47,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Input")
 	TObjectPtr<UInputAction> InventoryAction;
 
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> InputTest;
+	
 	UPROPERTY(EditDefaultsOnly, Category="UI")
 	TSubclassOf<UUserWidget> MainInventoryWidgetClass;
 	
@@ -62,6 +65,7 @@ private:
 	void Input_BlockEnd(const FInputActionValue& Value);
 	void Input_Roll(const FInputActionValue& Value);
 	void Input_Interact(const FInputActionValue& Value);
+	void Input_Test(const FInputActionValue& Value);
 
 	void Input_Attack(const FInputActionValue& Value);
 
