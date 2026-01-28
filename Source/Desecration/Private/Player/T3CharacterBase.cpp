@@ -85,6 +85,7 @@ void AT3CharacterBase::Tick(float DeltaTime)
 	
 	PlayerInputState.bIsMoving = CurrentGroundSpeed > MoveThreshold;
 	PlayerInputState.CurrentSpeed = CurrentGroundSpeed;
+	PlayerInputState.FutureSpeed = FutureSpeed;
 	PlayerInputState.bIsInAir = GetCharacterMovement()->IsFalling();
 	
 	if (GetCharacterMovement()->MaxWalkSpeed > 400.0f)
