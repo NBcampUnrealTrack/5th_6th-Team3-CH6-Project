@@ -4,9 +4,13 @@
 
 UT3ItemUseComponent::UT3ItemUseComponent()
 : PendingPowerValue(0.f),
+OriginalPowerValue(0.f),
 PendingDefenseValue(0.f),
+OriginalDefenseValue(0.f),
 PendingSpeedValue(0.f),
 PendingBerserkPowerValue(0.f),
+OriginalBerserkPowerValue(0.f),
+OriginalBerserkDefenseValue(0.f),
 PendingBerserkDefenseValue(0.f),
 bIsHPPotionActive(false),
 bIsMPPotionActive(false),
@@ -37,15 +41,36 @@ void UT3ItemUseComponent::BeginPlay()
 
 void UT3ItemUseComponent::EndPowerPotionEffect()
 {
-	OwnerCharacter->SetAttackPower(OwnerCharacter->GetAttackPower() / PendingPowerValue);
+	bIsPowerPotionActive = false;
+	
+	if (bIsBerserkPotionActive)
+	{
+		OwnerCharacter->SetAttackPower(OriginalPowerValue * PendingBerserkPowerValue);
+		OriginalBerserkPowerValue = OriginalPowerValue;
+	}
+	
 	PendingPowerValue = 0.f;
+	OriginalPowerValue = 0.f;
 	UE_LOG(LogTemp, Error, TEXT("공격력 포션 종료. 현재 공격력: %f"), OwnerCharacter->GetAttackPower());
 }
 
 void UT3ItemUseComponent::EndDefensePotionEffect()
 {
-	OwnerCharacter->SetDefense(OwnerCharacter->GetDefense() / PendingDefenseValue);
+	bIsDefensePotionActive = false;
+	
+	// 원본 값으로 복원 (부동소수점 오차 방지)
+	OwnerCharacter->SetDefense(OriginalDefenseValue);
+	
+	// 광전사 포션이 활성화되어 있으면 광전사 포션의 원본 값도 업데이트
+	// (타이머 콜백에서 안전하게 확인)
+	bool bBerserkActive = bIsBerserkPotionActive;
+	if (bBerserkActive)
+	{
+		OriginalBerserkDefenseValue = OriginalDefenseValue;
+	}
+	
 	PendingDefenseValue = 0.f;
+	OriginalDefenseValue = 0.f;
 	UE_LOG(LogTemp, Error, TEXT("방어력 포션 종료. 현재 방어력: %f"), OwnerCharacter->GetDefense());
 }
 
@@ -56,22 +81,40 @@ void UT3ItemUseComponent::EndSpeedPotionEffect()
 
 void UT3ItemUseComponent::EndBerserkPotionEffect()
 {
-	OwnerCharacter->SetAttackPower(OwnerCharacter->GetAttackPower() / PendingBerserkPowerValue);
-	OwnerCharacter->SetDefense(OwnerCharacter->GetDefense() * PendingBerserkDefenseValue);
+	// 원본 값으로 복원 (부동소수점 오차 방지)
+	OwnerCharacter->SetAttackPower(OriginalBerserkPowerValue);
+	OwnerCharacter->SetDefense(OriginalBerserkDefenseValue);
 	
+	bIsBerserkPotionActive = false;
 	PendingBerserkPowerValue = 0.f;
 	PendingBerserkDefenseValue = 0.f;
+	OriginalBerserkPowerValue = 0.f;
+	OriginalBerserkDefenseValue = 0.f;
 	UE_LOG(LogTemp, Error, TEXT("광전사 포션 종료. 현재 공격력: %f, 방어력: %f"), OwnerCharacter->GetAttackPower(), OwnerCharacter->GetDefense());
 }
 
 void UT3ItemUseComponent::EndHPPotionCoolTime()
 {
+	// 타이머 매니저 컨테이너 변경 방지를 위해 매우 작은 딜레이로 플래그 해제
+	// 0.001초 딜레이는 거의 즉시 실행되지만 타이머 매니저 순회가 끝난 후 실행됨
+	FTimerHandle TempHandle;
+	GetWorld()->GetTimerManager().SetTimer(TempHandle, this, &UT3ItemUseComponent::ClearHPPotionCoolTime, 0.001f, false);
+}
+
+void UT3ItemUseComponent::ClearHPPotionCoolTime()
+{
 	bIsHPPotionActive = false;
-	
 	UE_LOG(LogTemp, Error, TEXT("체력 포션을 사용할 수 있습니다."));
 }
 
 void UT3ItemUseComponent::EndMPPotionCoolTime()
+{
+	// 타이머 매니저 컨테이너 변경 방지를 위해 매우 작은 딜레이로 플래그 해제
+	FTimerHandle TempHandle;
+	GetWorld()->GetTimerManager().SetTimer(TempHandle, this, &UT3ItemUseComponent::ClearMPPotionCoolTime, 0.001f, false);
+}
+
+void UT3ItemUseComponent::ClearMPPotionCoolTime()
 {
 	bIsMPPotionActive = false;
 	UE_LOG(LogTemp, Error, TEXT("마나 포션을 사용할 수 있습니다."));
@@ -79,29 +122,53 @@ void UT3ItemUseComponent::EndMPPotionCoolTime()
 
 void UT3ItemUseComponent::EndPowerPotionCoolTime()
 {
+	// 타이머 매니저 컨테이너 변경 방지를 위해 매우 작은 딜레이로 플래그 해제
+	FTimerHandle TempHandle;
+	GetWorld()->GetTimerManager().SetTimer(TempHandle, this, &UT3ItemUseComponent::ClearPowerPotionCoolTime, 0.001f, false);
+}
+
+void UT3ItemUseComponent::ClearPowerPotionCoolTime()
+{
 	bIsPowerPotionActive = false;
-	
 	UE_LOG(LogTemp, Error, TEXT("공격력 포션을 사용할 수 있습니다."));
 }
 
 void UT3ItemUseComponent::EndDefensePotionCoolTime()
 {
+	// 타이머 매니저 컨테이너 변경 방지를 위해 매우 작은 딜레이로 플래그 해제
+	FTimerHandle TempHandle;
+	GetWorld()->GetTimerManager().SetTimer(TempHandle, this, &UT3ItemUseComponent::ClearDefensePotionCoolTime, 0.001f, false);
+}
+
+void UT3ItemUseComponent::ClearDefensePotionCoolTime()
+{
 	bIsDefensePotionActive = false;
-	
 	UE_LOG(LogTemp, Error, TEXT("방어력 포션을 사용할 수 있습니다."));
 }
 
 void UT3ItemUseComponent::EndSpeedPotionCoolTime()
 {
+	// 타이머 매니저 컨테이너 변경 방지를 위해 매우 작은 딜레이로 플래그 해제
+	FTimerHandle TempHandle;
+	GetWorld()->GetTimerManager().SetTimer(TempHandle, this, &UT3ItemUseComponent::ClearSpeedPotionCoolTime, 0.001f, false);
+}
+
+void UT3ItemUseComponent::ClearSpeedPotionCoolTime()
+{
 	bIsSpeedPotionActive = false;
-	
 	UE_LOG(LogTemp, Error, TEXT("신속 포션을 사용할 수 있습니다."));
 }
 
 void UT3ItemUseComponent::EndBerserkPotionCoolTime()
 {
+	// 타이머 매니저 컨테이너 변경 방지를 위해 매우 작은 딜레이로 플래그 해제
+	FTimerHandle TempHandle;
+	GetWorld()->GetTimerManager().SetTimer(TempHandle, this, &UT3ItemUseComponent::ClearBerserkPotionCoolTime, 0.001f, false);
+}
+
+void UT3ItemUseComponent::ClearBerserkPotionCoolTime()
+{
 	bIsBerserkPotionActive = false;
-	
 	UE_LOG(LogTemp, Error, TEXT("광전사 포션을 사용할 수 있습니다."));
 }
 
@@ -228,7 +295,16 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 				bIsPowerPotionActive = true;
 				
 				PendingPowerValue = ItemData.BuffValue;
-			
+				
+				if (bIsBerserkPotionActive)
+				{
+					OriginalPowerValue = OriginalBerserkPowerValue;
+				}
+				else
+				{
+					OriginalPowerValue = OwnerCharacter->GetAttackPower();
+				}
+				
 				OwnerCharacter->SetAttackPower(OwnerCharacter->GetAttackPower() * PendingPowerValue);
 			
 				UE_LOG(LogTemp, Warning, TEXT("[%s] 사용. 현재 공격력: %f"), *ItemData.ItemData.Name.ToString(), OwnerCharacter->GetAttackPower());
@@ -265,7 +341,16 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 				bIsDefensePotionActive = true;
 				
 				PendingDefenseValue = ItemData.BuffValue;
-			
+				
+				if (bIsBerserkPotionActive)
+				{
+					OriginalDefenseValue = OriginalBerserkDefenseValue;
+				}
+				else
+				{
+					OriginalDefenseValue = OwnerCharacter->GetDefense();
+				}
+				
 				OwnerCharacter->SetDefense(OwnerCharacter->GetDefense() * PendingDefenseValue);
 
 				UE_LOG(LogTemp, Warning, TEXT("[%s] 사용. 현재 방어력: %f"), *ItemData.ItemData.Name.ToString(), OwnerCharacter->GetDefense());
@@ -309,6 +394,24 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 				
 				PendingBerserkPowerValue = ItemData.BuffValue;
 				PendingBerserkDefenseValue = ItemData.DebuffValue;
+				
+				if (bIsPowerPotionActive)
+				{
+					OriginalBerserkPowerValue = OriginalPowerValue;
+				}
+				else
+				{
+					OriginalBerserkPowerValue = OwnerCharacter->GetAttackPower();
+				}
+				
+				if (bIsDefensePotionActive)
+				{
+					OriginalBerserkDefenseValue = OriginalDefenseValue;
+				}
+				else
+				{
+					OriginalBerserkDefenseValue = OwnerCharacter->GetDefense();
+				}
 			
 				OwnerCharacter->SetAttackPower(OwnerCharacter->GetAttackPower() * PendingBerserkPowerValue);
 				OwnerCharacter->SetDefense(OwnerCharacter->GetDefense() / PendingBerserkDefenseValue);

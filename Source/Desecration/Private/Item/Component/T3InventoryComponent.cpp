@@ -38,13 +38,8 @@ void UT3InventoryComponent::AddItem(FName ItemName)
 
 	FT3ConsumableItemData* ItemRow = ItemDataTable->FindRow<FT3ConsumableItemData>(ItemName, TEXT("AddItem"));
 
-	if (!ItemRow) // 데이터 테이블에 없는 아이템을 넣으면 출력됨
+	if (!ItemRow)
 	{
-		if (GEngine)
-		{
-			FString Msg = FString::Printf(TEXT("[%s]는 존재하지 않는 아이템"), *ItemName.ToString());
-			GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, Msg);
-		}
 		return;
 	}
 
@@ -162,32 +157,8 @@ float UT3InventoryComponent::GetCooldownProgressByItemID(FName ItemID)
     
 	float Elapsed = GetWorld()->GetTimeSeconds() - *StartTime;
 	float Progress = FMath::Clamp(Elapsed / *Duration, 0.0f, 1.0f);
-    
-	// if (Progress >= 1.0f)
-	// {
-	// 	ItemCooldownStartTimes.Remove(ItemID);
-	// 	ItemCooldownDurations.Remove(ItemID);
-	// }
-    
+	
 	return Progress;
-}
-
-float UT3InventoryComponent::GetItemCooldownTime(FName ItemID)
-{
-	if (ItemID == NAME_None || !IsValid(OwnerCharacter) || !IsValid(OwnerCharacter->ItemDataTable))
-	{
-		return 0.0f;
-	}
-    
-	FT3ConsumableItemData* ItemRow = 
-		OwnerCharacter->ItemDataTable->FindRow<FT3ConsumableItemData>(ItemID, TEXT("GetItemCooldownTime"));
-    
-	if (!ItemRow)
-	{
-		return 0.0f;
-	}
-    
-	return ItemRow->CoolTime;
 }
 
 void UT3InventoryComponent::UpdateCooldowns()

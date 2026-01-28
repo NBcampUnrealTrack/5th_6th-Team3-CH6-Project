@@ -42,9 +42,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	float GetCooldownProgressByItemID(FName ItemID);
 	
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	float GetItemCooldownTime(FName ItemID);
-	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TArray<FInventorySlot> Items;
 	
