@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "T3CharacterDataAsset.h"
 #include "T3CombatComponent.generated.h"
 
 class AAICharacter;
@@ -16,6 +17,7 @@ enum class ECharacterCombatState : uint8
 	Blocking,
 	Parrying,
 	Dodge,
+	Attacking,
 	Dead
 };
 
@@ -25,8 +27,10 @@ enum class ECombatWindowType : uint8
 {
 	None,
 	Parry      UMETA(DisplayName = "Parry Window"),
-	Dodge UMETA(DisplayName = "Invincible Window"),
-	Attack     UMETA(DisplayName = "Attack Collision")
+	Dodge UMETA(DisplayName = "Dodge Window"),
+	Attack     UMETA(DisplayName = "Attack Collision"),
+	PrevenRegen UMETA(DisplayName = "PrevenRegen")
+	
 };
 
 // 피격 방향 ENUM
@@ -40,6 +44,7 @@ enum class EHitDirection : uint8
 };
 
 
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class DESECRATION_API UT3CombatComponent : public UActorComponent
 {
@@ -48,12 +53,19 @@ class DESECRATION_API UT3CombatComponent : public UActorComponent
 public:
 	UT3CombatComponent();
 
+	void InitializeWeapons(const TMap<EEquipSlot, FWeaponEquipInfo>& WeaponMap);
+	
+	// 델리게이트용 데미지 처리 함수 (OnTakeAnyDamage에 바인딩용)
+	UFUNCTION()
+	void HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+
+	// 2. 실제 로직용 (우리가 원하는 Intensity 포함)
+	void ExecuteHitLogic(AActor* DamageCauser, float Damage, const UDamageType* DamageType, AController* InstigatedBy, EHitIntensity Intensity);
+
 protected:
 	virtual void BeginPlay() override;
 
-	// 데미지 처리 함수 (OnTakeAnyDamage에 바인딩용)
-	UFUNCTION()
-	void HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+
 
 public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -63,15 +75,12 @@ public:
 	void EndBlock();
 	
 	void Attack();
-	// 공격 판정 활성화/비활성화 (Notify에서 호출용)
-	void SetAttackDetectionEnabled(bool bEnabled, float InDamageMutifly = 1.f, TSubclassOf<UDamageType> InType = nullptr);
 
 	UFUNCTION(BlueprintCallable)
 	void SetParryingEnabled(bool bEnabled);
 
 	UFUNCTION(BlueprintCallable)
 	void SetDodgingEnabled(bool bEnabled);
-
 
 
 	// 록온
@@ -81,7 +90,23 @@ public:
 	FORCEINLINE ECharacterCombatState GetCurrentState() const { return CurrentState; }
 
 	// 공격 함수
-	void RequestAttackDamage(AActor* TargetActor, float DamageAmount, TSubclassOf<class UDamageType> DamageTypeClass);
+	UFUNCTION(BlueprintCallable)
+	void RequestAttackDamage(AActor* TargetActor, float DamageAmount, EHitIntensity Intensity, TSubclassOf<class UT3DamageType_Base> DamageTypeClass);
+
+	// 스태미너 소모 함수
+	void ConsumeStamina(float Amount);
+
+
+
+
+	// 무기 가져오기
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	class AT3WeaponBase* GetWeaponBySlot(EEquipSlot Slot) const;
+
+
+	// 무기 제거 로직
+	void ClearWeapons();
+
 
 private:
 	// 상태별 데미지 경감 로직
@@ -115,25 +140,10 @@ private:
 	float InterpSpeed = 20.f;
 
 
-
-	// ======== 공격 관련 ============
-
-	void ExecuteAttackTrace();
-
-	FTimerHandle AttackTraceTimerHandle;
-
-	// 무기 메시에 설정한 소켓 이름
-	FName WeaponStartSocket = FName("Start_Socket");
-	FName WeaponEndSocket = FName("End_Socket");
-
+	// 무기
 	UPROPERTY()
-	TArray<TObjectPtr<AActor>> HitActors;
+	TMap<EEquipSlot, TObjectPtr<class AT3WeaponBase>> EquippedWeapons;
 
-	// 노티파이별 데미지
-	float CurrentAttackDamage;
-	TSubclassOf<UDamageType> CurrentDamageType;
-
-protected:
 	// 방향 계산 함수
 	EHitDirection CalculateHitDirection(const FVector& HitLocation);
 

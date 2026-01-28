@@ -15,6 +15,7 @@ class UT3CombatComponent;
 class UDataTable;
 class UT3InventoryComponent; 
 class UT3ItemUseComponent;
+class UT3CharacterDataAsset;
 
 UCLASS()
 class DESECRATION_API AT3CharacterBase : public ACharacter
@@ -30,7 +31,10 @@ TObjectPtr <UDataTable> ItemDataTable;
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick( float DeltaTime ) override;
-
+	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
+	
+	UPROPERTY(EditAnywhere, Category = "Character Data")
+	TObjectPtr<class UT3CharacterDataAsset> CharacterData;
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
@@ -41,6 +45,8 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	TObjectPtr<UT3CombatComponent> CombatComponent;
+
+	void ApplyCharacterData(UT3CharacterDataAsset* Data);
 
 public:
 
@@ -118,10 +124,12 @@ public:
 	FORCEINLINE float GetCurrentMana() const { return CurrentMana; }
 	void SetCurrentMana(float NewMana) { CurrentMana = FMath::Clamp(NewMana, 0.f, MaxMana); }
 
+
 	// Stamina
 	FORCEINLINE float GetMaxStamina() const { return MaxStamina; }
 	FORCEINLINE float GetCurrentStamina() const { return CurrentStamina; }
 	void SetCurrentStamina(float NewStamina) { CurrentStamina = FMath::Clamp(NewStamina, 0.f, MaxStamina); }
+	bool bCanRegenStamina = true;
 
 	// Attack
 	FORCEINLINE float GetAttackPower() const { return AttackPower; }
@@ -181,4 +189,6 @@ private:
 	// 복구할 원본 속도 저장
 	float OriginalMoveSpeed;
 
+
+	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* InstigatedBy, AActor* DamageCauser) override;
 };
