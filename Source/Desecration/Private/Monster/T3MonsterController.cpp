@@ -88,24 +88,8 @@ void AT3MonsterController::OnTargetDetected(AActor *Actor,
   UBlackboardComponent *BB = GetBlackboardComponent();
   if (!BB)
     return;
-
-  // Check if this is a Sight stimulus
-  if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>()) {
-    // [SIGHT = Confirmed Target]
-    if (Stimulus.WasSuccessfullySensed()) {
-      // Set TargetActor
-      BB->SetValueAsObject(BBKey_TargetActor, Actor);
-
-      // Focus on the target (for strafing/aiming)
-      SetFocus(Actor);
-    } else {
-      // Lost sight - clear target
-      BB->ClearValue(BBKey_TargetActor);
-      ClearFocus(EAIFocusPriority::Gameplay);
-    }
-  }
-  // Check if this is a Damage stimulus
-  else if (Stimulus.Type == UAISense::GetSenseID<UAISense_Damage>()) {
+  
+  if (Stimulus.Type == UAISense::GetSenseID<UAISense_Damage>()) {
     // [DAMAGE = Clue Only]
     // DO NOT set TargetActor - only update LastKnownLocation
 
