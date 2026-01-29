@@ -4,6 +4,8 @@
 #include "Components/ActorComponent.h"
 #include "T3ItemUseComponent.generated.h"
 
+DECLARE_DYNAMIC_DELEGATE(FOnCoolTimeEnded);
+
 struct FT3ConsumableItemData;
 class AT3CharacterBase;
 
@@ -32,6 +34,17 @@ private:
 	void EndDefensePotionCoolTime();
 	void EndSpeedPotionCoolTime();
 	void EndBerserkPotionCoolTime();
+	
+	// 다음 틱에 실행될 쿨타임 해제 함수들 (타이머 매니저 컨테이너 변경 방지)
+	void ClearHPPotionCoolTime();
+	void ClearMPPotionCoolTime();
+	void ClearPowerPotionCoolTime();
+	void ClearDefensePotionCoolTime();
+	void ClearSpeedPotionCoolTime();
+	void ClearBerserkPotionCoolTime();
+	
+	float OriginalPowerValue;
+	float OriginalDefenseValue;
 	
 	float PendingPowerValue;
 	float PendingDefenseValue;
