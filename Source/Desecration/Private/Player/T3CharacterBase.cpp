@@ -10,6 +10,8 @@
 #include "Player/T3CombatComponent.h"
 #include "Item/Component/T3InventoryComponent.h"
 #include "Item/Component/T3ItemUseComponent.h"
+#include "Player/T3CharacterDataAsset.h"
+#include "Player/T3DamageTypes.h"
 
 
 
@@ -52,6 +54,11 @@ void AT3CharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (CharacterData)
+	{
+		ApplyCharacterData(CharacterData);
+	}
+
 	// 스태미너 자동 회복
 		GetWorldTimerManager().SetTimer(
 		StaminaRegenTimerHandle,
@@ -67,17 +74,95 @@ void AT3CharacterBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-	float CurrentAcceleration = GetCharacterMovement()->GetCurrentAcceleration().Size();
-	PlayerInputState.bWantsToMove = CurrentAcceleration > KINDA_SMALL_NUMBER;
-	
 	float CurrentGroundSpeed = GetVelocity().Size2D();
+	PlayerInputState.CurrentSpeed = CurrentGroundSpeed;
+	FVector InputVector = GetLastMovementInputVector();
+	float FutureSpeed = FMath::Min(InputVector.Size2D(), 1.0f) * (GetCharacterMovement()->MaxWalkSpeed);
+	PlayerInputState.FutureSpeed = FutureSpeed;
+	PlayerInputState.bWantsToMove = (InputVector.Size()>KINDA_SMALL_NUMBER) && (FutureSpeed >= (CurrentGroundSpeed +100));
+	
 	const float MoveThreshold = 3.0f;
 	
-	PlayerInputState.bIsMoving = CurrentGroundSpeed > (MoveThreshold);
+	PlayerInputState.bIsMoving = CurrentGroundSpeed > MoveThreshold;
+	PlayerInputState.bIsInAir = GetCharacterMovement()->IsFalling();
 	
-	PlayerInputState.CurrentSpeed = CurrentGroundSpeed;
+	if (GetCharacterMovement()->MaxWalkSpeed > 400.0f)
+	{
+		PlayerInputState.T3GaitState = EGaitState::Run;
+	}
+	else
+	{
+		PlayerInputState.T3GaitState = EGaitState::Walk;
+	}
+	
+	if (!PlayerInputState.bIsMoving && !PlayerInputState.bWantsToMove)
+	{
+		PlayerInputState.T3GaitState = EGaitState::Idle;
+	}
+	
+	if (GEngine)
+
+	{
+		FString DebugMsg = FString::Printf(TEXT("Current Speed: %f / PlayerInputStateCurrentSpeed : %f"), CurrentGroundSpeed, PlayerInputState.CurrentSpeed);
+
+		GEngine->AddOnScreenDebugMessage(1, 2.0f, FColor::Green, DebugMsg);
+	}
+	
 }
 
+void AT3CharacterBase::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
+{
+	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
+	
+	bool bCurrentOnGround = GetCharacterMovement()->IsMovingOnGround();
+	
+	if (PrevMovementMode == MOVE_Falling && bCurrentOnGround)
+	{
+		PlayerInputState.bIsJustLanded = true;
+		
+		FTimerHandle LandTimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(LandTimerHandle, [this]()
+		{
+			PlayerInputState.bIsJustLanded = false;
+		}, 0.2f, false);
+	}
+}
+
+
+void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)
+{
+	if (!Data) return;
+
+	// 1. 외형 변경
+	if (GetMesh() && Data->CharacterMesh)
+	{
+		GetMesh()->SetSkeletalMesh(Data->CharacterMesh);
+	}
+
+	// 2. 무기 장착 (CombatComponent에게 위임)
+	if (CombatComponent)
+	{
+		CombatComponent->InitializeWeapons(Data->WeaponMap);
+	}
+
+	// 3. 스탯 설정
+	MaxHP = Data->MaxHealth;
+	CurrentHP = MaxHP;
+
+	// 4. 스킬 컴포넌트 부착
+	if (Data->SkillComponent)
+	{
+		UActorComponent* ExistingComp = GetComponentByClass(Data->SkillComponent);
+		if (!ExistingComp)
+		{
+			UActorComponent* NewSkillComp = NewObject<UActorComponent>(this, Data->SkillComponent);
+			if (NewSkillComp)
+			{
+				NewSkillComp->RegisterComponent();
+			}
+		}
+	}
+}
 
 void AT3CharacterBase::Move(const FVector2D& Value)
 {
@@ -117,19 +202,15 @@ void AT3CharacterBase::Look(const FVector2D& Value)
 
 void AT3CharacterBase::Roll(const FInputActionValue& Value)
 {
+	TObjectPtr<UT3CombatComponent> Combat = GetCombatComponent();
 	if (GetCurrentStamina() < 20.f) return; // 스태미나 부족 시 실행 불가
 	
 	if (PlayerInputState.bWantsToRoll == false)
 	{
 
-		// 스태미나 20 차감 및 설정
-		float NewStamina = FMath::Max(0.f, GetCurrentStamina() - 20.f);
-		SetCurrentStamina(NewStamina);
+		// 스태미나 20 차감
+		Combat->ConsumeStamina(20);
 
-		// 현재 스태미너 로그 출력
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green,
-			FString::Printf(TEXT("Dodge! Remaining Stamina: %.1f / %.1f"), NewStamina, GetMaxStamina()));
-		
 		PlayerInputState.bWantsToRoll = true;
 		
 		float CurrentAngle = PlayerInputState.InputYawOffset;
@@ -159,11 +240,7 @@ ERollDirection AT3CharacterBase::GetRollDirection(float Angle) const
 // 스테미너 자연 회복
 void AT3CharacterBase::RegenerateStamina()
 {
-
-	if (CombatComponent->GetCurrentState() == ECharacterCombatState::Dodge)
-	{
-		return;
-	}
+	if (!CombatComponent || !bCanRegenStamina) return;
 
 	if (CurrentStamina < MaxStamina)
 	{
@@ -260,4 +337,25 @@ void AT3CharacterBase::AddMP(float Amount)
 void AT3CharacterBase::AddStamina(float Amount)
 {
 	CurrentStamina = FMath::Clamp(CurrentStamina + Amount, 0.f, MaxStamina);
+}
+
+float AT3CharacterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* InstigatedBy, AActor* DamageCauser)
+{
+	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, InstigatedBy, DamageCauser);
+
+	EHitIntensity ReceivedIntensity = EHitIntensity::Light;
+	if (DamageEvent.GetTypeID() == FT3DamageEvent::ClassID)
+	{
+		const FT3DamageEvent* T3Event = static_cast<const FT3DamageEvent*>(&DamageEvent);
+		ReceivedIntensity = T3Event->HitIntensity;
+	}
+
+	if (CombatComponent)
+	{
+		const UDamageType* DamageTypePtr = DamageEvent.DamageTypeClass ? DamageEvent.DamageTypeClass->GetDefaultObject<UDamageType>() : nullptr;
+
+		CombatComponent->ExecuteHitLogic(DamageCauser, ActualDamage, DamageTypePtr, InstigatedBy, ReceivedIntensity);
+	}
+
+	return ActualDamage;
 }

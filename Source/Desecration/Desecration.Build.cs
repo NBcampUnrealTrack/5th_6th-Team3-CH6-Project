@@ -15,7 +15,8 @@ public class Desecration : ModuleRules
 			"InputCore",
 			"EnhancedInput",
 			"AIModule",
-			"StateTreeModule",
+            "NavigationSystem",
+            "StateTreeModule",
 			"GameplayStateTreeModule",
 			"UMG",
 			"Slate"
