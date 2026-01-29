@@ -62,6 +62,9 @@ public:
 	// 2. 실제 로직용 (우리가 원하는 Intensity 포함)
 	void ExecuteHitLogic(AActor* DamageCauser, float Damage, const UDamageType* DamageType, AController* InstigatedBy, EHitIntensity Intensity);
 
+public:
+	void SetOwnerChar(ACharacter* InChar) { AIChar = InChar; };
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -123,6 +126,12 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<class APlayerController> OwnerPC;
+
+	UPROPERTY()
+	TObjectPtr<class ACharacter> AIChar;
+
+	UPROPERTY()
+	TObjectPtr<class AController> AIPC;
 
 	// 상태 변수
 	ECharacterCombatState CurrentState;

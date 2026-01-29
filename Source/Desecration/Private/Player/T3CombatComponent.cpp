@@ -32,6 +32,13 @@ void UT3CombatComponent::BeginPlay()
 		CurrentState = ECharacterCombatState::Idle; // 생성시 캐릭터 상태 초기화
 	}
 
+
+	AIChar = Cast<ACharacter>(GetOwner());
+	if (OwnerChar)
+	{
+		AIPC = OwnerChar->GetController<AController>();
+	}
+
 }
 
 void UT3CombatComponent::InitializeWeapons(const TMap<EEquipSlot, FWeaponEquipInfo>& WeaponMap)
@@ -341,6 +348,8 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 
 	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red,
 		FString::Printf(TEXT("HP Status: %.1f / %.1f"), NewHP, OwnerChar->GetMaxHP()));
+	   UE_LOG(LogTemp, Warning, TEXT("HP Status: %.1f / %.1f"), NewHP, OwnerChar->GetMaxHP());
+
 
 
 
@@ -364,6 +373,7 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 	EHitDirection HitDir = CalculateHitDirection(DamageCauser->GetActorLocation());
 	FString DirName = StaticEnum<EHitDirection>()->GetNameStringByValue((int64)HitDir);
 	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Orange, FString::Printf(TEXT("Hit Direction: [%s]"), *DirName));
+	UE_LOG(LogTemp, Warning, TEXT("Hit Direction: [%s]"), *DirName);
 }
 
 // 피격 데미지 계산
@@ -445,15 +455,21 @@ EHitDirection UT3CombatComponent::CalculateHitDirection(const FVector& HitLocati
 
 void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAmount, EHitIntensity Intensity, TSubclassOf<UT3DamageType_Base> DamageTypeClass)
 {
-	if (!TargetActor || !OwnerChar || !DamageTypeClass) return;
+	if (!TargetActor) { UE_LOG(LogTemp, Warning, TEXT("Target Missing!")); return; }
+	if (!OwnerChar && !AIChar) { UE_LOG(LogTemp, Warning, TEXT("Owner Missing!")); return; }
+	if (!DamageTypeClass) { UE_LOG(LogTemp, Warning, TEXT("DamageType Missing!")); return; }
 
 	// 커스텀 데미지 이벤트 생성
 	FT3DamageEvent T3DamageEvent(DamageTypeClass);
 	T3DamageEvent.HitIntensity = Intensity; // 공격 강도를 구조체에 직접 삽입
 
 	// TakeDamage 호출 시 커스텀 이벤트 구조체를 전달
+	if (OwnerChar)
 	TargetActor->TakeDamage(DamageAmount, T3DamageEvent, OwnerPC, OwnerChar);
 
+	if (AIChar)
+		TargetActor->TakeDamage(DamageAmount, T3DamageEvent, AIPC, AIChar);
+	
 	// 디버그 출력
 	const UEnum* EnumPtr = StaticEnum<EHitIntensity>();
 	FString IntensityString = EnumPtr ? EnumPtr->GetNameStringByValue((int64)Intensity) : TEXT("Unknown");
@@ -479,3 +495,34 @@ void UT3CombatComponent::ConsumeStamina(float Amount)
 }
 
 
+
+
+
+
+
+//float AT3MonsterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+//{
+//	const float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+//	CurrentHP -= ActualDamage;
+//
+//	if (CurrentHP <= 0.0f && !bIsDead)
+//	{
+//		bIsDead = true;
+//		OnDeath();
+//	}
+//
+//	const FT3DamageEvent* T3Event = static_cast<const FT3DamageEvent*>(&DamageEvent);
+//
+//	if (T3Event)
+//	{
+//		// 우리가 RequestAttackDamage에서 넣었던 HitIntensity 활용
+//		EHitIntensity Intensity = T3Event->HitIntensity;
+//
+//		// 예: 강공격(Heavy)일 경우 피격 애니메이션 분기 처리를 위한 로그 또는 로직
+//		UE_LOG(LogTemp, Log, TEXT("Monster Hit with Intensity: %d"), (int32)Intensity);
+//
+//		// 여기서 Intensity에 따른 경직 처리(Stun) 등을 수행할 수 있습니다.
+//	}
+//
+//	return ActualDamage;
+//}
