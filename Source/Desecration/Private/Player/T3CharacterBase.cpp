@@ -76,6 +76,7 @@ void AT3CharacterBase::Tick(float DeltaTime)
 	
 	float CurrentGroundSpeed = GetVelocity().Size2D();
 	PlayerInputState.CurrentSpeed = CurrentGroundSpeed;
+	
 	FVector InputVector = GetLastMovementInputVector();
 	float FutureSpeed = FMath::Min(InputVector.Size2D(), 1.0f) * (GetCharacterMovement()->MaxWalkSpeed);
 	PlayerInputState.FutureSpeed = FutureSpeed;
@@ -99,15 +100,6 @@ void AT3CharacterBase::Tick(float DeltaTime)
 	{
 		PlayerInputState.T3GaitState = EGaitState::Idle;
 	}
-	
-	if (GEngine)
-
-	{
-		FString DebugMsg = FString::Printf(TEXT("Current Speed: %f / PlayerInputStateCurrentSpeed : %f"), CurrentGroundSpeed, PlayerInputState.CurrentSpeed);
-
-		GEngine->AddOnScreenDebugMessage(1, 2.0f, FColor::Green, DebugMsg);
-	}
-	
 }
 
 void AT3CharacterBase::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
