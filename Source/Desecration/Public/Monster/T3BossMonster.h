@@ -10,6 +10,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBossHitDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBossStunDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBossDeathDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBossDamagedDelegate);
 
 USTRUCT(BlueprintType)
 struct FBossMonsterStats
@@ -38,6 +39,12 @@ public:
 	bool bBossStun = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	bool bSuperPattern = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	FString BossName = "DefaultName";
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	FBossMonsterStats BossStats;
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
@@ -49,8 +56,13 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FBossStunDelegate OnBossDeath;
 
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FBossDamagedDelegate OnBossDamaged;
+
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void Damage(float DamageAmount, float StunAmount);
+
+	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
 };
