@@ -4,6 +4,8 @@
 #include "Player/T3CharacterBase.h"
 #include "Public/Item/Data/T3ConsumableItemData.h"
 UT3InventoryComponent::UT3InventoryComponent()
+	:
+InventorySize(20)
 {
 	PrimaryComponentTick.bCanEverTick = false;
 	
