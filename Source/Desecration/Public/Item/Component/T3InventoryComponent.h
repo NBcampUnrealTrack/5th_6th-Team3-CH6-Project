@@ -46,7 +46,7 @@ public:
 	TArray<FInventorySlot> Items;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Inventory")
-	int32 InventorySize = 10;
+	int32 InventorySize;
 	
 	UPROPERTY(BlueprintAssignable, Category = "Inventory")
 	FOnInventoryUpdated OnInventoryUpdated;
