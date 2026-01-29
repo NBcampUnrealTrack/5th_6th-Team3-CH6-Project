@@ -6,6 +6,7 @@
 #include "T3InventoryComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCooldownUpdated, FName, ItemID, float, RemainingTime);
 
 class AT3CharacterBase;
 
@@ -38,6 +39,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void DropItem(int32 SlotIndex);
 	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	float GetCooldownProgressByItemID(FName ItemID);
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TArray<FInventorySlot> Items;
 	
@@ -47,10 +51,22 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Inventory")
 	FOnInventoryUpdated OnInventoryUpdated;
 	
+	UPROPERTY(BlueprintAssignable, Category = "Inventory")
+	FOnCooldownUpdated OnCooldownUpdated;
 protected:
 	virtual void BeginPlay() override;
 	
 private:
 	UPROPERTY()
 	AT3CharacterBase* OwnerCharacter;
+	
+	UPROPERTY()
+	TMap<FName, float> ItemCooldownStartTimes;
+    
+	UPROPERTY()
+	TMap<FName, float> ItemCooldownDurations;
+	
+	FTimerHandle CooldownUpdateTimerHandle;
+	
+	void UpdateCooldowns();
 };
