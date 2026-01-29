@@ -64,6 +64,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	float CurrentSpeed = 0.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
+	float FutureSpeed = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	float FallingSpeed = 0.0f;
 	
 	
