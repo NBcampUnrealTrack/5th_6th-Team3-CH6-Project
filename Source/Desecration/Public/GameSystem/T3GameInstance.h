@@ -31,9 +31,6 @@ private:
 	void MakeFirstSettings();
 	
 public:
-	//저장된 게임
-	TObjectPtr<UT3SaveGame> LoadGame();
-	
 	//게임 저장하기 (true : 저장 성공)
 	//TODO : 게임 저장을 위한 매개변수 추가
 	bool SaveGame();
@@ -52,6 +49,9 @@ public:
 	
 	//그래픽 설정하기
 	void SetGraphicQuality(const EGraphicQuality GraphicQuality);
+	
+	//저장된 게임
+	FORCEINLINE TObjectPtr<UT3SaveGame> LoadGame() { return SavedGameData; }
 	
 	//현재 설정
 	FORCEINLINE TSharedPtr<FSettings> GetCurrentSettings() const { return CurrentSettings; }
