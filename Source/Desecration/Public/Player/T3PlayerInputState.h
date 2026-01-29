@@ -28,9 +28,15 @@ enum class ECharacterClass : uint8
 UENUM(BlueprintType)
 enum class EGaitState : uint8
 {
-	Idle,
 	Walk,
 	Run
+};
+
+UENUM(BlueprintType)
+enum class EMovementState : uint8
+{
+	Idle,
+	Moving
 };
 
 USTRUCT(BlueprintType)
@@ -76,7 +82,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	ECharacterClass CharacterClass = ECharacterClass::Paladin;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
-	EGaitState T3GaitState = EGaitState::Idle;
+	EGaitState T3GaitState = EGaitState::Run;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
+	EMovementState MovementState = EMovementState::Moving;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	float InputYawOffset = 0.0f;

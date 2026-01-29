@@ -311,7 +311,7 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 {
 	if (Damage <= 0.f || !OwnerChar || CurrentState == ECharacterCombatState::Dead) return;
 	if (!DamageCauser || !DamageType) return;
-
+	
 	// 1. [디버그] 공격자 정보 및 데미지 타입 확인
 	FString TypeName = DamageType ? DamageType->GetClass()->GetName() : TEXT("Normal");
 	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::White,
@@ -364,6 +364,7 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 
 	// 2. 만약 캐스팅 성공했다면 그 안의 Intensity를 꺼냄, 실패했다면 기본값(Light)
 	EHitIntensity ReceivedIntensity = Intensity;
+	HitIntensity = ReceivedIntensity;
 
 	// 3. 로그 출력 (확인용)
 	FString IntensityStr = StaticEnum<EHitIntensity>()->GetNameStringByValue((int64)ReceivedIntensity);
@@ -371,6 +372,7 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 
 	// 5. 피격 방향 계산 및 출력
 	EHitDirection HitDir = CalculateHitDirection(DamageCauser->GetActorLocation());
+	HitDirection = HitDir;
 	FString DirName = StaticEnum<EHitDirection>()->GetNameStringByValue((int64)HitDir);
 	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Orange, FString::Printf(TEXT("Hit Direction: [%s]"), *DirName));
 	UE_LOG(LogTemp, Warning, TEXT("Hit Direction: [%s]"), *DirName);

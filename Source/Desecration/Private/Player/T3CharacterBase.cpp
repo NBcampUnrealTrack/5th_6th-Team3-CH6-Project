@@ -87,6 +87,7 @@ void AT3CharacterBase::Tick(float DeltaTime)
 	PlayerInputState.bIsMoving = CurrentGroundSpeed > MoveThreshold;
 	PlayerInputState.bIsInAir = GetCharacterMovement()->IsFalling();
 	
+	PlayerInputState.bWantsToStop = PlayerInputState.bIsMoving && (FutureSpeed< KINDA_SMALL_NUMBER);
 	if (GetCharacterMovement()->MaxWalkSpeed > 400.0f)
 	{
 		PlayerInputState.T3GaitState = EGaitState::Run;
@@ -94,11 +95,6 @@ void AT3CharacterBase::Tick(float DeltaTime)
 	else
 	{
 		PlayerInputState.T3GaitState = EGaitState::Walk;
-	}
-	
-	if (!PlayerInputState.bIsMoving && !PlayerInputState.bWantsToMove)
-	{
-		PlayerInputState.T3GaitState = EGaitState::Idle;
 	}
 }
 
@@ -334,7 +330,7 @@ void AT3CharacterBase::AddStamina(float Amount)
 float AT3CharacterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* InstigatedBy, AActor* DamageCauser)
 {
 	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, InstigatedBy, DamageCauser);
-
+	
 	EHitIntensity ReceivedIntensity = EHitIntensity::Light;
 	if (DamageEvent.GetTypeID() == FT3DamageEvent::ClassID)
 	{
@@ -347,6 +343,7 @@ float AT3CharacterBase::TakeDamage(float DamageAmount, FDamageEvent const& Damag
 		const UDamageType* DamageTypePtr = DamageEvent.DamageTypeClass ? DamageEvent.DamageTypeClass->GetDefaultObject<UDamageType>() : nullptr;
 
 		CombatComponent->ExecuteHitLogic(DamageCauser, ActualDamage, DamageTypePtr, InstigatedBy, ReceivedIntensity);
+		OnHit();
 	}
 
 	return ActualDamage;

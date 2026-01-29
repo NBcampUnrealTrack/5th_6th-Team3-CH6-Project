@@ -65,7 +65,9 @@ public:
 	void OnRollTriggered();
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnAttack();
-
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnHit();
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TObjectPtr<UT3InventoryComponent> InventoryComponent; 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")

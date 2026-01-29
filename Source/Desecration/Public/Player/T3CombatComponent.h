@@ -70,7 +70,12 @@ protected:
 
 
 
-public:
+public:	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	EHitDirection HitDirection;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	EHitIntensity HitIntensity;
+	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	// 막기/패링
