@@ -13,6 +13,7 @@
 #include "Player/T3DamageTestActor.h"
 #include "Player/T3CharacterDataAsset.h"
 #include "Player/T3WeaponBase.h"
+#include "Monster/T3BossMonster.h"
 
 
 UT3CombatComponent::UT3CombatComponent()
@@ -91,14 +92,30 @@ void UT3CombatComponent::ClearWeapons()
 // --- 막기 로직 ---
 void UT3CombatComponent::StartBlock()
 {
-	if (OwnerChar->GetCurrentStamina() < 50.f) return GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("You Need Stamina."));
+	// 스태미너 50이상만 막기 가능
+	if (!OwnerChar || OwnerChar->GetCurrentStamina() < 50.f)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("You Need Stamina."));
+		return;
+	}
+
 	if (CurrentState != ECharacterCombatState::Idle) return;
-	CurrentState = ECharacterCombatState::Blocking;
+
+	// 2. 초기 상태 설정: 패링(Parrying) 모드 진입
+	CurrentState = ECharacterCombatState::Parrying;
 	OwnerChar->PlayerInputState.bIsBlocking = true;
 	OwnerChar->GetCharacterMovement()->MaxWalkSpeed = 200.0f;
 
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("BlockingMode"));
-	// 여기서 몽타주 재생 로직 추가 (CharacterDataAsset 활용)
+
+	// 0.2초 후 SwitchToBlockingState 호출
+	GetWorld()->GetTimerManager().ClearTimer(ParryingToBlockingTimerHandle);
+	GetWorld()->GetTimerManager().SetTimer(
+		ParryingToBlockingTimerHandle,
+		this,
+		&UT3CombatComponent::SwitchToBlockingState,
+		0.2f,
+		false
+	);
 }
 
 void UT3CombatComponent::EndBlock()
@@ -137,6 +154,14 @@ void UT3CombatComponent::SetDodgingEnabled(bool bEnabled)
 		{
 			CurrentState = ECharacterCombatState::Idle;
 		}
+	}
+}
+
+void UT3CombatComponent::SwitchToBlockingState()
+{
+	if (CurrentState == ECharacterCombatState::Parrying)
+	{
+		CurrentState = ECharacterCombatState::Blocking;
 	}
 }
 
@@ -329,6 +354,9 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 
 		else if (CurrentState == ECharacterCombatState::Parrying)
 			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("Result: [PARRY] - Success!"));
+		// 패링 성공 시 보스에게 스턴치 10 부여
+		AT3BossMonster* HitBoss = Cast<AT3BossMonster>(DamageCauser);
+		if (HitBoss) { HitBoss->Damage(0, 10.f); }
 		return;
 	}
 	else if (CurrentState == ECharacterCombatState::Blocking)
@@ -400,6 +428,7 @@ float UT3CombatComponent::CalculateFinalDamage(float IncomingDamage, const class
 		{
 			return IncomingDamage; // 패링 실패, 생으로 맞음
 		}
+		
 		return 0.f; // 패링 성공 (데미지 0)
 	}
 
@@ -493,36 +522,3 @@ void UT3CombatComponent::ConsumeStamina(float Amount)
 			FString::Printf(TEXT("Remaining Stamina: %.1f"), OwnerChar->GetCurrentStamina()));
 	}
 }
-
-
-
-
-
-
-
-//float AT3MonsterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
-//{
-//	const float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-//	CurrentHP -= ActualDamage;
-//
-//	if (CurrentHP <= 0.0f && !bIsDead)
-//	{
-//		bIsDead = true;
-//		OnDeath();
-//	}
-//
-//	const FT3DamageEvent* T3Event = static_cast<const FT3DamageEvent*>(&DamageEvent);
-//
-//	if (T3Event)
-//	{
-//		// 우리가 RequestAttackDamage에서 넣었던 HitIntensity 활용
-//		EHitIntensity Intensity = T3Event->HitIntensity;
-//
-//		// 예: 강공격(Heavy)일 경우 피격 애니메이션 분기 처리를 위한 로그 또는 로직
-//		UE_LOG(LogTemp, Log, TEXT("Monster Hit with Intensity: %d"), (int32)Intensity);
-//
-//		// 여기서 Intensity에 따른 경직 처리(Stun) 등을 수행할 수 있습니다.
-//	}
-//
-//	return ActualDamage;
-//}

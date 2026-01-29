@@ -123,7 +123,7 @@ void AT3CharacterBase::OnMovementModeChanged(EMovementMode PrevMovementMode, uin
 
 void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)
 {
-	if (!Data) return;
+	if (!Data || !Data->SkillComponent) return;
 
 	// 1. 외형 변경
 	if (GetMesh() && Data->CharacterMesh)
@@ -151,6 +151,10 @@ void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)
 			if (NewSkillComp)
 			{
 				NewSkillComp->RegisterComponent();
+				// NewSkillComp->OnComponentCreated(); // 추가적인 초기화 호출
+				// this->AddOwnedComponent(NewSkillComp); // 소유권 명시
+
+				UE_LOG(LogTemp, Log, TEXT("Skill Component Attached: %s"), *Data->SkillComponent->GetName());
 			}
 		}
 	}
@@ -255,38 +259,6 @@ void AT3CharacterBase::RestoreMP(float Amount)
 	if (Amount <= 0.f) return;
 
 	AddMP(Amount);
-}
-
-// 호출용 이동속도 버프 함수 (이동속도 배율, 지속시간)
-void AT3CharacterBase::SetMoveSpeedTemporary(float NewSpeedMultiflier, float Duration)
-{
-	if (!GetCharacterMovement()) return;
-
-	// 기존에 돌고 있던 복구 타이머가 있다면 취소 (새로운 버프/디버프 갱신)
-	if (GetWorldTimerManager().IsTimerActive(SpeedResetTimerHandle))
-	{
-		GetWorldTimerManager().ClearTimer(SpeedResetTimerHandle);
-	}
-	else
-	{
-		// 처음 속도를 바꾸는 것이라면 현재 속도를 저장해둠
-		OriginalMoveSpeed = GetCharacterMovement()->MaxWalkSpeed;
-	}
-
-	// 속도 적용
-	GetCharacterMovement()->MaxWalkSpeed *= NewSpeedMultiflier;
-
-	if (Duration > 0.f)
-	{
-		// Duration 후에 ResetMoveSpeed 호출
-		GetWorldTimerManager().SetTimer(
-			SpeedResetTimerHandle,
-			this,
-			&AT3CharacterBase::ResetMoveSpeed,
-			Duration,
-			false
-		);
-	}
 }
 
 void AT3CharacterBase::ResetMoveSpeed()

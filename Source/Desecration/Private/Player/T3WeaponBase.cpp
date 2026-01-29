@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Player/T3CharacterBase.h"
 #include "Player/T3CombatComponent.h"
+#include "Monster/T3BossMonster.h"
 
 AT3WeaponBase::AT3WeaponBase()
 {
@@ -36,14 +37,15 @@ void AT3WeaponBase::BeginPlay()
     }
 }
 
-void AT3WeaponBase::SetWeaponCollisionEnabled(bool bEnabled, float InDamageMultiplier, TSubclassOf<UT3DamageType_Base> InType, EHitIntensity InIntensity)
+void AT3WeaponBase::SetWeaponCollisionEnabled(bool bEnabled, float InDamageMultiplier, TSubclassOf<UT3DamageType_Base> InType, EHitIntensity InIntensity, float InStunAmount)
 {
     if (bEnabled && OwnerChar)
     {
         CurrentAttackDamage = OwnerChar->GetAttackPower() * InDamageMultiplier;
         CurrentDamageType = InType;
         CurrentIntensity = InIntensity;
-
+        StunAmount = InStunAmount;
+        
         WeaponCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 
         // [디버그 로그]
@@ -73,9 +75,18 @@ void AT3WeaponBase::OnWeaponOverlap(UPrimitiveComponent* OverlappedComponent, AA
         AlreadyHitActors.Add(OtherActor);
         GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("Overlap Success with Enemy!"));
 
-        if (Combat)
+        AT3BossMonster* HitBoss = Cast<AT3BossMonster>(OtherActor);
+
+        if (HitBoss)
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Hit Boss!"));
+            HitBoss->Damage(CurrentAttackDamage, StunAmount);
+        }
+
+        if (Combat && !HitBoss)
         {
             Combat->RequestAttackDamage(OtherActor, CurrentAttackDamage, CurrentIntensity, CurrentDamageType);
+            GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Hit Monster!"));
         }
 
         UE_LOG(LogTemp, Log, TEXT("Hit: %s"), *OtherActor->GetName());

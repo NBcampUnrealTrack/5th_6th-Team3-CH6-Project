@@ -6,11 +6,30 @@
 #include "GameFramework/Actor.h"
 #include "T3SwordWaveProjectile.generated.h"
 
+class UNiagaraComponent;
+
 UCLASS()
 class DESECRATION_API AT3SwordWaveProjectile : public AActor
 {
 	GENERATED_BODY()
-	
 
+public:
+
+    AT3SwordWaveProjectile();
+
+    // 데미지와 속도를 설정하는 함수
+    void InitializeProjectile(float InDamage, float InSpeed);
+
+private:
+    UPROPERTY(VisibleAnywhere)
+    class UProjectileMovementComponent* MovementComp;
+
+    UPROPERTY(VisibleAnywhere)
+    class UBoxComponent* BoxCollision;
+
+    UPROPERTY(VisibleAnywhere, Category = "Effects")
+    UNiagaraComponent* SkillEffect;
+
+    float Damage;
 
 };

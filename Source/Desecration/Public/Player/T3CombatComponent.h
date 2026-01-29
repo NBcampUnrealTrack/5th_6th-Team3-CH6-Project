@@ -121,6 +121,11 @@ private:
 	void UpdateTargetUI(AActor* Target, bool bIsVisible);
 	bool IsTargetVisible(AActor* Target) const;
 
+	// 패링
+	FTimerHandle ParryingToBlockingTimerHandle;
+	UFUNCTION()
+	void SwitchToBlockingState();
+
 	UPROPERTY()
 	TObjectPtr<class AT3CharacterBase> OwnerChar;
 
