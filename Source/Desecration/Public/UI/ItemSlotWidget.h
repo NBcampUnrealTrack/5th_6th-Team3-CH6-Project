@@ -2,7 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "Components/Widget.h"
 #include "ItemSlotWidget.generated.h"
 
 class UT3InventoryComponent;
@@ -25,9 +24,6 @@ protected:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UImage* ItemIcon;
 
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UBorder* CooldownBorder;
-	
 	// 마우스 버튼이 눌렸을 때 호출
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
     
