@@ -3,11 +3,11 @@
 #include "Player/T3CharacterBase.h"
 
 UT3ItemUseComponent::UT3ItemUseComponent()
-: PendingPowerValue(0.f),
-OriginalPowerValue(0.f),
-PendingDefenseValue(0.f),
+: OriginalPowerValue(0.f),
 OriginalDefenseValue(0.f),
 OriginalSpeedValue(0.f),
+PendingPowerValue(0.f),
+PendingDefenseValue(0.f),
 PendingSpeedValue(0.f),
 PendingBerserkPowerValue(0.f),
 PendingBerserkDefenseValue(0.f),
