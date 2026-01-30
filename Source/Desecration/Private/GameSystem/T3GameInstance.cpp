@@ -44,9 +44,9 @@ void UT3GameInstance::MakeFirstSettings()
 		CurrentSettings->ScreenMode = ET3ScreenMode::Windowed;
 	}
 	
-	//그래픽 퀄리티는 중간으로
-	UserSettings->SetOverallScalabilityLevel(1);
-	CurrentSettings->GraphicQuality = EGraphicQuality::Medium;
+	//그래픽 퀄리티는 낮음으로
+	UserSettings->SetOverallScalabilityLevel(0);
+	CurrentSettings->GraphicQuality = EGraphicQuality::Low;
 	
 	UserSettings->SetScreenResolution(MaxResolution);
 	
