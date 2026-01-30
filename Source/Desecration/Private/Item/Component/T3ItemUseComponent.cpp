@@ -1,13 +1,14 @@
 #include "Item/Component/T3ItemUseComponent.h"
 #include "Item/Data/T3ConsumableItemData.h"
 #include "Player/T3CharacterBase.h"
+#include "NiagaraFunctionLibrary.h"
 
 UT3ItemUseComponent::UT3ItemUseComponent()
-: PendingPowerValue(0.f),
-OriginalPowerValue(0.f),
-PendingDefenseValue(0.f),
+: OriginalPowerValue(0.f),
 OriginalDefenseValue(0.f),
 OriginalSpeedValue(0.f),
+PendingPowerValue(0.f),
+PendingDefenseValue(0.f),
 PendingSpeedValue(0.f),
 PendingBerserkPowerValue(0.f),
 PendingBerserkDefenseValue(0.f),
@@ -187,6 +188,26 @@ void UT3ItemUseComponent::ClearBerserkPotionCoolTime()
 	UE_LOG(LogTemp, Error, TEXT("광전사 포션을 사용할 수 있습니다."));
 }
 
+void UT3ItemUseComponent::PlayItemUseEffect(FT3ConsumableItemData ItemData)
+{
+	if (IsValid(ItemData.UseEffect) && IsValid(OwnerCharacter))
+	{
+		USkeletalMeshComponent* MeshComp = OwnerCharacter->GetMesh();
+		if (IsValid(MeshComp))
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAttached(
+				ItemData.UseEffect,
+				MeshComp,
+				NAME_None,
+				FVector::ZeroVector,
+				FRotator::ZeroRotator,
+				EAttachLocation::SnapToTarget,
+				true
+			);
+		}
+	}
+}
+
 void UT3ItemUseComponent::RecoverHPTick()
 {
 	float RemainAmount = RecoverHPAmount - AccumulatedRecoverHP;
@@ -258,6 +279,8 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 					ItemData.CoolTime,
 					false);
 			
+				PlayItemUseEffect(ItemData);
+				
 				return true;
 			}
 		}
@@ -294,6 +317,8 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 					ItemData.CoolTime,
 					false);
 			
+				PlayItemUseEffect(ItemData);
+				
 				return true;
 			}
 		}
@@ -338,6 +363,8 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 					ItemData.CoolTime,
 					false);
 				
+				PlayItemUseEffect(ItemData);
+				
 				return true;
 			}
 		}
@@ -380,6 +407,8 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 						ItemData.CoolTime,
 						false);
 			
+				PlayItemUseEffect(ItemData);
+				
 				return true;
 			}
 		}
@@ -414,6 +443,8 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 						&UT3ItemUseComponent::EndSpeedPotionCoolTime,
 						ItemData.CoolTime,
 						false);
+				
+				PlayItemUseEffect(ItemData);
 				
 				return true;
 			}
@@ -467,6 +498,8 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 						ItemData.CoolTime,
 						false);
 			
+				PlayItemUseEffect(ItemData);
+				
 				return true;	
 			}
 		}
