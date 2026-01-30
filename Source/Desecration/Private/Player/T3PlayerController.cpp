@@ -27,6 +27,14 @@ void AT3PlayerController::BeginPlay()
 		MainInventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
 		MainInventoryWidget->AddToViewport();
 	}
+
+	if (IsValid(CombatWidgetClass))
+	{
+		CombatWidget = CreateWidget<UUserWidget>(this, CombatWidgetClass);
+
+		//CombatWidget->SetVisibility(ESlateVisibility::Collapsed);
+		CombatWidget->AddToViewport();
+	}
 }
 
 void AT3PlayerController::SetupInputComponent()

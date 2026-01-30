@@ -21,8 +21,8 @@ public class Desecration : ModuleRules
 			"UMG",
 			"Slate",
 			"SlateCore",
-			"Niagara"
-		});
+            "Niagara"
+        });
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
 
