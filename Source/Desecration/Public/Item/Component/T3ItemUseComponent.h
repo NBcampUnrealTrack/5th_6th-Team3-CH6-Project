@@ -45,6 +45,7 @@ private:
 	
 	float OriginalPowerValue;
 	float OriginalDefenseValue;
+	float OriginalSpeedValue;
 	
 	float PendingPowerValue;
 	float PendingDefenseValue;

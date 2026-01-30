@@ -13,6 +13,7 @@
 #include "Player/T3DamageTestActor.h"
 #include "Player/T3CharacterDataAsset.h"
 #include "Player/T3WeaponBase.h"
+#include "Monster/T3BossMonster.h"
 
 
 UT3CombatComponent::UT3CombatComponent()
@@ -28,8 +29,14 @@ void UT3CombatComponent::BeginPlay()
 	if (OwnerChar)
 	{
 		OwnerPC = OwnerChar->GetController<APlayerController>();
-		OwnerChar->OnTakeAnyDamage.AddDynamic(this, &UT3CombatComponent::HandleTakeAnyDamage);
 		CurrentState = ECharacterCombatState::Idle; // 생성시 캐릭터 상태 초기화
+	}
+
+
+	AIChar = Cast<ACharacter>(GetOwner());
+	if (OwnerChar)
+	{
+		AIPC = OwnerChar->GetController<AController>();
 	}
 
 }
@@ -84,14 +91,30 @@ void UT3CombatComponent::ClearWeapons()
 // --- 막기 로직 ---
 void UT3CombatComponent::StartBlock()
 {
-	if (OwnerChar->GetCurrentStamina() < 50.f) return GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("You Need Stamina."));
+	// 스태미너 50이상만 막기 가능
+	if (!OwnerChar || OwnerChar->GetCurrentStamina() < 50.f)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("You Need Stamina."));
+		return;
+	}
+
 	if (CurrentState != ECharacterCombatState::Idle) return;
-	CurrentState = ECharacterCombatState::Blocking;
+
+	// 2. 초기 상태 설정: 패링(Parrying) 모드 진입
+	CurrentState = ECharacterCombatState::Parrying;
 	OwnerChar->PlayerInputState.bIsBlocking = true;
 	OwnerChar->GetCharacterMovement()->MaxWalkSpeed = 200.0f;
 
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("BlockingMode"));
-	// 여기서 몽타주 재생 로직 추가 (CharacterDataAsset 활용)
+
+	// 0.2초 후 SwitchToBlockingState 호출
+	GetWorld()->GetTimerManager().ClearTimer(ParryingToBlockingTimerHandle);
+	GetWorld()->GetTimerManager().SetTimer(
+		ParryingToBlockingTimerHandle,
+		this,
+		&UT3CombatComponent::SwitchToBlockingState,
+		0.2f,
+		false
+	);
 }
 
 void UT3CombatComponent::EndBlock()
@@ -130,6 +153,14 @@ void UT3CombatComponent::SetDodgingEnabled(bool bEnabled)
 		{
 			CurrentState = ECharacterCombatState::Idle;
 		}
+	}
+}
+
+void UT3CombatComponent::SwitchToBlockingState()
+{
+	if (CurrentState == ECharacterCombatState::Parrying)
+	{
+		CurrentState = ECharacterCombatState::Blocking;
 	}
 }
 
@@ -294,25 +325,20 @@ void UT3CombatComponent::UpdateTargetUI(AActor* Target, bool bIsVisible)
 // ========== 전투 로직 ===============
 
 // 피격 로직
-void UT3CombatComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
-{
-	// 델리게이트를 통해 들어올 때는 Intensity를 알 수 없으므로 Light로 보냅니다.
-	// ExecuteHitLogic(DamageCauser, Damage, DamageType, InstigatedBy, EHitIntensity::Light);
-}
 
-void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, const UDamageType* DamageType, AController* InstigatedBy, EHitIntensity Intensity)
+void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, const UDamageType* DamageType, AController* InstigatedBy, EHitIntensity Intensity, float ReceievedDamageMultiplier)
 {
 	if (Damage <= 0.f || !OwnerChar || CurrentState == ECharacterCombatState::Dead) return;
 	if (!DamageCauser || !DamageType) return;
-
+	
 	// 1. [디버그] 공격자 정보 및 데미지 타입 확인
 	FString TypeName = DamageType ? DamageType->GetClass()->GetName() : TEXT("Normal");
 	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::White,
-		FString::Printf(TEXT("Hit by: %s | Original Damage: %.1f | Type: %s"),
-			*DamageCauser->GetName(), Damage, *TypeName));
+		FString::Printf(TEXT("Hit by: %s | Original Damage: %.1f | Type: %s | multi: %.1f"),
+			*DamageCauser->GetName(), Damage, *TypeName, ReceievedDamageMultiplier));
 
 	// 최종 데미지 계산
-	float FinalDamage = CalculateFinalDamage(Damage, DamageType);
+	float FinalDamage = CalculateFinalDamage(Damage, DamageType, ReceievedDamageMultiplier);
 
 	// 3. [상태별 로그 출력]
 	if (FinalDamage <= 0.f)
@@ -322,6 +348,9 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 
 		else if (CurrentState == ECharacterCombatState::Parrying)
 			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("Result: [PARRY] - Success!"));
+		// 패링 성공 시 보스에게 스턴치 10 부여
+		AT3BossMonster* HitBoss = Cast<AT3BossMonster>(DamageCauser);
+		if (HitBoss) { HitBoss->Damage(0, 10.f); }
 		return;
 	}
 	else if (CurrentState == ECharacterCombatState::Blocking)
@@ -341,6 +370,8 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 
 	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red,
 		FString::Printf(TEXT("HP Status: %.1f / %.1f"), NewHP, OwnerChar->GetMaxHP()));
+	   UE_LOG(LogTemp, Warning, TEXT("HP Status: %.1f / %.1f"), NewHP, OwnerChar->GetMaxHP());
+	   UE_LOG(LogTemp, Display, TEXT("final : %.1f"), FinalDamage);
 
 
 
@@ -353,22 +384,29 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 	}
 
 
-	// 2. 만약 캐스팅 성공했다면 그 안의 Intensity를 꺼냄, 실패했다면 기본값(Light)
+	// 공격 강도
 	EHitIntensity ReceivedIntensity = Intensity;
+	HitIntensity = ReceivedIntensity;
 
-	// 3. 로그 출력 (확인용)
+	// 공격 강도 로그 출력
 	FString IntensityStr = StaticEnum<EHitIntensity>()->GetNameStringByValue((int64)ReceivedIntensity);
 	UE_LOG(LogTemp, Warning, TEXT("피격 강도: %s"), *IntensityStr);
 
 	// 5. 피격 방향 계산 및 출력
 	EHitDirection HitDir = CalculateHitDirection(DamageCauser->GetActorLocation());
+	HitDirection = HitDir;
 	FString DirName = StaticEnum<EHitDirection>()->GetNameStringByValue((int64)HitDir);
 	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Orange, FString::Printf(TEXT("Hit Direction: [%s]"), *DirName));
+	UE_LOG(LogTemp, Warning, TEXT("Hit Direction: [%s]"), *DirName);
 }
 
 // 피격 데미지 계산
-float UT3CombatComponent::CalculateFinalDamage(float IncomingDamage, const class UDamageType* DamageType)
+float UT3CombatComponent::CalculateFinalDamage(float IncomingDamage, const class UDamageType* DamageType, float ReceievedDamageMultiplier)
 {
+	float Defence = OwnerChar->GetDefense();
+	float DamageReductionScale = FMath::Max(0.5f, ReceievedDamageMultiplier - Defence);
+	IncomingDamage *= DamageReductionScale;  // 데미지 * (데미지 배율 - 방어력 배율)
+
 
 	// 어떤 상황이든 예외 없이 데미지
 	if (DamageType->IsA(UT3DamageType_Undodgable::StaticClass()))
@@ -390,6 +428,7 @@ float UT3CombatComponent::CalculateFinalDamage(float IncomingDamage, const class
 		{
 			return IncomingDamage; // 패링 실패, 생으로 맞음
 		}
+		
 		return 0.f; // 패링 성공 (데미지 0)
 	}
 
@@ -406,7 +445,8 @@ float UT3CombatComponent::CalculateFinalDamage(float IncomingDamage, const class
 
 
 
-
+	UE_LOG(LogTemp, Display, TEXT("defence : %.1f"), Defence);
+	UE_LOG(LogTemp, Display, TEXT("multi : %.1f"), DamageReductionScale);
 	return IncomingDamage; // 일반 상태 피격
 }
 
@@ -443,17 +483,27 @@ EHitDirection UT3CombatComponent::CalculateHitDirection(const FVector& HitLocati
 
 // 공격 로직
 
-void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAmount, EHitIntensity Intensity, TSubclassOf<UT3DamageType_Base> DamageTypeClass)
+void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAmount, EHitIntensity Intensity, float DamageMultiflier, TSubclassOf<UT3DamageType_Base> DamageTypeClass)
 {
-	if (!TargetActor || !OwnerChar || !DamageTypeClass) return;
+	if (!TargetActor) { UE_LOG(LogTemp, Warning, TEXT("Target Missing!")); return; }
+	if (!OwnerChar && !AIChar) { UE_LOG(LogTemp, Warning, TEXT("Owner Missing!")); return; }
+	if (!DamageTypeClass) { UE_LOG(LogTemp, Warning, TEXT("DamageType Missing!")); return; }
 
 	// 커스텀 데미지 이벤트 생성
 	FT3DamageEvent T3DamageEvent(DamageTypeClass);
 	T3DamageEvent.HitIntensity = Intensity; // 공격 강도를 구조체에 직접 삽입
+	T3DamageEvent.HitDamageMultiplier = DamageMultiflier;
 
 	// TakeDamage 호출 시 커스텀 이벤트 구조체를 전달
-	TargetActor->TakeDamage(DamageAmount, T3DamageEvent, OwnerPC, OwnerChar);
-
+	if (OwnerChar)
+	{
+		TargetActor->TakeDamage(DamageAmount, T3DamageEvent, OwnerPC, OwnerChar);
+	}
+	else if (AIChar) // OwnerChar가 아닐 때만 AIChar로 실행
+	{
+		TargetActor->TakeDamage(DamageAmount, T3DamageEvent, AIPC, AIChar);
+	}
+	
 	// 디버그 출력
 	const UEnum* EnumPtr = StaticEnum<EHitIntensity>();
 	FString IntensityString = EnumPtr ? EnumPtr->GetNameStringByValue((int64)Intensity) : TEXT("Unknown");
@@ -477,5 +527,3 @@ void UT3CombatComponent::ConsumeStamina(float Amount)
 			FString::Printf(TEXT("Remaining Stamina: %.1f"), OwnerChar->GetCurrentStamina()));
 	}
 }
-
-
