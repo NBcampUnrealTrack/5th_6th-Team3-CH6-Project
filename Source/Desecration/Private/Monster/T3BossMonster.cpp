@@ -6,6 +6,14 @@
 #include "GameFramework/Controller.h"
 #include "Player/T3DamageTypes.h"
 
+
+void AT3BossMonster::BeginPlay()
+{
+	Super::BeginPlay();
+
+	OnBossSpawned.Broadcast();
+}
+
 void AT3BossMonster::Damage(float DamageAmount, float StunAmount)
 {
 	if (DamageAmount > 0 && !bSuperPattern) 
