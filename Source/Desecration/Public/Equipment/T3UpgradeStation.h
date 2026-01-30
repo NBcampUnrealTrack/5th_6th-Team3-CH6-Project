@@ -135,6 +135,34 @@ protected:
 	int32 MaxUpgradeLevel = 10;
 
 	// ========================================================================
+	// 강화석 아이콘 (에디터에서 설정)
+	// ========================================================================
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade|StoneIcons")
+	TObjectPtr<UTexture2D> NormalStoneIcon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade|StoneIcons")
+	TObjectPtr<UTexture2D> RareStoneIcon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade|StoneIcons")
+	TObjectPtr<UTexture2D> EpicStoneIcon;
+
+	// ========================================================================
+	// [임시] 강화석 보유량 - 추후 플레이어 측으로 이관 예정
+	// ========================================================================
+#pragma region TEMP_CURRENCY
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade|Currency")
+	int32 NormalStoneCount = 10;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade|Currency")
+	int32 RareStoneCount = 5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade|Currency")
+	int32 EpicStoneCount = 3;
+
+#pragma endregion TEMP_CURRENCY
+
+	// ========================================================================
 	// 상태
 	// ========================================================================
 	// 현재 범위 내 플레이어
@@ -144,6 +172,14 @@ protected:
 	// UI 열림 상태
 	UPROPERTY(BlueprintReadOnly, Category = "State")
 	bool bIsUpgradeUIOpen = false;
+
+	// 위젯 클래스 (에디터에서 WBP_UpgradeUI 지정)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UUserWidget> UpgradeWidgetClass;
+
+	// 현재 생성된 위젯 인스턴스
+	UPROPERTY(BlueprintReadOnly, Category = "UI")
+	TObjectPtr<UUserWidget> UpgradeWidgetInstance;
 
 	// ========================================================================
 	// 오버랩 이벤트 (Core)
@@ -208,7 +244,39 @@ public:
 	FT3UpgradeUIData GetEquipmentUIData(ET3EquipmentType EquipmentType) const;
 
 	// ========================================================================
+	// 강화석 조회 (Core - Widget Blueprint에서 직접 호출)
+	// 강화석은 장비별 데이터가 아닌 스테이션 공유 자원이므로
+	// UIData가 아닌 UpgradeStation 레퍼런스에서 직접 접근
+	// ========================================================================
+
+	// 특정 등급 강화석 보유량 조회
+	UFUNCTION(BlueprintPure, Category = "Upgrade|Currency")
+	int32 GetStoneCount(ET3UpgradeStoneGrade Grade) const;
+
+	// 특정 등급 강화석 아이콘 조회
+	UFUNCTION(BlueprintPure, Category = "Upgrade|Currency")
+	UTexture2D* GetStoneIcon(ET3UpgradeStoneGrade Grade) const;
+
+	// 현재 장비 레벨에 사용 가능한 강화석 등급 목록 조회
+	UFUNCTION(BlueprintCallable, Category = "Upgrade|Currency")
+	TArray<ET3UpgradeStoneGrade> GetAvailableStones(int32 CurrentEquipmentLevel) const;
+
+	// 특정 등급 강화석이 해당 레벨에 사용 가능한지
+	UFUNCTION(BlueprintPure, Category = "Upgrade|Currency")
+	bool CanUseStone(ET3UpgradeStoneGrade Grade, int32 CurrentEquipmentLevel) const;
+
+	// 강화석 최대 적용 레벨 조회 (Normal→3, Rare→5, Epic→7)
+	UFUNCTION(BlueprintPure, Category = "Upgrade|Currency")
+	static int32 GetMaxLevelForStone(ET3UpgradeStoneGrade Grade);
+
+	// 현재 장비 레벨에서 자동 선택될 강화석 등급 조회 (UI 표시용)
+	// 사용 가능한 강화석이 없으면 false 반환
+	UFUNCTION(BlueprintPure, Category = "Upgrade|Currency")
+	bool GetNextStoneGrade(int32 CurrentEquipmentLevel, ET3UpgradeStoneGrade& OutGrade) const;
+
+	// ========================================================================
 	// 강화 실행 (Core - Widget Blueprint에서 호출)
+	// 사용 가능한 강화석 중 최하급부터 자동 소모
 	// ========================================================================
 	// 무기 강화 (버튼 클릭 시)
 	UFUNCTION(BlueprintCallable, Category = "Upgrade|Action")
@@ -221,6 +289,16 @@ public:
 	// 특정 타입 장비 강화
 	UFUNCTION(BlueprintCallable, Category = "Upgrade|Action")
 	bool UpgradeEquipment(ET3EquipmentType EquipmentType);
+
+private:
+	// 현재 레벨에서 사용 가능한 최하급 강화석 자동 선택
+	// 사용 가능한 등급이 없으면 false 반환
+	bool SelectLowestAvailableStone(int32 CurrentEquipmentLevel, ET3UpgradeStoneGrade& OutGrade) const;
+
+	// 강화석 1개 차감
+	void ConsumeStone(ET3UpgradeStoneGrade Grade);
+
+public:
 
 	// ========================================================================
 	// 유틸리티 (Core)
