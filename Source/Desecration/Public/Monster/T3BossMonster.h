@@ -45,6 +45,9 @@ public:
 	FString BossName = "DefaultName";
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	float CurrentAttackRate = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	FBossMonsterStats BossStats;
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
