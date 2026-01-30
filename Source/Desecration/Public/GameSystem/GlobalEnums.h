@@ -39,3 +39,11 @@ enum class EGraphicQuality
 	Epic,
 	Cinematic
 };
+
+//레벨(맵) 이름
+UENUM()
+enum class ELevelName
+{
+	Title = 0 UMETA(DisplayName = "TitleLevel"),
+	SelectClass UMETA(DisplayName = "SelectClassLevel"),
+};
