@@ -308,17 +308,19 @@ float AT3CharacterBase::TakeDamage(float DamageAmount, FDamageEvent const& Damag
 	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, InstigatedBy, DamageCauser);
 
 	EHitIntensity ReceivedIntensity = EHitIntensity::Light;
+	float ReceievedDamageMultiplier = 1.0f;
 	if (DamageEvent.GetTypeID() == FT3DamageEvent::ClassID)
 	{
 		const FT3DamageEvent* T3Event = static_cast<const FT3DamageEvent*>(&DamageEvent);
 		ReceivedIntensity = T3Event->HitIntensity;
+		ReceievedDamageMultiplier = T3Event->HitDamageMultiplier;
 	}
 
 	if (CombatComponent)
 	{
 		const UDamageType* DamageTypePtr = DamageEvent.DamageTypeClass ? DamageEvent.DamageTypeClass->GetDefaultObject<UDamageType>() : nullptr;
 
-		CombatComponent->ExecuteHitLogic(DamageCauser, ActualDamage, DamageTypePtr, InstigatedBy, ReceivedIntensity);
+		CombatComponent->ExecuteHitLogic(DamageCauser, ActualDamage, DamageTypePtr, InstigatedBy, ReceivedIntensity, ReceievedDamageMultiplier);
 	}
 
 	return ActualDamage;

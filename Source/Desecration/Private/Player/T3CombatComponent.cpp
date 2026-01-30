@@ -29,7 +29,6 @@ void UT3CombatComponent::BeginPlay()
 	if (OwnerChar)
 	{
 		OwnerPC = OwnerChar->GetController<APlayerController>();
-		OwnerChar->OnTakeAnyDamage.AddDynamic(this, &UT3CombatComponent::HandleTakeAnyDamage);
 		CurrentState = ECharacterCombatState::Idle; // 생성시 캐릭터 상태 초기화
 	}
 
@@ -326,13 +325,8 @@ void UT3CombatComponent::UpdateTargetUI(AActor* Target, bool bIsVisible)
 // ========== 전투 로직 ===============
 
 // 피격 로직
-void UT3CombatComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
-{
-	// 델리게이트를 통해 들어올 때는 Intensity를 알 수 없으므로 Light로 보냅니다.
-	// ExecuteHitLogic(DamageCauser, Damage, DamageType, InstigatedBy, EHitIntensity::Light);
-}
 
-void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, const UDamageType* DamageType, AController* InstigatedBy, EHitIntensity Intensity)
+void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, const UDamageType* DamageType, AController* InstigatedBy, EHitIntensity Intensity, float ReceievedDamageMultiplier)
 {
 	if (Damage <= 0.f || !OwnerChar || CurrentState == ECharacterCombatState::Dead) return;
 	if (!DamageCauser || !DamageType) return;
@@ -340,8 +334,8 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 	// 1. [디버그] 공격자 정보 및 데미지 타입 확인
 	FString TypeName = DamageType ? DamageType->GetClass()->GetName() : TEXT("Normal");
 	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::White,
-		FString::Printf(TEXT("Hit by: %s | Original Damage: %.1f | Type: %s"),
-			*DamageCauser->GetName(), Damage, *TypeName));
+		FString::Printf(TEXT("Hit by: %s | Original Damage: %.1f | Type: %s | multi: %.1f"),
+			*DamageCauser->GetName(), Damage, *TypeName, ReceievedDamageMultiplier));
 
 	// 최종 데미지 계산
 	float FinalDamage = CalculateFinalDamage(Damage, DamageType);
@@ -390,10 +384,10 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 	}
 
 
-	// 2. 만약 캐스팅 성공했다면 그 안의 Intensity를 꺼냄, 실패했다면 기본값(Light)
+	// 공격 강도
 	EHitIntensity ReceivedIntensity = Intensity;
 
-	// 3. 로그 출력 (확인용)
+	// 공격 강도 로그 출력
 	FString IntensityStr = StaticEnum<EHitIntensity>()->GetNameStringByValue((int64)ReceivedIntensity);
 	UE_LOG(LogTemp, Warning, TEXT("피격 강도: %s"), *IntensityStr);
 
@@ -482,7 +476,7 @@ EHitDirection UT3CombatComponent::CalculateHitDirection(const FVector& HitLocati
 
 // 공격 로직
 
-void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAmount, EHitIntensity Intensity, TSubclassOf<UT3DamageType_Base> DamageTypeClass)
+void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAmount, EHitIntensity Intensity, float DamageMultiflier, TSubclassOf<UT3DamageType_Base> DamageTypeClass)
 {
 	if (!TargetActor) { UE_LOG(LogTemp, Warning, TEXT("Target Missing!")); return; }
 	if (!OwnerChar && !AIChar) { UE_LOG(LogTemp, Warning, TEXT("Owner Missing!")); return; }
@@ -491,13 +485,17 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 	// 커스텀 데미지 이벤트 생성
 	FT3DamageEvent T3DamageEvent(DamageTypeClass);
 	T3DamageEvent.HitIntensity = Intensity; // 공격 강도를 구조체에 직접 삽입
+	T3DamageEvent.HitDamageMultiplier = DamageMultiflier;
 
 	// TakeDamage 호출 시 커스텀 이벤트 구조체를 전달
 	if (OwnerChar)
-	TargetActor->TakeDamage(DamageAmount, T3DamageEvent, OwnerPC, OwnerChar);
-
-	if (AIChar)
+	{
+		TargetActor->TakeDamage(DamageAmount, T3DamageEvent, OwnerPC, OwnerChar);
+	}
+	else if (AIChar) // OwnerChar가 아닐 때만 AIChar로 실행
+	{
 		TargetActor->TakeDamage(DamageAmount, T3DamageEvent, AIPC, AIChar);
+	}
 	
 	// 디버그 출력
 	const UEnum* EnumPtr = StaticEnum<EHitIntensity>();

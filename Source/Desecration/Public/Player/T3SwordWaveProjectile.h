@@ -20,6 +20,8 @@ public:
     // 데미지와 속도를 설정하는 함수
     void InitializeProjectile(float InDamage, float InSpeed);
 
+    void PostInitializeComponents() override;
+
 private:
     UPROPERTY(VisibleAnywhere)
     class UProjectileMovementComponent* MovementComp;

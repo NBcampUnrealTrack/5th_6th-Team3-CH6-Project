@@ -29,6 +29,9 @@ AT3SwordWaveProjectile::AT3SwordWaveProjectile()
     SkillEffect->SetActive(true);
     SkillEffect->SetAutoActivate(true);
 
+    // 1초뒤에 자동으로 사라짐
+    InitialLifeSpan = 1.0f;
+
 }
 
 void AT3SwordWaveProjectile::InitializeProjectile(float InDamage, float InSpeed)
@@ -42,5 +45,17 @@ void AT3SwordWaveProjectile::InitializeProjectile(float InDamage, float InSpeed)
         // 🚨 핵심: 속도를 변경했으니 컴포넌트를 다시 활성화하고 속도를 강제로 업데이트합니다.
         MovementComp->Velocity = GetActorForwardVector() * InSpeed;
         MovementComp->UpdateComponentVelocity();
+    }
+}
+
+void AT3SwordWaveProjectile::PostInitializeComponents()
+{
+    Super::PostInitializeComponents();
+
+    // 런타임 스폰 시 컴포넌트들이 루트에 붙어있는지 재확인 및 활성화
+    if (SkillEffect)
+    {
+        SkillEffect->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+        SkillEffect->Activate(true); // 강제 활성화
     }
 }
