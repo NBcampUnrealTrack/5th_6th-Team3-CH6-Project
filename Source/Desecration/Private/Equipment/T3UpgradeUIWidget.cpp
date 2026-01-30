@@ -94,6 +94,19 @@ void UT3UpgradeUIWidget::RefreshUI()
 {
 	if (!UpgradeStation) return;
 
+	// 탭 선택 상태 표시
+	const FLinearColor SelectedTabColor = FLinearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	const FLinearColor UnselectedTabColor = FLinearColor(0.4f, 0.4f, 0.4f, 1.0f);
+
+	if (Btn_WeaponTab)
+	{
+		Btn_WeaponTab->SetBackgroundColor(CurrentTab == ET3EquipmentType::Weapon ? SelectedTabColor : UnselectedTabColor);
+	}
+	if (Btn_ArmorTab)
+	{
+		Btn_ArmorTab->SetBackgroundColor(CurrentTab == ET3EquipmentType::Armor ? SelectedTabColor : UnselectedTabColor);
+	}
+
 	// 현재 탭에 해당하는 장비 데이터 조회
 	FT3UpgradeUIData UIData = UpgradeStation->GetEquipmentUIData(CurrentTab);
 
