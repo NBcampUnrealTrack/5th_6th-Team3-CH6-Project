@@ -29,9 +29,13 @@ public:
     UPROPERTY(EditAnywhere, Category = "Combat", meta = (EditCondition = "StatusType == ECombatWindowType::Attack"))
     EHitIntensity AttackIntensity;
 
-    // 추가: 데미지 타입 (기본, 가드불가 등 선택 가능하도록)
+    // 데미지 타입 
     UPROPERTY(EditAnywhere, Category = "Combat", meta = (EditCondition = "StatusType == ECombatWindowType::Attack"))
     TSubclassOf<class UT3DamageType_Base> DamageTypeClass;
+
+    // 스턴값
+    UPROPERTY(EditAnywhere, Category = "Combat", meta = (EditCondition = "StatusType == ECombatWindowType::Attack"))
+    float StunAmount;
 
     virtual void NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference) override;
     virtual void NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
