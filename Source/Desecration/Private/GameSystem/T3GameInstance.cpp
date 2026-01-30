@@ -43,12 +43,11 @@ void UT3GameInstance::MakeFirstSettings()
 		CurrentSettings->Resolution = ET3Resolution::W800H600;
 		CurrentSettings->ScreenMode = ET3ScreenMode::Windowed;
 	}
+	UserSettings->SetScreenResolution(MaxResolution);
 	
 	//그래픽 퀄리티는 낮음으로
 	UserSettings->SetOverallScalabilityLevel(0);
 	CurrentSettings->GraphicQuality = EGraphicQuality::Low;
-	
-	UserSettings->SetScreenResolution(MaxResolution);
 	
 	//화면 모드, 해상도 적용
 	UserSettings->ApplySettings(true);
