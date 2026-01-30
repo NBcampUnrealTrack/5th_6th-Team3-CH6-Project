@@ -24,6 +24,7 @@ void AT3PlayerController::BeginPlay()
 	{
 		MainInventoryWidget = CreateWidget<UUserWidget>(this, MainInventoryWidgetClass);
 		
+		MainInventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
 		MainInventoryWidget->AddToViewport();
 	}
 }
@@ -51,6 +52,11 @@ void AT3PlayerController::SetupInputComponent()
 
 void AT3PlayerController::Input_Move(const FInputActionValue& Value)
 {
+	if (bIsInventoryOpen)
+	{
+		return;
+	}
+
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
 	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
@@ -61,6 +67,11 @@ void AT3PlayerController::Input_Move(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_Look(const FInputActionValue& Value)
 {
+	if (bIsInventoryOpen)
+	{
+		return;
+	}
+
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
 
 	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
@@ -72,6 +83,11 @@ void AT3PlayerController::Input_Look(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_LockOn(const FInputActionValue& Value)
 {
+	if (bIsInventoryOpen)
+	{
+		return;
+	}
+	
 	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
 	{
 		if (UT3CombatComponent* Combat = T3Char->GetCombatComponent())
@@ -83,6 +99,11 @@ void AT3PlayerController::Input_LockOn(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_BlockStart(const FInputActionValue& Value)
 {
+	if (bIsInventoryOpen)
+	{
+		return;
+	}
+	
 	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
 	{
 		if (UT3CombatComponent* Combat = T3Char->GetCombatComponent())
@@ -94,6 +115,11 @@ void AT3PlayerController::Input_BlockStart(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_BlockEnd(const FInputActionValue& Value)
 {
+	if (bIsInventoryOpen)
+	{
+		return;
+	}
+	
 	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
 	{
 		if (UT3CombatComponent* Combat = T3Char->GetCombatComponent())
@@ -107,6 +133,11 @@ void AT3PlayerController::Input_BlockEnd(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_Roll(const FInputActionValue& Value)
 {
+	if (bIsInventoryOpen)
+	{
+		return;
+	}
+	
 	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
 	{
 		T3Char->Roll(Value);
@@ -115,11 +146,21 @@ void AT3PlayerController::Input_Roll(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_Interact(const FInputActionValue& Value)
 {
+	if (bIsInventoryOpen)
+	{
+		return;
+	}
+	
 	// TODO: 상호작용 시스템 연결
 }
 
 void AT3PlayerController::Input_Test(const FInputActionValue& Value)
 {
+	if (bIsInventoryOpen)
+	{
+		return;
+	}
+	
 	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
 	{
 		if (T3Char->PlayerInputState.bIsCombatState == false)
@@ -136,6 +177,11 @@ void AT3PlayerController::Input_Test(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_Attack(const FInputActionValue& Value)
 {
+	if (bIsInventoryOpen)
+	{
+		return;
+	}
+	
 	if (AT3CharacterBase* T3Char= Cast<AT3CharacterBase>(GetPawn()))
 	{
 		if (UT3CombatComponent* Combat = T3Char->GetCombatComponent())
@@ -149,11 +195,30 @@ void AT3PlayerController::ToggleInventoryInput()
 {
 	if (IsValid(MainInventoryWidget))
 	{
-		FName const FunctionName = TEXT("ToggleInventoryWindow");
-		
-		if (UFunction* Function = MainInventoryWidget->FindFunction(FunctionName))
+		if (MainInventoryWidget->IsVisible())
 		{
-			MainInventoryWidget->ProcessEvent(Function, nullptr);
+			MainInventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
+			
+			FInputModeGameOnly InputModeGameOnly;
+			SetInputMode(InputModeGameOnly);
+			
+			SetShowMouseCursor(false);
+			SetInventoryOpen(false);
+		}
+		else
+		{
+			MainInventoryWidget->SetVisibility(ESlateVisibility::Visible);
+			
+			FInputModeGameAndUI InputModeGameAndUI;
+			SetInputMode(InputModeGameAndUI);
+			
+			SetShowMouseCursor(true);
+			SetInventoryOpen(true);
 		}
 	}
+}
+
+void AT3PlayerController::SetInventoryOpen(bool bIsOpen)
+{
+	bIsInventoryOpen = bIsOpen;
 }

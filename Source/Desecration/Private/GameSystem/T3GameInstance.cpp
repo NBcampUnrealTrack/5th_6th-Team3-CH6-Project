@@ -3,6 +3,7 @@
 #include "GameFramework/GameUserSettings.h"
 #include "GameSystem/T3SaveGame.h"
 #include "Kismet/GameplayStatics.h"
+#include "Sound/SoundClass.h"
 
 void UT3GameInstance::Init()
 {
@@ -42,6 +43,11 @@ void UT3GameInstance::MakeFirstSettings()
 		CurrentSettings->Resolution = ET3Resolution::W800H600;
 		CurrentSettings->ScreenMode = ET3ScreenMode::Windowed;
 	}
+	
+	//그래픽 퀄리티는 중간으로
+	UserSettings->SetOverallScalabilityLevel(1);
+	CurrentSettings->GraphicQuality = EGraphicQuality::Medium;
+	
 	UserSettings->SetScreenResolution(MaxResolution);
 	
 	//화면 모드, 해상도 적용
@@ -50,14 +56,8 @@ void UT3GameInstance::MakeFirstSettings()
 	//효과음, 배경음 모두 0.8을 기본으로
 	CurrentSettings->SoundEffectsVolume = 0.8f;
 	CurrentSettings->BackgroundVolume = 0.8f;
-	//마우스 감도는 0.5를 기본으로
-	CurrentSettings->MouseSensitivity = 0.5f;
-}
-
-
-TObjectPtr<UT3SaveGame> UT3GameInstance::LoadGame()
-{
-	return SavedGameData;
+	//마우스 감도는 1을 기본으로
+	CurrentSettings->MouseSensitivity = 1.0f;
 }
 
 bool UT3GameInstance::SaveGame()
@@ -67,7 +67,7 @@ bool UT3GameInstance::SaveGame()
 
 void UT3GameInstance::SetResolution(ET3Resolution Resolution)
 {
-	CurrentSettings->Resolution;
+	CurrentSettings->Resolution = Resolution;
 	
 	//ET3Resolution의 각 항목은 [가로 * 10000 + 세로]인 값을 가진다.
 	int32 Width = static_cast<int>(Resolution) / 10000;
@@ -87,4 +87,23 @@ void UT3GameInstance::SetScreenMode(ET3ScreenMode ScreenMode)
 	const FString LogOutValue = UEnum::GetValueAsString(ScreenMode);
 	UE_LOG(LogTemp, Warning, TEXT("화면 모드 변경 : %s"), *LogOutValue);
 #endif
+}
+
+void UT3GameInstance::SetSoundEffectsVolume(const float Volume)
+{
+	SoundClassSE->Properties.Volume = Volume;
+	CurrentSettings->SoundEffectsVolume = Volume;
+}
+
+void UT3GameInstance::SetBackgroundVolume(const float Volume)
+{
+	SoundClassBGM->Properties.Volume = Volume;
+	CurrentSettings->BackgroundVolume = Volume;
+}
+
+void UT3GameInstance::SetGraphicQuality(const EGraphicQuality GraphicQuality)
+{
+	CurrentSettings->GraphicQuality = GraphicQuality;
+	UserSettings->SetOverallScalabilityLevel(static_cast<int32>(GraphicQuality));
+	UserSettings->ApplySettings(true);
 }

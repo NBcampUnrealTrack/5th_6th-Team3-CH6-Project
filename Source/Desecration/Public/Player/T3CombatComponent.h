@@ -54,13 +54,9 @@ public:
 	UT3CombatComponent();
 
 	void InitializeWeapons(const TMap<EEquipSlot, FWeaponEquipInfo>& WeaponMap);
-	
-	// 델리게이트용 데미지 처리 함수 (OnTakeAnyDamage에 바인딩용)
-	UFUNCTION()
-	void HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
 	// 2. 실제 로직용 (우리가 원하는 Intensity 포함)
-	void ExecuteHitLogic(AActor* DamageCauser, float Damage, const UDamageType* DamageType, AController* InstigatedBy, EHitIntensity Intensity);
+	void ExecuteHitLogic(AActor* DamageCauser, float Damage, const UDamageType* DamageType, AController* InstigatedBy, EHitIntensity Intensity, float ReceievedDamageMultiplier);
 
 public:
 	void SetOwnerChar(ACharacter* InChar) { AIChar = InChar; };
@@ -99,7 +95,7 @@ public:
 
 	// 공격 함수
 	UFUNCTION(BlueprintCallable)
-	void RequestAttackDamage(AActor* TargetActor, float DamageAmount, EHitIntensity Intensity, TSubclassOf<class UT3DamageType_Base> DamageTypeClass);
+	void RequestAttackDamage(AActor* TargetActor, float DamageAmount, EHitIntensity Intensity, float DamageMultiflier, TSubclassOf<class UT3DamageType_Base> DamageTypeClass);
 
 	// 스태미너 소모 함수
 	void ConsumeStamina(float Amount);
@@ -125,6 +121,11 @@ private:
 	void ResetLockOn();
 	void UpdateTargetUI(AActor* Target, bool bIsVisible);
 	bool IsTargetVisible(AActor* Target) const;
+
+	// 패링
+	FTimerHandle ParryingToBlockingTimerHandle;
+	UFUNCTION()
+	void SwitchToBlockingState();
 
 	UPROPERTY()
 	TObjectPtr<class AT3CharacterBase> OwnerChar;
