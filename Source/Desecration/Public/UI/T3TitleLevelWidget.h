@@ -4,6 +4,7 @@
 #include "Blueprint/UserWidget.h"
 #include "T3TitleLevelWidget.generated.h"
 
+class AT3TitlePlayerController;
 class UTextBlock;
 class UT3SaveGame;
 class UT3GameInstance;
@@ -62,4 +63,8 @@ private:
 	//게임 인스턴스
 	UPROPERTY()
 	TObjectPtr<UT3GameInstance> T3GameInstance;
+	
+	//풀레이어 컨트롤러
+	UPROPERTY()
+	TObjectPtr<AT3TitlePlayerController> TitlePlayerController;
 };

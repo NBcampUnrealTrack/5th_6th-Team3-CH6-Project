@@ -4,6 +4,7 @@
 #include "Components/TextBlock.h"
 #include "GameSystem/T3GameInstance.h"
 #include "GameSystem/T3TitleGameMode.h"
+#include "Player/T3TitlePlayerController.h"
 
 void UT3TitleLevelWidget::NativeConstruct()
 {
@@ -22,6 +23,14 @@ void UT3TitleLevelWidget::NativeConstruct()
 	if (!TitleGameMode)
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s : T3GameInstance is NULL"), *GetNameSafe(this));
+		return;
+	}
+	
+	//플레이어 컨트롤러
+	TitlePlayerController = Cast<AT3TitlePlayerController>(GetOwningPlayer());
+	if (!TitlePlayerController)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : TitlePlayerController is NULL"), *GetNameSafe(this));
 		return;
 	}
 	
@@ -60,7 +69,7 @@ void UT3TitleLevelWidget::OnClickLoadButton()
 
 void UT3TitleLevelWidget::OnClickSettingsButton()
 {
-	//TODO : 플레이어 컨트롤러에서 세팅 화면 출력해주기
+	TitlePlayerController->SetActiveSettingsPanel(true);
 }
 
 void UT3TitleLevelWidget::OnClickQuitButton()
