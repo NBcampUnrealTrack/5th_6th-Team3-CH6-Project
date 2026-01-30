@@ -61,6 +61,12 @@ protected:
 	
 	UFUNCTION(BlueprintPure, Category="UI")
 	bool IsInventoryOpen() const { return bIsInventoryOpen; }
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> CombatWidgetClass;
+
+	UPROPERTY(BlueprintReadOnly, Category = "UI")
+	TObjectPtr<UUserWidget> CombatWidget;
 	
 private:
 	bool bIsInventoryOpen = false;

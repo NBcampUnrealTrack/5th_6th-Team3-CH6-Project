@@ -11,6 +11,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBossHitDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBossStunDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBossDeathDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBossDamagedDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBossSpawnedDelegate);
 
 USTRUCT(BlueprintType)
 struct FBossMonsterStats
@@ -30,6 +31,9 @@ UCLASS()
 class DESECRATION_API AT3BossMonster : public ACharacter
 {
 	GENERATED_BODY()
+
+protected:
+	virtual void BeginPlay() override;
 
 public:
 	UPROPERTY(BlueprintReadWrite, Category = "AI")
@@ -62,6 +66,8 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FBossDamagedDelegate OnBossDamaged;
 
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FBossSpawnedDelegate OnBossSpawned;
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void Damage(float DamageAmount, float StunAmount);
