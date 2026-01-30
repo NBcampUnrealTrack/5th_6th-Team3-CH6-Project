@@ -43,6 +43,8 @@ private:
 	void ClearSpeedPotionCoolTime();
 	void ClearBerserkPotionCoolTime();
 	
+	void PlayItemUseEffect(FT3ConsumableItemData ItemData);
+	
 	float OriginalPowerValue;
 	float OriginalDefenseValue;
 	float OriginalSpeedValue;
