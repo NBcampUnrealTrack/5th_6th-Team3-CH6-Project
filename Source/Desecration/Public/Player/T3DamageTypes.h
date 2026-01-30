@@ -24,9 +24,14 @@ struct FT3DamageEvent : public FDamageEvent
 	UPROPERTY()
 	EHitIntensity HitIntensity = EHitIntensity::Light;
 
-	// 기본 생성자 및 클래스 전달 생성자
-	FT3DamageEvent() : FDamageEvent() {}
-	FT3DamageEvent(TSubclassOf<UDamageType> InDamageTypeClass) : FDamageEvent(InDamageTypeClass) {}
+	// 보스 페이즈나 특정 기믹에 따른 데미지 증폭값
+	UPROPERTY()
+	float HitDamageMultiplier = 1.0f;
+
+	FT3DamageEvent() : FDamageEvent(), HitDamageMultiplier(1.0f) {}
+	FT3DamageEvent(TSubclassOf<UDamageType> InDamageTypeClass)
+		: FDamageEvent(InDamageTypeClass), HitDamageMultiplier(1.0f) {
+	}
 
 	// 기본 FDamageEvent와 구분하기 위한 ID (임의의 고유값)
 	static const int32 ClassID = 777;

@@ -65,7 +65,9 @@ public:
 	void OnRollTriggered();
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnAttack();
-
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnHit();
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TObjectPtr<UT3InventoryComponent> InventoryComponent; 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
@@ -151,10 +153,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Stat")
 	void SetMoveSpeed(float NewSpeed);
-
-	// 이동 속도 버프 함수
-	UFUNCTION(BlueprintCallable, Category = "Stat")
-	void SetMoveSpeedTemporary(float NewSpeedMultiflier, float Duration);
 
 
 	// 액티브 회복 함수

@@ -76,6 +76,7 @@ void AT3CharacterBase::Tick(float DeltaTime)
 	
 	float CurrentGroundSpeed = GetVelocity().Size2D();
 	PlayerInputState.CurrentSpeed = CurrentGroundSpeed;
+	
 	FVector InputVector = GetLastMovementInputVector();
 	float FutureSpeed = FMath::Min(InputVector.Size2D(), 1.0f) * (GetCharacterMovement()->MaxWalkSpeed);
 	PlayerInputState.FutureSpeed = FutureSpeed;
@@ -86,6 +87,7 @@ void AT3CharacterBase::Tick(float DeltaTime)
 	PlayerInputState.bIsMoving = CurrentGroundSpeed > MoveThreshold;
 	PlayerInputState.bIsInAir = GetCharacterMovement()->IsFalling();
 	
+	PlayerInputState.bWantsToStop = PlayerInputState.bIsMoving && (FutureSpeed< KINDA_SMALL_NUMBER);
 	if (GetCharacterMovement()->MaxWalkSpeed > 400.0f)
 	{
 		PlayerInputState.T3GaitState = EGaitState::Run;
@@ -93,21 +95,7 @@ void AT3CharacterBase::Tick(float DeltaTime)
 	else
 	{
 		PlayerInputState.T3GaitState = EGaitState::Walk;
-	}
-	
-	if (!PlayerInputState.bIsMoving && !PlayerInputState.bWantsToMove)
-	{
-		PlayerInputState.T3GaitState = EGaitState::Idle;
-	}
-	
-	if (GEngine)
-
-	{
-		FString DebugMsg = FString::Printf(TEXT("Current Speed: %f / PlayerInputStateCurrentSpeed : %f"), CurrentGroundSpeed, PlayerInputState.CurrentSpeed);
-
-		GEngine->AddOnScreenDebugMessage(1, 2.0f, FColor::Green, DebugMsg);
-	}
-	
+	}	
 }
 
 void AT3CharacterBase::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
@@ -159,6 +147,10 @@ void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)
 			if (NewSkillComp)
 			{
 				NewSkillComp->RegisterComponent();
+				// NewSkillComp->OnComponentCreated(); // 추가적인 초기화 호출
+				// this->AddOwnedComponent(NewSkillComp); // 소유권 명시
+
+				UE_LOG(LogTemp, Log, TEXT("Skill Component Attached: %s"), *Data->SkillComponent->GetName());
 			}
 		}
 	}
@@ -265,38 +257,6 @@ void AT3CharacterBase::RestoreMP(float Amount)
 	AddMP(Amount);
 }
 
-// 호출용 이동속도 버프 함수 (이동속도 배율, 지속시간)
-void AT3CharacterBase::SetMoveSpeedTemporary(float NewSpeedMultiflier, float Duration)
-{
-	if (!GetCharacterMovement()) return;
-
-	// 기존에 돌고 있던 복구 타이머가 있다면 취소 (새로운 버프/디버프 갱신)
-	if (GetWorldTimerManager().IsTimerActive(SpeedResetTimerHandle))
-	{
-		GetWorldTimerManager().ClearTimer(SpeedResetTimerHandle);
-	}
-	else
-	{
-		// 처음 속도를 바꾸는 것이라면 현재 속도를 저장해둠
-		OriginalMoveSpeed = GetCharacterMovement()->MaxWalkSpeed;
-	}
-
-	// 속도 적용
-	GetCharacterMovement()->MaxWalkSpeed *= NewSpeedMultiflier;
-
-	if (Duration > 0.f)
-	{
-		// Duration 후에 ResetMoveSpeed 호출
-		GetWorldTimerManager().SetTimer(
-			SpeedResetTimerHandle,
-			this,
-			&AT3CharacterBase::ResetMoveSpeed,
-			Duration,
-			false
-		);
-	}
-}
-
 void AT3CharacterBase::ResetMoveSpeed()
 {
 	if (GetCharacterMovement())
@@ -342,19 +302,22 @@ void AT3CharacterBase::AddStamina(float Amount)
 float AT3CharacterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* InstigatedBy, AActor* DamageCauser)
 {
 	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, InstigatedBy, DamageCauser);
-
+	
 	EHitIntensity ReceivedIntensity = EHitIntensity::Light;
+	float ReceievedDamageMultiplier = 1.0f;
 	if (DamageEvent.GetTypeID() == FT3DamageEvent::ClassID)
 	{
 		const FT3DamageEvent* T3Event = static_cast<const FT3DamageEvent*>(&DamageEvent);
 		ReceivedIntensity = T3Event->HitIntensity;
+		ReceievedDamageMultiplier = T3Event->HitDamageMultiplier;
 	}
 
 	if (CombatComponent)
 	{
 		const UDamageType* DamageTypePtr = DamageEvent.DamageTypeClass ? DamageEvent.DamageTypeClass->GetDefaultObject<UDamageType>() : nullptr;
 
-		CombatComponent->ExecuteHitLogic(DamageCauser, ActualDamage, DamageTypePtr, InstigatedBy, ReceivedIntensity);
+		CombatComponent->ExecuteHitLogic(DamageCauser, ActualDamage, DamageTypePtr, InstigatedBy, ReceivedIntensity, ReceievedDamageMultiplier);
+		OnHit();
 	}
 
 	return ActualDamage;

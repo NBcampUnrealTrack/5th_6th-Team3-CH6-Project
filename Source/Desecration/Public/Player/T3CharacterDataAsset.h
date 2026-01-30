@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "T3PlayerInputState.h"
 #include "T3CharacterDataAsset.generated.h"
 
 
@@ -39,7 +40,7 @@ class DESECRATION_API UT3CharacterDataAsset : public UPrimaryDataAsset
 
 public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Class")
-    TSubclassOf<class AT3CharacterBase> CharacterClass;
+    ECharacterClass CharacterClass;
     
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skill")
     TSubclassOf<class UActorComponent> SkillComponent;
