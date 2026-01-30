@@ -152,10 +152,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Stat")
 	void SetMoveSpeed(float NewSpeed);
 
-	// 이동 속도 버프 함수
-	UFUNCTION(BlueprintCallable, Category = "Stat")
-	void SetMoveSpeedTemporary(float NewSpeedMultiflier, float Duration);
-
 
 	// 액티브 회복 함수
 

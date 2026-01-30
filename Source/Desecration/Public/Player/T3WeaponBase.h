@@ -16,7 +16,7 @@ public:
     AT3WeaponBase();
 
     // 무기 콜리젼 활성화/비활성화 함수
-    void SetWeaponCollisionEnabled(bool bEnabled, float InDamageMultiplier = 1.f, TSubclassOf<class UT3DamageType_Base> InType = nullptr, EHitIntensity InIntensity = EHitIntensity::Light);
+    void SetWeaponCollisionEnabled(bool bEnabled, float InDamageMultiplier = 1.f, TSubclassOf<class UT3DamageType_Base> InType = nullptr, EHitIntensity InIntensity = EHitIntensity::Light, float InStunAmount = 0.f);
 
 protected:
     virtual void BeginPlay() override;
@@ -34,6 +34,7 @@ protected:
     TObjectPtr<class UStaticMeshComponent> WeaponMesh;
 
     float CurrentAttackDamage;
+    float StunAmount;
     TSubclassOf<class UT3DamageType_Base> CurrentDamageType;
     EHitIntensity CurrentIntensity;
     TObjectPtr<class AT3CharacterBase> OwnerChar;
