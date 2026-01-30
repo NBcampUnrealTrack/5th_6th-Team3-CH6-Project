@@ -37,6 +37,10 @@ public:
     UPROPERTY(EditAnywhere, Category = "Combat", meta = (EditCondition = "StatusType == ECombatWindowType::Attack"))
     float StunAmount;
 
+    // 스테미나
+    UPROPERTY(EditAnywhere, Category = "Combat", meta = (EditCondition = "StatusType == ECombatWindowType::Attack"))
+    float StaminaAmount = 10;
+
     virtual void NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference) override;
     virtual void NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
 };
