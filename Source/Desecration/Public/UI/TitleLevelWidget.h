@@ -62,8 +62,4 @@ private:
 	//게임 인스턴스
 	UPROPERTY()
 	TObjectPtr<UT3GameInstance> T3GameInstance;
-	
-	//저장된 게임
-	UPROPERTY()
-	TObjectPtr<UT3SaveGame> CurrentSaveGame;
 };
