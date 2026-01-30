@@ -28,3 +28,14 @@ enum class ET3ScreenMode
 	WindowedFullscreen,
 	Windowed
 };
+
+//그래픽 퀄리티
+UENUM()
+enum class EGraphicQuality
+{
+	Low = 0,//제일 낮음
+	Medium,
+	High,
+	Epic,
+	Cinematic
+};

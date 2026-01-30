@@ -56,7 +56,14 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category="UI")
 	TObjectPtr<UUserWidget> MainInventoryWidget;
 	
+	UFUNCTION(BlueprintCallable, Category="UI")
+	void SetInventoryOpen(bool bIsOpen);
+	
+	UFUNCTION(BlueprintPure, Category="UI")
+	bool IsInventoryOpen() const { return bIsInventoryOpen; }
+	
 private:
+	bool bIsInventoryOpen = false;
 	void Input_Move(const FInputActionValue& Value);
 	void Input_Look(const FInputActionValue& Value);
 
