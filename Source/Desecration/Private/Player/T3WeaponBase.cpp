@@ -80,7 +80,8 @@ void AT3WeaponBase::OnWeaponOverlap(UPrimitiveComponent* OverlappedComponent, AA
         if (HitBoss)
         {
             GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Hit Boss!"));
-            HitBoss->Damage(CurrentAttackDamage, StunAmount);
+             HitBoss->Damage(CurrentAttackDamage, 20.f);  // 테스트용 스턴 20
+            // HitBoss->Damage(CurrentAttackDamage, StunAmount);
         }
 
         if (Combat && !HitBoss)

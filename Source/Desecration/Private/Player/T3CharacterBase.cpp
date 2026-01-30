@@ -227,6 +227,37 @@ ERollDirection AT3CharacterBase::GetRollDirection(float Angle) const
 	return ERollDirection::Back;
 }
 
+// 통합 스탯 델리게이트 함수
+void AT3CharacterBase::BroadcastStatChange(ET3StatType StatType)
+{
+	if (!OnStatChanged.IsBound()) return;
+
+	switch (StatType)
+	{
+	case ET3StatType::HP:
+		OnStatChanged.Broadcast(StatType, CurrentHP, MaxHP);
+		break;
+	case ET3StatType::MP:
+		OnStatChanged.Broadcast(StatType, CurrentMana, MaxMana);
+		break;
+	case ET3StatType::Stamina:
+		OnStatChanged.Broadcast(StatType, CurrentStamina, MaxStamina);
+		break;
+	case ET3StatType::Attack:
+		OnStatChanged.Broadcast(StatType, AttackPower, -1.f); // 최대값이 없는 스탯은 -1 전달
+		break;
+	case ET3StatType::Defense:
+		OnStatChanged.Broadcast(StatType, Defense, -1.f);
+		break;
+	case ET3StatType::MoveSpeed:
+		OnStatChanged.Broadcast(StatType, GetMoveSpeed(), -1.f);
+		break;
+	default:
+		break;
+	}
+}
+
+
 // 회복 함수
 
 // 스테미너 자연 회복
@@ -262,6 +293,7 @@ void AT3CharacterBase::ResetMoveSpeed()
 	if (GetCharacterMovement())
 	{
 		GetCharacterMovement()->MaxWalkSpeed = OriginalMoveSpeed;
+		BroadcastStatChange(ET3StatType::Stamina);
 		UE_LOG(LogTemp, Log, TEXT("MoveSpeed Restored to: %f"), OriginalMoveSpeed);
 	}
 }
@@ -280,6 +312,7 @@ void AT3CharacterBase::SetMoveSpeed(float NewSpeed)
 	if (auto* Movement = GetCharacterMovement())
 	{
 		Movement->MaxWalkSpeed = NewSpeed;
+		BroadcastStatChange(ET3StatType::MoveSpeed);
 	}
 }
 
@@ -287,16 +320,19 @@ void AT3CharacterBase::SetMoveSpeed(float NewSpeed)
 void AT3CharacterBase::AddHP(float Amount)
 {
 	CurrentHP = FMath::Clamp(CurrentHP + Amount, 0.f, MaxHP);
+	BroadcastStatChange(ET3StatType::HP);
 }
 
 void AT3CharacterBase::AddMP(float Amount)
 {
 	CurrentMana = FMath::Clamp(CurrentMana + Amount, 0.f, MaxMana);
+	BroadcastStatChange(ET3StatType::MP);
 }
 
 void AT3CharacterBase::AddStamina(float Amount)
 {
 	CurrentStamina = FMath::Clamp(CurrentStamina + Amount, 0.f, MaxStamina);
+	BroadcastStatChange(ET3StatType::Stamina);
 }
 
 float AT3CharacterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* InstigatedBy, AActor* DamageCauser)

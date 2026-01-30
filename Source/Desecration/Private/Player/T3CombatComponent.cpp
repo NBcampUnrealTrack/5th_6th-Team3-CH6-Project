@@ -338,7 +338,7 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 			*DamageCauser->GetName(), Damage, *TypeName, ReceievedDamageMultiplier));
 
 	// 최종 데미지 계산
-	float FinalDamage = CalculateFinalDamage(Damage, DamageType);
+	float FinalDamage = CalculateFinalDamage(Damage, DamageType, ReceievedDamageMultiplier);
 
 	// 3. [상태별 로그 출력]
 	if (FinalDamage <= 0.f)
@@ -371,7 +371,7 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red,
 		FString::Printf(TEXT("HP Status: %.1f / %.1f"), NewHP, OwnerChar->GetMaxHP()));
 	   UE_LOG(LogTemp, Warning, TEXT("HP Status: %.1f / %.1f"), NewHP, OwnerChar->GetMaxHP());
-
+	   UE_LOG(LogTemp, Display, TEXT("final : %.1f"), FinalDamage);
 
 
 
@@ -401,8 +401,12 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 }
 
 // 피격 데미지 계산
-float UT3CombatComponent::CalculateFinalDamage(float IncomingDamage, const class UDamageType* DamageType)
+float UT3CombatComponent::CalculateFinalDamage(float IncomingDamage, const class UDamageType* DamageType, float ReceievedDamageMultiplier)
 {
+	float Defence = OwnerChar->GetDefense();
+	float DamageReductionScale = FMath::Max(0.5f, ReceievedDamageMultiplier - Defence);
+	IncomingDamage *= DamageReductionScale;  // 데미지 * (데미지 배율 - 방어력 배율)
+
 
 	// 어떤 상황이든 예외 없이 데미지
 	if (DamageType->IsA(UT3DamageType_Undodgable::StaticClass()))
@@ -441,7 +445,8 @@ float UT3CombatComponent::CalculateFinalDamage(float IncomingDamage, const class
 
 
 
-
+	UE_LOG(LogTemp, Display, TEXT("defence : %.1f"), Defence);
+	UE_LOG(LogTemp, Display, TEXT("multi : %.1f"), DamageReductionScale);
 	return IncomingDamage; // 일반 상태 피격
 }
 
