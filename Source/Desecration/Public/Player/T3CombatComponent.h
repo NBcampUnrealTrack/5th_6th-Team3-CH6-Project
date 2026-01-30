@@ -114,7 +114,7 @@ public:
 
 private:
 	// 상태별 데미지 경감 로직
-	float CalculateFinalDamage(float IncomingDamage, const class UDamageType* DamageType);
+	float CalculateFinalDamage(float IncomingDamage, const class UDamageType* DamageType, float ReceievedDamageMultiplier);
 	
 	// 내부 로직용
 	AActor* FindBestTarget();
