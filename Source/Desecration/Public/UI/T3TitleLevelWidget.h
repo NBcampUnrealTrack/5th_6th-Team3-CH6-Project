@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "TitleLevelWidget.generated.h"
+#include "T3TitleLevelWidget.generated.h"
 
 class UTextBlock;
 class UT3SaveGame;
@@ -11,7 +11,7 @@ class AT3TitleGameMode;
 class UButton;
 
 UCLASS()
-class DESECRATION_API UTitleLevelWidget : public UUserWidget
+class DESECRATION_API UT3TitleLevelWidget : public UUserWidget
 {
 	GENERATED_BODY()
 	

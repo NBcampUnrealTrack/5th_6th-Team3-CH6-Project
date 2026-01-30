@@ -1,11 +1,11 @@
-#include "UI/TitleLevelWidget.h"
+#include "UI/T3TitleLevelWidget.h"
 
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "GameSystem/T3GameInstance.h"
 #include "GameSystem/T3TitleGameMode.h"
 
-void UTitleLevelWidget::NativeConstruct()
+void UT3TitleLevelWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 	
@@ -41,7 +41,7 @@ void UTitleLevelWidget::NativeConstruct()
 	}
 }
 
-void UTitleLevelWidget::OnClickNewGameButton()
+void UT3TitleLevelWidget::OnClickNewGameButton()
 {
 	//저장된 게임이 있는 경우 패널을 통해 물어보기
 	if (T3GameInstance->LoadGame())
@@ -53,17 +53,17 @@ void UTitleLevelWidget::OnClickNewGameButton()
 	TitleGameMode->MoveToSelectClassLevel();
 }
 
-void UTitleLevelWidget::OnClickLoadButton()
+void UT3TitleLevelWidget::OnClickLoadButton()
 {
 	TitleGameMode->MoveToLastSavedLevel();
 }
 
-void UTitleLevelWidget::OnClickSettingsButton()
+void UT3TitleLevelWidget::OnClickSettingsButton()
 {
 	//TODO : 플레이어 컨트롤러에서 세팅 화면 출력해주기
 }
 
-void UTitleLevelWidget::OnClickQuitButton()
+void UT3TitleLevelWidget::OnClickQuitButton()
 {
 	//TODO : 게임 종료를 위한 패널 띄우기
 }

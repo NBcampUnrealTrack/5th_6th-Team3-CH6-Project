@@ -2,10 +2,10 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "SettingsPanel.generated.h"
+#include "T3SettingsPanel.generated.h"
 
 UCLASS()
-class DESECRATION_API USettingsPanel : public UUserWidget
+class DESECRATION_API UT3SettingsPanel : public UUserWidget
 {
 	GENERATED_BODY()
 	
