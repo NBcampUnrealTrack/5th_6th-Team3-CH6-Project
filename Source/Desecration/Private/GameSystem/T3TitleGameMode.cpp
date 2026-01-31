@@ -1,12 +1,13 @@
 #include "GameSystem/T3TitleGameMode.h"
 
+#include "GameSystem/GlobalEnums.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 void AT3TitleGameMode::MoveToSelectClassLevel()
 {
-	//TODO : 클래스 선택 맵으로 이동
-	UGameplayStatics::OpenLevel(GetWorld(), CLASS_LEVEL_NAME);
+	const TObjectPtr<UEnum> EnumPtr = StaticEnum<ELevelName>();
+	UGameplayStatics::OpenLevel(GetWorld(), EnumPtr->GetNameByIndex(static_cast<int32>(ELevelName::SelectClass)));
 }
 
 void AT3TitleGameMode::MoveToLastSavedLevel()
