@@ -1,4 +1,4 @@
-﻿#include "Public/Item/Component/T3InventoryComponent.h"
+#include "Public/Item/Component/T3InventoryComponent.h"
 
 #include "Item/Component/T3ItemUseComponent.h"
 #include "Player/T3CharacterBase.h"
@@ -138,6 +138,25 @@ void UT3InventoryComponent::UseItem(int32 SlotIndex)
 		Items[SlotIndex].ItemStack = 0;
 	}
 
+	OnInventoryUpdated.Broadcast();
+}
+
+void UT3InventoryComponent::SwapSlots(int32 SourceSlotIndex, int32 TargetSlotIndex)
+{
+	if (!Items.IsValidIndex(SourceSlotIndex) || !Items.IsValidIndex(TargetSlotIndex))
+	{
+		return;
+	}
+    
+	if (SourceSlotIndex == TargetSlotIndex)
+	{
+		return;
+	}
+	
+	FInventorySlot TempSlot = Items[SourceSlotIndex];
+	Items[SourceSlotIndex] = Items[TargetSlotIndex];
+	Items[TargetSlotIndex] = TempSlot;
+	
 	OnInventoryUpdated.Broadcast();
 }
 

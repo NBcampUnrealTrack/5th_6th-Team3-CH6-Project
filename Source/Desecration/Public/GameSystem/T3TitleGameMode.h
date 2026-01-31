@@ -18,7 +18,4 @@ public:
 	
 	//게임 종료
 	void QuitGame() const;
-	
-private:
-	const FName CLASS_LEVEL_NAME = TEXT("Level");
 };
