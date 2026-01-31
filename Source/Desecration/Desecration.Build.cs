@@ -20,6 +20,7 @@ public class Desecration : ModuleRules
 			"GameplayStateTreeModule",
 			"UMG",
 			"Slate",
+			"SlateCore",
             "Niagara"
         });
 

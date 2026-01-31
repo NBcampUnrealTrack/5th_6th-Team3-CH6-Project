@@ -1,9 +1,11 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 #include "Engine/DataTable.h"
 #include "T3ItemBaseData.h"
 #include "T3ConsumableItemData.generated.h"
+
+class UNiagaraSystem;
 
 UENUM(BlueprintType)
 enum class EEffectType : uint8
@@ -39,4 +41,7 @@ struct FT3ConsumableItemData : public FTableRowBase
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Comsumable")
 	float CoolTime; // 쿨타임
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VFX")
+	UNiagaraSystem* UseEffect; // 재생할 이펙트
 };
