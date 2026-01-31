@@ -6,8 +6,8 @@
 
 void AT3TitleGameMode::MoveToSelectClassLevel()
 {
-	const TObjectPtr<UEnum> EnumPtr = StaticEnum<ELevelName>();
-	UGameplayStatics::OpenLevel(GetWorld(), EnumPtr->GetNameByIndex(static_cast<int32>(ELevelName::SelectClass)));
+	const FName LevelName = FName(UEnum::GetDisplayValueAsText(ELevelName::SelectClass).ToString());
+	UGameplayStatics::OpenLevel(GetWorld(), LevelName);
 }
 
 void AT3TitleGameMode::MoveToLastSavedLevel()
