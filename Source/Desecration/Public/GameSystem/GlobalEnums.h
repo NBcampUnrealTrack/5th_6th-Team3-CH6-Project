@@ -47,3 +47,9 @@ enum class ELevelName
 	Title = 0 UMETA(DisplayName = "TitleLevel"),
 	SelectClass UMETA(DisplayName = "SelectClassLevel"),
 };
+
+enum class T3Castle_1
+{
+	Title = 0 UMETA(DisplayName = "TitleLevel"),
+	SelectClass UMETA(DisplayName = "SelectClassLevel"),
+};
