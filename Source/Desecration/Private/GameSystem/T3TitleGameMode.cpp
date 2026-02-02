@@ -15,7 +15,7 @@ void AT3TitleGameMode::MoveToLastSavedLevel()
 	//TODO : 마지막 저장 장소인 맵으로 이동
 }
 
-void AT3TitleGameMode::QuitGame() const
+void AT3TitleGameMode::QuitGame()
 {
 	UKismetSystemLibrary::QuitGame(GetWorld(), GetWorld()->GetFirstPlayerController(), EQuitPreference::Quit, false);
 }
