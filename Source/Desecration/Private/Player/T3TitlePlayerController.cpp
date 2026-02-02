@@ -7,6 +7,11 @@ void AT3TitlePlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	//마우스 사용
+	bShowMouseCursor = true;
+	const FInputModeUIOnly InputModeUIOnly;
+	SetInputMode(InputModeUIOnly);
+	
 	//위젯 생성
 	TitleLevelWidgetInstance = CreateWidget<UT3TitleLevelWidget>(this, TitleLevelWidgetClass);
 	if (!TitleLevelWidgetInstance)
