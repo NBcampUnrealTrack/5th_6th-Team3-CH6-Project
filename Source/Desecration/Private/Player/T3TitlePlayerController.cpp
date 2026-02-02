@@ -19,6 +19,7 @@ void AT3TitlePlayerController::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("%s : Failed to create TitleLevelWidget"), *GetNameSafe(this));
 		return;
 	}
+	TitleLevelWidgetInstance->AddToViewport();
 	
 	SettingsPanelInstance = CreateWidget<UT3SettingsPanel>(this, SettingsPanelClass);
 	if (!SettingsPanelInstance)
@@ -26,6 +27,7 @@ void AT3TitlePlayerController::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("%s : Failed to create SettingsPanel"), *GetNameSafe(this));
 		return;
 	}
+	SettingsPanelInstance->AddToViewport();
 	
 	//설정 패널은 숨김 상태로 시작
 	SettingsPanelInstance->SetVisibility(ESlateVisibility::Collapsed);
