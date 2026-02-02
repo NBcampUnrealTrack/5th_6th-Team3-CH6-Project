@@ -4,7 +4,13 @@
 #include "Player/T3ANS_Combat.h"
 #include "Player/T3CharacterBase.h"
 #include "Player/T3CombatComponent.h"
+#include "Player/T3WeaponBase.h"
 
+
+UT3ANS_Combat::UT3ANS_Combat()
+{
+    DamageTypeClass = UT3DamageType_Base::StaticClass();
+}
 
 void UT3ANS_Combat::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
@@ -15,17 +21,22 @@ void UT3ANS_Combat::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceB
     if (AT3CharacterBase* Char = Cast<AT3CharacterBase>(MeshComp->GetOwner()))
     {
         if (UT3CombatComponent* Combat = Char->GetCombatComponent())
+            if (AT3WeaponBase* Weapon = Combat->GetWeaponBySlot(EEquipSlot::RightHand))
         {
             switch (StatusType)
             {
             case ECombatWindowType::Parry:
                 Combat->SetParryingEnabled(true);
                 break;
-            case ECombatWindowType::Invincible:
-                // Combat->SetInvincible(true); // 추후 구현 시
+            case ECombatWindowType::Dodge:
+                Combat->SetDodgingEnabled(true);
                 break;
             case ECombatWindowType::Attack:
-                // Combat->EnableAttackCollision(true); // 추후 구현 시
+                Weapon->SetWeaponCollisionEnabled(true, AttackDamageMultiflier,DamageTypeClass, AttackIntensity, StunAmount, StaminaAmount);
+                Combat->ConsumeStamina(StaminaAmount);
+                break;
+            case ECombatWindowType::PrevenRegen:
+                Char->bCanRegenStamina = false;
                 break;
             }
         }
@@ -41,17 +52,21 @@ void UT3ANS_Combat::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBas
     if (AT3CharacterBase* Char = Cast<AT3CharacterBase>(MeshComp->GetOwner()))
     {
         if (UT3CombatComponent* Combat = Char->GetCombatComponent())
+            if (AT3WeaponBase* Weapon = Combat->GetWeaponBySlot(EEquipSlot::RightHand))
         {
             switch (StatusType)
             {
             case ECombatWindowType::Parry:
                 Combat->SetParryingEnabled(false);
                 break;
-            case ECombatWindowType::Invincible:
-                // Combat->SetInvincible(false);
+            case ECombatWindowType::Dodge:
+                Combat->SetDodgingEnabled(false);
                 break;
             case ECombatWindowType::Attack:
-                // Combat->EnableAttackCollision(false);
+                Weapon->SetWeaponCollisionEnabled(false);
+                break;
+            case ECombatWindowType::PrevenRegen:
+                Char->bCanRegenStamina = true;
                 break;
             }
         }

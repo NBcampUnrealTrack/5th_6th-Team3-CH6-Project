@@ -1,0 +1,75 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Components/ActorComponent.h"
+#include "Engine/DataTable.h"
+#include "T3InventoryComponent.generated.h"
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCooldownUpdated, FName, ItemID, float, RemainingTime);
+
+class AT3CharacterBase;
+
+USTRUCT(BlueprintType)
+struct FInventorySlot
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory Slot")
+	FName ItemID;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory Slot")
+	int32 ItemStack = 0;
+};
+
+UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+class DESECRATION_API UT3InventoryComponent : public UActorComponent
+{
+	GENERATED_BODY()
+
+public:	
+	UT3InventoryComponent();
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void AddItem(FName ItemName);
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void UseItem(int32 SlotIndex);
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void SwapSlots(int32 SourceSlotIndex, int32 TargetSlotIndex);
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void DropItem(int32 SlotIndex);
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	float GetCooldownProgressByItemID(FName ItemID);
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory")
+	TArray<FInventorySlot> Items;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory")
+	int32 InventorySize;
+	
+	UPROPERTY(BlueprintAssignable, Category = "Inventory")
+	FOnInventoryUpdated OnInventoryUpdated;
+	
+	UPROPERTY(BlueprintAssignable, Category = "Inventory")
+	FOnCooldownUpdated OnCooldownUpdated;
+protected:
+	virtual void BeginPlay() override;
+	
+private:
+	UPROPERTY()
+	AT3CharacterBase* OwnerCharacter;
+	
+	UPROPERTY()
+	TMap<FName, float> ItemCooldownStartTimes;
+    
+	UPROPERTY()
+	TMap<FName, float> ItemCooldownDurations;
+	
+	FTimerHandle CooldownUpdateTimerHandle;
+	
+	void UpdateCooldowns();
+};

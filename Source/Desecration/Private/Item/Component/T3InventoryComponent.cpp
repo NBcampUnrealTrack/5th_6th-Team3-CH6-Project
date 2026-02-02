@@ -1,0 +1,229 @@
+#include "Public/Item/Component/T3InventoryComponent.h"
+
+#include "Item/Component/T3ItemUseComponent.h"
+#include "Player/T3CharacterBase.h"
+#include "Public/Item/Data/T3ConsumableItemData.h"
+UT3InventoryComponent::UT3InventoryComponent()
+	:
+InventorySize(20)
+{
+	PrimaryComponentTick.bCanEverTick = false;
+	
+	Items.SetNum(InventorySize);
+}
+
+void UT3InventoryComponent::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	OwnerCharacter = Cast<AT3CharacterBase>(GetOwner());
+}
+
+void UT3InventoryComponent::AddItem(FName ItemName)
+{
+	if (ItemName == NAME_None)
+	{
+		return;
+	}
+
+	if (!IsValid(OwnerCharacter))
+	{
+		return;
+	}
+	
+	UDataTable* ItemDataTable = OwnerCharacter->ItemDataTable;
+	
+	if (!IsValid(ItemDataTable))
+	{
+		return;
+	}
+
+	FT3ConsumableItemData* ItemRow = ItemDataTable->FindRow<FT3ConsumableItemData>(ItemName, TEXT("AddItem"));
+
+	if (!ItemRow)
+	{
+		return;
+	}
+
+	for (int32 i = 0; i < Items.Num(); i++) // 슬롯에 추가 할 아이템이 이미 있는지 확인
+	{
+		if (Items[i].ItemID == ItemName)
+		{
+			Items[i].ItemStack++;
+			
+			UE_LOG(LogTemp, Log, TEXT("[%s] 1개 추가, 현재 개수: %d"), *ItemName.ToString(), Items[i].ItemStack)
+			
+			OnInventoryUpdated.Broadcast();
+			return;
+		}
+	}
+	
+	for (int32 i = 0; i < Items.Num(); i++)
+	{
+		if (Items[i].ItemID == NAME_None)
+		{
+			Items[i].ItemID = ItemName;
+			Items[i].ItemStack = 1;
+			
+			UE_LOG(LogTemp, Log, TEXT("새로운 아이템 [%s] 획득, 현재 개수: %d"), *ItemName.ToString(), Items[i].ItemStack)
+
+			OnInventoryUpdated.Broadcast();
+			return;
+		}
+	}
+
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("인벤토리 꽉 참"));
+	}
+}
+
+void UT3InventoryComponent::UseItem(int32 SlotIndex)
+{
+	if (!Items.IsValidIndex(SlotIndex))
+	{
+		return;
+	}
+    
+	FName const ItemIDToUse = Items[SlotIndex].ItemID;
+    
+	if (ItemIDToUse == NAME_None || Items[SlotIndex].ItemStack <= 0)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("아이템 없음"));
+		return;
+	}
+	
+	if (!IsValid(OwnerCharacter) || !IsValid(OwnerCharacter->ItemDataTable))
+	{
+		return;
+	}
+	
+	FT3ConsumableItemData* ItemRow =
+		OwnerCharacter->ItemDataTable->FindRow<FT3ConsumableItemData>(ItemIDToUse, TEXT("UseItem"));
+	
+	if (!ItemRow)
+	{
+		return;
+	}
+	
+	bool bUsed = OwnerCharacter->ItemUseComponent->ApplyConsumableItem(*ItemRow);
+	
+	if (!bUsed)
+	{
+		return;
+	}
+	
+	ItemCooldownStartTimes.Add(ItemIDToUse, GetWorld()->GetTimeSeconds());
+	ItemCooldownDurations.Add(ItemIDToUse, ItemRow->CoolTime);
+	
+	if (!GetWorld()->GetTimerManager().IsTimerActive(CooldownUpdateTimerHandle))
+	{
+		GetWorld()->GetTimerManager().SetTimer(
+			CooldownUpdateTimerHandle,
+			this,
+			&UT3InventoryComponent::UpdateCooldowns,
+			0.1f,
+			true);
+	}
+	
+	Items[SlotIndex].ItemStack--;
+
+	UE_LOG(LogTemp, Log, TEXT("[%s]를 1개 사용했습니다. 현재 개수: %d"), *Items[SlotIndex].ItemID.ToString(), Items[SlotIndex].ItemStack)
+
+	if (Items[SlotIndex].ItemStack <= 0)
+	{
+		UE_LOG(LogTemp, Log, TEXT("[%s]를 모두 사용했습니다."), *Items[SlotIndex].ItemID.ToString())
+		
+		Items[SlotIndex].ItemID = NAME_None;
+		Items[SlotIndex].ItemStack = 0;
+	}
+
+	OnInventoryUpdated.Broadcast();
+}
+
+void UT3InventoryComponent::SwapSlots(int32 SourceSlotIndex, int32 TargetSlotIndex)
+{
+	if (!Items.IsValidIndex(SourceSlotIndex) || !Items.IsValidIndex(TargetSlotIndex))
+	{
+		return;
+	}
+    
+	if (SourceSlotIndex == TargetSlotIndex)
+	{
+		return;
+	}
+	
+	FInventorySlot TempSlot = Items[SourceSlotIndex];
+	Items[SourceSlotIndex] = Items[TargetSlotIndex];
+	Items[TargetSlotIndex] = TempSlot;
+	
+	OnInventoryUpdated.Broadcast();
+}
+
+void UT3InventoryComponent::DropItem(int32 SlotIndex)
+{
+}
+
+float UT3InventoryComponent::GetCooldownProgressByItemID(FName ItemID)
+{
+	if (ItemID == NAME_None)
+	{
+		return 1.0f;
+	}
+    
+	float* StartTime = ItemCooldownStartTimes.Find(ItemID);
+	float* Duration = ItemCooldownDurations.Find(ItemID);
+    
+	if (!StartTime || !Duration || *Duration <= 0.0f)
+	{
+		return 1.0f;
+	}
+    
+	float Elapsed = GetWorld()->GetTimeSeconds() - *StartTime;
+	float Progress = FMath::Clamp(Elapsed / *Duration, 0.0f, 1.0f);
+	
+	return Progress;
+}
+
+void UT3InventoryComponent::UpdateCooldowns()
+{
+	bool bHasActiveCooldowns = false;
+	TArray<FName> ItemsToRemove; // 제거할 항목들을 저장할 배열
+    
+	for (auto& Pair : ItemCooldownStartTimes)
+	{
+		FName ItemID = Pair.Key;
+		float* Duration = ItemCooldownDurations.Find(ItemID);
+        
+		if (!Duration)
+		{
+			continue;
+		}
+        
+		float Elapsed = GetWorld()->GetTimeSeconds() - Pair.Value;
+		float Remaining = FMath::Max(0.0f, *Duration - Elapsed);
+        
+		OnCooldownUpdated.Broadcast(ItemID, Remaining);
+        
+		if (Remaining > 0.0f)
+		{
+			bHasActiveCooldowns = true;
+		}
+		else
+		{
+			ItemsToRemove.Add(ItemID); // 제거 목록에 추가만 함
+		}
+	}
+	
+	// 순회가 끝난 후 제거
+	for (FName ItemID : ItemsToRemove)
+	{
+		ItemCooldownStartTimes.Remove(ItemID);
+		ItemCooldownDurations.Remove(ItemID);
+	}
+    
+	if (!bHasActiveCooldowns)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(CooldownUpdateTimerHandle);
+	}
+}

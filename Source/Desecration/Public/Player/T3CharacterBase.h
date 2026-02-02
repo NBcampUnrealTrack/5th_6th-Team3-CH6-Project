@@ -4,12 +4,34 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "T3PlayerInputState.h"
+#include "InputActionValue.h"
 #include "T3CharacterBase.generated.h"
+
 
 class USpringArmComponent;
 class UCameraComponent;
 class UT3CombatComponent;
 class UDataTable;
+class UT3InventoryComponent; 
+class UT3ItemUseComponent;
+class UT3CharacterDataAsset;
+
+
+UENUM(BlueprintType)
+enum class ET3StatType : uint8
+{
+	HP,
+	MP,
+	Stamina,
+	Attack,
+	Defense,
+	CriticalChance,
+	CriticalDamage,
+	MoveSpeed
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnStatChangedDelegate, ET3StatType, StatType, float, CurrentValue, float, MaxValue);
 
 UCLASS()
 class DESECRATION_API AT3CharacterBase : public ACharacter
@@ -19,12 +41,23 @@ class DESECRATION_API AT3CharacterBase : public ACharacter
 public:
 AT3CharacterBase();
 
+// 캐릭터 스탯 델리게이트 바인딩 함수
+UPROPERTY(BlueprintAssignable, Category = "Stat | Events")
+FOnStatChangedDelegate OnStatChanged;
+
 UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory|Data") 
 TObjectPtr <UDataTable> ItemDataTable;
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void Tick( float DeltaTime ) override;
+	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
+	
+	// 스탯 변경 시 내부적으로 델리게이트를 호출해주는 헬퍼 함수
+	void BroadcastStatChange(ET3StatType StatType);
 
+	UPROPERTY(EditAnywhere, Category = "Character Data")
+	TObjectPtr<class UT3CharacterDataAsset> CharacterData;
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
@@ -36,13 +69,32 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	TObjectPtr<UT3CombatComponent> CombatComponent;
 
+	void ApplyCharacterData(UT3CharacterDataAsset* Data);
+
 public:
-	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
-	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
-	FORCEINLINE UT3CombatComponent* GetCombatComponent() const { return CombatComponent; }
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "PlayerInputState")
+	FT3PlayerInputState PlayerInputState;
+	
+
+	FORCEINLINE TObjectPtr <USpringArmComponent> GetCameraBoom() const { return CameraBoom; }
+	FORCEINLINE TObjectPtr <UCameraComponent> GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE TObjectPtr <UT3CombatComponent> GetCombatComponent() const { return CombatComponent; }
 
 	void Move(const FVector2D& Value);
 	void Look(const FVector2D& Value);
+	void Roll(const FInputActionValue& Value);
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnRollTriggered();
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnAttack();
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnHit();
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
+	TObjectPtr<UT3InventoryComponent> InventoryComponent; 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
+	TObjectPtr<UT3ItemUseComponent> ItemUseComponent;
 
 
 
@@ -57,64 +109,73 @@ protected:
 	float CurrentHP;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
-	float AttackPower = 20.f; // 장비 착용하면 변경
+	float AttackPower = 50.f; // 장비 착용하면 변경
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
-	float Defense = 10.f; // 장비 착용하면 변경
+	float Defense = 0.1f; // 장비 착용하면 변경
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float MaxStamina = 100.f;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float CurrentStamina;
 
-	UPROPERTY(EditAnywhere, Category = "Stat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float StaminaRegenRate = 25.f; // 스태미나 초당 회복량
 
-	UPROPERTY(EditAnywhere, Category = "Stat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float MaxMana = 100.f;
 
-	UPROPERTY(VisibleAnywhere, Category = "Stat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float CurrentMana;
 
-	UPROPERTY(EditAnywhere, Category = "Stat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float CriticalChance = 0.1f;  // 크확
 
-	UPROPERTY(EditAnywhere, Category = "Stat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float CriticalDamage = 1.5f;  // 크뎀
 
+
 public:
-	// 7개 스탯 Get / Set 함수
+	// 7개 스탯 + 이동속도 Get / Set 함수
 
 	// HP
 	FORCEINLINE float GetMaxHP() const { return MaxHP; }
 	FORCEINLINE float GetCurrentHP() const { return CurrentHP; }
-	void SetCurrentHP(float NewHP) { CurrentHP = FMath::Clamp(NewHP, 0.f, MaxHP); }
+	void SetCurrentHP(float NewHP) { CurrentHP = FMath::Clamp(NewHP, 0.f, MaxHP); BroadcastStatChange(ET3StatType::HP);}
 
 	// Mana
 	FORCEINLINE float GetMaxMana() const { return MaxMana; }
 	FORCEINLINE float GetCurrentMana() const { return CurrentMana; }
-	void SetCurrentMana(float NewMana) { CurrentMana = FMath::Clamp(NewMana, 0.f, MaxMana); }
+	void SetCurrentMana(float NewMana) { CurrentMana = FMath::Clamp(NewMana, 0.f, MaxMana); BroadcastStatChange(ET3StatType::MP);}
+
 
 	// Stamina
 	FORCEINLINE float GetMaxStamina() const { return MaxStamina; }
 	FORCEINLINE float GetCurrentStamina() const { return CurrentStamina; }
-	void SetCurrentStamina(float NewStamina) { CurrentStamina = FMath::Clamp(NewStamina, 0.f, MaxStamina); }
+	void SetCurrentStamina(float NewStamina) { CurrentStamina = FMath::Clamp(NewStamina, 0.f, MaxStamina); BroadcastStatChange(ET3StatType::Stamina);}
+	bool bCanRegenStamina = true;
 
 	// Attack
 	FORCEINLINE float GetAttackPower() const { return AttackPower; }
-	FORCEINLINE void SetAttackPower(float NewPower) { AttackPower = NewPower; }
+	FORCEINLINE void SetAttackPower(float NewPower) { AttackPower = NewPower; BroadcastStatChange(ET3StatType::Attack);}
 
 	// Defense
 	FORCEINLINE float GetDefense() const { return Defense; }
-	FORCEINLINE void SetDefense(float NewDefense) { Defense = NewDefense; }
+	FORCEINLINE void SetDefense(float NewDefense) { Defense = NewDefense; BroadcastStatChange(ET3StatType::Defense);}
 
 	// Critical
 	FORCEINLINE float GetCriticalChance() const { return CriticalChance; }
-	FORCEINLINE void SetCriticalChance(float NewChance) { CriticalChance = NewChance; }
+	FORCEINLINE void SetCriticalChance(float NewChance) { CriticalChance = NewChance; BroadcastStatChange(ET3StatType::CriticalChance);	}
 	FORCEINLINE float GetCriticalDamage() const { return CriticalDamage; }
-	FORCEINLINE void SetCriticalDamage(float NewDamage) { CriticalDamage = NewDamage; }
+	FORCEINLINE void SetCriticalDamage(float NewDamage) { CriticalDamage = NewDamage; BroadcastStatChange(ET3StatType::CriticalDamage);	}
 
+	// Speed
+	UFUNCTION(BlueprintCallable, Category = "Stat")
+	float GetMoveSpeed() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Stat")
+	void SetMoveSpeed(float NewSpeed);
 
 
 	// 액티브 회복 함수
@@ -133,6 +194,9 @@ protected:
 	// 스테미나 회복 주기
 	float StaminaRegenInterval = 0.1f;
 	FTimerHandle StaminaRegenTimerHandle;
+	
+	UFUNCTION(BlueprintPure)
+	ERollDirection GetRollDirection(float Angle) const;
 
 private:
 	// 내부 수치 계산 및 제한(Clamp)용 로직
@@ -140,4 +204,12 @@ private:
 	void AddMP(float Amount);
 	void AddStamina(float Amount);
 
+	// 속도 복구용 함수
+	void ResetMoveSpeed();
+	FTimerHandle SpeedResetTimerHandle;
+	// 복구할 원본 속도 저장
+	float OriginalMoveSpeed;
+
+
+	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* InstigatedBy, AActor* DamageCauser) override;
 };
