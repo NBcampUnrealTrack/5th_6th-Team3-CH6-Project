@@ -69,6 +69,11 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	TObjectPtr<UT3CombatComponent> CombatComponent;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "State")
+	bool bMoveLock = false;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "State")
+	bool bCameraLock = false;
+	
 	void ApplyCharacterData(UT3CharacterDataAsset* Data);
 
 public:

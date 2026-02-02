@@ -158,6 +158,8 @@ void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)
 
 void AT3CharacterBase::Move(const FVector2D& Value)
 {
+	if (bMoveLock) return;
+	
 	if (Controller != nullptr)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
@@ -188,6 +190,8 @@ void AT3CharacterBase::Move(const FVector2D& Value)
 
 void AT3CharacterBase::Look(const FVector2D& Value)
 {
+	if (bCameraLock) return;
+	
 	AddControllerYawInput(Value.X);
 	AddControllerPitchInput(Value.Y);
 }
