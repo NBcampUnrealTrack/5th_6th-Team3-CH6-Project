@@ -5,6 +5,7 @@
 #include "GameSystem/T3GameInstance.h"
 #include "GameSystem/T3TitleGameMode.h"
 #include "Player/T3TitlePlayerController.h"
+#include "UI/T3ConfirmPanel.h"
 
 void UT3TitleLevelWidget::NativeConstruct()
 {
@@ -55,7 +56,8 @@ void UT3TitleLevelWidget::OnClickNewGameButton()
 	//저장된 게임이 있는 경우 패널을 통해 물어보기
 	if (T3GameInstance->LoadGame())
 	{
-		//TODO : 패널 띄우기
+		ConfirmPanel->ShowConfirmPanel(CHECK_NEW_GAME);
+		ConfirmPanel->OnClickConfirmButtonAction.AddDynamic(TitleGameMode, &AT3TitleGameMode::MoveToSelectClassLevel);
 		return;
 	}
 	
@@ -74,5 +76,6 @@ void UT3TitleLevelWidget::OnClickSettingsButton()
 
 void UT3TitleLevelWidget::OnClickQuitButton()
 {
-	//TODO : 게임 종료를 위한 패널 띄우기
+	ConfirmPanel->ShowConfirmPanel(QUIT_GAME_STRING);
+	ConfirmPanel->OnClickConfirmButtonAction.AddDynamic(TitleGameMode, &AT3TitleGameMode::QuitGame);
 }
