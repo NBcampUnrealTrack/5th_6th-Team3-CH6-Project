@@ -18,6 +18,16 @@ enum class EShopBuyResult : uint8
 	Succeeded // 구매 성공
 };
 
+UENUM(BlueprintType)
+enum class EShopSellResult : uint8
+{
+	None,
+	InvalidData, // ShopData or Inventory 없음
+	ItemNotFound, // 인벤토리에 없음
+	CannotSell, // 판매 불가 아이템
+	Succeeded // 판매 성공
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class DESECRATION_API UT3ShopComponent : public UActorComponent
 {
@@ -28,6 +38,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Shop")
 	EShopBuyResult BuyItem(const FName& ItemName, UT3InventoryComponent* Inventory);
+	
+	UFUNCTION(BlueprintCallable, Category = "Shop")
+	EShopSellResult SellItem(const FName& ItemName, UT3InventoryComponent* Inventory);
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Data")
 	TObjectPtr<UDataTable> ShopData;

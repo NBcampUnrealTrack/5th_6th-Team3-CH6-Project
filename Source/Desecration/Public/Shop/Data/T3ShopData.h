@@ -20,4 +20,7 @@ struct FT3ShopData : public FTableRowBase
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sell Data")
 	int32 SellPrice; // 플레이어가 팔 때 가격
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sell Data")
+	uint8 bCanSell : 1; // 플레이어가 팔 수 있는지
 };

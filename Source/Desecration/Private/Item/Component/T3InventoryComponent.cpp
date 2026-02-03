@@ -1,5 +1,6 @@
 #include "Public/Item/Component/T3InventoryComponent.h"
 
+#include "IDetailTreeNode.h"
 #include "Item/Component/T3ItemUseComponent.h"
 #include "Player/T3CharacterBase.h"
 #include "Public/Item/Data/T3ConsumableItemData.h"
@@ -20,7 +21,7 @@ void UT3InventoryComponent::BeginPlay()
 	OwnerCharacter = Cast<AT3CharacterBase>(GetOwner());
 }
 
-void UT3InventoryComponent::AddItem(FName ItemName)
+void UT3InventoryComponent::AddItem(const FName& ItemName)
 {
 	if (ItemName == NAME_None)
 	{
@@ -164,15 +165,36 @@ void UT3InventoryComponent::DropItem(int32 SlotIndex)
 {
 }
 
-float UT3InventoryComponent::GetCooldownProgressByItemID(FName ItemID)
+bool UT3InventoryComponent::RemoveItem(const FName& ItemName)
 {
-	if (ItemID == NAME_None)
+	for (int32 i = 0; i < Items.Num(); i++)
+	{
+		if (Items[i].ItemID == ItemName)
+		{
+			Items[i].ItemStack--;
+			
+			if (Items[i].ItemStack <= 0)
+			{
+				Items[i].ItemID = NAME_None;
+				Items[i].ItemStack = 0;
+			}
+			
+			OnInventoryUpdated.Broadcast();
+			return true;
+		}
+	}
+	return false;
+}
+
+float UT3InventoryComponent::GetCooldownProgressByItemID(const FName& ItemName)
+{
+	if (ItemName == NAME_None)
 	{
 		return 1.0f;
 	}
     
-	float* StartTime = ItemCooldownStartTimes.Find(ItemID);
-	float* Duration = ItemCooldownDurations.Find(ItemID);
+	float* StartTime = ItemCooldownStartTimes.Find(ItemName);
+	float* Duration = ItemCooldownDurations.Find(ItemName);
     
 	if (!StartTime || !Duration || *Duration <= 0.0f)
 	{
