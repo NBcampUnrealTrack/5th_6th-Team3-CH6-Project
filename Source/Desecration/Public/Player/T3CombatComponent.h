@@ -72,6 +72,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EHitIntensity HitIntensity;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector CurrentDamageCauserLocation;
+	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	// 막기/패링
