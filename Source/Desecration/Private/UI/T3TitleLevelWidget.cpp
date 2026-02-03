@@ -66,7 +66,14 @@ void UT3TitleLevelWidget::OnClickNewGameButton()
 
 void UT3TitleLevelWidget::OnClickLoadButton()
 {
-	TitleGameMode->MoveToLastSavedLevel();
+	//저장된 게임이 없다면 무시
+	if (!T3GameInstance->LoadGame())
+	{
+		return;
+	}
+	
+	ConfirmPanel->ShowConfirmPanel(TEXT("TODO : 저장된 게임 불러오기 문구 추가"));
+	ConfirmPanel->OnClickConfirmButtonAction.AddDynamic(TitleGameMode, &AT3TitleGameMode::MoveToLastSavedLevel);
 }
 
 void UT3TitleLevelWidget::OnClickSettingsButton()
