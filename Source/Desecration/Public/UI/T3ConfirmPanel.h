@@ -35,6 +35,7 @@ private:
 	
 public:
 	//확인 버튼을 누를 때 실행할 내용
+	//패널을 띄울때 마다 바인딩 필요
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnClickConfirmButtonAction OnClickConfirmButtonAction;
 
