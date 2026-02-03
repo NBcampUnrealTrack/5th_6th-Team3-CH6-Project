@@ -1,11 +1,13 @@
 #include "Public/Item/Component/T3InventoryComponent.h"
 
+#include "IDetailTreeNode.h"
 #include "Item/Component/T3ItemUseComponent.h"
 #include "Player/T3CharacterBase.h"
 #include "Public/Item/Data/T3ConsumableItemData.h"
 UT3InventoryComponent::UT3InventoryComponent()
 	:
-InventorySize(20)
+InventorySize(20),
+Money(0)
 {
 	PrimaryComponentTick.bCanEverTick = false;
 	
@@ -19,15 +21,17 @@ void UT3InventoryComponent::BeginPlay()
 	OwnerCharacter = Cast<AT3CharacterBase>(GetOwner());
 }
 
-void UT3InventoryComponent::AddItem(FName ItemName)
+void UT3InventoryComponent::AddItem(const FName& ItemName)
 {
 	if (ItemName == NAME_None)
 	{
+		UE_LOG(LogTemp, Error, TEXT("아이템 이름 비었음"));
 		return;
 	}
 
 	if (!IsValid(OwnerCharacter))
 	{
+		UE_LOG(LogTemp, Error, TEXT("캐릭터 유효하지않음"));
 		return;
 	}
 	
@@ -35,6 +39,7 @@ void UT3InventoryComponent::AddItem(FName ItemName)
 	
 	if (!IsValid(ItemDataTable))
 	{
+		UE_LOG(LogTemp, Error, TEXT("데이터 테이블 비었음"));
 		return;
 	}
 
@@ -42,6 +47,7 @@ void UT3InventoryComponent::AddItem(FName ItemName)
 
 	if (!ItemRow)
 	{
+		UE_LOG(LogTemp, Error, TEXT("아이템 Row 없음"));
 		return;
 	}
 
@@ -70,11 +76,6 @@ void UT3InventoryComponent::AddItem(FName ItemName)
 			OnInventoryUpdated.Broadcast();
 			return;
 		}
-	}
-
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("인벤토리 꽉 참"));
 	}
 }
 
@@ -164,15 +165,36 @@ void UT3InventoryComponent::DropItem(int32 SlotIndex)
 {
 }
 
-float UT3InventoryComponent::GetCooldownProgressByItemID(FName ItemID)
+bool UT3InventoryComponent::RemoveItem(const FName& ItemName)
 {
-	if (ItemID == NAME_None)
+	for (int32 i = 0; i < Items.Num(); i++)
+	{
+		if (Items[i].ItemID == ItemName)
+		{
+			Items[i].ItemStack--;
+			
+			if (Items[i].ItemStack <= 0)
+			{
+				Items[i].ItemID = NAME_None;
+				Items[i].ItemStack = 0;
+			}
+			
+			OnInventoryUpdated.Broadcast();
+			return true;
+		}
+	}
+	return false;
+}
+
+float UT3InventoryComponent::GetCooldownProgressByItemID(const FName& ItemName)
+{
+	if (ItemName == NAME_None)
 	{
 		return 1.0f;
 	}
     
-	float* StartTime = ItemCooldownStartTimes.Find(ItemID);
-	float* Duration = ItemCooldownDurations.Find(ItemID);
+	float* StartTime = ItemCooldownStartTimes.Find(ItemName);
+	float* Duration = ItemCooldownDurations.Find(ItemName);
     
 	if (!StartTime || !Duration || *Duration <= 0.0f)
 	{
@@ -183,6 +205,18 @@ float UT3InventoryComponent::GetCooldownProgressByItemID(FName ItemID)
 	float Progress = FMath::Clamp(Elapsed / *Duration, 0.0f, 1.0f);
 	
 	return Progress;
+}
+
+int32 UT3InventoryComponent::GetMoney()
+{
+	return Money;
+}
+
+int32 UT3InventoryComponent::SetMoney(int32 NewMoney)
+{
+	Money = NewMoney;
+	
+	return Money;
 }
 
 void UT3InventoryComponent::UpdateCooldowns()
