@@ -2,6 +2,8 @@
 #include "Item/Data/T3ConsumableItemData.h"
 #include "Player/T3CharacterBase.h"
 #include "NiagaraFunctionLibrary.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundCue.h"
 
 UT3ItemUseComponent::UT3ItemUseComponent()
 : OriginalPowerValue(0.f),
@@ -244,6 +246,12 @@ void UT3ItemUseComponent::RecoverMPTick()
 
 bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemData)
 {
+	UGameplayStatics::PlaySoundAtLocation(
+	this,
+	HealSound,
+	OwnerCharacter->GetActorLocation()
+);
+	
 	switch (ItemData.EffectType)
 	{
 	case EEffectType::HP:

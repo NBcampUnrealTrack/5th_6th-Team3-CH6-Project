@@ -31,19 +31,28 @@ public:
 	UT3InventoryComponent();
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void AddItem(FName ItemName);
+	void AddItem(const FName& ItemName);
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void UseItem(int32 SlotIndex);
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void SwapSlots(int32 SourceSlotIndex, int32 TargetSlotIndex);
-	
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void DropItem(int32 SlotIndex);
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	float GetCooldownProgressByItemID(FName ItemID);
+	bool RemoveItem(const FName& ItemName);
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void SwapSlots(int32 SourceSlotIndex, int32 TargetSlotIndex);
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	float GetCooldownProgressByItemID(const FName& ItemName);
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 GetMoney();
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 SetMoney(int32 NewMoney);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TArray<FInventorySlot> Items;
@@ -56,9 +65,13 @@ public:
 	
 	UPROPERTY(BlueprintAssignable, Category = "Inventory")
 	FOnCooldownUpdated OnCooldownUpdated;
+
 protected:
 	virtual void BeginPlay() override;
 	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Money")
+	int32 Money;
+
 private:
 	UPROPERTY()
 	AT3CharacterBase* OwnerCharacter;
