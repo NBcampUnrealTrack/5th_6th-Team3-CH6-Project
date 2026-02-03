@@ -2,6 +2,8 @@
 
 
 #include "Player/T3CharacterBase.h"
+
+#include "SNegativeActionButton.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -360,6 +362,7 @@ float AT3CharacterBase::TakeDamage(float DamageAmount, FDamageEvent const& Damag
 
 		CombatComponent->ExecuteHitLogic(DamageCauser, ActualDamage, DamageTypePtr, InstigatedBy, ReceivedIntensity, ReceievedDamageMultiplier);
 		OnHit();
+		UE_LOG(LogTemp, Warning, TEXT("DamageCauser: %s"), *DamageCauser->GetName());
 	}
 
 	return ActualDamage;
