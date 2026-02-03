@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "T3CharacterDataAsset.h"
-#include "Player/T3DamageTypes.h"
 #include "T3CombatComponent.generated.h"
 
 class AAICharacter;
@@ -19,8 +18,7 @@ enum class ECharacterCombatState : uint8
 	Parrying,
 	Dodge,
 	Attacking,
-	Dead,
-	Cooldown
+	Dead
 };
 
 // 노티파이용 ENUM
@@ -94,17 +92,13 @@ public:
 
 	// 록온
 	void ToggleLockOn();
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LockOn")
-	float TargetHeightPercent = 1.0f;
-	TObjectPtr<class USpringArmComponent> SpringArm;
 
 	// 캐릭터 상태 Getter
 	FORCEINLINE ECharacterCombatState GetCurrentState() const { return CurrentState; }
 
 	// 공격 함수
 	UFUNCTION(BlueprintCallable)
-	void RequestAttackDamage(AActor* TargetActor, float DamageAmount, EHitIntensity Intensity = EHitIntensity::Light, float DamageMultiflier = 1.0f , TSubclassOf<class UT3DamageType_Base> DamageTypeClass = nullptr);
+	void RequestAttackDamage(AActor* TargetActor, float DamageAmount, EHitIntensity Intensity, float DamageMultiflier, TSubclassOf<class UT3DamageType_Base> DamageTypeClass);
 
 	// 스태미너 소모 함수
 	void ConsumeStamina(float Amount);
@@ -170,15 +164,6 @@ private:
 
 	// 방향 계산 함수
 	EHitDirection CalculateHitDirection(const FVector& HitLocation);
-
-
-	protected:
-	// 블락 타이머 (무한 패링 방지)
-	FTimerHandle BlockingCooldownTimerHandle;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Block")
-	float BlockCooldownTime = 1.f;
-	bool bCanEndBlock = false;
-	void ResetBlockCooldown();
 
 
 };

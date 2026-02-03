@@ -53,7 +53,5 @@ public:
 private:
     UPROPERTY(EditAnywhere, Category = "Skill Data")
     FSkillData SwordWaveData;
-
-    TObjectPtr<class T3CharacterBase> OwnerChar;
 		
 };
