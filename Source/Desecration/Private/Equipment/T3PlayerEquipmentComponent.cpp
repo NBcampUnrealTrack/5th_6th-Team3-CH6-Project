@@ -288,8 +288,11 @@ void UT3PlayerEquipmentComponent::RefreshStats()
     CurrentAttackPower = BaseAtk + RuneAtk;
     CurrentDefensePower = BaseDef + RuneDef;
 
-    UE_LOG(LogDesecration, Log, TEXT("Stats Updated -> Atk: %.1f (Rune+%.1f), Def: %.1f (Rune+%.1f)"), 
+    UE_LOG(LogDesecration, Log, TEXT("Stats Updated -> Atk: %.1f (Rune+%.1f), Def: %.1f (Rune+%.1f)"),
         CurrentAttackPower, RuneAtk, CurrentDefensePower, RuneDef);
+
+    // 캐릭터팀에 스탯 변경 알림
+    OnEquipmentStatsChanged.Broadcast(CurrentAttackPower, CurrentDefensePower);
 }
 
 bool UT3PlayerEquipmentComponent::TryUpgrade(ET3EquipmentType TargetType, int32 MaxAllowedLevel)

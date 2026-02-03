@@ -69,6 +69,13 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	TObjectPtr<UT3CombatComponent> CombatComponent;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
+	bool bMoveLock = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
+	bool bCameraLock = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
+	bool bIsKnockback = false;
+	
 	void ApplyCharacterData(UT3CharacterDataAsset* Data);
 
 public:
@@ -86,6 +93,8 @@ public:
 	void Roll(const FInputActionValue& Value);
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnRollTriggered();
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnWakeUp();
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnAttack();
 	UFUNCTION(BlueprintImplementableEvent)
@@ -117,7 +126,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float MaxStamina = 100.f;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float CurrentStamina;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
@@ -172,7 +181,7 @@ public:
 
 	// Speed
 	UFUNCTION(BlueprintCallable, Category = "Stat")
-	FORCEINLINE float GetMoveSpeed() const;
+	float GetMoveSpeed() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Stat")
 	void SetMoveSpeed(float NewSpeed);

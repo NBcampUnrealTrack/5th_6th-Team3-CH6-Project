@@ -158,6 +158,8 @@ void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)
 
 void AT3CharacterBase::Move(const FVector2D& Value)
 {
+	if (bMoveLock) return;
+	
 	if (Controller != nullptr)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
@@ -188,6 +190,8 @@ void AT3CharacterBase::Move(const FVector2D& Value)
 
 void AT3CharacterBase::Look(const FVector2D& Value)
 {
+	if (bCameraLock) return;
+	
 	AddControllerYawInput(Value.X);
 	AddControllerPitchInput(Value.Y);
 }
@@ -196,6 +200,8 @@ void AT3CharacterBase::Roll(const FInputActionValue& Value)
 {
 	TObjectPtr<UT3CombatComponent> Combat = GetCombatComponent();
 	if (GetCurrentStamina() < 20.f) return; // 스태미나 부족 시 실행 불가
+	
+	OnWakeUp();
 	
 	if (PlayerInputState.bWantsToRoll == false)
 	{

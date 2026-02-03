@@ -7,6 +7,7 @@
 #include "Components/InputComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "InputCoreTypes.h"
+#include "Blueprint/UserWidget.h"
 #include "Player/T3CharacterBase.h"
 #include "Equipment/T3PlayerEquipmentComponent.h"
 #include "Equipment/T3TestItemInstance.h"
@@ -140,7 +141,26 @@ void AT3UpgradeStation::OpenUpgradeUI()
 
 	bIsUpgradeUIOpen = true;
 
-	// 델리게이트 발송 (Widget Blueprint에서 수신)
+	// 위젯 생성 + Viewport 추가
+	if (UpgradeWidgetClass)
+	{
+		APlayerController* PC = GetWorld()->GetFirstPlayerController();
+		UpgradeWidgetInstance = CreateWidget<UUserWidget>(PC, UpgradeWidgetClass);
+		if (UpgradeWidgetInstance)
+		{
+			UpgradeWidgetInstance->AddToViewport();
+
+			// 마우스 커서 표시 + UI 입력 모드
+			if (PC)
+			{
+				PC->SetShowMouseCursor(true);
+				FInputModeUIOnly InputMode;
+				InputMode.SetWidgetToFocus(UpgradeWidgetInstance->TakeWidget());
+				PC->SetInputMode(InputMode);
+			}
+		}
+	}
+
 	OnUpgradeUIOpened.Broadcast();
 
 	UE_LOG(LogDesecration, Log, TEXT("[UpgradeStation] UI 열림"));
@@ -152,7 +172,20 @@ void AT3UpgradeStation::CloseUpgradeUI()
 
 	bIsUpgradeUIOpen = false;
 
-	// 델리게이트 발송 (Widget Blueprint에서 수신)
+	// 위젯 제거
+	if (UpgradeWidgetInstance)
+	{
+		UpgradeWidgetInstance->RemoveFromParent();
+		UpgradeWidgetInstance = nullptr;
+	}
+
+	// 게임 입력 모드 복원
+	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+	{
+		PC->SetShowMouseCursor(false);
+		PC->SetInputMode(FInputModeGameOnly());
+	}
+
 	OnUpgradeUIClosed.Broadcast();
 
 	UE_LOG(LogDesecration, Log, TEXT("[UpgradeStation] UI 닫힘"));
@@ -210,14 +243,11 @@ FT3UpgradeUIData AT3UpgradeStation::GetEquipmentUIData(ET3EquipmentType Equipmen
 	UIData.ItemID = ItemInstance->ItemID;
 	UIData.CurrentLevel = ItemInstance->CurrentLevel;
 
-	// 최대 레벨 체크
 	int32 NextLevel = ItemInstance->CurrentLevel + 1;
-	UIData.bIsMaxLevel = (NextLevel > MaxUpgradeLevel);
-	UIData.bCanUpgrade = !UIData.bIsMaxLevel;
-
-	// 테이블에서 표시 정보 및 다음 레벨 스탯 조회
 	int32 NextLevelIdx = NextLevel - 1; // 배열 인덱스
 
+	// 테이블에서 표시 정보 및 다음 레벨 스탯 조회
+	// 최대 레벨은 데이터 테이블의 LevelStats 배열 크기로 결정
 	if (EquipmentType == ET3EquipmentType::Weapon)
 	{
 		if (EquipComp->WeaponTable)
@@ -228,7 +258,10 @@ FT3UpgradeUIData AT3UpgradeStation::GetEquipmentUIData(ET3EquipmentType Equipmen
 				UIData.DisplayName = Row->DisplayName;
 				UIData.Icon = Row->Icon;
 
-				if (!UIData.bIsMaxLevel && Row->LevelStats.IsValidIndex(NextLevelIdx))
+				// 데이터 테이블 기준 최대 레벨 판정
+				UIData.bIsMaxLevel = !Row->LevelStats.IsValidIndex(NextLevelIdx);
+
+				if (!UIData.bIsMaxLevel)
 				{
 					UIData.NextLevelStat = Row->LevelStats[NextLevelIdx].FixedAttackPower;
 				}
@@ -245,7 +278,10 @@ FT3UpgradeUIData AT3UpgradeStation::GetEquipmentUIData(ET3EquipmentType Equipmen
 				UIData.DisplayName = Row->DisplayName;
 				UIData.Icon = Row->Icon;
 
-				if (!UIData.bIsMaxLevel && Row->LevelStats.IsValidIndex(NextLevelIdx))
+				// 데이터 테이블 기준 최대 레벨 판정
+				UIData.bIsMaxLevel = !Row->LevelStats.IsValidIndex(NextLevelIdx);
+
+				if (!UIData.bIsMaxLevel)
 				{
 					UIData.NextLevelStat = Row->LevelStats[NextLevelIdx].FixedDefensePower;
 				}
@@ -253,7 +289,79 @@ FT3UpgradeUIData AT3UpgradeStation::GetEquipmentUIData(ET3EquipmentType Equipmen
 		}
 	}
 
+	UIData.bCanUpgrade = !UIData.bIsMaxLevel;
+
+	// 사용 가능한 강화석이 없으면 강화 불가
+	ET3UpgradeStoneGrade TempGrade;
+	if (!SelectLowestAvailableStone(UIData.CurrentLevel, TempGrade))
+	{
+		UIData.bCanUpgrade = false;
+	}
+
 	return UIData;
+}
+
+// ============================================================================
+// 강화석 조회 (Core)
+// ============================================================================
+
+int32 AT3UpgradeStation::GetStoneCount(ET3UpgradeStoneGrade Grade) const
+{
+	switch (Grade)
+	{
+	case ET3UpgradeStoneGrade::Normal: return NormalStoneCount;
+	case ET3UpgradeStoneGrade::Rare:   return RareStoneCount;
+	case ET3UpgradeStoneGrade::Epic:   return EpicStoneCount;
+	default: return 0;
+	}
+}
+
+UTexture2D* AT3UpgradeStation::GetStoneIcon(ET3UpgradeStoneGrade Grade) const
+{
+	switch (Grade)
+	{
+	case ET3UpgradeStoneGrade::Normal: return NormalStoneIcon;
+	case ET3UpgradeStoneGrade::Rare:   return RareStoneIcon;
+	case ET3UpgradeStoneGrade::Epic:   return EpicStoneIcon;
+	default: return nullptr;
+	}
+}
+
+TArray<ET3UpgradeStoneGrade> AT3UpgradeStation::GetAvailableStones(int32 CurrentEquipmentLevel) const
+{
+	TArray<ET3UpgradeStoneGrade> AvailableStones;
+
+	if (CanUseStone(ET3UpgradeStoneGrade::Normal, CurrentEquipmentLevel) && NormalStoneCount > 0)
+	{
+		AvailableStones.Add(ET3UpgradeStoneGrade::Normal);
+	}
+	if (CanUseStone(ET3UpgradeStoneGrade::Rare, CurrentEquipmentLevel) && RareStoneCount > 0)
+	{
+		AvailableStones.Add(ET3UpgradeStoneGrade::Rare);
+	}
+	if (CanUseStone(ET3UpgradeStoneGrade::Epic, CurrentEquipmentLevel) && EpicStoneCount > 0)
+	{
+		AvailableStones.Add(ET3UpgradeStoneGrade::Epic);
+	}
+
+	return AvailableStones;
+}
+
+bool AT3UpgradeStation::CanUseStone(ET3UpgradeStoneGrade Grade, int32 CurrentEquipmentLevel) const
+{
+	int32 NextLevel = CurrentEquipmentLevel + 1;
+	return NextLevel <= GetMaxLevelForStone(Grade);
+}
+
+int32 AT3UpgradeStation::GetMaxLevelForStone(ET3UpgradeStoneGrade Grade)
+{
+	switch (Grade)
+	{
+	case ET3UpgradeStoneGrade::Normal: return 3;
+	case ET3UpgradeStoneGrade::Rare:   return 5;
+	case ET3UpgradeStoneGrade::Epic:   return 7;
+	default: return 0;
+	}
 }
 
 // ============================================================================
@@ -279,11 +387,36 @@ bool AT3UpgradeStation::UpgradeEquipment(ET3EquipmentType EquipmentType)
 		return false;
 	}
 
-	// 강화 시도
-	bool bSuccess = EquipComp->TryUpgrade(EquipmentType, MaxUpgradeLevel);
+	// 현재 장비 레벨 조회
+	UT3TestItemInstance* ItemInstance = (EquipmentType == ET3EquipmentType::Weapon)
+		? EquipComp->WeaponInstance
+		: EquipComp->ArmorInstance;
+
+	if (!ItemInstance)
+	{
+		OnUpgradeFailed.Broadcast(FText::FromString(TEXT("장착된 장비가 없습니다.")));
+		return false;
+	}
+
+	// 사용 가능한 최하급 강화석 자동 선택
+	ET3UpgradeStoneGrade SelectedGrade;
+	if (!SelectLowestAvailableStone(ItemInstance->CurrentLevel, SelectedGrade))
+	{
+		OnUpgradeFailed.Broadcast(FText::FromString(TEXT("사용 가능한 강화석이 없습니다.")));
+		UE_LOG(LogDesecration, Warning, TEXT("[UpgradeStation] 강화 실패 - 사용 가능한 강화석 없음 (레벨: %d)"),
+			ItemInstance->CurrentLevel);
+		return false;
+	}
+
+	// 강화 시도 (MaxAllowedLevel = 강화석 등급별 최대 레벨)
+	int32 MaxAllowedLevel = GetMaxLevelForStone(SelectedGrade);
+	bool bSuccess = EquipComp->TryUpgrade(EquipmentType, MaxAllowedLevel);
 
 	if (bSuccess)
 	{
+		// 강화석 1개 차감
+		ConsumeStone(SelectedGrade);
+
 		// 성공 델리게이트 발송
 		OnUpgradeSuccess.Broadcast(EquipmentType);
 
@@ -292,7 +425,8 @@ bool AT3UpgradeStation::UpgradeEquipment(ET3EquipmentType EquipmentType)
 			? EquipComp->GetCurrentAttackPower()
 			: EquipComp->GetCurrentDefensePower();
 
-		UE_LOG(LogDesecration, Log, TEXT("[UpgradeStation] %s 강화 성공! 새 스탯: %.1f"), *TypeName, NewStat);
+		UE_LOG(LogDesecration, Log, TEXT("[UpgradeStation] %s 강화 성공! 새 스탯: %.1f (사용 강화석: %d등급, 남은 수량: %d)"),
+			*TypeName, NewStat, static_cast<uint8>(SelectedGrade), GetStoneCount(SelectedGrade));
 	}
 	else
 	{
@@ -303,6 +437,43 @@ bool AT3UpgradeStation::UpgradeEquipment(ET3EquipmentType EquipmentType)
 	}
 
 	return bSuccess;
+}
+
+bool AT3UpgradeStation::GetNextStoneGrade(int32 CurrentEquipmentLevel, ET3UpgradeStoneGrade& OutGrade) const
+{
+	return SelectLowestAvailableStone(CurrentEquipmentLevel, OutGrade);
+}
+
+bool AT3UpgradeStation::SelectLowestAvailableStone(int32 CurrentEquipmentLevel, ET3UpgradeStoneGrade& OutGrade) const
+{
+	// 낮은 등급부터 순회하여 사용 가능한 첫 번째 강화석 선택
+	// Normal → Rare → Epic 순서
+	const ET3UpgradeStoneGrade Priority[] = {
+		ET3UpgradeStoneGrade::Normal,
+		ET3UpgradeStoneGrade::Rare,
+		ET3UpgradeStoneGrade::Epic
+	};
+
+	for (ET3UpgradeStoneGrade Grade : Priority)
+	{
+		if (CanUseStone(Grade, CurrentEquipmentLevel) && GetStoneCount(Grade) > 0)
+		{
+			OutGrade = Grade;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void AT3UpgradeStation::ConsumeStone(ET3UpgradeStoneGrade Grade)
+{
+	switch (Grade)
+	{
+	case ET3UpgradeStoneGrade::Normal: --NormalStoneCount; break;
+	case ET3UpgradeStoneGrade::Rare:   --RareStoneCount;   break;
+	case ET3UpgradeStoneGrade::Epic:   --EpicStoneCount;   break;
+	}
 }
 
 // ============================================================================
@@ -354,7 +525,6 @@ void AT3UpgradeStation::UnbindInputFromPlayer(APlayerController* PC)
 // [TEST] 레거시 강화 함수 (Deprecated)
 bool AT3UpgradeStation::TryUpgradeWeapon(int32 MaxLevel)
 {
-	// 임시로 MaxUpgradeLevel 덮어쓰기
 	int32 OriginalMax = MaxUpgradeLevel;
 	MaxUpgradeLevel = MaxLevel;
 

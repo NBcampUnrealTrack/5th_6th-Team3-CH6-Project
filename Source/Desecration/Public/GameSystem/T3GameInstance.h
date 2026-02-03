@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
-#include "SettingEnums.h"
+#include "GlobalEnums.h"
 #include "T3GameInstance.generated.h"
 
 class UT3SaveGame;

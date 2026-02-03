@@ -32,8 +32,8 @@ void UT3ANS_Combat::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceB
                 Combat->SetDodgingEnabled(true);
                 break;
             case ECombatWindowType::Attack:
-                Weapon->SetWeaponCollisionEnabled(true, AttackDamageMultiflier,DamageTypeClass, AttackIntensity, StunAmount);
-                Combat->ConsumeStamina(10.f);
+                Weapon->SetWeaponCollisionEnabled(true, AttackDamageMultiflier,DamageTypeClass, AttackIntensity, StunAmount, StaminaAmount);
+                Combat->ConsumeStamina(StaminaAmount);
                 break;
             case ECombatWindowType::PrevenRegen:
                 Char->bCanRegenStamina = false;
