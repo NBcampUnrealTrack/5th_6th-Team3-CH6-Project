@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
@@ -35,6 +35,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void UseItem(int32 SlotIndex);
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void SwapSlots(int32 SourceSlotIndex, int32 TargetSlotIndex);
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void DropItem(int32 SlotIndex);

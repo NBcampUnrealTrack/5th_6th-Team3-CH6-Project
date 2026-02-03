@@ -37,7 +37,7 @@ void AT3WeaponBase::BeginPlay()
     }
 }
 
-void AT3WeaponBase::SetWeaponCollisionEnabled(bool bEnabled, float InDamageMultiplier, TSubclassOf<UT3DamageType_Base> InType, EHitIntensity InIntensity, float InStunAmount)
+void AT3WeaponBase::SetWeaponCollisionEnabled(bool bEnabled, float InDamageMultiplier, TSubclassOf<UT3DamageType_Base> InType, EHitIntensity InIntensity, float InStunAmount, float StaminaAmount)
 {
     if (bEnabled && OwnerChar)
     {

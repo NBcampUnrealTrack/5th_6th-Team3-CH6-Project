@@ -126,7 +126,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float MaxStamina = 100.f;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float CurrentStamina;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
@@ -181,7 +181,7 @@ public:
 
 	// Speed
 	UFUNCTION(BlueprintCallable, Category = "Stat")
-	FORCEINLINE float GetMoveSpeed() const;
+	float GetMoveSpeed() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Stat")
 	void SetMoveSpeed(float NewSpeed);
