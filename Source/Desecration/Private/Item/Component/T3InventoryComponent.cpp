@@ -5,7 +5,8 @@
 #include "Public/Item/Data/T3ConsumableItemData.h"
 UT3InventoryComponent::UT3InventoryComponent()
 	:
-InventorySize(20)
+InventorySize(20),
+Money(0)
 {
 	PrimaryComponentTick.bCanEverTick = false;
 	
@@ -23,11 +24,13 @@ void UT3InventoryComponent::AddItem(FName ItemName)
 {
 	if (ItemName == NAME_None)
 	{
+		UE_LOG(LogTemp, Error, TEXT("아이템 이름 비었음"));
 		return;
 	}
 
 	if (!IsValid(OwnerCharacter))
 	{
+		UE_LOG(LogTemp, Error, TEXT("캐릭터 유효하지않음"));
 		return;
 	}
 	
@@ -35,6 +38,7 @@ void UT3InventoryComponent::AddItem(FName ItemName)
 	
 	if (!IsValid(ItemDataTable))
 	{
+		UE_LOG(LogTemp, Error, TEXT("데이터 테이블 비었음"));
 		return;
 	}
 
@@ -42,6 +46,7 @@ void UT3InventoryComponent::AddItem(FName ItemName)
 
 	if (!ItemRow)
 	{
+		UE_LOG(LogTemp, Error, TEXT("아이템 Row 없음"));
 		return;
 	}
 
@@ -70,11 +75,6 @@ void UT3InventoryComponent::AddItem(FName ItemName)
 			OnInventoryUpdated.Broadcast();
 			return;
 		}
-	}
-
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("인벤토리 꽉 참"));
 	}
 }
 
@@ -183,6 +183,18 @@ float UT3InventoryComponent::GetCooldownProgressByItemID(FName ItemID)
 	float Progress = FMath::Clamp(Elapsed / *Duration, 0.0f, 1.0f);
 	
 	return Progress;
+}
+
+int32 UT3InventoryComponent::GetMoney()
+{
+	return Money;
+}
+
+int32 UT3InventoryComponent::SetMoney(int32 NewMoney)
+{
+	Money = NewMoney;
+	
+	return Money;
 }
 
 void UT3InventoryComponent::UpdateCooldowns()
