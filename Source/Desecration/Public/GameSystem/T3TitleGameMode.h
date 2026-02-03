@@ -11,14 +11,11 @@ class DESECRATION_API AT3TitleGameMode : public AGameModeBase
 	
 public:
 	//클래스 선택 화면으로
-	UFUNCTION()
 	void MoveToSelectClassLevel();
 	
 	//마지막 저장 장소에서 계속하기 (저장된 게임 데이터 적용)
-	UFUNCTION()
 	void MoveToLastSavedLevel();
 	
 	//게임 종료
-	UFUNCTION()
 	void QuitGame();
 };

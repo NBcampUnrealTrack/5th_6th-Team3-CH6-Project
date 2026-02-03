@@ -7,9 +7,6 @@
 class UT3ConfirmPanel;
 class AT3TitlePlayerController;
 class UTextBlock;
-class UT3SaveGame;
-class UT3GameInstance;
-class AT3TitleGameMode;
 class UButton;
 
 UCLASS()
@@ -60,15 +57,7 @@ private:
 	//확인 패널
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
 	TObjectPtr<UT3ConfirmPanel> ConfirmPanel;
-	
-	//게임 모드
-	UPROPERTY()
-	TObjectPtr<AT3TitleGameMode> TitleGameMode;
-	
-	//게임 인스턴스
-	UPROPERTY()
-	TObjectPtr<UT3GameInstance> T3GameInstance;
-	
+
 	//풀레이어 컨트롤러
 	UPROPERTY()
 	TObjectPtr<AT3TitlePlayerController> TitlePlayerController;
