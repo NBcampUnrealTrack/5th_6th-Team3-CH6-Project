@@ -6,7 +6,6 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Engine/OverlapResult.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "Player/T3DamageTypes.h"
 #include "Player/T3CharacterBase.h"
 #include "Player/T3PlayerController.h"
 #include "Kismet/GameplayStatics.h"
@@ -487,15 +486,25 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 {
 	if (!TargetActor) { UE_LOG(LogTemp, Warning, TEXT("Target Missing!")); return; }
 	if (!OwnerChar && !AIChar) { UE_LOG(LogTemp, Warning, TEXT("Owner Missing!")); return; }
-	if (!DamageTypeClass) { UE_LOG(LogTemp, Warning, TEXT("DamageType Missing!")); return; }
+	// if (!DamageTypeClass) { UE_LOG(LogTemp, Warning, TEXT("DamageType Missing!")); return; }
 
 	// 커스텀 데미지 이벤트 생성
+	DamageTypeClass = UT3DamageType_Base::StaticClass();
 	FT3DamageEvent T3DamageEvent(DamageTypeClass);
 	T3DamageEvent.HitIntensity = Intensity; // 공격 강도를 구조체에 직접 삽입
 	T3DamageEvent.HitDamageMultiplier = DamageMultiflier;
 
+	AT3BossMonster* HitBoss = Cast<AT3BossMonster>(TargetActor);
+
+	if (HitBoss)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Hit Boss!"));
+		HitBoss->Damage(DamageAmount, 20.f);  // 테스트용 스턴 20
+		// HitBoss->Damage(CurrentAttackDamage, StunAmount);
+	}
+
 	// TakeDamage 호출 시 커스텀 이벤트 구조체를 전달
-	if (OwnerChar)
+	else if (OwnerChar)
 	{
 		TargetActor->TakeDamage(DamageAmount, T3DamageEvent, OwnerPC, OwnerChar);
 	}

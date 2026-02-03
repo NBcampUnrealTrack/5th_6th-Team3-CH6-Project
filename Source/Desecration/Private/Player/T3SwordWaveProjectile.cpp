@@ -5,6 +5,8 @@
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Player/T3CharacterBase.h"
+#include "Player/T3CombatComponent.h"
 
 
 AT3SwordWaveProjectile::AT3SwordWaveProjectile()
@@ -14,9 +16,11 @@ AT3SwordWaveProjectile::AT3SwordWaveProjectile()
     SetRootComponent(BoxCollision);
 
     BoxCollision->InitBoxExtent(FVector(20.f, 100.f, 50.f));
-    BoxCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision); // 일단 테스트용
+    BoxCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     BoxCollision->SetHiddenInGame(false);
 
+    // 충돌 이벤트 바인딩
+    BoxCollision->OnComponentBeginOverlap.AddDynamic(this, &AT3SwordWaveProjectile::OnOverlapBegin);
 
     // 2. 무브먼트 설정
     MovementComp = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
@@ -42,7 +46,6 @@ void AT3SwordWaveProjectile::InitializeProjectile(float InDamage, float InSpeed)
         MovementComp->InitialSpeed = InSpeed;
         MovementComp->MaxSpeed = InSpeed;
 
-        // 🚨 핵심: 속도를 변경했으니 컴포넌트를 다시 활성화하고 속도를 강제로 업데이트합니다.
         MovementComp->Velocity = GetActorForwardVector() * InSpeed;
         MovementComp->UpdateComponentVelocity();
     }
@@ -57,5 +60,18 @@ void AT3SwordWaveProjectile::PostInitializeComponents()
     {
         SkillEffect->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
         SkillEffect->Activate(true); // 강제 활성화
+    }
+}
+
+void AT3SwordWaveProjectile::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+    TObjectPtr<AT3CharacterBase> OwnerChar = Cast<AT3CharacterBase>(GetOwner());
+    TObjectPtr<UT3CombatComponent> Combat = OwnerChar->GetCombatComponent();
+    if (!OwnerChar) return;
+    // 자기 자신이나 생성자(Instigator)는 무시
+    if (OtherActor && (OtherActor != this) && (OtherActor != GetInstigator()))
+    {
+        Combat->RequestAttackDamage(OtherActor, Damage);
+
     }
 }

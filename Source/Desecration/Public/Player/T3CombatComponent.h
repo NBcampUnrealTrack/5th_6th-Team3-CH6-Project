@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "T3CharacterDataAsset.h"
+#include "Player/T3DamageTypes.h"
 #include "T3CombatComponent.generated.h"
 
 class AAICharacter;
@@ -95,7 +96,7 @@ public:
 
 	// 공격 함수
 	UFUNCTION(BlueprintCallable)
-	void RequestAttackDamage(AActor* TargetActor, float DamageAmount, EHitIntensity Intensity, float DamageMultiflier, TSubclassOf<class UT3DamageType_Base> DamageTypeClass);
+	void RequestAttackDamage(AActor* TargetActor, float DamageAmount, EHitIntensity Intensity = EHitIntensity::Light, float DamageMultiflier = 1.0f , TSubclassOf<class UT3DamageType_Base> DamageTypeClass = nullptr);
 
 	// 스태미너 소모 함수
 	void ConsumeStamina(float Amount);

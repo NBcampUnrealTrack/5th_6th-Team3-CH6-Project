@@ -5,6 +5,7 @@
 #include "GameFramework/Character.h"
 #include "Engine/World.h" 
 #include "Player/T3SwordWaveProjectile.h"
+#include "Player/T3CharacterBase.h"
 
 UT3Paladin_SkillComponent::UT3Paladin_SkillComponent()
 {
@@ -37,7 +38,6 @@ void UT3Paladin_SkillComponent::ExecuteSwordWave()
     ACharacter* Paladin = Cast<ACharacter>(Owner);
     if (Paladin)
     {
-        // 몽타주 재생 (애니메이션 기반 스킬 실행)
         Paladin->PlayAnimMontage(SwordWaveData.SkillMontage);
     }
 }
