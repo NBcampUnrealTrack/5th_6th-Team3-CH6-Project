@@ -9,6 +9,10 @@
 #include "T3PlayerEquipmentComponent.generated.h"
 
 
+// 장비 스탯 변경 시 발송되는 델리게이트
+// 캐릭터팀에서 바인딩하여 공격력/방어력을 동기화
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEquipmentStatsChanged, float, NewAttackPower, float, NewDefensePower);
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class DESECRATION_API UT3PlayerEquipmentComponent : public UActorComponent
 {
@@ -16,6 +20,11 @@ class DESECRATION_API UT3PlayerEquipmentComponent : public UActorComponent
 
 public:
 	UT3PlayerEquipmentComponent();
+
+	// 장비 스탯 변경 델리게이트 (캐릭터팀 바인딩용)
+	// BeginPlay 초기 장착, 강화, 룬 장착 시 자동 발송
+	UPROPERTY(BlueprintAssignable, Category = "Equipment|Events")
+	FOnEquipmentStatsChanged OnEquipmentStatsChanged;
 
 protected:
 	virtual void BeginPlay() override;

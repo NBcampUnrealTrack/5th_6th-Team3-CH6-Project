@@ -1,9 +1,13 @@
-﻿#include "Public/Item/Component/T3InventoryComponent.h"
+#include "Public/Item/Component/T3InventoryComponent.h"
 
+#include "IDetailTreeNode.h"
 #include "Item/Component/T3ItemUseComponent.h"
 #include "Player/T3CharacterBase.h"
 #include "Public/Item/Data/T3ConsumableItemData.h"
 UT3InventoryComponent::UT3InventoryComponent()
+	:
+InventorySize(20),
+Money(0)
 {
 	PrimaryComponentTick.bCanEverTick = false;
 	
@@ -17,15 +21,17 @@ void UT3InventoryComponent::BeginPlay()
 	OwnerCharacter = Cast<AT3CharacterBase>(GetOwner());
 }
 
-void UT3InventoryComponent::AddItem(FName ItemName)
+void UT3InventoryComponent::AddItem(const FName& ItemName)
 {
 	if (ItemName == NAME_None)
 	{
+		UE_LOG(LogTemp, Error, TEXT("아이템 이름 비었음"));
 		return;
 	}
 
 	if (!IsValid(OwnerCharacter))
 	{
+		UE_LOG(LogTemp, Error, TEXT("캐릭터 유효하지않음"));
 		return;
 	}
 	
@@ -33,6 +39,7 @@ void UT3InventoryComponent::AddItem(FName ItemName)
 	
 	if (!IsValid(ItemDataTable))
 	{
+		UE_LOG(LogTemp, Error, TEXT("데이터 테이블 비었음"));
 		return;
 	}
 
@@ -40,10 +47,11 @@ void UT3InventoryComponent::AddItem(FName ItemName)
 
 	if (!ItemRow)
 	{
+		UE_LOG(LogTemp, Error, TEXT("아이템 Row 없음"));
 		return;
 	}
 
-	for (int32 i = 0; i < Items.Num(); i++)
+	for (int32 i = 0; i < Items.Num(); i++) // 슬롯에 추가 할 아이템이 이미 있는지 확인
 	{
 		if (Items[i].ItemID == ItemName)
 		{
@@ -54,7 +62,10 @@ void UT3InventoryComponent::AddItem(FName ItemName)
 			OnInventoryUpdated.Broadcast();
 			return;
 		}
-
+	}
+	
+	for (int32 i = 0; i < Items.Num(); i++)
+	{
 		if (Items[i].ItemID == NAME_None)
 		{
 			Items[i].ItemID = ItemName;
@@ -65,11 +76,6 @@ void UT3InventoryComponent::AddItem(FName ItemName)
 			OnInventoryUpdated.Broadcast();
 			return;
 		}
-	}
-
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("인벤토리 꽉 참"));
 	}
 }
 
@@ -136,19 +142,59 @@ void UT3InventoryComponent::UseItem(int32 SlotIndex)
 	OnInventoryUpdated.Broadcast();
 }
 
+void UT3InventoryComponent::SwapSlots(int32 SourceSlotIndex, int32 TargetSlotIndex)
+{
+	if (!Items.IsValidIndex(SourceSlotIndex) || !Items.IsValidIndex(TargetSlotIndex))
+	{
+		return;
+	}
+    
+	if (SourceSlotIndex == TargetSlotIndex)
+	{
+		return;
+	}
+	
+	FInventorySlot TempSlot = Items[SourceSlotIndex];
+	Items[SourceSlotIndex] = Items[TargetSlotIndex];
+	Items[TargetSlotIndex] = TempSlot;
+	
+	OnInventoryUpdated.Broadcast();
+}
+
 void UT3InventoryComponent::DropItem(int32 SlotIndex)
 {
 }
 
-float UT3InventoryComponent::GetCooldownProgressByItemID(FName ItemID)
+bool UT3InventoryComponent::RemoveItem(const FName& ItemName)
 {
-	if (ItemID == NAME_None)
+	for (int32 i = 0; i < Items.Num(); i++)
+	{
+		if (Items[i].ItemID == ItemName)
+		{
+			Items[i].ItemStack--;
+			
+			if (Items[i].ItemStack <= 0)
+			{
+				Items[i].ItemID = NAME_None;
+				Items[i].ItemStack = 0;
+			}
+			
+			OnInventoryUpdated.Broadcast();
+			return true;
+		}
+	}
+	return false;
+}
+
+float UT3InventoryComponent::GetCooldownProgressByItemID(const FName& ItemName)
+{
+	if (ItemName == NAME_None)
 	{
 		return 1.0f;
 	}
     
-	float* StartTime = ItemCooldownStartTimes.Find(ItemID);
-	float* Duration = ItemCooldownDurations.Find(ItemID);
+	float* StartTime = ItemCooldownStartTimes.Find(ItemName);
+	float* Duration = ItemCooldownDurations.Find(ItemName);
     
 	if (!StartTime || !Duration || *Duration <= 0.0f)
 	{
@@ -161,9 +207,22 @@ float UT3InventoryComponent::GetCooldownProgressByItemID(FName ItemID)
 	return Progress;
 }
 
+int32 UT3InventoryComponent::GetMoney()
+{
+	return Money;
+}
+
+int32 UT3InventoryComponent::SetMoney(int32 NewMoney)
+{
+	Money = NewMoney;
+	
+	return Money;
+}
+
 void UT3InventoryComponent::UpdateCooldowns()
 {
 	bool bHasActiveCooldowns = false;
+	TArray<FName> ItemsToRemove; // 제거할 항목들을 저장할 배열
     
 	for (auto& Pair : ItemCooldownStartTimes)
 	{
@@ -186,9 +245,15 @@ void UT3InventoryComponent::UpdateCooldowns()
 		}
 		else
 		{
-			ItemCooldownStartTimes.Remove(ItemID);
-			ItemCooldownDurations.Remove(ItemID);
+			ItemsToRemove.Add(ItemID); // 제거 목록에 추가만 함
 		}
+	}
+	
+	// 순회가 끝난 후 제거
+	for (FName ItemID : ItemsToRemove)
+	{
+		ItemCooldownStartTimes.Remove(ItemID);
+		ItemCooldownDurations.Remove(ItemID);
 	}
     
 	if (!bHasActiveCooldowns)

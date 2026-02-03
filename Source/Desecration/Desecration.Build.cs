@@ -19,8 +19,10 @@ public class Desecration : ModuleRules
             "StateTreeModule",
 			"GameplayStateTreeModule",
 			"UMG",
-			"Slate"
-		});
+			"Slate",
+			"SlateCore",
+            "Niagara"
+        });
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
 
