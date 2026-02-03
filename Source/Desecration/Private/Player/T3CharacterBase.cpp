@@ -70,35 +70,64 @@ void AT3CharacterBase::BeginPlay()
 		true
 	);
 
+		// 시작 시 전투모드 활성화
+		PlayerInputState.bIsCombatState = true;
+
+
 }
+
 
 void AT3CharacterBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
-	float CurrentGroundSpeed = GetVelocity().Size2D();
-	PlayerInputState.CurrentSpeed = CurrentGroundSpeed;
-	
-	FVector InputVector = GetLastMovementInputVector();
-	float FutureSpeed = FMath::Min(InputVector.Size2D(), 1.0f) * (GetCharacterMovement()->MaxWalkSpeed);
-	PlayerInputState.FutureSpeed = FutureSpeed;
-	PlayerInputState.bWantsToMove = (InputVector.Size()>KINDA_SMALL_NUMBER) && (FutureSpeed >= (CurrentGroundSpeed +100));
-	
-	const float MoveThreshold = 3.0f;
-	
-	PlayerInputState.bIsMoving = CurrentGroundSpeed > MoveThreshold;
-	PlayerInputState.bIsInAir = GetCharacterMovement()->IsFalling();
-	
-	PlayerInputState.bWantsToStop = PlayerInputState.bIsMoving && (FutureSpeed< KINDA_SMALL_NUMBER);
-	if (GetCharacterMovement()->MaxWalkSpeed > 400.0f)
+	if (bIsForcedMoving)
 	{
-		PlayerInputState.T3GaitState = EGaitState::Run;
+		FVector CurrentLocation = GetActorLocation();
+		FVector Direction = (ForcedTargetLocation - CurrentLocation).GetSafeNormal();
+		float Distance = FVector::Dist(CurrentLocation, ForcedTargetLocation);
+
+		// [해결책] 좌표 강제 고정(SetActorLocation)을 제거하고 입력만 지속적으로 주입
+		// 이렇게 하면 엔진이 가속도를 부드럽게 계산하여 애니메이션이 끊기지 않습니다.
+		AddMovementInput(GetActorLocation(), 1.0f);
+
+
+		// 회전 처리 (부드러운 시선 처리)
+		FRotator TargetRot = Direction.Rotation();
+		TargetRot.Pitch = 0.f;
+		SetActorRotation(FMath::RInterpTo(GetActorRotation(), TargetRot, DeltaTime, 10.f));
+
+		//if (APlayerController* PC = Cast<APlayerController>(GetController()))
+		//{
+		//	PC->SetControlRotation(TargetRot);
+		//}
+
+		// 도착 체크 (입력만으로 이동하므로 오차 범위를 조금 넉넉히 50.f 정도로 잡습니다)
+		if (Distance < 100.f)
+		{
+			StopForcedMove();
+		}
+
+		return; // 강제 이동 중에는 하단 플레이어 조작 로직 무시
 	}
-	else
-	{
-		PlayerInputState.T3GaitState = EGaitState::Walk;
-	}	
-}
+
+		// --- 3. 일반 조작 시 상태 판별 로직 ---
+		float CurrentGroundSpeed = GetVelocity().Size2D();
+		PlayerInputState.CurrentSpeed = CurrentGroundSpeed;
+
+		FVector InputVector = GetLastMovementInputVector();
+		float FutureSpeed = FMath::Min(InputVector.Size2D(), 1.0f) * (GetCharacterMovement()->MaxWalkSpeed);
+		PlayerInputState.FutureSpeed = FutureSpeed;
+
+		// 일반 조작 시 이동 의지 판별
+		PlayerInputState.bWantsToMove = (InputVector.Size() > KINDA_SMALL_NUMBER) && (FutureSpeed >= (CurrentGroundSpeed + 10.f));
+
+		PlayerInputState.bIsMoving = CurrentGroundSpeed > 3.0f;
+		PlayerInputState.bIsInAir = GetCharacterMovement()->IsFalling();
+		PlayerInputState.bWantsToStop = PlayerInputState.bIsMoving && (FutureSpeed < KINDA_SMALL_NUMBER);
+
+		// 가이트 상태 결정
+		PlayerInputState.T3GaitState = (GetCharacterMovement()->MaxWalkSpeed > 400.0f) ? EGaitState::Run : EGaitState::Walk;
+	}
 
 void AT3CharacterBase::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
 {
@@ -200,8 +229,11 @@ void AT3CharacterBase::Look(const FVector2D& Value)
 
 void AT3CharacterBase::Roll(const FInputActionValue& Value)
 {
+	if (PlayerInputState.bWantsToRoll) return;
+
 	TObjectPtr<UT3CombatComponent> Combat = GetCombatComponent();
-	if (GetCurrentStamina() < 20.f) return; // 스태미나 부족 시 실행 불가
+	if (!Combat || GetCurrentStamina() < 20.f) 
+		return GEngine->AddOnScreenDebugMessage(-1,1.f,FColor::Emerald,FString::Printf(TEXT("You Need Stamina"))); // 스태미나 부족 시 실행 불가
 	
 	OnWakeUp();
 	
@@ -217,7 +249,22 @@ void AT3CharacterBase::Roll(const FInputActionValue& Value)
 		PlayerInputState.RollDirection = GetRollDirection(CurrentAngle);
 
 		OnRollTriggered();
+
+		// 구르기 딜레이 설정
+		//GetWorldTimerManager().SetTimer(
+		//	RollDelayTimerHandle,
+		//	this,
+		//	&AT3CharacterBase::ResetRollDelay,
+		//	RollDelayTime,
+		//	false
+		//);
 	}
+}
+
+void AT3CharacterBase::ResetRollDelay()
+{
+	PlayerInputState.bWantsToRoll = false;
+	UE_LOG(LogTemp, Display, TEXT("roll reset"));
 }
 
 ERollDirection AT3CharacterBase::GetRollDirection(float Angle) const
@@ -366,4 +413,30 @@ float AT3CharacterBase::TakeDamage(float DamageAmount, FDamageEvent const& Damag
 	}
 
 	return ActualDamage;
+}
+
+void AT3CharacterBase::StartForcedMove(FVector TargetLocation, float Speed)
+{
+	ForcedTargetLocation = TargetLocation;
+	bIsForcedMoving = true;
+	ForcedMoveSpeed = Speed;
+	DefaultMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+
+	// 이동 중에는 플레이어의 입력을 막음
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		PC->SetIgnoreMoveInput(true);
+	}
+}
+
+void AT3CharacterBase::StopForcedMove()
+{
+	bIsForcedMoving = false;
+	GetCharacterMovement()->MaxWalkSpeed = DefaultMaxWalkSpeed;
+	GetCharacterMovement()->Velocity = FVector::ZeroVector;
+
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		PC->SetIgnoreMoveInput(false);
+	}
 }
