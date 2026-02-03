@@ -13,6 +13,9 @@
 #include "Player/T3CharacterDataAsset.h"
 #include "Player/T3WeaponBase.h"
 #include "Monster/T3BossMonster.h"
+#include "Components/CapsuleComponent.h"
+#include "DrawDebugHelpers.h"
+#include "GameFramework/SpringArmComponent.h"
 
 
 UT3CombatComponent::UT3CombatComponent()
@@ -25,6 +28,8 @@ void UT3CombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	OwnerChar = Cast<AT3CharacterBase>(GetOwner());
+	SpringArm = OwnerChar->FindComponentByClass<USpringArmComponent>();
+
 	if (OwnerChar)
 	{
 		OwnerPC = OwnerChar->GetController<APlayerController>();
@@ -97,11 +102,13 @@ void UT3CombatComponent::StartBlock()
 		return;
 	}
 
-	if (CurrentState != ECharacterCombatState::Idle) return;
+	if (OwnerChar->PlayerInputState.bIsBlocking || CurrentState != ECharacterCombatState::Idle) return;
 
 	// 2. 초기 상태 설정: 패링(Parrying) 모드 진입
+	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Blue, TEXT("BlockingModeOn"));
 	CurrentState = ECharacterCombatState::Parrying;
 	OwnerChar->PlayerInputState.bIsBlocking = true;
+	bCanEndBlock = true;
 	OwnerChar->GetCharacterMovement()->MaxWalkSpeed = 200.0f;
 
 
@@ -118,10 +125,29 @@ void UT3CombatComponent::StartBlock()
 
 void UT3CombatComponent::EndBlock()
 {
-	CurrentState = ECharacterCombatState::Idle;
+	if (!bCanEndBlock) return;
+
+	if (OwnerChar->PlayerInputState.bIsBlocking && bCanEndBlock)
+	{
+		CurrentState = ECharacterCombatState::Idle;
+		OwnerChar->GetCharacterMovement()->MaxWalkSpeed = 500.0f;
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("BlockingModeOff"));
+		bCanEndBlock = false;
+
+		GetWorld()->GetTimerManager().SetTimer(
+			BlockingCooldownTimerHandle,
+			this,
+			&UT3CombatComponent::ResetBlockCooldown,
+			BlockCooldownTime, // 쿨타임 시간
+			false
+		);
+	}
+}
+
+void UT3CombatComponent::ResetBlockCooldown()
+{
 	OwnerChar->PlayerInputState.bIsBlocking = false;
-	OwnerChar->GetCharacterMovement()->MaxWalkSpeed = 500.0f;
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("BlockingModeOff"));
+	bCanEndBlock = true;
 }
 
 void UT3CombatComponent::Attack()
@@ -184,6 +210,10 @@ void UT3CombatComponent::ToggleLockOn()
 		SetComponentTickEnabled(true);
 		UpdateTargetUI(CurrentTarget, true);
 
+		// 카메라 랙 설정
+		SpringArm->bEnableCameraRotationLag = true;
+		SpringArm->bEnableCameraLag = true;
+
 		OwnerChar->GetCharacterMovement()->bOrientRotationToMovement = false;
 		OwnerChar->GetCharacterMovement()->bUseControllerDesiredRotation = true;
 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("LockOn"));
@@ -212,12 +242,44 @@ void UT3CombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		return;
 	}
 
-	// 3. 바라보기 로직 (기존 로직)
+	FVector StartLocation = OwnerChar->GetActorLocation();
+	FVector TargetLocation = CurrentTarget->GetActorLocation();
+
+	if (ACharacter* TargetChar = Cast<ACharacter>(CurrentTarget))
+	{
+		float HalfHeight = TargetChar->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+		// 발바닥 위치에서 위로 (절반 높이 * 2 * 퍼센트)만큼 이동
+		TargetLocation.Z = (HalfHeight * 2.0f * TargetHeightPercent);
+	}
+
+	// 바라보기 로직 (기존 로직)
 	FRotator LookAtRot = UKismetMathLibrary::FindLookAtRotation(OwnerChar->GetActorLocation(), CurrentTarget->GetActorLocation());
 
+	// 카메라 상하 움직임 제한
+	LookAtRot.Pitch = FMath::Clamp(LookAtRot.Pitch, -40.f, 20.f);
 
 	// 컨트롤러 회전 적용
 	OwnerPC->SetControlRotation(LookAtRot);
+
+	// 디버깅 록온 마크
+	if (ACharacter* TargetChar = Cast<ACharacter>(CurrentTarget))
+	{
+		// 빨간 점(구체) 그리기 로직 추가
+		if (GetWorld())
+		{
+			DrawDebugSphere(
+				GetWorld(),
+				TargetLocation,   // 위치
+				15.f,            // 반지름
+				12,              // 세그먼트(해상도)
+				FColor::Red,     // 색상
+				false,           // 지속성 (false면 다음 프레임에 사라짐)
+				-1.f,            // 수명 (-1이면 한 프레임만 유지)
+				0,               // 우선순위
+				2.f              // 선 두께
+			);
+		}
+	}
 }
 
 AActor* UT3CombatComponent::FindBestTarget()
@@ -305,6 +367,9 @@ void UT3CombatComponent::ResetLockOn()
 
 		OwnerChar->GetCharacterMovement()->bOrientRotationToMovement = true;
 		OwnerChar->GetCharacterMovement()->bUseControllerDesiredRotation = false;
+
+		SpringArm->bEnableCameraRotationLag = false;
+		SpringArm->bEnableCameraLag = false;
 	}
 
 	SetComponentTickEnabled(false); // 틱 중지하여 자원 절약

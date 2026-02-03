@@ -78,6 +78,15 @@ protected:
 	
 	void ApplyCharacterData(UT3CharacterDataAsset* Data);
 
+	// 구르기 조정
+	// 쿨타임 시간
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float RollDelayTime = 0.5f;
+
+	FTimerHandle RollDelayTimerHandle;
+	void ResetRollDelay();
+
+
 public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "PlayerInputState")
@@ -221,4 +230,20 @@ private:
 
 
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* InstigatedBy, AActor* DamageCauser) override;
+
+
+	// 강제 이동 구현
+	protected:
+		// 강제 이동 관련 변수
+		bool bIsForcedMoving = false;
+		FVector ForcedTargetLocation;
+		float ForcedMoveSpeed = 200.f;
+		float DefaultMaxWalkSpeed = 500.f;
+
+public:
+	// 툴에서 호출할 함수 (좌표를 인자로 받음)
+	UFUNCTION(BlueprintCallable, Category = "Tool")
+	void StartForcedMove(FVector TargetLocation, float Speed = 200.f);
+
+	void StopForcedMove();
 };

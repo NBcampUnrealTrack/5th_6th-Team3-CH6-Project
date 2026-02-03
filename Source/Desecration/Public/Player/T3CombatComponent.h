@@ -19,7 +19,8 @@ enum class ECharacterCombatState : uint8
 	Parrying,
 	Dodge,
 	Attacking,
-	Dead
+	Dead,
+	Cooldown
 };
 
 // 노티파이용 ENUM
@@ -90,6 +91,10 @@ public:
 
 	// 록온
 	void ToggleLockOn();
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LockOn")
+	float TargetHeightPercent = 1.0f;
+	TObjectPtr<class USpringArmComponent> SpringArm;
 
 	// 캐릭터 상태 Getter
 	FORCEINLINE ECharacterCombatState GetCurrentState() const { return CurrentState; }
@@ -162,6 +167,15 @@ private:
 
 	// 방향 계산 함수
 	EHitDirection CalculateHitDirection(const FVector& HitLocation);
+
+
+	protected:
+	// 블락 타이머 (무한 패링 방지)
+	FTimerHandle BlockingCooldownTimerHandle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Block")
+	float BlockCooldownTime = 1.f;
+	bool bCanEndBlock = false;
+	void ResetBlockCooldown();
 
 
 };
