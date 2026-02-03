@@ -19,6 +19,25 @@ void UT3SelectClassWidget::NativeConstruct()
 	//버튼 바인딩
 	SelectButton->OnClicked.AddDynamic(this, &ThisClass::OnClickSelectButton);
 	ReturnButton->OnClicked.AddDynamic(this, &ThisClass::OnClickReturnButton);
+	//각 클래스 버튼은 SButton에 Lambda로 바인딩한다.
+	int32 TempClassValue = static_cast<int32>(EPlayerClass::Warrior);
+	for (TObjectPtr<UWidget> ChildWidget : SelectClassBox->GetAllChildren())
+	{
+		TObjectPtr<UButton> ChildButton = Cast<UButton>(ChildWidget);
+		if (!ChildButton)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s : 버튼이 아님"), *ChildWidget.GetName());
+			continue;
+		}
+		TSharedPtr<SButton> SlateButton = StaticCastSharedPtr<SButton>(ChildButton->GetCachedWidget());
+		SlateButton->SetOnClicked(FOnClicked::CreateLambda([this, TempClassValue]()
+		{
+			OnClickSelectClassButton(static_cast<EPlayerClass>(TempClassValue));
+			return FReply::Handled(); 
+		}));
+		
+		++TempClassValue;
+	}
 	
 	//선택 버튼은 비활성화 상태로 시작
 	SelectButton->SetIsEnabled(false);
