@@ -201,6 +201,8 @@ void AT3CharacterBase::Roll(const FInputActionValue& Value)
 	TObjectPtr<UT3CombatComponent> Combat = GetCombatComponent();
 	if (GetCurrentStamina() < 20.f) return; // 스태미나 부족 시 실행 불가
 	
+	OnWakeUp();
+	
 	if (PlayerInputState.bWantsToRoll == false)
 	{
 
