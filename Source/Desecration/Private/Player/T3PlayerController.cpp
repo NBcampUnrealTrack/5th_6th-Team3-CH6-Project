@@ -35,6 +35,8 @@ void AT3PlayerController::BeginPlay()
 		//CombatWidget->SetVisibility(ESlateVisibility::Collapsed);
 		CombatWidget->AddToViewport();
 	}
+
+	OwnerChar = Cast<AT3CharacterBase>(GetPawn());
 }
 
 void AT3PlayerController::SetupInputComponent()
@@ -60,45 +62,45 @@ void AT3PlayerController::SetupInputComponent()
 
 void AT3PlayerController::Input_Move(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen)
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
 	{
 		return;
 	}
 
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
-	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
+	if (OwnerChar)
 	{
-		T3Char->Move(MovementVector);
+		OwnerChar->Move(MovementVector);
 	}
 }
 
 void AT3PlayerController::Input_Look(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen)
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
 	{
 		return;
 	}
 
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
 
-	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
+	if (OwnerChar)
 	{
-		T3Char->Look(LookAxisVector);
+		OwnerChar->Look(LookAxisVector);
 	}
 }
 
 
 void AT3PlayerController::Input_LockOn(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen)
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
 	{
 		return;
 	}
 	
-	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
+	if (OwnerChar)
 	{
-		if (UT3CombatComponent* Combat = T3Char->GetCombatComponent())
+		if (UT3CombatComponent* Combat = OwnerChar->GetCombatComponent())
 		{
 			Combat->ToggleLockOn();
 		}
@@ -107,14 +109,14 @@ void AT3PlayerController::Input_LockOn(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_BlockStart(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen)
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
 	{
 		return;
 	}
 	
-	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
+	if (OwnerChar)
 	{
-		if (UT3CombatComponent* Combat = T3Char->GetCombatComponent())
+		if (UT3CombatComponent* Combat = OwnerChar->GetCombatComponent())
 		{
 			Combat->StartBlock();
 		}
@@ -123,14 +125,14 @@ void AT3PlayerController::Input_BlockStart(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_BlockEnd(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen)
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
 	{
 		return;
 	}
 	
-	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
+	if (OwnerChar)
 	{
-		if (UT3CombatComponent* Combat = T3Char->GetCombatComponent())
+		if (UT3CombatComponent* Combat = OwnerChar->GetCombatComponent())
 		{
 			Combat->EndBlock();
 		}
@@ -141,20 +143,20 @@ void AT3PlayerController::Input_BlockEnd(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_Roll(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen)
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
 	{
 		return;
 	}
 	
-	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
+	if (OwnerChar)
 	{
-		T3Char->Roll(Value);
+		OwnerChar->Roll(Value);
 	}
 }
 
 void AT3PlayerController::Input_Interact(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen)
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
 	{
 		return;
 	}
@@ -164,20 +166,20 @@ void AT3PlayerController::Input_Interact(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_Test(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen)
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
 	{
 		return;
 	}
 	
-	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
+	if (OwnerChar)
 	{
-		if (T3Char->PlayerInputState.bIsCombatState == false)
+		if (OwnerChar->PlayerInputState.bIsCombatState == false)
 		{
-			T3Char->PlayerInputState.bIsCombatState = true;
+			OwnerChar->PlayerInputState.bIsCombatState = true;
 		}
 		else
 		{
-			T3Char->PlayerInputState.bIsCombatState = false;
+			OwnerChar->PlayerInputState.bIsCombatState = false;
 		}
 		
 	}
@@ -185,14 +187,14 @@ void AT3PlayerController::Input_Test(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_Attack(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen)
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
 	{
 		return;
 	}
 	
-	if (AT3CharacterBase* T3Char= Cast<AT3CharacterBase>(GetPawn()))
+	if (OwnerChar)
 	{
-		if (UT3CombatComponent* Combat = T3Char->GetCombatComponent())
+		if (UT3CombatComponent* Combat = OwnerChar->GetCombatComponent())
 		{
 			Combat->Attack();
 		}

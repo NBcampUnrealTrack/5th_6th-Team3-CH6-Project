@@ -68,6 +68,8 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "UI")
 	TObjectPtr<UUserWidget> CombatWidget;
 	
+
+	TObjectPtr<class AT3CharacterBase> OwnerChar;
 private:
 	bool bIsInventoryOpen = false;
 	void Input_Move(const FInputActionValue& Value);
