@@ -219,12 +219,12 @@ void AT3CharacterBase::StopForcedMove()
 	bIsRotatingToTarget = true;
 
 	// 이동 중단 시 속도 초기화 (안 하면 미끄러질 수 있음)
-	//if (GetCharacterMovement())
-	//{
-	//	GetCharacterMovement()->Velocity = FVector::ZeroVector;
-	//	GetCharacterMovement()->MaxWalkSpeed = DefaultMaxWalkSpeed;
-	//	GetCharacterMovement()->StopMovementImmediately();
-	//}
+	// if (GetCharacterMovement())
+	// {
+	// 	GetCharacterMovement()->Velocity = FVector::ZeroVector;
+	// 	GetCharacterMovement()->MaxWalkSpeed = DefaultMaxWalkSpeed;
+	// 	GetCharacterMovement()->StopMovementImmediately();
+	// }
 }
 
 void AT3CharacterBase::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
@@ -327,8 +327,6 @@ void AT3CharacterBase::Look(const FVector2D& Value)
 
 void AT3CharacterBase::Roll(const FInputActionValue& Value)
 {
-	// if (PlayerInputState.bWantsToRoll) return;
-
 	TObjectPtr<UT3CombatComponent> Combat = GetCombatComponent();
 	if (!Combat || GetCurrentStamina() < 20.f) 
 		return GEngine->AddOnScreenDebugMessage(-1,1.f,FColor::Emerald,FString::Printf(TEXT("You Need Stamina"))); // 스태미나 부족 시 실행 불가
