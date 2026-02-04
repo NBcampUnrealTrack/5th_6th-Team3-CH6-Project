@@ -81,9 +81,16 @@ void AT3CharacterBase::Tick(float DeltaTime)
 
 	Super::Tick(DeltaTime);
 
+	// 강제 이동
 	if (bIsForcedMoving)
 	{
 		UpdateForcedMovement(DeltaTime);
+	}
+
+	// 강제 이동 종료 후 강제 회전
+	if (bIsRotatingToTarget)
+	{
+		UpdateForcedRotation(DeltaTime);
 	}
 
 
@@ -130,7 +137,17 @@ void AT3CharacterBase::UpdateForcedMovement(float DeltaTime)
 	TargetRot.Pitch = 0.f;
 	TargetRot.Roll = 0.f;
 
+
 	SetActorRotation(FMath::RInterpTo(CurrentRot, TargetRot, DeltaTime, 20.f));
+
+	// 컨트롤러 시점(카메라) 동기화
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		FRotator CurrentControlRot = PC->GetControlRotation();
+		// 카메라 시점도 목적지를 향해 부드럽게 회전
+		FRotator NewControlRot = FMath::RInterpTo(CurrentControlRot, TargetRot, DeltaTime, 15.f);
+		PC->SetControlRotation(NewControlRot);
+	}
 
 	// 3. 애니메이션 연동: CharacterMovement의 속도값을 강제로 갱신
 	// 이 작업이 있어야 AnimBP의 GroundSpeed가 계산되어 달리기 모션이 출력됩니다.
@@ -144,16 +161,47 @@ void AT3CharacterBase::UpdateForcedMovement(float DeltaTime)
 
 	// 4. 도착 체크 및 종료
 	float DistanceSq = FVector::DistSquared(CurrentLocation, ForcedTargetLocation);
-	if (DistanceSq < FMath::Square(100.f)) // Dist보다 DistSquared가 연산 비용이 적어 성능에 좋습니다.
+	if (DistanceSq < FMath::Square(100.f))
 	{
 		StopForcedMove();
 	}
 }
 
-void AT3CharacterBase::StartForcedMove(FVector TargetLocation, float Speed)
+void AT3CharacterBase::UpdateForcedRotation(float DeltaTime)
+{
+	FRotator CurrentRot = GetActorRotation();
+	// 목표 회전값으로 부드럽게 보간
+	FRotator NewRot = FMath::RInterpTo(CurrentRot, ForcedTargetRotation, DeltaTime, 3.f);
+	SetActorRotation(NewRot);
+
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		PC->SetControlRotation(NewRot);
+	}
+
+	// 거의 다 돌아갔으면 회전 모드 종료 및 입력 복구
+	if (CurrentRot.Equals(ForcedTargetRotation, 1.0f))
+	{
+		bIsRotatingToTarget = false;
+		PlayerInputState.bIsCombatState = true;
+		if (APlayerController* PC = Cast<APlayerController>(GetController()))
+		{
+			PC->SetIgnoreMoveInput(false);
+			PC->ResetIgnoreInputFlags(); // 시점 제한까지 모두 해제
+		}
+
+		if (OnForcedMoveEnd.IsBound())
+		{
+			OnForcedMoveEnd.Broadcast();
+		}
+	}
+}
+
+void AT3CharacterBase::StartForcedMove(FVector TargetLocation, FRotator TargetRotation, float Speed)
 {
 	DefaultMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
 	ForcedTargetLocation = TargetLocation;
+	ForcedTargetRotation = TargetRotation;
 	bIsForcedMoving = true;
 	ForcedMoveSpeed = Speed;
 	PlayerInputState.bIsCombatState = false;
@@ -162,28 +210,21 @@ void AT3CharacterBase::StartForcedMove(FVector TargetLocation, float Speed)
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
 		PC->SetIgnoreMoveInput(true);
-		PC->SetIgnoreLookInput(true);
 	}
 }
 
 void AT3CharacterBase::StopForcedMove()
 {
 	bIsForcedMoving = false;
-	PlayerInputState.bIsCombatState = true;
-
-	if (APlayerController* PC = Cast<APlayerController>(GetController()))
-	{
-		PC->SetIgnoreMoveInput(false);
-		PC->SetIgnoreLookInput(false);
-	}
+	bIsRotatingToTarget = true;
 
 	// 이동 중단 시 속도 초기화 (안 하면 미끄러질 수 있음)
-	if (GetCharacterMovement())
-	{
-		GetCharacterMovement()->Velocity = FVector::ZeroVector;
-		GetCharacterMovement()->MaxWalkSpeed = DefaultMaxWalkSpeed;
-		GetCharacterMovement()->StopMovementImmediately();
-	}
+	//if (GetCharacterMovement())
+	//{
+	//	GetCharacterMovement()->Velocity = FVector::ZeroVector;
+	//	GetCharacterMovement()->MaxWalkSpeed = DefaultMaxWalkSpeed;
+	//	GetCharacterMovement()->StopMovementImmediately();
+	//}
 }
 
 void AT3CharacterBase::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
@@ -286,7 +327,7 @@ void AT3CharacterBase::Look(const FVector2D& Value)
 
 void AT3CharacterBase::Roll(const FInputActionValue& Value)
 {
-	if (PlayerInputState.bWantsToRoll) return;
+	// if (PlayerInputState.bWantsToRoll) return;
 
 	TObjectPtr<UT3CombatComponent> Combat = GetCombatComponent();
 	if (!Combat || GetCurrentStamina() < 20.f) 
@@ -306,22 +347,7 @@ void AT3CharacterBase::Roll(const FInputActionValue& Value)
 		PlayerInputState.RollDirection = GetRollDirection(CurrentAngle);
 
 		OnRollTriggered();
-
-		// 구르기 딜레이 설정
-		//GetWorldTimerManager().SetTimer(
-		//	RollDelayTimerHandle,
-		//	this,
-		//	&AT3CharacterBase::ResetRollDelay,
-		//	RollDelayTime,
-		//	false
-		//);
 	}
-}
-
-void AT3CharacterBase::ResetRollDelay()
-{
-	PlayerInputState.bWantsToRoll = false;
-	UE_LOG(LogTemp, Display, TEXT("roll reset"));
 }
 
 ERollDirection AT3CharacterBase::GetRollDirection(float Angle) const

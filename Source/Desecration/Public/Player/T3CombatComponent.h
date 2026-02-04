@@ -99,6 +99,11 @@ public:
 	float TargetHeightPercent = 0.3f;
 	TObjectPtr<class USpringArmComponent> SpringArm;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LockOn")
+	float DefaultArmLength = 400.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LockOn")
+	float MaxArmLength = 2000.f; // 보스가 높이 뜰 때 멀어질 최대 거리
+
 	// 캐릭터 상태 Getter
 	FORCEINLINE ECharacterCombatState GetCurrentState() const { return CurrentState; }
 
@@ -160,7 +165,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Combat|LockOn")
 	FName TargetTag = FName("Enemy");
 
-	float SearchRadius = 2000.f;
+	float SearchRadius = 2500.f;
 	float InterpSpeed = 20.f;
 
 
@@ -177,7 +182,7 @@ private:
 	FTimerHandle BlockingCooldownTimerHandle;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Block")
 	float BlockCooldownTime = 1.f;
-	bool bCanEndBlock = false;
+	bool bCanBlock = true;
 	void ResetBlockCooldown();
 
 

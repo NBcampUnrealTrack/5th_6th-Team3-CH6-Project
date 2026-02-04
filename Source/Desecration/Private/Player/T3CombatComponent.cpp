@@ -102,13 +102,13 @@ void UT3CombatComponent::StartBlock()
 		return;
 	}
 
-	if (OwnerChar->PlayerInputState.bIsBlocking || CurrentState != ECharacterCombatState::Idle) return;
+	if (OwnerChar->PlayerInputState.bIsBlocking || CurrentState != ECharacterCombatState::Idle || !bCanBlock) return;
 
 	// 2. 초기 상태 설정: 패링(Parrying) 모드 진입
 	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Blue, TEXT("BlockingModeOn"));
 	CurrentState = ECharacterCombatState::Parrying;
 	OwnerChar->PlayerInputState.bIsBlocking = true;
-	bCanEndBlock = true;
+	bCanBlock = false;
 	OwnerChar->GetCharacterMovement()->MaxWalkSpeed = 200.0f;
 
 
@@ -125,29 +125,27 @@ void UT3CombatComponent::StartBlock()
 
 void UT3CombatComponent::EndBlock()
 {
-	if (!bCanEndBlock) return;
+	if (!OwnerChar || !OwnerChar->PlayerInputState.bIsBlocking) return;
 
-	if (OwnerChar->PlayerInputState.bIsBlocking && bCanEndBlock)
-	{
-		CurrentState = ECharacterCombatState::Idle;
-		OwnerChar->GetCharacterMovement()->MaxWalkSpeed = 500.0f;
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("BlockingModeOff"));
-		bCanEndBlock = false;
+	CurrentState = ECharacterCombatState::Idle;
+	OwnerChar->PlayerInputState.bIsBlocking = false;
+	OwnerChar->GetCharacterMovement()->MaxWalkSpeed = 500.0f;
+	
+	GetWorld()->GetTimerManager().ClearTimer(ParryingToBlockingTimerHandle);
 
-		GetWorld()->GetTimerManager().SetTimer(
-			BlockingCooldownTimerHandle,
-			this,
-			&UT3CombatComponent::ResetBlockCooldown,
-			BlockCooldownTime, // 쿨타임 시간
-			false
-		);
-	}
+	GetWorld()->GetTimerManager().SetTimer(
+		BlockingCooldownTimerHandle,
+		this,
+		&UT3CombatComponent::ResetBlockCooldown,
+		BlockCooldownTime,
+		false
+	);
 }
 
 void UT3CombatComponent::ResetBlockCooldown()
 {
-	OwnerChar->PlayerInputState.bIsBlocking = false;
-	bCanEndBlock = true;
+	bCanBlock = true;
+	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Block Ready Again"));
 }
 
 void UT3CombatComponent::Attack()
@@ -224,62 +222,60 @@ void UT3CombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	// 1. 유효성 검사 (타겟이 사라졌는지 확인)
-	if (!bIsLockOn || !IsValid(CurrentTarget) || !OwnerChar || !OwnerPC)
+	if (!bIsLockOn || !IsValid(CurrentTarget) || !OwnerChar || !OwnerPC || !SpringArm)
 	{
 		ResetLockOn();
 		return;
 	}
 
-	// 2. 거리 체크 (일정 거리 이상 멀어지면 해제)
-	float Distance = FVector::Dist(OwnerChar->GetActorLocation(), CurrentTarget->GetActorLocation());
-	const float MaxLockOnDistance = 2000.f;
-
-	if (Distance > MaxLockOnDistance)
-	{
-		ResetLockOn();
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Target Out of Range - LockOn Released"));
-		return;
-	}
-
-	FVector StartLocation = OwnerChar->GetActorLocation();
+	// 타겟의 실시간 월드 위치
 	FVector TargetLocation = CurrentTarget->GetActorLocation();
 
+	// 타겟의 록온 높이 퍼센트 적용
 	if (ACharacter* TargetChar = Cast<ACharacter>(CurrentTarget))
 	{
 		float HalfHeight = TargetChar->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
-		// 발바닥 위치에서 위로 (절반 높이 * 2 * 퍼센트)만큼 이동
-		TargetLocation.Z = (HalfHeight * 2.0f * TargetHeightPercent);
+		float FootZ = TargetLocation.Z - HalfHeight;
+		TargetLocation.Z = FootZ + (HalfHeight * 2.0f * TargetHeightPercent);
 	}
 
-	// 바라보기 로직 (기존 로직)
-	FRotator LookAtRot = UKismetMathLibrary::FindLookAtRotation(OwnerChar->GetActorLocation(), CurrentTarget->GetActorLocation());
+	// 높이 차이 계산
+	float HeightDifference = TargetLocation.Z - OwnerChar->GetActorLocation().Z;
 
-	// 카메라 상하 움직임 제한
-	LookAtRot.Pitch = FMath::Clamp(LookAtRot.Pitch, -40.f, 20.f);
 
-	// 컨트롤러 회전 적용
+	// 록온 대상의 높이가 높아질수록 광각으로 카메라가 멀어짐
+	float RawAlpha = FMath::GetMappedRangeValueClamped(FVector2D(100.f, 1000.f), FVector2D(0.f, 1.f), HeightDifference);
+	float ExponentialAlpha = FMath::Clamp(RawAlpha * 1.5f, 0.f, 1.f);
+
+	// 스프링암 길이
+	float DynamicMaxExtra = 2500.f;
+	float TargetArmLength = DefaultArmLength + (ExponentialAlpha * DynamicMaxExtra);
+
+	float TargetDistance = FMath::Lerp(DefaultArmLength, 2500.f, ExponentialAlpha);
+
+	// 광각 범위
+	float TargetFOV = FMath::Lerp(90.f, 120.f, ExponentialAlpha);
+
+	// SocketOffset: 카메라를 더 위로 올려서 아래를 내려다보게 함 (High Angle)
+	float TargetSocketZ = FMath::Lerp(50.f, 500.f, ExponentialAlpha);
+
+	// 부드러운 카메라 전환
+	SpringArm->TargetArmLength = FMath::FInterpTo(SpringArm->TargetArmLength, TargetDistance, DeltaTime, 5.0f);
+	SpringArm->SocketOffset.Z = FMath::FInterpTo(SpringArm->SocketOffset.Z, TargetSocketZ, DeltaTime, 5.0f);
+
+	if (OwnerPC->PlayerCameraManager)
+	{
+		float CurrentFOV = OwnerPC->PlayerCameraManager->GetFOVAngle();
+		OwnerPC->PlayerCameraManager->SetFOV(FMath::FInterpTo(CurrentFOV, TargetFOV, DeltaTime, 4.0f));
+	}
+
+	// 바라보기 회전 
+	FRotator LookAtRot = UKismetMathLibrary::FindLookAtRotation(OwnerChar->GetActorLocation(), TargetLocation);
+	LookAtRot.Pitch = FMath::Clamp(LookAtRot.Pitch, -85.f, 30.f);
 	OwnerPC->SetControlRotation(LookAtRot);
 
-	// 디버깅 록온 마크
-	if (ACharacter* TargetChar = Cast<ACharacter>(CurrentTarget))
-	{
-		// 빨간 점(구체) 그리기 로직 추가
-		if (GetWorld())
-		{
-			DrawDebugSphere(
-				GetWorld(),
-				TargetLocation,   // 위치
-				15.f,            // 반지름
-				12,              // 세그먼트(해상도)
-				FColor::Red,     // 색상
-				false,           // 지속성 (false면 다음 프레임에 사라짐)
-				-1.f,            // 수명 (-1이면 한 프레임만 유지)
-				0,               // 우선순위
-				2.f              // 선 두께
-			);
-		}
-	}
+	// 4. 디버깅 
+	DrawDebugSphere(GetWorld(), TargetLocation, 20.f, 12, FColor::Red, false, -1.f, 0, 2.f);
 }
 
 AActor* UT3CombatComponent::FindBestTarget()
@@ -370,6 +366,8 @@ void UT3CombatComponent::ResetLockOn()
 
 		SpringArm->bEnableCameraRotationLag = false;
 		SpringArm->bEnableCameraLag = false;
+		SpringArm->TargetArmLength = DefaultArmLength;
+		OwnerPC->PlayerCameraManager->SetFOV(90.f);
 	}
 
 	SetComponentTickEnabled(false); // 틱 중지하여 자원 절약

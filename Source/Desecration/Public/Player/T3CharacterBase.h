@@ -32,6 +32,7 @@ enum class ET3StatType : uint8
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnStatChangedDelegate, ET3StatType, StatType, float, CurrentValue, float, MaxValue);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnForcedMoveEndSignature);
 
 UCLASS()
 class DESECRATION_API AT3CharacterBase : public ACharacter
@@ -44,6 +45,10 @@ AT3CharacterBase();
 // 캐릭터 스탯 델리게이트 바인딩 함수
 UPROPERTY(BlueprintAssignable, Category = "Stat | Events")
 FOnStatChangedDelegate OnStatChanged;
+
+// 강제 이동 완료 델리게이트 바인딩 함수
+UPROPERTY(BlueprintAssignable, Category = "Events")
+FOnForcedMoveEndSignature OnForcedMoveEnd;
 
 UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory|Data") 
 TObjectPtr <UDataTable> ItemDataTable;
@@ -77,14 +82,6 @@ protected:
 	bool bIsKnockback = false;
 	
 	void ApplyCharacterData(UT3CharacterDataAsset* Data);
-
-	// 구르기 조정
-	// 쿨타임 시간
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	float RollDelayTime = 0.5f;
-
-	FTimerHandle RollDelayTimerHandle;
-	void ResetRollDelay();
 
 
 public:
@@ -240,15 +237,17 @@ private:
 		// 강제 이동 관련 변수
 		bool bIsForcedMoving = false;
 		FVector ForcedTargetLocation;
+		FRotator ForcedTargetRotation;
 		float ForcedMoveSpeed = 200.f;
 		float DefaultMaxWalkSpeed = 500.f;
-
+		bool bIsRotatingToTarget = false;
 public:
 	// 툴에서 호출할 함수 (좌표를 인자로 받음)
 	UFUNCTION(BlueprintCallable, Category = "Tool")
-	void StartForcedMove(FVector TargetLocation, float Speed = 200.f);
+	void StartForcedMove(FVector TargetLocation, FRotator TargetRotation, float Speed = 200.f);
 
 	void StopForcedMove();
 
 	void UpdateForcedMovement(float DeltaTime);
+	void UpdateForcedRotation(float DeltaTime);
 };
