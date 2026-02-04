@@ -74,6 +74,36 @@ EShopSellResult UT3ShopComponent::SellItem(const FName& ItemName, UT3InventoryCo
 	return EShopSellResult::Succeeded;
 }
 
+void UT3ShopComponent::GetShopItemUIData(TArray<FT3ShopItemUIData>& OutItems) const
+{
+	if (!IsValid(ShopData))
+	{
+		return;
+	}
+
+	TArray<FName> RowNames = ShopData->GetRowNames();
+
+	for (const FName& RowName : RowNames)
+	{
+		FT3ShopData* Row = ShopData->FindRow<FT3ShopData>(RowName, TEXT("Shop"));
+
+		if (!Row)
+		{
+			continue;
+		}
+
+		FT3ShopItemUIData UIData;
+		
+		UIData.ItemID = RowName;
+		UIData.Name = Row->Name;
+		UIData.Icon = Row->Icon;
+		UIData.BuyPrice = Row->BuyPrice;
+		UIData.SellPrice = Row->SellPrice;
+
+		OutItems.Add(UIData);
+	}
+}
+
 void UT3ShopComponent::BeginPlay()
 {
 	Super::BeginPlay();

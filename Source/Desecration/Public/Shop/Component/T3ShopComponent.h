@@ -28,6 +28,33 @@ enum class EShopSellResult : uint8
 	Succeeded // 판매 성공
 };
 
+USTRUCT(BlueprintType)
+struct FT3ShopItemUIData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly)
+	FName ItemID;
+	
+	UPROPERTY(BlueprintReadOnly)
+	FText Name;
+	
+	UPROPERTY(BlueprintReadOnly)
+	UTexture2D* Icon;
+	
+	UPROPERTY(BlueprintReadOnly)
+	int32 BuyPrice;
+	
+	UPROPERTY(BlueprintReadOnly)
+	uint8 bCanBuy : 1;
+	
+	UPROPERTY(BlueprintReadOnly)
+	int32 SellPrice;
+	
+	UPROPERTY(BlueprintReadOnly)
+	uint8 bCanSell : 1;
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class DESECRATION_API UT3ShopComponent : public UActorComponent
 {
@@ -41,6 +68,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Shop")
 	EShopSellResult SellItem(const FName& ItemName, UT3InventoryComponent* Inventory);
+	
+	UFUNCTION(BlueprintCallable, Category = "Shop")
+	void GetShopItemUIData(TArray<FT3ShopItemUIData>& OutItems) const;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Data")
 	TObjectPtr<UDataTable> ShopData;
