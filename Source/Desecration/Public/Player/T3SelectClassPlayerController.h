@@ -17,7 +17,7 @@ protected:
 	virtual void BeginPlay() override;
 	
 public:
-	void TutorialStart();
+	void TutorialStart(const FText& PlayerName);
 	
 	//타이틀 화면으로
 	void ReturnToTitleLevel();

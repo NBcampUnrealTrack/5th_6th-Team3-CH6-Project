@@ -39,7 +39,7 @@ void AT3SelectClassPlayerController::BeginPlay()
 	SelectClassWidgetInstance->AddToViewport();
 }
 
-void AT3SelectClassPlayerController::TutorialStart()
+void AT3SelectClassPlayerController::TutorialStart(const FText& PlayerName)
 {
 	
 }

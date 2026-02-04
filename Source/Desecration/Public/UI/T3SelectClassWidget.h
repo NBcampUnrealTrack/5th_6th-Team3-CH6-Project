@@ -5,6 +5,7 @@
 #include "GameSystem/GlobalEnums.h"
 #include "T3SelectClassWidget.generated.h"
 
+class UT3InputNamePanel;
 class UHorizontalBox;
 class AT3SelectClassPlayerController;
 class UButton;
@@ -16,6 +17,13 @@ class DESECRATION_API UT3SelectClassWidget : public UUserWidget
 	
 protected:
 	virtual void NativeConstruct() override;
+	
+public:
+	//이름 입력 패널 활성화 여부
+	void SetActiveInputNamePanel(bool bActive);
+	
+	//입력한 이름으로 튜토리얼 시작하기
+	void TutorialStart(const FText& PlayerName);
 	
 private:
 	//클래스 선택 버튼
@@ -40,6 +48,14 @@ private:
 	//돌아가기 버튼
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
 	TObjectPtr<UButton> ReturnButton;
+	
+	//이름 입력 패널이 있는 부모 위젯
+	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
+	TObjectPtr<UWidget> InputNamePanelParent;
+	
+	//이름 입력 패널
+	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
+	TObjectPtr<UT3InputNamePanel> InputNamePanel;
 	
 	//플레이어 컨트롤러
 	UPROPERTY()

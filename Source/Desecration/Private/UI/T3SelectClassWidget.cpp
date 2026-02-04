@@ -3,6 +3,7 @@
 #include "Components/Button.h"
 #include "Components/HorizontalBox.h"
 #include "Player/T3SelectClassPlayerController.h"
+#include "UI/T3InputNamePanel.h"
 
 void UT3SelectClassWidget::NativeConstruct()
 {
@@ -40,10 +41,24 @@ void UT3SelectClassWidget::NativeConstruct()
 	}
 	
 	//선택 버튼은 비활성화 상태로 시작
-	SelectButton->SetIsEnabled(false);
+	SetActiveInputNamePanel(false);
+	
+	//이름 입력 패널 초기화
+	InputNamePanel->SelectClassWidget = this;
+	InputNamePanelParent->SetVisibility(ESlateVisibility::Collapsed);
 	
 	//그외 나머지 초기화
 	SelectedPlayerClass = EPlayerClass::None;
+}
+
+void UT3SelectClassWidget::SetActiveInputNamePanel(bool bActive)
+{
+	InputNamePanelParent->SetVisibility(bActive ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+}
+
+void UT3SelectClassWidget::TutorialStart(const FText& PlayerName)
+{
+	SelectClassPlayerController->TutorialStart(PlayerName);
 }
 
 void UT3SelectClassWidget::OnClickSelectClassButton(const EPlayerClass ButtonValue)
@@ -69,8 +84,8 @@ void UT3SelectClassWidget::OnClickSelectButton()
 		return;
 	}
 	
-	//TODO : 이름 입력 패널 구현
-	//TODO : 튜토리얼 시작 구현
+	//이름 입력하기
+	SetActiveInputNamePanel(true);
 }
 
 void UT3SelectClassWidget::OnClickReturnButton()
