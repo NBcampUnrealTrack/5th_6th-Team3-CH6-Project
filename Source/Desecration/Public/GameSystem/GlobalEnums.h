@@ -46,7 +46,8 @@ enum class ELevelName
 {
 	Title = 0 UMETA(DisplayName = "TitleLevel"),
 	SelectClass UMETA(DisplayName = "SelectClassLevel"),
+	Tutorial UMETA(DisplayName = "T3_TutorialLevel"),
 	Town UMETA(DisplayName = "T3Town"),
-	Castle_1 = 0 UMETA(DisplayName = "T3Castle_1"),
+	Castle_1 UMETA(DisplayName = "T3Castle_1"),
 
 };
