@@ -87,5 +87,5 @@ void UT3SettingsPanel::OnClickResetButton()
 
 void UT3SettingsPanel::OnClickConfirmButton()
 {
-	
+	TitlePlayerController->SetActiveSettingsPanel(false);
 }
