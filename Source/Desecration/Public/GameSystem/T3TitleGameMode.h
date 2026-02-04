@@ -17,5 +17,5 @@ public:
 	void MoveToLastSavedLevel();
 	
 	//게임 종료
-	void QuitGame() const;
+	void QuitGame();
 };
