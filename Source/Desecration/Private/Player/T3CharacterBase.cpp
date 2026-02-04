@@ -286,8 +286,6 @@ void AT3CharacterBase::Look(const FVector2D& Value)
 
 void AT3CharacterBase::Roll(const FInputActionValue& Value)
 {
-	if (PlayerInputState.bWantsToRoll) return;
-
 	TObjectPtr<UT3CombatComponent> Combat = GetCombatComponent();
 	if (!Combat || GetCurrentStamina() < 20.f) 
 		return GEngine->AddOnScreenDebugMessage(-1,1.f,FColor::Emerald,FString::Printf(TEXT("You Need Stamina"))); // 스태미나 부족 시 실행 불가
