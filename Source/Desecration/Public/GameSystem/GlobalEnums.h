@@ -51,3 +51,12 @@ enum class ELevelName
 	Castle_1 UMETA(DisplayName = "T3Castle_1"),
 
 };
+//플레이어의 클래스
+UENUM()
+enum class EPlayerClass
+{
+	None,
+	Warrior,
+	Class1,//TODO : 모든 클래스의 영어명 정하기
+	Class2
+};
