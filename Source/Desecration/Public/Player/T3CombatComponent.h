@@ -153,8 +153,6 @@ private:
 
 	// 록온 변수
 	bool bIsLockOn = false;
-	UPROPERTY()
-	TObjectPtr<AActor> CurrentTarget;
 
 	// 록온 타깃 식별 태그
 	UPROPERTY(EditAnywhere, Category = "Combat|LockOn")
@@ -177,6 +175,8 @@ private:
 	FTimerHandle BlockingCooldownTimerHandle;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Block")
 	float BlockCooldownTime = 1.f;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	TObjectPtr<AActor> CurrentTarget;
 	bool bCanEndBlock = false;
 	void ResetBlockCooldown();
 
