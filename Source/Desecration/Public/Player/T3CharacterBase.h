@@ -166,6 +166,7 @@ public:
 	FORCEINLINE float GetMaxMana() const { return MaxMana; }
 	FORCEINLINE float GetCurrentMana() const { return CurrentMana; }
 	void SetCurrentMana(float NewMana) { CurrentMana = FMath::Clamp(NewMana, 0.f, MaxMana); BroadcastStatChange(ET3StatType::MP);}
+	void ConsumeMana(float Amount);
 
 
 	// Stamina

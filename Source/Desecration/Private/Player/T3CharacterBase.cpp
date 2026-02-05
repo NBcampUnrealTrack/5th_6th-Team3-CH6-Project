@@ -13,6 +13,7 @@
 #include "Item/Component/T3ItemUseComponent.h"
 #include "Player/T3CharacterDataAsset.h"
 #include "Player/T3DamageTypes.h"
+#include "Player/T3SkillComponentBase.h"
 
 
 
@@ -272,12 +273,15 @@ void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)
 		UActorComponent* ExistingComp = GetComponentByClass(Data->SkillComponent);
 		if (!ExistingComp)
 		{
-			UActorComponent* NewSkillComp = NewObject<UActorComponent>(this, Data->SkillComponent);
+			UT3SkillComponentBase* NewSkillComp = NewObject<UT3SkillComponentBase>(this, Data->SkillComponent);
 			if (NewSkillComp)
 			{
 				NewSkillComp->RegisterComponent();
-				// NewSkillComp->OnComponentCreated(); // 추가적인 초기화 호출
-				// this->AddOwnedComponent(NewSkillComp); // 소유권 명시
+				
+				if (CombatComponent)
+				{
+					CombatComponent->SetSkillComponent(NewSkillComp);
+				}
 
 				UE_LOG(LogTemp, Log, TEXT("Skill Component Attached: %s"), *Data->SkillComponent->GetName());
 			}
@@ -431,6 +435,18 @@ void AT3CharacterBase::ResetMoveSpeed()
 		GetCharacterMovement()->MaxWalkSpeed = OriginalMoveSpeed;
 		BroadcastStatChange(ET3StatType::Stamina);
 		UE_LOG(LogTemp, Log, TEXT("MoveSpeed Restored to: %f"), OriginalMoveSpeed);
+	}
+}
+
+void AT3CharacterBase::ConsumeMana(float Amount)
+{
+	if (CurrentMana >= Amount)
+	{
+		float NewMana = CurrentMana - Amount;
+		SetCurrentMana(NewMana);
+
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
+		FString::Printf(TEXT("Remaining Mana: %.1f"), CurrentMana));
 	}
 }
 

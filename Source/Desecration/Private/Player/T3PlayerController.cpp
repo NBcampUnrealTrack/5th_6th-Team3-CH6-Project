@@ -37,6 +37,8 @@ void AT3PlayerController::BeginPlay()
 	}
 
 	OwnerChar = Cast<AT3CharacterBase>(GetPawn());
+	Combat = OwnerChar->GetCombatComponent();
+	
 }
 
 void AT3PlayerController::SetupInputComponent()
@@ -57,6 +59,15 @@ void AT3PlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_Attack);
 	
 		EnhancedInputComponent->BindAction(InventoryAction, ETriggerEvent::Started, this, &AT3PlayerController::ToggleInventoryInput);
+
+		// 슬롯 체인지 및 사용
+		EnhancedInputComponent->BindAction(ChangeSkillSlotAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_ChangeSkillSlot);
+		EnhancedInputComponent->BindAction(ChangePotionSlotAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_ChangePotionSlot);
+		EnhancedInputComponent->BindAction(ChangeConsumableSlotAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_ChangeConsumableSlot);
+		EnhancedInputComponent->BindAction(ActiveSkillSlotAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_ActiveSkillSlot);
+		EnhancedInputComponent->BindAction(ActivePotionSlotAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_ActivePotionSlot);
+		EnhancedInputComponent->BindAction(ActiveConsumableSlotAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_ActiveConsumableSlot);
+
 	}
 }
 
@@ -98,12 +109,9 @@ void AT3PlayerController::Input_LockOn(const FInputActionValue& Value)
 		return;
 	}
 	
-	if (OwnerChar)
+	if (Combat)
 	{
-		if (UT3CombatComponent* Combat = OwnerChar->GetCombatComponent())
-		{
-			Combat->ToggleLockOn();
-		}
+		Combat->ToggleLockOn();
 	}
 }
 
@@ -114,12 +122,9 @@ void AT3PlayerController::Input_BlockStart(const FInputActionValue& Value)
 		return;
 	}
 	
-	if (OwnerChar)
+	if (Combat)
 	{
-		if (UT3CombatComponent* Combat = OwnerChar->GetCombatComponent())
-		{
 			Combat->StartBlock();
-		}
 	}
 }
 
@@ -130,12 +135,9 @@ void AT3PlayerController::Input_BlockEnd(const FInputActionValue& Value)
 		return;
 	}
 	
-	if (OwnerChar)
+	if (Combat)
 	{
-		if (UT3CombatComponent* Combat = OwnerChar->GetCombatComponent())
-		{
 			Combat->EndBlock();
-		}
 	}
 }
 
@@ -192,12 +194,9 @@ void AT3PlayerController::Input_Attack(const FInputActionValue& Value)
 		return;
 	}
 	
-	if (OwnerChar)
+	if (Combat)
 	{
-		if (UT3CombatComponent* Combat = OwnerChar->GetCombatComponent())
-		{
 			Combat->Attack();
-		}
 	}
 }
 
@@ -228,7 +227,46 @@ void AT3PlayerController::ToggleInventoryInput()
 	}
 }
 
+
+void AT3PlayerController::Input_ChangeSkillSlot(const FInputActionValue& Value)
+{	
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())	{return;}
+	if (Combat)	{Combat->ChangeActiveSlot(ESlotType::Skill);}
+}
+
+void AT3PlayerController::Input_ChangePotionSlot(const FInputActionValue& Value)
+{
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction()) { return; }
+	if (Combat) { Combat->ChangeActiveSlot(ESlotType::Potion); } 
+}
+
+void AT3PlayerController::Input_ChangeConsumableSlot(const FInputActionValue& Value)
+{
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction()) { return; }
+	if (Combat) { Combat->ChangeActiveSlot(ESlotType::Consumable); } 
+}
+
+void AT3PlayerController::Input_ActiveSkillSlot(const FInputActionValue& Value)
+{
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction()) { return; }
+	if (Combat) { Combat->ExecuteCurrentSlotAction(ESlotType::Skill); } 
+}
+
+void AT3PlayerController::Input_ActivePotionSlot(const FInputActionValue& Value)
+{
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction()) { return; }
+	if (Combat) { Combat->ExecuteCurrentSlotAction(ESlotType::Potion); } 
+}
+
+void AT3PlayerController::Input_ActiveConsumableSlot(const FInputActionValue& Value)
+{
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction()) { return; }
+	if (Combat) { Combat->ExecuteCurrentSlotAction(ESlotType::Consumable); } 
+}
+
 void AT3PlayerController::SetInventoryOpen(bool bIsOpen)
 {
 	bIsInventoryOpen = bIsOpen;
 }
+
+
