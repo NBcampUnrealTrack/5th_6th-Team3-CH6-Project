@@ -16,6 +16,7 @@
 #include "Components/CapsuleComponent.h"
 #include "DrawDebugHelpers.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Player/T3SkillComponentBase.h"
 
 
 UT3CombatComponent::UT3CombatComponent()
@@ -270,9 +271,19 @@ void UT3CombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	}
 
 	// 바라보기 회전 
-	FRotator LookAtRot = UKismetMathLibrary::FindLookAtRotation(OwnerChar->GetActorLocation(), TargetLocation);
-	LookAtRot.Pitch = FMath::Clamp(LookAtRot.Pitch, -85.f, 30.f);
-	OwnerPC->SetControlRotation(LookAtRot);
+	FVector CameraLocation = SpringArm->GetComponentLocation(); // 캐릭터 위치가 아닌 카메라 기준
+	FRotator LookAtRot = UKismetMathLibrary::FindLookAtRotation(CameraLocation, TargetLocation);
+	
+	LookAtRot.Pitch = FMath::Clamp(LookAtRot.Pitch, -75.f, 20.f);
+	
+	// 2. ControlRotation에 직접 Set하는 대신 RInterpTo를 사용
+	// 갑작스러운 타겟 이동이나 수직 위치 변화 시 카메라가 튀는 것을 방지합니다.
+	FRotator CurrentRot = OwnerPC->GetControlRotation();
+
+	// Smoothness를 위해 InterpSpeed를 조절 (예: 7.0f)
+	FRotator SmoothRot = FMath::RInterpTo(CurrentRot, LookAtRot, DeltaTime, 7.0f);
+
+	OwnerPC->SetControlRotation(SmoothRot);
 
 	// 4. 디버깅 
 	DrawDebugSphere(GetWorld(), TargetLocation, 20.f, 12, FColor::Red, false, -1.f, 0, 2.f);
@@ -597,5 +608,83 @@ void UT3CombatComponent::ConsumeStamina(float Amount)
 
 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
 			FString::Printf(TEXT("Remaining Stamina: %.1f"), OwnerChar->GetCurrentStamina()));
+	}
+}
+
+
+// 스킬&아이템 슬롯 함수
+void UT3CombatComponent::ChangeActiveSlot(ESlotType Type)
+{
+	switch (Type)
+	{
+	case ESlotType::Skill:
+		CurrentSkillSlot = (CurrentSkillSlot % MaxSkillSlots) + 1; // 슬롯 전환 시 순환으로 전환
+		UE_LOG(LogTemp, Log, TEXT("Skill Slot Switched: %d"), CurrentSkillSlot);
+		break;
+	case ESlotType::Consumable:
+		CurrentConsumableSlot = (CurrentConsumableSlot % MaxConsumableSlots) + 1;
+		UE_LOG(LogTemp, Log, TEXT("Consumable Slot Switched: %d"), CurrentConsumableSlot);
+		break;
+	case ESlotType::Potion:
+		CurrentPotionSlot = (CurrentPotionSlot % MaxPotionSlots) + 1;
+		UE_LOG(LogTemp, Log, TEXT("Potion Slot Switched: %d"), CurrentPotionSlot);
+		break;
+	}
+
+	if (OnSlotContentChanged.IsBound())
+	{
+		OnSlotSelectionChanged.Broadcast(Type, CurrentSkillSlot);
+	}
+}
+
+void UT3CombatComponent::ExecuteCurrentSlotAction(ESlotType Type)
+{
+	switch (Type)
+	{
+	case ESlotType::Skill:
+		if (SkillComp) SkillComp->ExecuteSkill(CurrentSkillSlot);
+		break;
+	case ESlotType::Consumable:
+		// ItemComp->UseConsumable(CurrentConsumableSlot);
+		UE_LOG(LogTemp, Log, TEXT("Using Consumable Slot: %d"), CurrentConsumableSlot);
+		break;
+	case ESlotType::Potion:
+		// ItemComp->UsePotion(CurrentPotionSlot);
+		UE_LOG(LogTemp, Log, TEXT("Using Potion Slot: %d"), CurrentPotionSlot);
+		break;
+	}
+}
+
+void UT3CombatComponent::UpdateSlotContent(ESlotType Type, int32 SlotIndex, int32 NewID)
+{
+	if (SlotIndex <= 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Combat: Invalid SlotIndex %d"), SlotIndex);
+		return;
+	}
+
+	switch (Type)
+	{
+	case ESlotType::Skill:
+		if (SkillComp)
+		{
+			// 실제 데이터 변경은 각 컴포넌트에 위임
+			SkillComp->SetSkillSlot(SlotIndex, NewID);
+		}
+		break;
+
+	case ESlotType::Consumable:
+		UE_LOG(LogTemp, Log, TEXT("Combat: Consumable Slot %d updated with ID %d"), SlotIndex, NewID);
+		break;
+
+	case ESlotType::Potion:
+		UE_LOG(LogTemp, Log, TEXT("Combat: Potion Slot %d updated with ID %d"), SlotIndex, NewID);
+		break;
+	}
+
+	// UI팀에게 알림
+	if (OnSlotContentChanged.IsBound())
+	{
+		OnSlotContentChanged.Broadcast(Type, SlotIndex, NewID);
 	}
 }

@@ -45,6 +45,20 @@ enum class EHitDirection : uint8
 	Right   UMETA(DisplayName = "Right")
 };
 
+// 슬롯 체인지 타입 구분
+UENUM(BlueprintType)
+enum class ESlotType : uint8
+{
+	Skill,
+	Consumable, // 소모아이템
+	Potion
+};
+
+// 현재 선택된 슬롯이 바뀔 때 (전투 화면에서 슬롯 체인지)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSlotSelectionChanged, ESlotType, SlotType, int32, NewSlotIndex);
+
+// 슬롯에 장착된 내용물이 바뀔 때 (인벤토리에서 슬롯 내용 체인지)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSlotContentChanged, ESlotType, SlotType, int32, SlotIndex, int32, NewID);
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -57,11 +71,19 @@ public:
 
 	void InitializeWeapons(const TMap<EEquipSlot, FWeaponEquipInfo>& WeaponMap);
 
-	// 2. 실제 로직용 (우리가 원하는 Intensity 포함)
 	void ExecuteHitLogic(AActor* DamageCauser, float Damage, const UDamageType* DamageType, AController* InstigatedBy, EHitIntensity Intensity, float ReceievedDamageMultiplier);
 
-public:
 	void SetOwnerChar(ACharacter* InChar) { AIChar = InChar; };
+
+
+	UPROPERTY(BlueprintAssignable, Category = "Combat|UI")
+	FOnSlotSelectionChanged OnSlotSelectionChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "Combat|UI")
+	FOnSlotContentChanged OnSlotContentChanged;
+
+	// 슬롯 내용물 변경 함수 (인벤토리에서 호출용)
+	void UpdateSlotContent(ESlotType Type, int32 SlotIndex, int32 NewID);
 
 protected:
 	virtual void BeginPlay() override;
@@ -126,7 +148,45 @@ public:
 	void ClearWeapons();
 
 
+	// ======== 스킬, 아이템 슬롯 전환 및 슬롯 실행 ==========
+
+public:
+	// 슬롯 전환 함수 (키 입력에 대응)
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	void ChangeActiveSlot(ESlotType Type);
+
+	// 현재 슬롯 실행 (실제 키 입력 시 호출)
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	void ExecuteCurrentSlotAction(ESlotType Type);
+
+	void SetSkillComponent(UT3SkillComponentBase* InSkillComp) { SkillComp = InSkillComp; }
+
+
 private:
+	// 현재 선택된 인덱스들
+	int32 CurrentSkillSlot = 1;
+	int32 CurrentConsumableSlot = 1;
+	int32 CurrentPotionSlot = 1;
+
+	// 최대 슬롯 수 (직업별 확장성 고려)
+	int32 MaxSkillSlots = 2;
+	int32 MaxConsumableSlots = 2;
+	int32 MaxPotionSlots = 2;
+
+	// 캐싱된 컴포넌트
+	UPROPERTY()
+	class UT3SkillComponentBase* SkillComp;
+
+	UPROPERTY()
+	class UT3ItemUseComponent* ItemComp;
+	
+	
+	
+	
+	
+	
+	
+	
 	// 상태별 데미지 경감 로직
 	float CalculateFinalDamage(float IncomingDamage, const class UDamageType* DamageType, float ReceievedDamageMultiplier);
 	
