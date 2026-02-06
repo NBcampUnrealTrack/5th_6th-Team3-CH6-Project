@@ -31,6 +31,9 @@ private:
 	void MakeFirstSettings();
 	
 public:
+	//튜토리얼 시작시 첫 게임 데이터 생성
+	void MakeFirstGameData();
+	
 	//게임 저장하기 (true : 저장 성공)
 	//TODO : 게임 저장을 위한 매개변수 추가
 	bool SaveGame();
