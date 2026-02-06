@@ -59,6 +59,11 @@ void UT3GameInstance::MakeFirstSettings()
 	CurrentSettings->MouseSensitivity = 1.0f;
 }
 
+void UT3GameInstance::MakeFirstGameData()
+{
+	
+}
+
 bool UT3GameInstance::SaveGame()
 {
 	return UGameplayStatics::SaveGameToSlot(SavedGameData, SAVE_GAME_NAME, 0);
