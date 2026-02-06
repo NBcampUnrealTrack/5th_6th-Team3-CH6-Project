@@ -44,8 +44,8 @@ enum class EGraphicQuality
 UENUM()
 enum class ELevelName
 {
-	Title = 0 UMETA(DisplayName = "T9TitleLevel"),
-	SelectClass UMETA(DisplayName = "T9SelectClassLevel"),
+	Title = 0 UMETA(DisplayName = "T3TitleLevel"),
+	SelectClass UMETA(DisplayName = "T3SelectClassLevel"),
 	Tutorial UMETA(DisplayName = "T3_TutorialLevel"),
 	Town UMETA(DisplayName = "T3Town"),
 	Castle_1 UMETA(DisplayName = "T3Castle_1"),
