@@ -59,9 +59,15 @@ void UT3GameInstance::MakeFirstSettings()
 	CurrentSettings->MouseSensitivity = 1.0f;
 }
 
-void UT3GameInstance::MakeFirstGameData()
+TObjectPtr<UT3SaveGame> UT3GameInstance::MakeFirstGameData()
 {
+	if (!SavedGameData)
+	{
+		SavedGameData = NewObject<UT3SaveGame>();
+	}
+	SavedGameData->ResetGameData();
 	
+	return SavedGameData;
 }
 
 bool UT3GameInstance::SaveGame()

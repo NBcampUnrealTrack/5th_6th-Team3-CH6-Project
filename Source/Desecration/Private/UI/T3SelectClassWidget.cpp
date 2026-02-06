@@ -58,7 +58,7 @@ void UT3SelectClassWidget::SetActiveInputNamePanel(bool bActive)
 
 void UT3SelectClassWidget::TutorialStart(const FText& PlayerName)
 {
-	SelectClassPlayerController->TutorialStart(PlayerName);
+	SelectClassPlayerController->TutorialStart(PlayerName, SelectedPlayerClass);
 }
 
 void UT3SelectClassWidget::OnClickSelectClassButton(const EPlayerClass ButtonValue)
