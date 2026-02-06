@@ -7,6 +7,7 @@
 class UT3SelectClassWidget;
 class AT3SelectClassGameMode;
 class UT3GameInstance;
+enum class EPlayerClass;
 
 UCLASS()
 class DESECRATION_API AT3SelectClassPlayerController : public APlayerController
@@ -17,16 +18,13 @@ protected:
 	virtual void BeginPlay() override;
 	
 public:
-	void TutorialStart(const FText& PlayerName);
+	//튜토리얼 시작
+	void TutorialStart(const FText& PlayerName, const EPlayerClass SelectedPlayerClass);
 	
 	//타이틀 화면으로
 	void ReturnToTitleLevel();
 	
-private:
-	//게임 인스턴스
-	UPROPERTY()
-	TObjectPtr<UT3GameInstance> T3GameInstance;
-	
+private:	
 	//게임 모드
 	UPROPERTY()
 	TObjectPtr<AT3SelectClassGameMode> SelectClassGameMode;
