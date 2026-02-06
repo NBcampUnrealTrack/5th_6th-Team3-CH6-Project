@@ -8,8 +8,15 @@
 #include "Player/T3DamageTypes.h"
 #include "T3HealthComponent.generated.h"
 
-// 데미지 처리 후 체력 변화나 사망 시그널을 위한 델리게이트 선언
+// 데미지 처리 후 사망 델리게이트 선언
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeathSignature);
+// 데미지 처리 후 히트 델리게이트 선언
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(
+    FOnDamagedSignature, 
+    float,DamageAmount, 
+    const class UDamageType*, DamageType, 
+    class AController*, InstigatedBy, 
+    AActor*, DamageCauser);
 
 UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class DESECRATION_API UT3HealthComponent : public UActorComponent
@@ -37,8 +44,11 @@ public:
 	// 플레이어의 데미지 처리를 위한 커스텀 함수
 	void HandleTakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
 
-	// 사망 시그널 델리게이트
+	// 사망 델리게이트
     UPROPERTY(BlueprintAssignable, Category = "Health")
     FOnDeathSignature OnDeath;
 
+    // 히트 델리게이트
+    UPROPERTY(BlueprintAssignable, Category = "Health")
+    FOnDamagedSignature OnDamaged;
 };

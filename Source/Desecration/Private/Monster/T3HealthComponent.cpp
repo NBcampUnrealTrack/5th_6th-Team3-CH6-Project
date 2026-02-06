@@ -44,5 +44,12 @@ void UT3HealthComponent::HandleTakeDamage(float DamageAmount, const FDamageEvent
 			OnDeath.Broadcast();
 		}
 	}
+	else
+	{
+		if (OnDamaged.IsBound())
+		{
+			OnDamaged.Broadcast(DamageAmount, DamageEvent.DamageTypeClass ? DamageEvent.DamageTypeClass->GetDefaultObject<UDamageType>() : nullptr, EventInstigator, DamageCauser);
+		}
+	}
 }
 
