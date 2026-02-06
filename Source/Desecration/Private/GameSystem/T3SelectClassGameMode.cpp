@@ -3,7 +3,6 @@
 #include "GameSystem/GlobalEnums.h"
 #include "GameSystem/T3GameInstance.h"
 #include "GameSystem/T3SaveGame.h"
-#include "Kismet/GameplayStatics.h"
 
 void AT3SelectClassGameMode::BeginPlay()
 {
@@ -31,12 +30,10 @@ void AT3SelectClassGameMode::MakeFirstGameData(const FText& PlayerName, const EP
 
 void AT3SelectClassGameMode::TutorialStart()
 {
-	const FName LevelName = FName(UEnum::GetDisplayValueAsText(ELevelName::Tutorial).ToString());
-	UGameplayStatics::OpenLevel(GetWorld(), LevelName);
+	T3GameInstance->OpenLevel(ELevelName::Tutorial);
 }
 
 void AT3SelectClassGameMode::ReturnToTitleLevel()
 {
-	const FName LevelName = FName(UEnum::GetDisplayValueAsText(ELevelName::Title).ToString());
-	UGameplayStatics::OpenLevel(GetWorld(), LevelName);
+	T3GameInstance->OpenLevel(ELevelName::Title);
 }

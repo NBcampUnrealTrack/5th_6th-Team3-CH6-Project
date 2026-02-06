@@ -53,6 +53,9 @@ public:
 	//그래픽 설정하기
 	void SetGraphicQuality(const EGraphicQuality GraphicQuality);
 	
+	//레벨(맵) 이동하기
+	void OpenLevel(ELevelName LevelName) const;
+	
 	//저장된 게임
 	FORCEINLINE TObjectPtr<UT3SaveGame> LoadGame() { return SavedGameData; }
 	
