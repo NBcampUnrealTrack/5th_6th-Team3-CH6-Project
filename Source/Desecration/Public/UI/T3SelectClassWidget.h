@@ -23,7 +23,7 @@ public:
 	void SetActiveInputNamePanel(bool bActive);
 	
 	//입력한 이름으로 튜토리얼 시작하기
-	void TutorialStart(const FText& PlayerName);
+	void TutorialStart(const FString& PlayerName);
 	
 private:
 	//클래스 선택 버튼

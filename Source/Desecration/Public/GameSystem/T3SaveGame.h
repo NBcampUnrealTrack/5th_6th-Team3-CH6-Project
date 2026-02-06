@@ -22,7 +22,7 @@ public:
 	
 	//플레이어 이름
 	UPROPERTY()
-	FText PlayerName;
+	FString PlayerName;
 	
 	//저장한 곳의 맵 이름
 	UPROPERTY()

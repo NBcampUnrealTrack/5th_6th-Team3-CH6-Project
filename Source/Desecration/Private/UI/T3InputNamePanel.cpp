@@ -13,24 +13,23 @@ void UT3InputNamePanel::NativeConstruct()
 	CancelButton->OnClicked.AddDynamic(this, &ThisClass::OnClickCancelButton);
 	
 	//이름 입력 칸 초기화
-	InputNameBoxText = FText();
 	InputNameBox->SetText(FText::GetEmpty());
 }
 
 void UT3InputNamePanel::OnClickConfirmButton()
 {
 	//이름 미입력시 무시
-	FText InputText = InputNameBox->GetText();
-	if (InputText.IsEmpty())
+	const FString InputName = InputNameBox->GetText().ToString();
+	if (InputName.IsEmpty())
 	{
 		return;
 	}
 	
 	//튜토리얼 시작
-	// if (const TObjectPtr<UT3SelectClassWidget> WidgetInstance = SelectClassWidget.Get())
-	// {
-	// 	WidgetInstance->TutorialStart(InputNameBoxText);
-	// }
+	if (const TObjectPtr<UT3SelectClassWidget> WidgetInstance = SelectClassWidget.Get())
+	{
+		WidgetInstance->TutorialStart(InputName);
+	}
 }
 
 void UT3InputNamePanel::OnClickCancelButton()

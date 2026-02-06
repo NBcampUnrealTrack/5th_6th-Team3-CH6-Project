@@ -16,7 +16,7 @@ protected:
 	
 public:
 	//시작 데이터 생성하기 (true : 생성 성공)
-	void MakeFirstGameData(const FText& PlayerName, const EPlayerClass SelectedPlayerClass);
+	void MakeFirstGameData(const FString& PlayerName, const EPlayerClass SelectedPlayerClass);
 	
 	//튜토리얼 시작
 	void TutorialStart();

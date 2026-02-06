@@ -42,8 +42,4 @@ private:
 	//클래스 선택 위젯
 	UPROPERTY()
 	TWeakObjectPtr<UT3SelectClassWidget> SelectClassWidget;
-	
-	//이름 입력칸의 내용
-	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = true))
-	FText InputNameBoxText;
 };

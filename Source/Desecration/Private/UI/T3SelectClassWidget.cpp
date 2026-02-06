@@ -56,7 +56,7 @@ void UT3SelectClassWidget::SetActiveInputNamePanel(bool bActive)
 	InputNamePanelParent->SetVisibility(bActive ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 }
 
-void UT3SelectClassWidget::TutorialStart(const FText& PlayerName)
+void UT3SelectClassWidget::TutorialStart(const FString& PlayerName)
 {
 	SelectClassPlayerController->TutorialStart(PlayerName, SelectedPlayerClass);
 }

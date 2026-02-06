@@ -33,7 +33,7 @@ void AT3SelectClassPlayerController::BeginPlay()
 	SelectClassWidgetInstance->AddToViewport();
 }
 
-void AT3SelectClassPlayerController::TutorialStart(const FText& PlayerName, const EPlayerClass SelectedPlayerClass)
+void AT3SelectClassPlayerController::TutorialStart(const FString& PlayerName, const EPlayerClass SelectedPlayerClass)
 {
 	SelectClassGameMode->MakeFirstGameData(PlayerName, SelectedPlayerClass);
 	SelectClassGameMode->TutorialStart();

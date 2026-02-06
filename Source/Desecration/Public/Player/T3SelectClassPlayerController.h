@@ -19,7 +19,7 @@ protected:
 	
 public:
 	//튜토리얼 시작
-	void TutorialStart(const FText& PlayerName, const EPlayerClass SelectedPlayerClass);
+	void TutorialStart(const FString& PlayerName, const EPlayerClass SelectedPlayerClass);
 	
 	//타이틀 화면으로
 	void ReturnToTitleLevel();
