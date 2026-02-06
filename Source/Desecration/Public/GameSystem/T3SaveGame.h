@@ -20,7 +20,15 @@ public:
 	UPROPERTY()
 	EPlayerClass PlayerClass;
 	
+	//플레이어 이름
+	UPROPERTY()
+	FText PlayerName;
+	
 	//저장한 곳의 맵 이름
 	UPROPERTY()
 	ELevelName SavedLevelName;
+	
+	//저장한 맵 내의 체크 포인트 (0 : 시작지점)
+	UPROPERTY()
+	int32 SavePointPos;
 };
