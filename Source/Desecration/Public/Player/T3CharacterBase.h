@@ -32,6 +32,7 @@ enum class ET3StatType : uint8
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnStatChangedDelegate, ET3StatType, StatType, float, CurrentValue, float, MaxValue);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnForcedMoveEndSignature);
 
 UCLASS()
 class DESECRATION_API AT3CharacterBase : public ACharacter
@@ -44,6 +45,10 @@ AT3CharacterBase();
 // 캐릭터 스탯 델리게이트 바인딩 함수
 UPROPERTY(BlueprintAssignable, Category = "Stat | Events")
 FOnStatChangedDelegate OnStatChanged;
+
+// 강제 이동 완료 델리게이트 바인딩 함수
+UPROPERTY(BlueprintAssignable, Category = "Events")
+FOnForcedMoveEndSignature OnForcedMoveEnd;
 
 UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory|Data") 
 TObjectPtr <UDataTable> ItemDataTable;
@@ -78,7 +83,11 @@ protected:
 	
 	void ApplyCharacterData(UT3CharacterDataAsset* Data);
 
+
 public:
+
+	// 행동 가능 여부 판단 함수
+	bool CanExecuteAction() const;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "PlayerInputState")
 	FT3PlayerInputState PlayerInputState;
@@ -157,6 +166,7 @@ public:
 	FORCEINLINE float GetMaxMana() const { return MaxMana; }
 	FORCEINLINE float GetCurrentMana() const { return CurrentMana; }
 	void SetCurrentMana(float NewMana) { CurrentMana = FMath::Clamp(NewMana, 0.f, MaxMana); BroadcastStatChange(ET3StatType::MP);}
+	void ConsumeMana(float Amount);
 
 
 	// Stamina
@@ -221,4 +231,24 @@ private:
 
 
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* InstigatedBy, AActor* DamageCauser) override;
+
+
+	// 강제 이동 구현
+	protected:
+		// 강제 이동 관련 변수
+		bool bIsForcedMoving = false;
+		FVector ForcedTargetLocation;
+		FRotator ForcedTargetRotation;
+		float ForcedMoveSpeed = 200.f;
+		float DefaultMaxWalkSpeed = 500.f;
+		bool bIsRotatingToTarget = false;
+public:
+	// 툴에서 호출할 함수 (좌표를 인자로 받음)
+	UFUNCTION(BlueprintCallable, Category = "Tool")
+	void StartForcedMove(FVector TargetLocation, FRotator TargetRotation, float Speed = 200.f);
+
+	void StopForcedMove();
+
+	void UpdateForcedMovement(float DeltaTime);
+	void UpdateForcedRotation(float DeltaTime);
 };
