@@ -12,6 +12,9 @@ struct FT3ShopData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Buy Data")
 	FText Name; // 플레이어에게 보여질 아이템 이름
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
+	UTexture2D* Icon;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Buy Data")
 	int32 BuyPrice; // 플레이어가 살 때 가격
 	

@@ -44,9 +44,19 @@ enum class EGraphicQuality
 UENUM()
 enum class ELevelName
 {
-	Title = 0 UMETA(DisplayName = "TitleLevel"),
-	SelectClass UMETA(DisplayName = "SelectClassLevel"),
+	Title = 0 UMETA(DisplayName = "T9TitleLevel"),
+	SelectClass UMETA(DisplayName = "T9SelectClassLevel"),
+	Tutorial UMETA(DisplayName = "T3_TutorialLevel"),
 	Town UMETA(DisplayName = "T3Town"),
-	Castle_1 = 0 UMETA(DisplayName = "T3Castle_1"),
+	Castle_1 UMETA(DisplayName = "T3Castle_1"),
+};
 
+//플레이어의 클래스
+UENUM()
+enum class EPlayerClass
+{
+	None,
+	Warrior,
+	Class1,//TODO : 모든 클래스의 영어명 정하기
+	Class2
 };

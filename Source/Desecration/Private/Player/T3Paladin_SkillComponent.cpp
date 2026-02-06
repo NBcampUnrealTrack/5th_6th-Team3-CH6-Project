@@ -22,6 +22,7 @@ void UT3Paladin_SkillComponent::ExecuteSkill(int32 SlotNumber)
         ExecuteSwordWave();
         break;
     case 1: // 방패찍기
+        ShieldStrike();
         break;
     default:
         UE_LOG(LogTemp, Warning, TEXT("Unknown Skill ID: %d"), SkillID);
