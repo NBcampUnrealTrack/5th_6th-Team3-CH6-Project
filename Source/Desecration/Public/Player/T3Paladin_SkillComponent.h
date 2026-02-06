@@ -43,6 +43,9 @@ public:
     // 스킬 실행 함수
     UFUNCTION(BlueprintCallable, Category = "Skill")
     void ExecuteSwordWave();
+    
+    UFUNCTION(BlueprintImplementableEvent, Category = "Skill")
+    void ShieldStrike();
 
     // 실제 투사체 스폰 (AnimNotify에서 호출될 용도)
     void SpawnSwordWaveProjectile();
