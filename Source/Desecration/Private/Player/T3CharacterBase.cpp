@@ -1,4 +1,4 @@
-﻿// T3CharacterBase.cpp
+// T3CharacterBase.cpp
 
 
 #include "Player/T3CharacterBase.h"
@@ -210,7 +210,7 @@ void AT3CharacterBase::StartForcedMove(FVector TargetLocation, FRotator TargetRo
 	// 이동 중에는 플레이어의 입력을 막음
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
-		PC->SetIgnoreMoveInput(true);
+		//PC->SetIgnoreMoveInput(true);
 	}
 }
 
