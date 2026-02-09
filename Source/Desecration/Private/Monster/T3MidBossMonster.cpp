@@ -193,7 +193,17 @@ void AT3MidBossMonster::CancelCurrentPattern()
 	UE_LOG(LogDesecration, Log,
 		TEXT("T3_MidBoss: 패턴 강제 중단 — '%s'"), *CurrentPatternName.ToString());
 
-	StopAnimMontage();
+	// 현재 패턴 몽타주를 명시적으로 중단 (히트 리액션과 혼동 방지)
+	const FMidBossAttackPattern* PatternData = FindPatternData(CurrentPatternName);
+	if (PatternData && PatternData->MontageChain.IsValidIndex(CurrentChainIndex))
+	{
+		StopAnimMontage(PatternData->MontageChain[CurrentChainIndex].Montage);
+	}
+	else
+	{
+		StopAnimMontage();
+	}
+
 	SetAttackCollisionEnabled(false);
 	bIsMovingToTarget = false;
 	ResetPatternState();
@@ -614,11 +624,11 @@ float AT3MidBossMonster::TakeDamage(float DamageAmount, FDamageEvent const& Dama
 		}
 	}
 
-	ApplyDamageToMidBoss(ActualDamage, StunAmount);
+	ApplyDamageToMidBoss(ActualDamage, StunAmount, DamageCauser);
 	return ActualDamage;
 }
 
-void AT3MidBossMonster::ApplyDamageToMidBoss(float DamageAmount, float StunAmount)
+void AT3MidBossMonster::ApplyDamageToMidBoss(float DamageAmount, float StunAmount, AActor* DamageCauser)
 {
 	if (IsDead() || DamageAmount <= 0.f)
 	{
@@ -633,7 +643,7 @@ void AT3MidBossMonster::ApplyDamageToMidBoss(float DamageAmount, float StunAmoun
 
 	if (HasSuperArmor())
 	{
-		PlayAdditiveHitReaction();
+		PlayAdditiveHitReaction(DamageCauser);
 	}
 
 	if (!IsStunned())
@@ -667,12 +677,55 @@ void AT3MidBossMonster::ApplyDamageToMidBoss(float DamageAmount, float StunAmoun
 	OnMidBossHit.Broadcast();
 }
 
-void AT3MidBossMonster::PlayAdditiveHitReaction()
+void AT3MidBossMonster::PlayAdditiveHitReaction(AActor* DamageCauser)
 {
-	if (AdditiveHitReactMontage)
+	UAnimMontage* Montage = GetDirectionalHitReactMontage(DamageCauser);
+	if (Montage)
 	{
-		PlayAnimMontage(AdditiveHitReactMontage);
+		PlayAnimMontage(Montage);
 	}
+}
+
+UAnimMontage* AT3MidBossMonster::GetDirectionalHitReactMontage(AActor* DamageCauser) const
+{
+	if (!DamageCauser)
+	{
+		return HitReactMontage_Default;
+	}
+
+	// 보스 기준 공격자 방향 계산
+	const FVector ToAttacker = (DamageCauser->GetActorLocation() - GetActorLocation()).GetSafeNormal2D();
+	const FVector Forward = GetActorForwardVector().GetSafeNormal2D();
+
+	const float Dot = FVector::DotProduct(Forward, ToAttacker);
+	const float Cross = FVector::CrossProduct(Forward, ToAttacker).Z;
+
+	// 전후좌우 판별 (45도 기준)
+	UAnimMontage* Selected = nullptr;
+
+	if (Dot > 0.707f)
+	{
+		// 전방에서 맞음 (±45도)
+		Selected = HitReactMontage_F;
+	}
+	else if (Dot < -0.707f)
+	{
+		// 후방에서 맞음 (±45도)
+		Selected = HitReactMontage_B;
+	}
+	else if (Cross > 0.f)
+	{
+		// 우측에서 맞음
+		Selected = HitReactMontage_R;
+	}
+	else
+	{
+		// 좌측에서 맞음
+		Selected = HitReactMontage_L;
+	}
+
+	// 방향별 몽타주가 없으면 폴백
+	return Selected ? Selected : HitReactMontage_Default.Get();
 }
 
 void AT3MidBossMonster::ApplyStun()

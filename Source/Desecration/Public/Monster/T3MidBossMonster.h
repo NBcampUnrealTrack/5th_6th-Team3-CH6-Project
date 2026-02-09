@@ -234,10 +234,28 @@ public:
 	void FaceTarget(float InterpSpeed = 10.f);
 
 	// ==========================================================
-	// 애니메이션
+	// 애디티브 히트 리액션 몽타주 (방향별)
 	// ==========================================================
+
+	// 기본 피격 (방향 판별 불가 시 폴백)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Animation")
-	TObjectPtr<UAnimMontage> AdditiveHitReactMontage;
+	TObjectPtr<UAnimMontage> HitReactMontage_Default;
+
+	// 전방 피격 (앞에서 맞았을 때)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Animation")
+	TObjectPtr<UAnimMontage> HitReactMontage_F;
+
+	// 후방 피격 (뒤에서 맞았을 때)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Animation")
+	TObjectPtr<UAnimMontage> HitReactMontage_B;
+
+	// 좌측 피격 (왼쪽에서 맞았을 때)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Animation")
+	TObjectPtr<UAnimMontage> HitReactMontage_L;
+
+	// 우측 피격 (오른쪽에서 맞았을 때)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Animation")
+	TObjectPtr<UAnimMontage> HitReactMontage_R;
 
 	// ==========================================================
 	// 공격 패턴 데이터 (에디터에서 세팅)
@@ -346,17 +364,18 @@ public:
 	// ==========================================================
 
 	UFUNCTION(BlueprintCallable, Category = "MidBoss|Combat")
-	void ApplyDamageToMidBoss(float DamageAmount, float StunAmount);
+	void ApplyDamageToMidBoss(float DamageAmount, float StunAmount, AActor* DamageCauser = nullptr);
 
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
 		AController* EventInstigator, AActor* DamageCauser) override;
 
 	// ==========================================================
-	// 히트 리액션 / 스턴 (기존)
+	// 히트 리액션 / 스턴
 	// ==========================================================
 
+	// 방향별 애디티브 히트 리액션 (DamageCauser 위치 기준 F/B/L/R 판별)
 	UFUNCTION(BlueprintCallable, Category = "MidBoss|Combat")
-	void PlayAdditiveHitReaction();
+	void PlayAdditiveHitReaction(AActor* DamageCauser = nullptr);
 
 	// 스턴 지속 시간 (타이머로 자동 해제)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Combat")
@@ -404,4 +423,7 @@ private:
 
 	// 기본 확률 조회 + ModifyNotifyChance 적용 후 판정
 	bool ShouldTriggerNotify(FName NotifyName) const;
+
+	// 피격 방향 기반 히트 리액션 몽타주 선택
+	UAnimMontage* GetDirectionalHitReactMontage(AActor* DamageCauser) const;
 };
