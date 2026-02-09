@@ -35,6 +35,9 @@ protected:
 
     float CurrentAttackDamage;
     float StunAmount;
+    float ManaCost;
+    float CoolTime;
+
     TSubclassOf<class UT3DamageType_Base> CurrentDamageType;
     EHitIntensity CurrentIntensity;
     TObjectPtr<class AT3CharacterBase> OwnerChar;
