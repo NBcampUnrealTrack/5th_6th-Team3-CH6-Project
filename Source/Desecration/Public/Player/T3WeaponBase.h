@@ -26,8 +26,8 @@ protected:
     void OnWeaponOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
    
     // 충돌체 (칼날 부분에 배치)
-    UPROPERTY(VisibleAnywhere, Category = "Combat")
-   TObjectPtr<class UBoxComponent> WeaponCollision;
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat")
+    TObjectPtr<class UBoxComponent> WeaponCollision;
 
     // 무기 외형
     UPROPERTY(VisibleAnywhere, Category = "Visual")
