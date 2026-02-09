@@ -261,3 +261,53 @@ void UT3InventoryComponent::UpdateCooldowns()
 		GetWorld()->GetTimerManager().ClearTimer(CooldownUpdateTimerHandle);
 	}
 }
+
+void UT3InventoryComponent::ToggleEquipItem(const FName& ItemName)
+{
+	if (ItemName == NAME_None)
+	{
+		return;
+	}
+	
+	if (EquippedItemIDs.Contains(ItemName))
+	{
+		UnequipItem(ItemName);
+		return;
+	}
+	
+	EquippedItemIDs.Emplace(ItemName);
+	OnToggleItemEquipped.Broadcast(ItemName);
+	OnInventoryUpdated.Broadcast();
+}
+
+void UT3InventoryComponent::UnequipItem(const FName& ItemName)
+{
+	if (ItemName == NAME_None)
+	{
+		return;
+	}
+	
+	if (!EquippedItemIDs.Contains(ItemName))
+	{
+		return;
+	}
+	
+	int32 Index = GetEquippedItemIndex(ItemName);
+	
+	if (Index != INDEX_NONE)
+	{
+		EquippedItemIDs.RemoveAt(Index);
+		OnToggleItemEquipped.Broadcast(ItemName);
+		OnInventoryUpdated.Broadcast();
+	}
+}
+
+int32 UT3InventoryComponent::GetEquippedItemIndex(const FName& ItemName) const
+{
+	return EquippedItemIDs.IndexOfByKey(ItemName);
+}
+
+bool UT3InventoryComponent::IsItemEquipped(const FName& ItemName) const
+{
+	return EquippedItemIDs.Contains(ItemName);
+}
