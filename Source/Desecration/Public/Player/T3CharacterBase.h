@@ -33,6 +33,7 @@ enum class ET3StatType : uint8
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnStatChangedDelegate, ET3StatType, StatType, float, CurrentValue, float, MaxValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnForcedMoveEndSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSellItemRequested, const FInventorySlot&, SlotData);
 
 UCLASS()
 class DESECRATION_API AT3CharacterBase : public ACharacter
@@ -49,6 +50,12 @@ FOnStatChangedDelegate OnStatChanged;
 // 강제 이동 완료 델리게이트 바인딩 함수
 UPROPERTY(BlueprintAssignable, Category = "Events")
 FOnForcedMoveEndSignature OnForcedMoveEnd;
+
+// 아이템 관련 델리게이트 바인딩 함수
+UFUNCTION(BlueprintCallable)
+void RequestSellItem(const FInventorySlot& SlotData);
+UPROPERTY(BlueprintAssignable)
+FOnSellItemRequested OnSellItemRequested;
 
 UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory|Data") 
 TObjectPtr <UDataTable> ItemDataTable;

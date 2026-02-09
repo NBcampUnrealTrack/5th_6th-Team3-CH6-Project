@@ -36,6 +36,7 @@ AT3CharacterBase::AT3CharacterBase()
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	CurrentHP = MaxHP;
 	CurrentStamina = MaxStamina;
+	CurrentMana = MaxMana;
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
@@ -50,6 +51,11 @@ AT3CharacterBase::AT3CharacterBase()
 
 	InventoryComponent = CreateDefaultSubobject<UT3InventoryComponent>(TEXT("InventoryComponent")); 
 	ItemUseComponent = CreateDefaultSubobject<UT3ItemUseComponent>(TEXT("ItemUseComponent"));
+}
+
+void AT3CharacterBase::RequestSellItem(const FInventorySlot& SlotData)
+{
+	OnSellItemRequested.Broadcast(SlotData);
 }
 
 void AT3CharacterBase::BeginPlay()
