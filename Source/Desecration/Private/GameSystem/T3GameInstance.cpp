@@ -59,9 +59,15 @@ void UT3GameInstance::MakeFirstSettings()
 	CurrentSettings->MouseSensitivity = 1.0f;
 }
 
-void UT3GameInstance::MakeFirstGameData()
+TObjectPtr<UT3SaveGame> UT3GameInstance::MakeFirstGameData()
 {
+	if (!SavedGameData)
+	{
+		SavedGameData = NewObject<UT3SaveGame>();
+	}
+	SavedGameData->ResetGameData();
 	
+	return SavedGameData;
 }
 
 bool UT3GameInstance::SaveGame()
@@ -110,4 +116,10 @@ void UT3GameInstance::SetGraphicQuality(const EGraphicQuality GraphicQuality)
 	CurrentSettings->GraphicQuality = GraphicQuality;
 	UserSettings->SetOverallScalabilityLevel(static_cast<int32>(GraphicQuality));
 	UserSettings->ApplySettings(true);
+}
+
+void UT3GameInstance::OpenLevel(const ELevelName LevelName) const
+{
+	const FName DisplayName = FName(UEnum::GetDisplayValueAsText(LevelName).ToString());
+	UGameplayStatics::OpenLevel(GetWorld(), DisplayName);
 }
