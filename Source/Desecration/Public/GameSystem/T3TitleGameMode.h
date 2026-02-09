@@ -4,10 +4,15 @@
 #include "GameFramework/GameModeBase.h"
 #include "T3TitleGameMode.generated.h"
 
+class UT3GameInstance;
+
 UCLASS()
 class DESECRATION_API AT3TitleGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
+	
+protected:
+	virtual void BeginPlay() override;
 	
 public:
 	//클래스 선택 화면으로
@@ -18,4 +23,9 @@ public:
 	
 	//게임 종료
 	void QuitGame();
+	
+private:
+	//게임 인스턴스
+	UPROPERTY()
+	TObjectPtr<UT3GameInstance> T3GameInstance;
 };

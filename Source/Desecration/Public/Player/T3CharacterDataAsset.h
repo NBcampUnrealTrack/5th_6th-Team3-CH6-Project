@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "T3PlayerInputState.h"
+#include "Player/T3SkillComponentBase.h"
 #include "T3CharacterDataAsset.generated.h"
 
 
@@ -43,7 +44,10 @@ public:
     ECharacterClass CharacterClass;
     
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skill")
-    TSubclassOf<class UActorComponent> SkillComponent;
+    TSubclassOf<UT3SkillComponentBase> SkillComponent;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skill")
+    TObjectPtr<UDataTable> SkillDataTable; // 이 직업 전용 스킬 테이블
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Visual")
     TObjectPtr<USkeletalMesh> CharacterMesh;

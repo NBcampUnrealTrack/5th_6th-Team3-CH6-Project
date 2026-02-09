@@ -3,5 +3,7 @@
 void UT3SaveGame::ResetGameData()
 {
 	PlayerClass = EPlayerClass::None;
-	SavedLevelName = ELevelName::Town;
+	PlayerName = TEXT("");
+	SavedLevelName = ELevelName::Tutorial;
+	SavePointPos = 0;
 }

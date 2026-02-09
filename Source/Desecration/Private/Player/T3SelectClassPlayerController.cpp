@@ -1,7 +1,9 @@
 #include "Player/T3SelectClassPlayerController.h"
 
 #include "GameSystem/T3GameInstance.h"
+#include "GameSystem/T3SaveGame.h"
 #include "GameSystem/T3SelectClassGameMode.h"
+#include "Kismet/GameplayStatics.h"
 #include "UI/T3SelectClassWidget.h"
 
 void AT3SelectClassPlayerController::BeginPlay()
@@ -21,14 +23,6 @@ void AT3SelectClassPlayerController::BeginPlay()
 		return;
 	}
 	
-	//게임 인스턴스
-	T3GameInstance = Cast<UT3GameInstance>(GetGameInstance());
-	if (!T3GameInstance)
-	{
-		UE_LOG(LogTemp, Error, TEXT("%s : T3GameInstance is NULL"), *GetNameSafe(this));
-		return;
-	}
-	
 	//위젯 생성
 	SelectClassWidgetInstance = CreateWidget<UT3SelectClassWidget>(this, SelectClassWidgetClass);
 	if (!SelectClassWidgetInstance)
@@ -39,9 +33,10 @@ void AT3SelectClassPlayerController::BeginPlay()
 	SelectClassWidgetInstance->AddToViewport();
 }
 
-void AT3SelectClassPlayerController::TutorialStart(const FText& PlayerName)
+void AT3SelectClassPlayerController::TutorialStart(const FString& PlayerName, const EPlayerClass SelectedPlayerClass)
 {
-	
+	SelectClassGameMode->MakeFirstGameData(PlayerName, SelectedPlayerClass);
+	SelectClassGameMode->TutorialStart();
 }
 
 void AT3SelectClassPlayerController::ReturnToTitleLevel()
