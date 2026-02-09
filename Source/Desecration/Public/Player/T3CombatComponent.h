@@ -126,6 +126,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LockOn")
 	float MaxArmLength = 2000.f; // 보스가 높이 뜰 때 멀어질 최대 거리
 
+	AActor* GetCurrentTarget() const { return CurrentTarget; }
+
 	// 캐릭터 상태 Getter
 	FORCEINLINE ECharacterCombatState GetCurrentState() const { return CurrentState; }
 
@@ -195,6 +197,7 @@ private:
 	void ResetLockOn();
 	void UpdateTargetUI(AActor* Target, bool bIsVisible);
 	bool IsTargetVisible(AActor* Target) const;
+	void SetLockOnTarget(AActor* NewTarget);
 
 	// 패링
 	FTimerHandle ParryingToBlockingTimerHandle;

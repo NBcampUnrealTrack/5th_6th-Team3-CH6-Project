@@ -72,8 +72,8 @@ void UT3CombatComponent::InitializeWeapons(const TMap<EEquipSlot, FWeaponEquipIn
 			NewWeapon->SetActorRelativeTransform(Info.RelativeTransform);
 			EquippedWeapons.Add(Slot, NewWeapon);
 		}
-	}
 }
+	}
 
 AT3WeaponBase* UT3CombatComponent::GetWeaponBySlot(EEquipSlot Slot) const
 {
@@ -169,6 +169,7 @@ void UT3CombatComponent::SetDodgingEnabled(bool bEnabled)
 	if (bEnabled)
 	{
 		CurrentState = ECharacterCombatState::Dodge;
+		UE_LOG(LogTemp, Display, TEXT("DodgeOn"));
 	}
 	else
 	{
@@ -176,6 +177,7 @@ void UT3CombatComponent::SetDodgingEnabled(bool bEnabled)
 		if (CurrentState == ECharacterCombatState::Dodge)
 		{
 			CurrentState = ECharacterCombatState::Idle;
+			UE_LOG(LogTemp, Display, TEXT("DodgeOff"));
 		}
 	}
 }
@@ -360,6 +362,29 @@ bool UT3CombatComponent::IsTargetVisible(AActor* Target) const
 	return !bBlocked || (Hit.GetActor() == Target);
 }
 
+//void UT3CombatComponent::SetLockOnTarget(AActor* NewTarget)
+//{
+//	// 1. 기존 타겟의 마커 숨기기
+//	if (CurrentTarget)
+//	{
+//		UWidgetComponent* OldMarker = CurrentTarget->FindComponentByClass<UWidgetComponent>();
+//		if (OldMarker) OldMarker->SetHiddenInGame(true);
+//	}
+//
+//	CurrentTarget = NewTarget;
+//
+//	// 2. 새 타겟의 마커 보여주기
+//	if (CurrentTarget)
+//	{
+//		UWidgetComponent* NewMarker = CurrentTarget->FindComponentByClass<UWidgetComponent>();
+//		if (NewMarker)
+//		{
+//			NewMarker->SetHiddenInGame(false);
+//			// 필요하다면 여기서 마커의 애니메이션을 재생시킬 수도 있어
+//		}
+//	}
+//}
+
 void UT3CombatComponent::ResetLockOn()
 {
 	UpdateTargetUI(CurrentTarget, false);
@@ -487,7 +512,7 @@ float UT3CombatComponent::CalculateFinalDamage(float IncomingDamage, const class
 		return IncomingDamage;
 	}
 
-	// 1. 회피 상태 (무적)
+	// 1. 회피 상태
 	if (CurrentState == ECharacterCombatState::Dodge)
 	{
 		return 0.f;
@@ -560,10 +585,10 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 {
 	if (!TargetActor) { UE_LOG(LogTemp, Warning, TEXT("Target Missing!")); return; }
 	if (!OwnerChar && !AIChar) { UE_LOG(LogTemp, Warning, TEXT("Owner Missing!")); return; }
-	// if (!DamageTypeClass) { UE_LOG(LogTemp, Warning, TEXT("DamageType Missing!")); return; }
+	if (!DamageTypeClass) { DamageTypeClass = UT3DamageType_Base::StaticClass(); }
+	
 
 	// 커스텀 데미지 이벤트 생성
-	DamageTypeClass = UT3DamageType_Base::StaticClass();
 	FT3DamageEvent T3DamageEvent(DamageTypeClass);
 	T3DamageEvent.HitIntensity = Intensity; // 공격 강도를 구조체에 직접 삽입
 	T3DamageEvent.HitDamageMultiplier = DamageMultiflier;
@@ -588,13 +613,13 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 	}
 	
 	// 디버그 출력
-	const UEnum* EnumPtr = StaticEnum<EHitIntensity>();
-	FString IntensityString = EnumPtr ? EnumPtr->GetNameStringByValue((int64)Intensity) : TEXT("Unknown");
+	// const UEnum* EnumPtr = StaticEnum<EHitIntensity>();
+	// FString IntensityString = EnumPtr ? EnumPtr->GetNameStringByValue((int64)Intensity) : TEXT("Unknown");
 
 	if (GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
-			FString::Printf(TEXT("Attack Sent -> Target: %s, Intensity: %s"), *TargetActor->GetName(), *IntensityString));
+		FString::Printf(TEXT("Attack Sent -> Target: %s, Damage: %.1f"), *TargetActor->GetName(), DamageAmount));
 	}
 }
 

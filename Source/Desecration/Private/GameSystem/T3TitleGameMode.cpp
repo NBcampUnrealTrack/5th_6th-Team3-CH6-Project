@@ -1,13 +1,25 @@
 #include "GameSystem/T3TitleGameMode.h"
 
 #include "GameSystem/GlobalEnums.h"
-#include "Kismet/GameplayStatics.h"
+#include "GameSystem/T3GameInstance.h"
 #include "Kismet/KismetSystemLibrary.h"
+
+void AT3TitleGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	//게임 인스턴스
+	T3GameInstance = Cast<UT3GameInstance>(GetGameInstance());
+	if (!T3GameInstance)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : T3GameInstance is NULL"), *GetNameSafe(this));
+		return;
+	}
+}
 
 void AT3TitleGameMode::MoveToSelectClassLevel()
 {
-	const FName LevelName = FName(UEnum::GetDisplayValueAsText(ELevelName::SelectClass).ToString());
-	UGameplayStatics::OpenLevel(GetWorld(), LevelName);
+	T3GameInstance->OpenLevel(ELevelName::SelectClass);
 }
 
 void AT3TitleGameMode::MoveToLastSavedLevel()

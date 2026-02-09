@@ -1,4 +1,4 @@
-﻿// T3CharacterBase.cpp
+// T3CharacterBase.cpp
 
 
 #include "Player/T3CharacterBase.h"
@@ -36,6 +36,7 @@ AT3CharacterBase::AT3CharacterBase()
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	CurrentHP = MaxHP;
 	CurrentStamina = MaxStamina;
+	CurrentMana = MaxMana;
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
@@ -50,6 +51,11 @@ AT3CharacterBase::AT3CharacterBase()
 
 	InventoryComponent = CreateDefaultSubobject<UT3InventoryComponent>(TEXT("InventoryComponent")); 
 	ItemUseComponent = CreateDefaultSubobject<UT3ItemUseComponent>(TEXT("ItemUseComponent"));
+}
+
+void AT3CharacterBase::RequestSellItem(const FInventorySlot& SlotData)
+{
+	OnSellItemRequested.Broadcast(SlotData);
 }
 
 void AT3CharacterBase::BeginPlay()
@@ -210,7 +216,7 @@ void AT3CharacterBase::StartForcedMove(FVector TargetLocation, FRotator TargetRo
 	// 이동 중에는 플레이어의 입력을 막음
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
-		PC->SetIgnoreMoveInput(true);
+		//PC->SetIgnoreMoveInput(true);
 	}
 }
 
