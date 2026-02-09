@@ -58,7 +58,7 @@ public:
 	void OpenLevel(UPARAM() ELevelName LevelName) const;
 	
 	//저장된 게임
-	FORCEINLINE TObjectPtr<UT3SaveGame> LoadGame() { return SavedGameData; }
+	FORCEINLINE TObjectPtr<UT3SaveGame> GetSavedGameData() { return SavedGameData; }
 	
 	//현재 설정
 	FORCEINLINE TSharedPtr<FSettings> GetCurrentSettings() const { return CurrentSettings; }
