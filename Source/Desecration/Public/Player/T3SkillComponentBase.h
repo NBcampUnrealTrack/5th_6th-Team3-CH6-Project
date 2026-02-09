@@ -50,6 +50,9 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill")
     int32 Slot_2_SkillID = 1;
+    
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill")
+    bool bUsingSkill = false;
 
     // 슬롯 번호를 입력받아 스킬 실행
     virtual void ExecuteSkillNotify(int32 Index);
