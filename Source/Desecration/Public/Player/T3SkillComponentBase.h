@@ -14,6 +14,9 @@ struct FSkillData
     GENERATED_BODY()
 
     // --- 공통 데이터 ---
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+    UTexture2D* SkillIcon = nullptr;
+
     UPROPERTY(EditAnywhere, Category = "Common")
     UAnimMontage* SkillMontage = nullptr;
 
