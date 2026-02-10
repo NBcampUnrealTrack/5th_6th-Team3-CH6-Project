@@ -66,30 +66,30 @@ protected:
 	TObjectPtr<UBorder> Border_NormalStone;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UBorder> Border_RareStone;
+	TObjectPtr<UBorder> Border_EpicStone;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UBorder> Border_EpicStone;
+	TObjectPtr<UBorder> Border_LegendaryStone;
 
 	// 강화석 아이콘 (등급별)
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UImage> Img_NormalStone;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UImage> Img_RareStone;
+	TObjectPtr<UImage> Img_EpicStone;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UImage> Img_EpicStone;
+	TObjectPtr<UImage> Img_LegendaryStone;
 
 	// 강화석 보유량 (등급별)
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> Txt_NormalStoneCount;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UTextBlock> Txt_RareStoneCount;
+	TObjectPtr<UTextBlock> Txt_EpicStoneCount;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UTextBlock> Txt_EpicStoneCount;
+	TObjectPtr<UTextBlock> Txt_LegendaryStoneCount;
 
 	// 강화 버튼 (최대레벨 or 강화석 없음 → 비활성화)
 	UPROPERTY(meta = (BindWidget))
