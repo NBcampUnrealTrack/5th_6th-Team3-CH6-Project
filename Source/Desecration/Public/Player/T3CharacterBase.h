@@ -118,6 +118,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Death")
 	void OnDeath();
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Death")
+	bool bIsDead = false;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TObjectPtr<UT3InventoryComponent> InventoryComponent; 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
