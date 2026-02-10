@@ -1,4 +1,4 @@
-// T3CharacterBase.cpp
+﻿// T3CharacterBase.cpp
 
 
 #include "Player/T3CharacterBase.h"
@@ -81,6 +81,11 @@ void AT3CharacterBase::BeginPlay()
 
 
 }
+
+//void AT3CharacterBase::PostInitializeComponents()
+//{
+//	 Super::PostInitializeComponents();
+//}
 
 
 void AT3CharacterBase::Tick(float DeltaTime)
