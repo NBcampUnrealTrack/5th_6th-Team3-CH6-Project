@@ -644,22 +644,39 @@ void UT3CombatComponent::ChangeActiveSlot(ESlotType Type)
 	switch (Type)
 	{
 	case ESlotType::Skill:
-		CurrentSkillSlot = (CurrentSkillSlot % MaxSkillSlots) + 1; // 슬롯 전환 시 순환으로 전환
-		UE_LOG(LogTemp, Log, TEXT("Skill Slot Switched: %d"), CurrentSkillSlot);
+	{
+		if (Type != ESlotType::Skill) return;
+
+		if (SkillComp)
+		{
+			// 넥스트 슬롯이 0인지 확인
+			if (SkillComp->GetSkillIDBySlotIndex(2) == 0)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("넥스트 슬롯이 비어있어 교체할 수 없습니다."));
+				return;
+			}
+
+			// 실제 스왑 실행
+			SkillComp->SwapSkills();
+		}
 		break;
+
+	}
 	case ESlotType::Consumable:
 		CurrentConsumableSlot = (CurrentConsumableSlot % MaxConsumableSlots) + 1;
 		UE_LOG(LogTemp, Log, TEXT("Consumable Slot Switched: %d"), CurrentConsumableSlot);
 		break;
+
+
 	case ESlotType::Potion:
 		CurrentPotionSlot = (CurrentPotionSlot % MaxPotionSlots) + 1;
 		UE_LOG(LogTemp, Log, TEXT("Potion Slot Switched: %d"), CurrentPotionSlot);
 		break;
 	}
 
-	if (OnSlotContentChanged.IsBound())
+	if (OnSlotSelectionChanged.IsBound())
 	{
-		OnSlotSelectionChanged.Broadcast(Type, CurrentSkillSlot);
+		OnSlotSelectionChanged.Broadcast(Type, 1);
 	}
 }
 
@@ -681,36 +698,11 @@ void UT3CombatComponent::ExecuteCurrentSlotAction(ESlotType Type)
 	}
 }
 
-void UT3CombatComponent::UpdateSlotContent(ESlotType Type, int32 SlotIndex, int32 NewID)
+// 인벤토리에서 호출할 스킬 슬롯 업데이트 함수
+void UT3CombatComponent::RequestUpdateSkill(int32 SkillID, bool bIsEquip)
 {
-	if (SlotIndex <= 0)
+	if (SkillComp)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Combat: Invalid SlotIndex %d"), SlotIndex);
-		return;
-	}
-
-	switch (Type)
-	{
-	case ESlotType::Skill:
-		if (SkillComp)
-		{
-			// 실제 데이터 변경은 각 컴포넌트에 위임
-			SkillComp->SetSkillSlot(SlotIndex, NewID);
-		}
-		break;
-
-	case ESlotType::Consumable:
-		UE_LOG(LogTemp, Log, TEXT("Combat: Consumable Slot %d updated with ID %d"), SlotIndex, NewID);
-		break;
-
-	case ESlotType::Potion:
-		UE_LOG(LogTemp, Log, TEXT("Combat: Potion Slot %d updated with ID %d"), SlotIndex, NewID);
-		break;
-	}
-
-	// UI팀에게 알림
-	if (OnSlotContentChanged.IsBound())
-	{
-		OnSlotContentChanged.Broadcast(Type, SlotIndex, NewID);
+		SkillComp->SetSkillSlot(SkillID, bIsEquip);
 	}
 }
