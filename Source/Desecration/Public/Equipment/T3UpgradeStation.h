@@ -14,6 +14,7 @@ class UInputAction;
 class UInputMappingContext;
 class AT3CharacterBase;
 class UT3PlayerEquipmentComponent;
+class UT3InventoryComponent;
 
 // ============================================================================
 // IT3Interactable 인터페이스
@@ -141,26 +142,10 @@ protected:
 	TObjectPtr<UTexture2D> NormalStoneIcon;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade|StoneIcons")
-	TObjectPtr<UTexture2D> RareStoneIcon;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade|StoneIcons")
 	TObjectPtr<UTexture2D> EpicStoneIcon;
 
-	// ========================================================================
-	// [임시] 강화석 보유량 - 추후 플레이어 측으로 이관 예정
-	// ========================================================================
-#pragma region TEMP_CURRENCY
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade|Currency")
-	int32 NormalStoneCount = 10;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade|Currency")
-	int32 RareStoneCount = 5;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade|Currency")
-	int32 EpicStoneCount = 3;
-
-#pragma endregion TEMP_CURRENCY
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade|StoneIcons")
+	TObjectPtr<UTexture2D> LegendaryStoneIcon;
 
 	// ========================================================================
 	// 상태
@@ -266,7 +251,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Upgrade|Currency")
 	bool CanUseStone(ET3UpgradeStoneGrade Grade, int32 CurrentEquipmentLevel) const;
 
-	// 강화석 최대 적용 레벨 조회 (Normal→3, Rare→5, Epic→7)
+	// 강화석 최대 적용 레벨 조회 (Normal→3, Epic→5, Legendary→7)
 	UFUNCTION(BlueprintPure, Category = "Upgrade|Currency")
 	static int32 GetMaxLevelForStone(ET3UpgradeStoneGrade Grade);
 
@@ -315,6 +300,10 @@ public:
 	// EquipmentComponent 조회 헬퍼
 	UFUNCTION(BlueprintPure, Category = "Upgrade|Utility")
 	UT3PlayerEquipmentComponent* GetPlayerEquipmentComponent() const;
+
+	// InventoryComponent 조회 헬퍼
+	UFUNCTION(BlueprintPure, Category = "Upgrade|Utility")
+	UT3InventoryComponent* GetPlayerInventoryComponent() const;
 
 // ============================================================================
 // [TEST] 테스트용 코드 - 정식 Interaction 시스템 연동 후 제거 예정
