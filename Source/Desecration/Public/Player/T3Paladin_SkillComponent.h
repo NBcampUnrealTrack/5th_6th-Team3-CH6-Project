@@ -12,25 +12,6 @@ class AT3SwordWaveProjectile;
 class UAnimMontage;
 
 
-USTRUCT(BlueprintType)
-struct FSkillData
-{
-    GENERATED_BODY()
-
-    UPROPERTY(EditAnywhere, Category = "Skill")
-    TSubclassOf<class AT3SwordWaveProjectile> ProjectileClass;
-
-    UPROPERTY(EditAnywhere, Category = "Skill")
-    float Damage = 50.f;
-
-    UPROPERTY(EditAnywhere, Category = "Skill")
-    float Speed = 1500.f;
-
-    UPROPERTY(EditAnywhere, Category = "Skill")
-    UAnimMontage* SkillMontage = nullptr;;
-};
-
-
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class DESECRATION_API UT3Paladin_SkillComponent : public UT3SkillComponentBase
 {
@@ -56,5 +37,8 @@ public:
 private:
     UPROPERTY(EditAnywhere, Category = "Skill Data")
     FSkillData SwordWaveData;
+
+    UPROPERTY(EditAnywhere, Category = "Skill Data")
+    FSkillData ShieldStrikeData;
 		
 };
