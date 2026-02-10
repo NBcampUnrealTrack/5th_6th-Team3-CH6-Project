@@ -8,42 +8,38 @@
 #include "T3SkillComponentBase.generated.h"
 
 
-// 스킬 데이터 테이블 구조체
-#pragma region SkillDataTable
 USTRUCT(BlueprintType)
-struct FSkillAttributes : public FTableRowBase
+struct FSkillData
 {
     GENERATED_BODY()
 
-public:
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "General")
-    FString SkillName;
+    // --- 공통 데이터 ---
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+    UTexture2D* SkillIcon = nullptr;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
-    TSoftObjectPtr<UTexture2D> SkillIcon;
+    UPROPERTY(EditAnywhere, Category = "Common")
+    UAnimMontage* SkillMontage = nullptr;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
-    float ManaCost = 0.f;
+    UPROPERTY(EditAnywhere, Category = "Common")
+    float ManaCost = 10.f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
-    float Cooldown = 1.f;
+    UPROPERTY(EditAnywhere, Category = "Common")
+    float Cooldown = 3.f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
-    float DamageMultiplier = 1.0f; // 1.0 = 100% (캐릭터 공격력 비례)
+    // --- 공격 데이터 ---
+    UPROPERTY(EditAnywhere, Category = "Combat")
+    float DamageMultiflier = 1.f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
-    float StunAmount = 0.f;
+    // --- 투사체 데이터 (필요한 스킬만 입력) ---
+    UPROPERTY(EditAnywhere, Category = "Projectile")
+    TSubclassOf<class AActor> ProjectileClass;
 
-    // 패시브 및 특수 효과를 위한 섹션
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Special")
-    bool bIsPassive = false;
+    UPROPERTY(EditAnywhere, Category = "Projectile")
+    float ProjectileSpeed = 1500.f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Special")
-    FGameplayTag SpecialEffectTag;
-   
+    // 런타임 데이터
+    float LastActivatedTime = -100.f;
 };
-
-#pragma endregion
 
 UCLASS( Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class DESECRATION_API UT3SkillComponentBase : public UActorComponent
@@ -51,7 +47,7 @@ class DESECRATION_API UT3SkillComponentBase : public UActorComponent
     GENERATED_BODY()
 
 public:
-    // 슬롯 1, 2에 장착된 스킬 번호
+    // 슬롯 1, 2에 장착된 스킬 번호 -> 스킬 갈아끼울때 여기만 수정하면 된다.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill")
     int32 Slot_1_SkillID = 0;
 
@@ -65,12 +61,19 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Skill")
     void SetSkillSlot(int32 SlotNumber, int32 NewSkillID);
 
-    // 데이터 테이블에서 스킬 정보를 가져오는 함수
-    FSkillAttributes* GetSkillRow(int32 SkillID);
-
 protected:
+
+    virtual void BeginPlay() override;
+
     UPROPERTY()
-    TObjectPtr<UDataTable> MySkillTable;
+    class AT3CharacterBase* OwnerChar;
+
+    UPROPERTY()
+    class UT3CombatComponent* Combat;
+
+    // 스킬 사용 가능여부 체크 위한 쿨타임 마나 계산
+    virtual bool CanExecuteSkill(FSkillData& Data);
+    void StartCooldown(FSkillData& Data);
 };
 
 

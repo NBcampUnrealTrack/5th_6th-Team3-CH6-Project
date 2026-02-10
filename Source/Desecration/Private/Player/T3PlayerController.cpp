@@ -6,6 +6,9 @@
 #include "EnhancedInputSubsystems.h"
 #include "Player/T3CharacterBase.h"
 #include "Player/T3CombatComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "GameFramework/Character.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
 #include "Blueprint/UserWidget.h"
 
 void AT3PlayerController::BeginPlay()
@@ -34,6 +37,16 @@ void AT3PlayerController::BeginPlay()
 
 		//CombatWidget->SetVisibility(ESlateVisibility::Collapsed);
 		CombatWidget->AddToViewport();
+	}
+
+	if (LockOnWidgetClass)
+	{
+		LockOnWidget = CreateWidget<UUserWidget>(this, LockOnWidgetClass);
+		if (LockOnWidget)
+		{
+			LockOnWidget->AddToViewport();
+			LockOnWidget->SetVisibility(ESlateVisibility::Collapsed); // 평소엔 숨김
+		}
 	}
 
 	OwnerChar = Cast<AT3CharacterBase>(GetPawn());

@@ -7,6 +7,7 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCooldownUpdated, FName, ItemID, float, RemainingTime);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnToggleItemEquipped, FName, ItemID);
 
 class AT3CharacterBase;
 
@@ -49,10 +50,28 @@ public:
 	float GetCooldownProgressByItemID(const FName& ItemName);
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	int32 GetMoney();
+	int32 GetMoney() const;
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	int32 SetMoney(int32 NewMoney);
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 GetNormalStoneCount() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 GetEpicStoneCount() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 GetLegendaryStoneCount() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 SetNormalStoneCount(int32 NewCount);
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 SetEpicStoneCount(int32 NewCount);
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 SetLegendaryStoneCount(int32 NewCount);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TArray<FInventorySlot> Items;
@@ -72,6 +91,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Money")
 	int32 Money;
 
+	int32 NormalStoneCount;
+	int32 EpicStoneCount;
+	int32 LegendaryStoneCount;
+	
 private:
 	UPROPERTY()
 	AT3CharacterBase* OwnerCharacter;
@@ -85,4 +108,22 @@ private:
 	FTimerHandle CooldownUpdateTimerHandle;
 	
 	void UpdateCooldowns();
+	
+public:
+	UPROPERTY(BlueprintReadOnly, Category = "Equipment")
+	TArray<FName> EquippedItemIDs;
+	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	void ToggleEquipItem(const FName& ItemName);
+	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	void UnequipItem(const FName& ItemName);
+	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	bool IsItemEquipped(const FName& ItemName) const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	int32 GetEquippedItemIndex(const FName& ItemName) const;
+	
+	FOnToggleItemEquipped OnToggleItemEquipped;
 };

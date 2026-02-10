@@ -24,9 +24,9 @@ enum class ET3EquipmentType : uint8
 UENUM(BlueprintType)
 enum class ET3UpgradeStoneGrade : uint8
 {
-	Normal,  // 하급 (1~3강)
-	Rare,    // 중급 (1~5강)
-	Epic     // 상급 (1~7강)
+	Normal,     // 하급 (1~3강)
+	Epic,       // 중급 (1~5강)
+	Legendary   // 상급 (1~7강)
 };
 
 UENUM(BlueprintType)
