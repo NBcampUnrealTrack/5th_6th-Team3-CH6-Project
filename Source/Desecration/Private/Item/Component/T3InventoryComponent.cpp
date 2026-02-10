@@ -276,6 +276,7 @@ void UT3InventoryComponent::ToggleEquipItem(const FName& ItemName)
 	}
 	
 	EquippedItemIDs.Emplace(ItemName);
+	
 	OnToggleItemEquipped.Broadcast(ItemName);
 	OnInventoryUpdated.Broadcast();
 }
@@ -297,6 +298,7 @@ void UT3InventoryComponent::UnequipItem(const FName& ItemName)
 	if (Index != INDEX_NONE)
 	{
 		EquippedItemIDs.RemoveAt(Index);
+		
 		OnToggleItemEquipped.Broadcast(ItemName);
 		OnInventoryUpdated.Broadcast();
 	}
