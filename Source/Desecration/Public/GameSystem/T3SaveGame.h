@@ -5,7 +5,7 @@
 #include "GameSystem/GlobalEnums.h"
 #include "T3SaveGame.generated.h"
 
-
+struct FInventorySlot;
 
 UCLASS()
 class DESECRATION_API UT3SaveGame : public USaveGame
@@ -28,10 +28,11 @@ public:
 	UPROPERTY()
 	ELevelName SavedLevelName;
 	
-	//저장한 맵 내의 체크 포인트 (0 : 시작지점)
+	//저장한 맵 내의 위치
 	UPROPERTY()
-	int32 SavePointPos;
+	FVector PlayerLocation;
 	
+#pragma region 캐릭터 스탯
 	//최대 HP
 	UPROPERTY()
 	float MaxHP;
@@ -71,4 +72,17 @@ public:
 	//이동 속도
 	UPROPERTY()
 	float MoveSpeed;
+#pragma endregion
+	
+#pragma region 인벤토리
+	//인벤토리내 아이템 목록
+	UPROPERTY()
+	TArray<FInventorySlot> Items;
+	
+	//보유 재화
+	UPROPERTY()
+	int32 Money;
+	
+#pragma endregion 
+	
 };
