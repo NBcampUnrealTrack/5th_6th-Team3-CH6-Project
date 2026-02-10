@@ -447,7 +447,7 @@ void AT3CharacterBase::ResetMoveSpeed()
 void AT3CharacterBase::OnDeath()
 {
 	
-	void AT3CharacterBase::OnDeathAnimation();
+	OnDeathAnimation();
 }
 
 void AT3CharacterBase::ConsumeMana(float Amount)
