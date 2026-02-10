@@ -63,14 +63,37 @@ void UT3Paladin_SkillComponent::ExecuteSwordWave()
         UE_LOG(LogTemp, Display, TEXT("no montage"))
          return;
     }
-    if (OwnerChar)
+    UAnimInstance* AnimInstance = OwnerChar->GetMesh()->GetAnimInstance();
+    if (OwnerChar && AnimInstance)
     {
-        // 몽타주 재생 (애니메이션 기반 스킬 실행)
-        OwnerChar->PlayAnimMontage(SwordWaveData.SkillMontage);
-        UE_LOG(LogTemp, Display, TEXT("play sword wave"));
+        // 1. 스킬 사용 시작 상태 설정
+        bUsingSkill = true;
+
+        // 2. 몽타주 재생 (애니메이션 기반 스킬 실행)
+        float Duration = OwnerChar->PlayAnimMontage(SwordWaveData.SkillMontage);
+        
+        if (Duration > 0.f)
+        {
+            // 3. 몽타주 종료 델리게이트 바인딩
+            FOnMontageEnded MontageEndedDelegate;
+            MontageEndedDelegate.BindUObject(this, &UT3Paladin_SkillComponent::OnSkillMontageEnded);
+            AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, SwordWaveData.SkillMontage);
+        }
+        else
+        {
+            // 재생 실패 시 즉시 상태 초기화
+            bUsingSkill = false;
+        }
     }
 }
 
+void UT3Paladin_SkillComponent::OnSkillMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+    // 스킬 사용 상태 해제
+    bUsingSkill = false;
+
+    UE_LOG(LogTemp, Log, TEXT("Skill Montage Ended. bUsingSkill set to false. Interrupted: %s"), bInterrupted ? TEXT("True") : TEXT("False"));
+}
 
 void UT3Paladin_SkillComponent::ExecuteSkillNotify(int32 Index)
 {

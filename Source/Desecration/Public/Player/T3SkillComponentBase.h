@@ -78,6 +78,10 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill")
     bool bUsingSkill = false;
 
+    // 몽타주 종료 콜백 함수
+    UFUNCTION()
+    void OnSkillMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
     // 슬롯 번호를 입력받아 스킬 실행
     virtual void ExecuteSkillNotify(int32 Index);
     virtual void ExecuteSkill(int32 SkillSlot);

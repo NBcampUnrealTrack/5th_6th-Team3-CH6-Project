@@ -45,5 +45,7 @@ private:
 
     UPROPERTY(EditAnywhere, Category = "Skill Data")
     FSkillData EmptySkillData;
+
+    void OnSkillMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 		
 };

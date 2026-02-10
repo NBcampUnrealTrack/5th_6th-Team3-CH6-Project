@@ -85,6 +85,8 @@ void UT3SkillComponentBase::BeginPlay()
 
 bool UT3SkillComponentBase::CanExecuteSkill(FSkillData& Data)
 {
+    if (bUsingSkill) return false;
+    
     // 1. 마나 체크
     if (OwnerChar->GetCurrentMana() < Data.ManaCost)
     {
@@ -128,6 +130,11 @@ void UT3SkillComponentBase::SwapSkills()
         OnSkillSlotUpdated.Broadcast(1, CurrentSkillSlot, *GetSkillDataByID(CurrentSkillSlot));
         OnSkillSlotUpdated.Broadcast(2, NextSkillSlot, *GetSkillDataByID(NextSkillSlot));
     }
+}
+
+void UT3SkillComponentBase::OnSkillMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+
 }
 
 
