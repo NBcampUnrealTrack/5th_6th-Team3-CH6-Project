@@ -446,7 +446,7 @@ void AT3CharacterBase::ResetMoveSpeed()
 
 void AT3CharacterBase::OnDeath()
 {
-	
+	bMoveLock = true;
 	OnDeathAnimation();
 }
 
