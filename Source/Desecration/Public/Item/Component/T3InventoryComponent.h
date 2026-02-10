@@ -125,5 +125,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
 	int32 GetEquippedItemIndex(const FName& ItemName) const;
 	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	void SwapEquippedItem();
+	
+	UPROPERTY(BlueprintAssignable, Category = "Equipment")
 	FOnToggleItemEquipped OnToggleItemEquipped;
 };

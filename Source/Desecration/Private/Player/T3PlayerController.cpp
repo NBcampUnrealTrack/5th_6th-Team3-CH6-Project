@@ -10,6 +10,7 @@
 #include "GameFramework/Character.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Blueprint/UserWidget.h"
+#include "Item/Component/T3InventoryComponent.h"
 
 void AT3PlayerController::BeginPlay()
 {
@@ -255,8 +256,12 @@ void AT3PlayerController::Input_ChangePotionSlot(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_ChangeConsumableSlot(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction()) { return; }
-	if (Combat) { Combat->ChangeActiveSlot(ESlotType::Consumable); } 
+	if (!OwnerChar->CanExecuteAction()) { return; }
+	
+	if (IsValid(OwnerChar))
+	{
+		OwnerChar->InventoryComponent->SwapEquippedItem();
+	}
 }
 
 void AT3PlayerController::Input_ActiveSkillSlot(const FInputActionValue& Value)
