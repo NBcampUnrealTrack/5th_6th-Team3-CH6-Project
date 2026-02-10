@@ -346,11 +346,13 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 				
 				if (bIsBerserkPotionActive)
 				{
-					OwnerCharacter->SetAttackPower(OriginalPowerValue * PendingPowerValue * PendingBerserkPowerValue);
+					float Result = FMath::RoundToFloat(OriginalPowerValue * PendingPowerValue * PendingBerserkPowerValue * 10.f) / 10.f;
+					OwnerCharacter->SetAttackPower(Result);
 				}
 				else
 				{
-					OwnerCharacter->SetAttackPower(OriginalPowerValue * PendingPowerValue);
+					float Result = FMath::RoundToFloat(OriginalPowerValue * PendingPowerValue * 10.f) / 10.f;
+					OwnerCharacter->SetAttackPower(Result);
 				}
 				
 				UE_LOG(LogTemp, Warning, TEXT("[%s] 사용. 현재 공격력: %f"), *ItemData.ItemData.Name.ToString(), OwnerCharacter->GetAttackPower());
@@ -392,11 +394,13 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 				
 				if (bIsBerserkPotionActive)
 				{
-					OwnerCharacter->SetDefense(OriginalDefenseValue * PendingDefenseValue / PendingBerserkDefenseValue);
+					float Result = FMath::RoundToFloat(OriginalDefenseValue * PendingDefenseValue / PendingBerserkDefenseValue * 10.0f) / 10.0f;
+					OwnerCharacter->SetDefense(Result);
 				}
 				else
 				{
-					OwnerCharacter->SetDefense(OriginalDefenseValue * PendingDefenseValue);
+					float Result = FMath::RoundToFloat(OriginalDefenseValue * PendingDefenseValue * 10.0f) / 10.0f;
+					OwnerCharacter->SetDefense(Result);
 				}
 
 				UE_LOG(LogTemp, Warning, TEXT("[%s] 사용. 현재 방어력: %f"), *ItemData.ItemData.Name.ToString(), OwnerCharacter->GetDefense());
@@ -434,7 +438,8 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 				
 				PendingSpeedValue = ItemData.BuffValue;
 				
-				OwnerCharacter->SetMoveSpeed(OriginalSpeedValue * PendingSpeedValue);
+				float Result = FMath::RoundToFloat(OriginalSpeedValue * PendingSpeedValue * 10.0f) / 10.0f;
+				OwnerCharacter->SetMoveSpeed(Result);
 
 				UE_LOG(LogTemp, Warning, TEXT("[%s] 사용. 현재 이동속도: %f"), *ItemData.ItemData.Name.ToString(), OwnerCharacter->GetMoveSpeed());
 
@@ -474,20 +479,24 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 				
 				if (bIsPowerPotionActive)
 				{
-					OwnerCharacter->SetAttackPower(OriginalPowerValue * PendingBerserkPowerValue * PendingPowerValue);
+					float Result = FMath::RoundToFloat(OriginalPowerValue * PendingBerserkPowerValue * PendingPowerValue * 10.0f) / 10.f;
+					OwnerCharacter->SetAttackPower(Result);
 				}
 				else
 				{
-					OwnerCharacter->SetAttackPower(OriginalPowerValue * PendingBerserkPowerValue);
+					float Result = FMath::RoundToFloat(OriginalPowerValue * PendingBerserkPowerValue * 10.0f) / 10.0f;
+					OwnerCharacter->SetAttackPower(Result);
 				}
 				
 				if (bIsDefensePotionActive)
 				{
-					OwnerCharacter->SetDefense(OriginalDefenseValue * PendingDefenseValue / PendingBerserkDefenseValue);
+					float Result = FMath::RoundToFloat(OriginalDefenseValue * PendingDefenseValue / PendingBerserkDefenseValue * 10.0f) / 10.f;
+					OwnerCharacter->SetDefense(Result);
 				}
 				else
 				{
-					OwnerCharacter->SetDefense(OriginalDefenseValue / PendingBerserkDefenseValue);
+					float Result = FMath::RoundToFloat(OriginalDefenseValue / PendingBerserkDefenseValue * 10.0f) / 10.0f;
+					OwnerCharacter->SetDefense(Result);
 				}
 				
 				UE_LOG(LogTemp, Warning, TEXT("[%s] 사용. 현재 공격력: %f, 방어력: %f"), *ItemData.ItemData.Name.ToString(), OwnerCharacter->GetAttackPower(), OwnerCharacter->GetDefense());

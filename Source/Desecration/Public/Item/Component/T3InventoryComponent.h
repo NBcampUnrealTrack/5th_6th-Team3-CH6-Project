@@ -7,6 +7,7 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCooldownUpdated, FName, ItemID, float, RemainingTime);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnToggleItemEquipped, FName, ItemID);
 
 class AT3CharacterBase;
 
@@ -85,4 +86,22 @@ private:
 	FTimerHandle CooldownUpdateTimerHandle;
 	
 	void UpdateCooldowns();
+	
+public:
+	UPROPERTY(BlueprintReadOnly, Category = "Equipment")
+	TArray<FName> EquippedItemIDs;
+	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	void ToggleEquipItem(const FName& ItemName);
+	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	void UnequipItem(const FName& ItemName);
+	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	bool IsItemEquipped(const FName& ItemName) const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	int32 GetEquippedItemIndex(const FName& ItemName) const;
+	
+	FOnToggleItemEquipped OnToggleItemEquipped;
 };
