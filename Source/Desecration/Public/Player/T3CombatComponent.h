@@ -57,9 +57,6 @@ enum class ESlotType : uint8
 // 현재 선택된 슬롯이 바뀔 때 (전투 화면에서 슬롯 체인지)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSlotSelectionChanged, ESlotType, SlotType, int32, NewSlotIndex);
 
-// 슬롯에 장착된 내용물이 바뀔 때 (인벤토리에서 슬롯 내용 체인지)
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSlotContentChanged, ESlotType, SlotType, int32, SlotIndex, int32, NewID);
-
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class DESECRATION_API UT3CombatComponent : public UActorComponent
@@ -79,11 +76,7 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Combat|UI")
 	FOnSlotSelectionChanged OnSlotSelectionChanged;
 
-	UPROPERTY(BlueprintAssignable, Category = "Combat|UI")
-	FOnSlotContentChanged OnSlotContentChanged;
-
-	// 슬롯 내용물 변경 함수 (인벤토리에서 호출용)
-	void UpdateSlotContent(ESlotType Type, int32 SlotIndex, int32 NewID);
+	void RequestUpdateSkill(int32 SkillID, bool bIsEquip);
 
 protected:
 	virtual void BeginPlay() override;
@@ -162,7 +155,7 @@ public:
 	void ExecuteCurrentSlotAction(ESlotType Type);
 
 	void SetSkillComponent(UT3SkillComponentBase* InSkillComp) { SkillComp = InSkillComp; }
-
+	UT3SkillComponentBase* GetSkillComponent() const { return SkillComp; }
 
 private:
 	// 현재 선택된 인덱스들
@@ -197,7 +190,7 @@ private:
 	void ResetLockOn();
 	void UpdateTargetUI(AActor* Target, bool bIsVisible);
 	bool IsTargetVisible(AActor* Target) const;
-	void SetLockOnTarget(AActor* NewTarget);
+	// void SetLockOnTarget(AActor* NewTarget);
 
 	// 패링
 	FTimerHandle ParryingToBlockingTimerHandle;

@@ -34,11 +34,16 @@ public:
     virtual void ExecuteSkill(int32 SkilSolt) override;
     virtual void ExecuteSkillNotify(int32 Index) override;
 
+    virtual FSkillData* GetSkillDataByID(int32 SkillID) override;
+
 private:
     UPROPERTY(EditAnywhere, Category = "Skill Data")
     FSkillData SwordWaveData;
 
     UPROPERTY(EditAnywhere, Category = "Skill Data")
     FSkillData ShieldStrikeData;
+
+    UPROPERTY(EditAnywhere, Category = "Skill Data")
+    FSkillData EmptySkillData;
 		
 };

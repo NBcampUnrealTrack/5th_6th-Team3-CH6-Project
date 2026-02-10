@@ -11,28 +11,45 @@ UT3Paladin_SkillComponent::UT3Paladin_SkillComponent()
 {
 }
 
+FSkillData* UT3Paladin_SkillComponent::GetSkillDataByID(int32 SkillID)
+{
+    switch (SkillID)
+    {
+    case 1: return &SwordWaveData;
+    case 2: return &ShieldStrikeData;
+    // case 3: return &Data;
+    // case 4: return &Data;
+    default: return nullptr;
+    }
+}
+
 void UT3Paladin_SkillComponent::ExecuteSkill(int32 SlotNumber)
 {
-    // 1. 어떤 스킬 ID가 들어왔는지 확인
-    FSkillData* TargetData = (SlotNumber == 1) ? &SwordWaveData : &ShieldStrikeData; // 스킬 데이터 선택
-    int32 SkillID = (SlotNumber == 1) ? Slot_1_SkillID : Slot_2_SkillID;
+    // 1. 슬롯 번호(1 or 2)에 따른 ID 추출
+    int32 SkillID = (SlotNumber == 1) ? CurrentSkillSlot : NextSkillSlot;
 
-    // 2. 마나 & 쿨타임 체크
+    // 2. ID에 맞는 데이터 가져오기
+    FSkillData* TargetData = GetSkillDataByID(SkillID);
+
+    // 3. 마나 & 쿨타임 체크
+    if (!TargetData || SkillID == 0) return;
     if (!CanExecuteSkill(*TargetData)) return;
 
-    // 3. 쿨타임 시작 및 스킬 실행
+    // 4. 쿨타임 시작 및 스킬 실행
     StartCooldown(*TargetData);
 
     // ID에 따른 분기
     switch (SkillID)
     {
-    case 0: // 검격
+    case 0: // 빈슬롯
+        UE_LOG(LogTemp, Warning, TEXT("There is no skill."));    break;
+    case 1: // 검격
         ExecuteSwordWave();    break;
-    case 1: // 방패찍기
+    case 2: // 방패찍기
         ShieldStrike();    break;
-    case 2: // 도약찍기
+    case 3: // 도약찍기
         UE_LOG(LogTemp, Warning, TEXT("Flying Attack"));    break;
-    case 3: // 신의심판
+    case 4: // 신의심판
         UE_LOG(LogTemp, Warning, TEXT("Judge of God"));    break;
     default:
         UE_LOG(LogTemp, Warning, TEXT("Unknown Skill ID: %d"), SkillID);   break;
