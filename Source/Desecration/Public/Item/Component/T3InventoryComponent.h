@@ -50,10 +50,28 @@ public:
 	float GetCooldownProgressByItemID(const FName& ItemName);
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	int32 GetMoney();
+	int32 GetMoney() const;
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	int32 SetMoney(int32 NewMoney);
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 GetNormalStoneCount() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 GetEpicStoneCount() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 GetLegendaryStoneCount() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 SetNormalStoneCount(int32 NewCount);
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 SetEpicStoneCount(int32 NewCount);
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 SetLegendaryStoneCount(int32 NewCount);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TArray<FInventorySlot> Items;
@@ -73,6 +91,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Money")
 	int32 Money;
 
+	int32 NormalStoneCount;
+	int32 EpicStoneCount;
+	int32 LegendaryStoneCount;
+	
 private:
 	UPROPERTY()
 	AT3CharacterBase* OwnerCharacter;
