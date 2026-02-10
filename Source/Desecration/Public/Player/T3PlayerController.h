@@ -19,6 +19,14 @@ class DESECRATION_API AT3PlayerController : public APlayerController
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
+
+	// 에디터에서 할당할 위젯 클래스
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<class UUserWidget> LockOnWidgetClass;
+
+	// 실제 생성된 위젯 인스턴스
+	UPROPERTY()
+	class UUserWidget* LockOnWidget;
 	
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
@@ -80,7 +88,6 @@ protected:
 	TObjectPtr<UInputAction> ActivePotionSlotAction;
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> ActiveConsumableSlotAction;
-	
 
 	TObjectPtr<class AT3CharacterBase> OwnerChar;
 	TObjectPtr<class UT3CombatComponent> Combat;
@@ -107,4 +114,6 @@ private:
 	void Input_ActiveSkillSlot(const FInputActionValue& Value);
 	void Input_ActivePotionSlot(const FInputActionValue& Value);
 	void Input_ActiveConsumableSlot(const FInputActionValue& Value);
+
+
 };

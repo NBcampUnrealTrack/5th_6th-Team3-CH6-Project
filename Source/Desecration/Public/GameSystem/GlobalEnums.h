@@ -42,7 +42,7 @@ enum class EGraphicQuality
 
 //레벨(맵) 이름
 UENUM()
-enum class ELevelName
+enum class ELevelName : uint8
 {
 	Title = 0 UMETA(DisplayName = "T3TitleLevel"),
 	SelectClass UMETA(DisplayName = "T3SelectClassLevel"),
