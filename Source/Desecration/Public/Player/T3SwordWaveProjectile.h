@@ -17,7 +17,6 @@ public:
 
     AT3SwordWaveProjectile();
 
-    virtual void BeginPlay() override;
     // 데미지와 속도를 설정하는 함수
     void InitializeProjectile(float InDamage, float InSpeed);
 
@@ -35,9 +34,4 @@ private:
 
     float Damage;
 
-    UFUNCTION()
-    void OnProjectileOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-    UPROPERTY()
-    TArray<AActor*> HitActors;
 };

@@ -3,6 +3,7 @@
 
 #include "Player/T3ANS_Combat.h"
 #include "Player/T3CharacterBase.h"
+#include "Player/T3CombatComponent.h"
 #include "Player/T3WeaponBase.h"
 
 
@@ -17,36 +18,29 @@ void UT3ANS_Combat::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceB
 
     if (!MeshComp || !MeshComp->GetOwner()) return;
 
-    AT3CharacterBase* Char = Cast<AT3CharacterBase>(MeshComp->GetOwner());
-    if (!Char) return;
-
-    UT3CombatComponent* Combat = Char->GetCombatComponent();
-    if (!Combat) return;
-
-    // 장비를 장착한 위치 반환
-    AT3WeaponBase* TargetWeapon = Combat->GetWeaponBySlot(TargetSlot);
-
+    if (AT3CharacterBase* Char = Cast<AT3CharacterBase>(MeshComp->GetOwner()))
+    {
+        if (UT3CombatComponent* Combat = Char->GetCombatComponent())
+            if (AT3WeaponBase* Weapon = Combat->GetWeaponBySlot(EEquipSlot::RightHand))
+        {
             switch (StatusType)
             {
-            case ECombatWindowType::Attack:
-                if (TargetWeapon)
-                {
-                 TargetWeapon->SetWeaponCollisionEnabled(true, AttackDamageMultiflier, DamageTypeClass, AttackIntensity, StunAmount, StaminaAmount);
-                 Combat->ConsumeStamina(StaminaAmount);
-                 const FString SlotName = StaticEnum<EEquipSlot>()->GetNameStringByValue((int64)TargetSlot);
-                 UE_LOG(LogTemp, Log, TEXT("TargetSlot: %s"), *SlotName);
-                }
-                break;
             case ECombatWindowType::Parry:
                 Combat->SetParryingEnabled(true);
                 break;
             case ECombatWindowType::Dodge:
                 Combat->SetDodgingEnabled(true);
                 break;
+            case ECombatWindowType::Attack:
+                Weapon->SetWeaponCollisionEnabled(true, AttackDamageMultiflier,DamageTypeClass, AttackIntensity, StunAmount, StaminaAmount);
+                Combat->ConsumeStamina(StaminaAmount);
+                break;
             case ECombatWindowType::PrevenRegen:
                 Char->bCanRegenStamina = false;
                 break;
             }
+        }
+    }
 }
 
 void UT3ANS_Combat::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
@@ -55,15 +49,11 @@ void UT3ANS_Combat::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBas
 
     if (!MeshComp || !MeshComp->GetOwner()) return;
 
-    AT3CharacterBase* Char = Cast<AT3CharacterBase>(MeshComp->GetOwner());
-    if (!Char) return;
-
-    UT3CombatComponent* Combat = Char->GetCombatComponent();
-    if (!Combat) return;
-
-    // 장비를 장착한 위치 반환
-    AT3WeaponBase* TargetWeapon = Combat->GetWeaponBySlot(TargetSlot);
-
+    if (AT3CharacterBase* Char = Cast<AT3CharacterBase>(MeshComp->GetOwner()))
+    {
+        if (UT3CombatComponent* Combat = Char->GetCombatComponent())
+            if (AT3WeaponBase* Weapon = Combat->GetWeaponBySlot(EEquipSlot::RightHand))
+        {
             switch (StatusType)
             {
             case ECombatWindowType::Parry:
@@ -73,10 +63,12 @@ void UT3ANS_Combat::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBas
                 Combat->SetDodgingEnabled(false);
                 break;
             case ECombatWindowType::Attack:
-                TargetWeapon->SetWeaponCollisionEnabled(false);
+                Weapon->SetWeaponCollisionEnabled(false);
                 break;
             case ECombatWindowType::PrevenRegen:
                 Char->bCanRegenStamina = true;
                 break;
             }
+        }
+    }
 }

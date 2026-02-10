@@ -4,13 +4,7 @@
 #include "Components/Border.h"
 #include "UI/ItemDragDropOperation.h"
 #include "Item/Component/T3InventoryComponent.h"
-
-void UItemSlotWidget::SetSelected(bool bSelected)
-{
-	UE_LOG(LogTemp, Warning, TEXT("SetSelected called: %s"), bSelected ? TEXT("true") : TEXT("false"));
-
-	SelectionBorder->SetVisibility(bSelected ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
-}
+#include "SlateBasics.h"
 
 FReply UItemSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
@@ -33,8 +27,6 @@ FReply UItemSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, con
 		}
 		
 		FReply Reply = Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
-		
-		OnSlotClicked.Broadcast(this);
 		
 		// 드래그 감지를 활성화
 		if (TSharedPtr<SWidget> SlateWidget = GetCachedWidget())

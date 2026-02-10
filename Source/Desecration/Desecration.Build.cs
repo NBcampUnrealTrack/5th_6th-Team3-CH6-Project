@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+﻿// Copyright Epic Games, Inc. All Rights Reserved.
 
 using UnrealBuildTool;
 
@@ -21,8 +21,7 @@ public class Desecration : ModuleRules
 			"UMG",
 			"Slate",
 			"SlateCore",
-            "Niagara",
-            "GameplayTags"
+            "Niagara"
         });
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

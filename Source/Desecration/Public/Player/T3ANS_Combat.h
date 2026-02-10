@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "Animation/AnimNotifies/AnimNotifyState.h"
 #include "Player/T3DamageTypes.h"
-#include "Player/T3CombatComponent.h"
 #include "T3ANS_Combat.generated.h"
 
 enum class ECombatWindowType : uint8;
@@ -23,12 +22,16 @@ public:
     UPROPERTY(EditAnywhere, Category = "Combat")
     ECombatWindowType StatusType;
 
-    UPROPERTY(EditAnywhere, Category = "Combat", meta = (EditCondition = "StatusType == ECombatWindowType::Attack"))
-    EEquipSlot TargetSlot = EEquipSlot::RightHand;
-
     // 이 공격의 기본 데미지 배율
     UPROPERTY(EditAnywhere, Category = "Combat", meta = (EditCondition = "StatusType == ECombatWindowType::Attack"))
     float AttackDamageMultiflier = 1.f;
+
+    UPROPERTY(EditAnywhere, Category = "Combat", meta = (EditCondition = "StatusType == ECombatWindowType::Attack"))
+    EHitIntensity AttackIntensity;
+
+    // 데미지 타입 
+    UPROPERTY(EditAnywhere, Category = "Combat", meta = (EditCondition = "StatusType == ECombatWindowType::Attack"))
+    TSubclassOf<class UT3DamageType_Base> DamageTypeClass;
 
     // 스턴값
     UPROPERTY(EditAnywhere, Category = "Combat", meta = (EditCondition = "StatusType == ECombatWindowType::Attack"))
@@ -37,13 +40,6 @@ public:
     // 스테미나
     UPROPERTY(EditAnywhere, Category = "Combat", meta = (EditCondition = "StatusType == ECombatWindowType::Attack"))
     float StaminaAmount = 10;
-
-    UPROPERTY()
-    EHitIntensity AttackIntensity;
-
-    // 데미지 타입 
-    UPROPERTY()
-    TSubclassOf<class UT3DamageType_Base> DamageTypeClass;
 
     virtual void NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference) override;
     virtual void NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;

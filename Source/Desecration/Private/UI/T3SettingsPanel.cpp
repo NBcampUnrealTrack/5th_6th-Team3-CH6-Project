@@ -46,7 +46,6 @@ void UT3SettingsPanel::NativeConstruct()
 	GraphicQualityComboBox->OnSelectionChanged.AddDynamic(this, &ThisClass::OnSelectGraphicQualityComboBox);
 	
 	//버튼 바인딩
-	ResetButton->OnClicked.AddDynamic(this, &ThisClass::OnClickResetButton);
 	ConfirmButton->OnClicked.AddDynamic(this, &ThisClass::OnClickConfirmButton);
 }
 
@@ -80,12 +79,7 @@ void UT3SettingsPanel::OnSelectGraphicQualityComboBox(FString SelectedItem, ESel
 	
 }
 
-void UT3SettingsPanel::OnClickResetButton()
-{
-	
-}
-
 void UT3SettingsPanel::OnClickConfirmButton()
 {
-	TitlePlayerController->SetActiveSettingsPanel(false);
+	
 }

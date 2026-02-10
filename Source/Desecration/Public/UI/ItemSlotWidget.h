@@ -8,8 +8,6 @@ class UT3InventoryComponent;
 class UImage;
 class UBorder;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInventorySlotClicked, UItemSlotWidget*, OnSlotClicked);
-
 UCLASS()
 class DESECRATION_API UItemSlotWidget : public UUserWidget
 {
@@ -22,19 +20,10 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "Slot", meta = (ExposeOnSpawn = "true"))
 	TObjectPtr<class UT3InventoryComponent> InventoryComponent;
 	
-	UFUNCTION(BlueprintCallable)
-	void SetSelected(bool bSelected);
-
-	UPROPERTY(BlueprintAssignable)
-	FOnInventorySlotClicked OnSlotClicked;
-	
 protected:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UImage* ItemIcon;
 
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UBorder* SelectionBorder;
-	
 	// 마우스 버튼이 눌렸을 때 호출
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
     

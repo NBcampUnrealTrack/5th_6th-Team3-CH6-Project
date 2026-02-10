@@ -44,10 +44,6 @@ private:
 	UFUNCTION()
 	void OnSelectGraphicQualityComboBox(FString SelectedItem, ESelectInfo::Type SelectionType);
 	
-	//초기화 버튼
-	UFUNCTION()
-	void OnClickResetButton();
-	
 	//확인 버튼
 	UFUNCTION()
 	void OnClickConfirmButton();
@@ -75,10 +71,6 @@ private:
 	//그래픽 퀄리티 콤보박스
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
 	TObjectPtr<UComboBoxString> GraphicQualityComboBox;
-	
-	//초기화 버튼
-	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
-	TObjectPtr<UButton> ResetButton;
 	
 	//확인 버튼
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))

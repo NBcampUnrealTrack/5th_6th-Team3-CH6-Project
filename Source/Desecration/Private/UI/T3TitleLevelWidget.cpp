@@ -5,12 +5,27 @@
 #include "GameSystem/T3GameInstance.h"
 #include "GameSystem/T3TitleGameMode.h"
 #include "Player/T3TitlePlayerController.h"
-#include "UI/T3ConfirmPanel.h"
 
 void UT3TitleLevelWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-
+	
+	//게임 모드
+	TitleGameMode = Cast<AT3TitleGameMode>(GetWorld()->GetAuthGameMode());
+	if (!TitleGameMode)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : TitleGameMode is NULL"), *GetNameSafe(this));
+		return;
+	}
+	
+	//게임 인스턴스
+	T3GameInstance = Cast<UT3GameInstance>(GetGameInstance());
+	if (!TitleGameMode)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : T3GameInstance is NULL"), *GetNameSafe(this));
+		return;
+	}
+	
 	//플레이어 컨트롤러
 	TitlePlayerController = Cast<AT3TitlePlayerController>(GetOwningPlayer());
 	if (!TitlePlayerController)
@@ -24,7 +39,7 @@ void UT3TitleLevelWidget::NativeConstruct()
 	SettingsButton->OnClicked.AddDynamic(this, &ThisClass::OnClickSettingsButton);
 	QuitButton->OnClicked.AddDynamic(this, &ThisClass::OnClickQuitButton);
 	//불러오기는 저장된 게임이 있을 때만 사용
-	if (TitlePlayerController->DoesSavedDataExist())
+	if (T3GameInstance->LoadGame())
 	{
 		LoadButton->OnClicked.AddDynamic(this, &ThisClass::OnClickLoadButton);
 	}
@@ -38,26 +53,18 @@ void UT3TitleLevelWidget::NativeConstruct()
 void UT3TitleLevelWidget::OnClickNewGameButton()
 {
 	//저장된 게임이 있는 경우 패널을 통해 물어보기
-	if (TitlePlayerController->DoesSavedDataExist())
+	if (T3GameInstance->LoadGame())
 	{
-		ConfirmPanel->ShowConfirmPanel(CHECK_NEW_GAME);
-		ConfirmPanel->OnClickConfirmButtonAction.AddDynamic(TitlePlayerController, &AT3TitlePlayerController::MoveToSelectClassLevel);
+		//TODO : 패널 띄우기
 		return;
 	}
 	
-	TitlePlayerController->MoveToSelectClassLevel();
+	TitleGameMode->MoveToSelectClassLevel();
 }
 
 void UT3TitleLevelWidget::OnClickLoadButton()
 {
-	//저장된 게임이 없다면 무시
-	if (!TitlePlayerController->DoesSavedDataExist())
-	{
-		return;
-	}
-	
-	ConfirmPanel->ShowConfirmPanel(TEXT("TODO : 저장된 게임 불러오기 문구 추가"));
-	ConfirmPanel->OnClickConfirmButtonAction.AddDynamic(TitlePlayerController, &AT3TitlePlayerController::MoveToLastSavedLevel);
+	TitleGameMode->MoveToLastSavedLevel();
 }
 
 void UT3TitleLevelWidget::OnClickSettingsButton()
@@ -67,6 +74,5 @@ void UT3TitleLevelWidget::OnClickSettingsButton()
 
 void UT3TitleLevelWidget::OnClickQuitButton()
 {
-	ConfirmPanel->ShowConfirmPanel(QUIT_GAME_STRING);
-	ConfirmPanel->OnClickConfirmButtonAction.AddDynamic(TitlePlayerController, &AT3TitlePlayerController::QuitGame);
+	//TODO : 게임 종료를 위한 패널 띄우기
 }
