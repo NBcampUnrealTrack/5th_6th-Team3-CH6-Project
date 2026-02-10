@@ -8,6 +8,8 @@
 #include "Player/T3DamageTypes.h"
 #include "Monster/T3MidBossNotifyModifier.h"
 #include "Components/StateTreeComponent.h"
+#include "Components/BoxComponent.h"
+#include "MotionWarpingComponent.h"
 #include "T3MidBossMonster.generated.h"
 
 // ============================================================
@@ -174,6 +176,22 @@ public:
 	TObjectPtr<UStateTreeComponent> StateTreeComponent;
 
 	// ==========================================================
+	// MotionWarping (루트모션 워프)
+	// ==========================================================
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MidBoss|Movement")
+	TObjectPtr<UMotionWarpingComponent> MotionWarpingComponent;
+
+	// 타겟 앞에서 멈출 오프셋 거리
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Movement")
+	float WarpTargetOffset = 150.f;
+
+	static inline const FName MotionWarpTargetName = FName(TEXT("CombatTarget"));
+
+	// MotionWarping 타겟 갱신
+	UFUNCTION(BlueprintCallable, Category = "MidBoss|Movement")
+	void UpdateMotionWarpTarget();
+
+	// ==========================================================
 	// 전투 타겟
 	// ==========================================================
 	UPROPERTY(BlueprintReadWrite, Category = "MidBoss|AI")
@@ -234,7 +252,23 @@ public:
 	void FaceTarget(float InterpSpeed = 10.f);
 
 	// ==========================================================
-	// 애디티브 히트 리액션 몽타주 (방향별)
+	// 피격 카메라 쉐이크 (공격 중에도 항상 재생)
+	// ==========================================================
+
+	// 카메라 쉐이크 클래스 (에디터에서 할당)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Combat")
+	TSubclassOf<UCameraShakeBase> HitCameraShakeClass;
+
+	// 카메라 쉐이크 외부 반경
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Combat")
+	float HitShakeOuterRadius = 600.f;
+
+	// 카메라 쉐이크 감쇠
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Combat")
+	float HitShakeFalloff = 1.2f;
+
+	// ==========================================================
+	// 히트 리액션 몽타주 (방향별, 비공격 시에만 재생)
 	// ==========================================================
 
 	// 기본 피격 (방향 판별 불가 시 폴백)
@@ -258,6 +292,26 @@ public:
 	TObjectPtr<UAnimMontage> HitReactMontage_R;
 
 	// ==========================================================
+	// 무기 시스템
+	// ==========================================================
+
+	// 무기 외형 메시 (소켓에 부착)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MidBoss|Weapon")
+	TObjectPtr<UStaticMeshComponent> WeaponMeshComponent;
+
+	// 무기 판정 박스 (WeaponMeshComponent의 자식)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MidBoss|Weapon")
+	TObjectPtr<UBoxComponent> WeaponHitBox;
+
+	// 무기 부착 소켓 이름 (스켈레탈 메시에 정의된 소켓)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Weapon")
+	FName WeaponSocketName = FName(TEXT("weapon_r"));
+
+	// 무기 드롭 (사망 연출용)
+	UFUNCTION(BlueprintCallable, Category = "MidBoss|Weapon")
+	void DropWeapon();
+
+	// ==========================================================
 	// 공격 패턴 데이터 (에디터에서 세팅)
 	// ==========================================================
 
@@ -265,8 +319,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Patterns")
 	TArray<FMidBossAttackPattern> AttackPatterns;
 
-	// 무기 판정용 컴포넌트 (BP에서 할당)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Combat")
+	// 무기 판정용 컴포넌트 (WeaponHitBox에 자동 할당)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MidBoss|Combat")
 	TObjectPtr<UPrimitiveComponent> WeaponCollisionComponent;
 
 	// ==========================================================
@@ -409,6 +463,9 @@ private:
 	float MoveToTargetDuration = 0.f;
 	FVector MoveToTargetDirection = FVector::ZeroVector;
 	float MoveToTargetSpeed = 0.f;
+
+	// 무기 드롭 여부
+	bool bIsWeaponDropped = false;
 
 	// --- 내부 함수 ---
 	const FMidBossAttackPattern* FindPatternData(FName PatternName) const;

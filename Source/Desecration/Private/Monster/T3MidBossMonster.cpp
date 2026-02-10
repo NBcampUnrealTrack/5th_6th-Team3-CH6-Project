@@ -2,6 +2,7 @@
 #include "Desecration.h"
 #include "Engine/DamageEvents.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "NativeGameplayTags.h"
 
 // Gameplay Tag 네이티브 정의 — 상태 태그
@@ -22,6 +23,25 @@ AT3MidBossMonster::AT3MidBossMonster()
 
 	// StateTree 컴포넌트 (standalone 스키마 — AI Controller 없이 동작)
 	StateTreeComponent = CreateDefaultSubobject<UStateTreeComponent>(TEXT("StateTreeComponent"));
+
+	// MotionWarping 컴포넌트
+	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarpingComponent"));
+
+	// 무기 메시 (BeginPlay에서 소켓 부착)
+	WeaponMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
+	WeaponMeshComponent->SetupAttachment(GetMesh());
+	WeaponMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	WeaponMeshComponent->SetCanEverAffectNavigation(false);
+
+	// 무기 판정 박스 (WeaponMesh 자식)
+	WeaponHitBox = CreateDefaultSubobject<UBoxComponent>(TEXT("WeaponHitBox"));
+	WeaponHitBox->SetupAttachment(WeaponMeshComponent);
+	WeaponHitBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	WeaponHitBox->SetCollisionResponseToAllChannels(ECR_Overlap);
+	WeaponHitBox->SetBoxExtent(FVector(10.f, 5.f, 40.f));
+
+	// 기존 WeaponCollisionComponent에 자동 할당 → SetAttackCollisionEnabled 호환
+	WeaponCollisionComponent = WeaponHitBox;
 }
 
 // ============================================================
@@ -70,6 +90,15 @@ bool AT3MidBossMonster::HasSuperArmor() const
 void AT3MidBossMonster::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// 무기 소켓 부착 (BP에서 설정한 WeaponSocketName 사용)
+	if (WeaponMeshComponent && GetMesh())
+	{
+		WeaponMeshComponent->AttachToComponent(
+			GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocketName);
+
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 무기 소켓 '%s'에 부착"), *WeaponSocketName.ToString());
+	}
 
 	MidBossStats.CurrentHP = MidBossStats.MaxHP;
 	MidBossStats.CurrentStunGauge = 0.f;
@@ -206,6 +235,7 @@ void AT3MidBossMonster::CancelCurrentPattern()
 
 	SetAttackCollisionEnabled(false);
 	bIsMovingToTarget = false;
+	if (MotionWarpingComponent) { MotionWarpingComponent->RemoveWarpTarget(MotionWarpTargetName); }
 	ResetPatternState();
 }
 
@@ -455,6 +485,24 @@ void AT3MidBossMonster::MoveToTarget(float Duration, float Distance)
 		TEXT("T3_MidBoss: MoveToTarget 시작 (Duration:%.2f, Distance:%.0f)"), Duration, Distance);
 }
 
+void AT3MidBossMonster::UpdateMotionWarpTarget()
+{
+	if (!MotionWarpingComponent || !CombatTarget)
+	{
+		return;
+	}
+
+	// bFollowComponent=true → ANS 윈도우 동안 매 프레임 타겟 위치 자동 갱신
+	MotionWarpingComponent->AddOrUpdateWarpTargetFromComponent(
+		MotionWarpTargetName,
+		CombatTarget->GetRootComponent(),
+		NAME_None,
+		true,  // bFollowComponent
+		EWarpTargetLocationOffsetDirection::VectorFromTargetToOwner,
+		FVector(WarpTargetOffset, 0.f, 0.f)
+	);
+}
+
 void AT3MidBossMonster::SetAttackCollisionEnabled(bool bEnable)
 {
 	if (WeaponCollisionComponent)
@@ -514,6 +562,9 @@ void AT3MidBossMonster::PlayCurrentChainMontage()
 		AdvanceChainOrComplete();
 		return;
 	}
+
+	// MotionWarping 타겟 갱신 (ANS_MotionWarping 있는 몽타주에서만 실제 워프 발생)
+	UpdateMotionWarpTarget();
 
 	// 몽타주 재생 먼저 → 그 다음 EndDelegate 등록 (재생 중이어야 delegate가 걸림)
 	PlayAnimMontage(MontageData.Montage, MontageData.PlayRate);
@@ -587,6 +638,7 @@ void AT3MidBossMonster::ResetPatternState()
 	CurrentPatternName = NAME_None;
 	CurrentChainIndex = 0;
 	RemoveStateTag(TAG_Boss_State_ExecutingPattern);
+	if (MotionWarpingComponent) { MotionWarpingComponent->RemoveWarpTarget(MotionWarpTargetName); }
 }
 
 // ============================================================
@@ -641,7 +693,23 @@ void AT3MidBossMonster::ApplyDamageToMidBoss(float DamageAmount, float StunAmoun
 	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 피격 (데미지: %.0f, 남은HP: %.0f, 스턴게이지: %.0f/%.0f)"),
 		*BossName, DamageAmount, MidBossStats.CurrentHP, MidBossStats.CurrentStunGauge, MidBossStats.StunThreshold);
 
-	if (HasSuperArmor())
+	// 카메라 쉐이크 — 상태 무관하게 항상 재생 (피격 피드백)
+	if (HitCameraShakeClass)
+	{
+		UGameplayStatics::PlayWorldCameraShake(
+			this, HitCameraShakeClass, GetActorLocation(),
+			0.f, HitShakeOuterRadius, HitShakeFalloff);
+
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 카메라 쉐이크 재생 (Class: %s, Radius: %.0f)"),
+			*HitCameraShakeClass->GetName(), HitShakeOuterRadius);
+	}
+	else
+	{
+		UE_LOG(LogDesecration, Warning, TEXT("T3_MidBoss: HitCameraShakeClass가 할당되지 않음!"));
+	}
+
+	// 히트 리액션 — 슈퍼아머 + 비기절 + 비공격 + 생존 시에만 재생
+	if (HasSuperArmor() && !IsStunned() && !IsExecutingPattern() && MidBossStats.CurrentHP > 0.f)
 	{
 		PlayAdditiveHitReaction(DamageCauser);
 	}
@@ -727,6 +795,38 @@ UAnimMontage* AT3MidBossMonster::GetDirectionalHitReactMontage(AActor* DamageCau
 	// 방향별 몽타주가 없으면 폴백
 	return Selected ? Selected : HitReactMontage_Default.Get();
 }
+
+// ============================================================
+// 무기 드롭
+// ============================================================
+
+void AT3MidBossMonster::DropWeapon()
+{
+	if (bIsWeaponDropped || !WeaponMeshComponent)
+	{
+		return;
+	}
+
+	bIsWeaponDropped = true;
+
+	// 판정 비활성화
+	SetAttackCollisionEnabled(false);
+
+	// 메시를 소켓에서 분리 → 물리 시뮬레이션
+	WeaponMeshComponent->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+	WeaponMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	WeaponMeshComponent->SetCollisionResponseToAllChannels(ECR_Block);
+	WeaponMeshComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+	WeaponMeshComponent->SetSimulatePhysics(true);
+	WeaponMeshComponent->SetLinearDamping(0.5f);
+	WeaponMeshComponent->SetAngularDamping(1.0f);
+
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 무기 드롭"), *BossName);
+}
+
+// ============================================================
+// 스턴 / 회복
+// ============================================================
 
 void AT3MidBossMonster::ApplyStun()
 {
