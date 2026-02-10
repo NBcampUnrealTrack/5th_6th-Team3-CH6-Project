@@ -349,3 +349,19 @@ bool UT3InventoryComponent::IsItemEquipped(const FName& ItemName) const
 {
 	return EquippedItemIDs.Contains(ItemName);
 }
+
+void UT3InventoryComponent::SwapEquippedItem()
+{
+	if (EquippedItemIDs.Num() <= 1)
+	{
+		return;
+	}
+	
+	FName TempName = EquippedItemIDs[0];
+	
+	EquippedItemIDs.RemoveAt(0);
+	EquippedItemIDs.Emplace(TempName);
+
+	OnToggleItemEquipped.Broadcast(TempName);
+	OnInventoryUpdated.Broadcast();
+}
