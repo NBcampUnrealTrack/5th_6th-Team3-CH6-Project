@@ -83,6 +83,60 @@ public:
 	UPROPERTY()
 	int32 Money;
 	
-#pragma endregion 
+	//현재 HP포션 개수
+	UPROPERTY()
+	int32 CurrentHPPotionCount;
 	
+	//현재 MP포션 개수
+	UPROPERTY()
+	int32 CurrentMPPotionCount;
+	
+	//현재 HP포션 개수 강화 단계
+	UPROPERTY()
+	int32 CurrentHPPotionAmountLevel;
+	
+	//현재 HP포션 회복량 강화 단계
+	UPROPERTY()
+	int32 CurrentHPIncreaseAmountLevel;
+	
+	//현재 MP포션 개수 강화 단계
+	UPROPERTY()
+	int32 CurrentMPPotionAmountLevel;
+	
+	//현재 MP포션 회복량 강화 단계
+	UPROPERTY()
+	int32 CurrentMPIncreaseAmountLevel;
+#pragma endregion
+	
+#pragma region 장비
+	//현재 무기 강화 단계
+	UPROPERTY()
+	int32 CurrentWeaponLevel;
+	
+	//현재 방어구 강화 단계
+	UPROPERTY()
+	int32 CurrentArmorLevel;
+	
+	//강화석1
+	UPROPERTY()
+	int32 StoneCount1;
+	
+	//강화석2
+	UPROPERTY()
+	int32 StoneCount2;
+	
+	//강화석3
+	UPROPERTY()
+	int32 StoneCount3;
+#pragma endregion
+
+#pragma region 스킬
+	//보유 스킬
+	UPROPERTY()
+	TArray<int32> OwnedSkills;
+	
+	//스킬 슬롯
+	UPROPERTY()
+	TArray<int32> EquippedSkills;
+#pragma endregion
 };
