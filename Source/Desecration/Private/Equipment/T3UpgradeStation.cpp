@@ -11,6 +11,7 @@
 #include "Player/T3CharacterBase.h"
 #include "Equipment/T3PlayerEquipmentComponent.h"
 #include "Equipment/T3TestItemInstance.h"
+#include "Item/Component/T3InventoryComponent.h"
 
 // ============================================================================
 // 생성자 및 초기화
@@ -201,6 +202,12 @@ UT3PlayerEquipmentComponent* AT3UpgradeStation::GetPlayerEquipmentComponent() co
 	return PlayerInRange->FindComponentByClass<UT3PlayerEquipmentComponent>();
 }
 
+UT3InventoryComponent* AT3UpgradeStation::GetPlayerInventoryComponent() const
+{
+	if (!PlayerInRange) return nullptr;
+	return PlayerInRange->FindComponentByClass<UT3InventoryComponent>();
+}
+
 FT3UpgradeUIData AT3UpgradeStation::GetWeaponUIData() const
 {
 	return GetEquipmentUIData(ET3EquipmentType::Weapon);
@@ -307,11 +314,14 @@ FT3UpgradeUIData AT3UpgradeStation::GetEquipmentUIData(ET3EquipmentType Equipmen
 
 int32 AT3UpgradeStation::GetStoneCount(ET3UpgradeStoneGrade Grade) const
 {
+	UT3InventoryComponent* InvComp = GetPlayerInventoryComponent();
+	if (!InvComp) return 0;
+
 	switch (Grade)
 	{
-	case ET3UpgradeStoneGrade::Normal: return NormalStoneCount;
-	case ET3UpgradeStoneGrade::Rare:   return RareStoneCount;
-	case ET3UpgradeStoneGrade::Epic:   return EpicStoneCount;
+	case ET3UpgradeStoneGrade::Normal:    return InvComp->GetNormalStoneCount();
+	case ET3UpgradeStoneGrade::Epic:      return InvComp->GetEpicStoneCount();
+	case ET3UpgradeStoneGrade::Legendary: return InvComp->GetLegendaryStoneCount();
 	default: return 0;
 	}
 }
@@ -320,9 +330,9 @@ UTexture2D* AT3UpgradeStation::GetStoneIcon(ET3UpgradeStoneGrade Grade) const
 {
 	switch (Grade)
 	{
-	case ET3UpgradeStoneGrade::Normal: return NormalStoneIcon;
-	case ET3UpgradeStoneGrade::Rare:   return RareStoneIcon;
-	case ET3UpgradeStoneGrade::Epic:   return EpicStoneIcon;
+	case ET3UpgradeStoneGrade::Normal:    return NormalStoneIcon;
+	case ET3UpgradeStoneGrade::Epic:      return EpicStoneIcon;
+	case ET3UpgradeStoneGrade::Legendary: return LegendaryStoneIcon;
 	default: return nullptr;
 	}
 }
@@ -331,17 +341,17 @@ TArray<ET3UpgradeStoneGrade> AT3UpgradeStation::GetAvailableStones(int32 Current
 {
 	TArray<ET3UpgradeStoneGrade> AvailableStones;
 
-	if (CanUseStone(ET3UpgradeStoneGrade::Normal, CurrentEquipmentLevel) && NormalStoneCount > 0)
+	if (CanUseStone(ET3UpgradeStoneGrade::Normal, CurrentEquipmentLevel) && GetStoneCount(ET3UpgradeStoneGrade::Normal) > 0)
 	{
 		AvailableStones.Add(ET3UpgradeStoneGrade::Normal);
 	}
-	if (CanUseStone(ET3UpgradeStoneGrade::Rare, CurrentEquipmentLevel) && RareStoneCount > 0)
-	{
-		AvailableStones.Add(ET3UpgradeStoneGrade::Rare);
-	}
-	if (CanUseStone(ET3UpgradeStoneGrade::Epic, CurrentEquipmentLevel) && EpicStoneCount > 0)
+	if (CanUseStone(ET3UpgradeStoneGrade::Epic, CurrentEquipmentLevel) && GetStoneCount(ET3UpgradeStoneGrade::Epic) > 0)
 	{
 		AvailableStones.Add(ET3UpgradeStoneGrade::Epic);
+	}
+	if (CanUseStone(ET3UpgradeStoneGrade::Legendary, CurrentEquipmentLevel) && GetStoneCount(ET3UpgradeStoneGrade::Legendary) > 0)
+	{
+		AvailableStones.Add(ET3UpgradeStoneGrade::Legendary);
 	}
 
 	return AvailableStones;
@@ -357,9 +367,9 @@ int32 AT3UpgradeStation::GetMaxLevelForStone(ET3UpgradeStoneGrade Grade)
 {
 	switch (Grade)
 	{
-	case ET3UpgradeStoneGrade::Normal: return 3;
-	case ET3UpgradeStoneGrade::Rare:   return 5;
-	case ET3UpgradeStoneGrade::Epic:   return 7;
+	case ET3UpgradeStoneGrade::Normal:    return 3;
+	case ET3UpgradeStoneGrade::Epic:      return 5;
+	case ET3UpgradeStoneGrade::Legendary: return 7;
 	default: return 0;
 	}
 }
@@ -447,11 +457,11 @@ bool AT3UpgradeStation::GetNextStoneGrade(int32 CurrentEquipmentLevel, ET3Upgrad
 bool AT3UpgradeStation::SelectLowestAvailableStone(int32 CurrentEquipmentLevel, ET3UpgradeStoneGrade& OutGrade) const
 {
 	// 낮은 등급부터 순회하여 사용 가능한 첫 번째 강화석 선택
-	// Normal → Rare → Epic 순서
+	// Normal → Epic → Legendary 순서
 	const ET3UpgradeStoneGrade Priority[] = {
 		ET3UpgradeStoneGrade::Normal,
-		ET3UpgradeStoneGrade::Rare,
-		ET3UpgradeStoneGrade::Epic
+		ET3UpgradeStoneGrade::Epic,
+		ET3UpgradeStoneGrade::Legendary
 	};
 
 	for (ET3UpgradeStoneGrade Grade : Priority)
@@ -468,11 +478,20 @@ bool AT3UpgradeStation::SelectLowestAvailableStone(int32 CurrentEquipmentLevel, 
 
 void AT3UpgradeStation::ConsumeStone(ET3UpgradeStoneGrade Grade)
 {
+	UT3InventoryComponent* InvComp = GetPlayerInventoryComponent();
+	if (!InvComp) return;
+
 	switch (Grade)
 	{
-	case ET3UpgradeStoneGrade::Normal: --NormalStoneCount; break;
-	case ET3UpgradeStoneGrade::Rare:   --RareStoneCount;   break;
-	case ET3UpgradeStoneGrade::Epic:   --EpicStoneCount;   break;
+	case ET3UpgradeStoneGrade::Normal:
+		InvComp->SetNormalStoneCount(InvComp->GetNormalStoneCount() - 1);
+		break;
+	case ET3UpgradeStoneGrade::Epic:
+		InvComp->SetEpicStoneCount(InvComp->GetEpicStoneCount() - 1);
+		break;
+	case ET3UpgradeStoneGrade::Legendary:
+		InvComp->SetLegendaryStoneCount(InvComp->GetLegendaryStoneCount() - 1);
+		break;
 	}
 }
 

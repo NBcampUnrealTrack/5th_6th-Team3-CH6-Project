@@ -88,7 +88,10 @@ public:
 	EHitDirection HitDirection;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EHitIntensity HitIntensity;
-
+	// 상태 변수
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	ECharacterCombatState CurrentState;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector CurrentDamageCauserLocation;
 	
@@ -208,9 +211,6 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<class AController> AIPC;
-
-	// 상태 변수
-	ECharacterCombatState CurrentState;
 
 	// 록온 변수
 	bool bIsLockOn = false;

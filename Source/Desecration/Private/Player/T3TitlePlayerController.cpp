@@ -63,7 +63,7 @@ void AT3TitlePlayerController::MoveToLastSavedLevel()
 
 bool AT3TitlePlayerController::DoesSavedDataExist()
 {
-	return T3GameInstance->LoadGame() != nullptr;
+	return T3GameInstance->GetSavedGameData() != nullptr;
 }
 
 void AT3TitlePlayerController::SetActiveSettingsPanel(bool bActive)

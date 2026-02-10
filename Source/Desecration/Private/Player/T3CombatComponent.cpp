@@ -478,6 +478,7 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 	{
 		CurrentState = ECharacterCombatState::Dead;
 		// 사망 로직 실행
+		OwnerChar->OnDeath();
 		return;
 	}
 

@@ -7,9 +7,12 @@
 
 void UItemSlotWidget::SetSelected(bool bSelected)
 {
-	UE_LOG(LogTemp, Warning, TEXT("SetSelected called: %s"), bSelected ? TEXT("true") : TEXT("false"));
-
 	SelectionBorder->SetVisibility(bSelected ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+}
+
+bool UItemSlotWidget::GetSlotData_Implementation(FInventorySlot& OutSlotData) const
+{
+	return false;
 }
 
 FReply UItemSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
