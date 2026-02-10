@@ -19,6 +19,14 @@ class DESECRATION_API AT3PlayerController : public APlayerController
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
+
+	// 에디터에서 할당할 위젯 클래스
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<class UUserWidget> LockOnWidgetClass;
+
+	// 실제 생성된 위젯 인스턴스
+	UPROPERTY()
+	class UUserWidget* LockOnWidget;
 	
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
@@ -67,7 +75,22 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "UI")
 	TObjectPtr<UUserWidget> CombatWidget;
-	
+
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> ChangeSkillSlotAction;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> ChangePotionSlotAction;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> ChangeConsumableSlotAction;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> ActiveSkillSlotAction;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> ActivePotionSlotAction;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> ActiveConsumableSlotAction;
+
+	TObjectPtr<class AT3CharacterBase> OwnerChar;
+	TObjectPtr<class UT3CombatComponent> Combat;
 private:
 	bool bIsInventoryOpen = false;
 	void Input_Move(const FInputActionValue& Value);
@@ -83,4 +106,14 @@ private:
 	void Input_Attack(const FInputActionValue& Value);
 
 	void ToggleInventoryInput();
+
+	// 슬롯 전환 및 사용
+	void Input_ChangeSkillSlot(const FInputActionValue& Value);
+	void Input_ChangePotionSlot(const FInputActionValue& Value);
+	void Input_ChangeConsumableSlot(const FInputActionValue& Value);
+	void Input_ActiveSkillSlot(const FInputActionValue& Value);
+	void Input_ActivePotionSlot(const FInputActionValue& Value);
+	void Input_ActiveConsumableSlot(const FInputActionValue& Value);
+
+
 };
