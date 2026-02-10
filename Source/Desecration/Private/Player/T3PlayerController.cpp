@@ -6,9 +6,6 @@
 #include "EnhancedInputSubsystems.h"
 #include "Player/T3CharacterBase.h"
 #include "Player/T3CombatComponent.h"
-#include "Components/CapsuleComponent.h"
-#include "GameFramework/Character.h"
-#include "Blueprint/WidgetLayoutLibrary.h"
 #include "Blueprint/UserWidget.h"
 
 void AT3PlayerController::BeginPlay()
@@ -38,20 +35,6 @@ void AT3PlayerController::BeginPlay()
 		//CombatWidget->SetVisibility(ESlateVisibility::Collapsed);
 		CombatWidget->AddToViewport();
 	}
-
-	if (LockOnWidgetClass)
-	{
-		LockOnWidget = CreateWidget<UUserWidget>(this, LockOnWidgetClass);
-		if (LockOnWidget)
-		{
-			LockOnWidget->AddToViewport();
-			LockOnWidget->SetVisibility(ESlateVisibility::Collapsed); // 평소엔 숨김
-		}
-	}
-
-	OwnerChar = Cast<AT3CharacterBase>(GetPawn());
-	Combat = OwnerChar->GetCombatComponent();
-	
 }
 
 void AT3PlayerController::SetupInputComponent()
@@ -72,85 +55,85 @@ void AT3PlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_Attack);
 	
 		EnhancedInputComponent->BindAction(InventoryAction, ETriggerEvent::Started, this, &AT3PlayerController::ToggleInventoryInput);
-
-		// 슬롯 체인지 및 사용
-		EnhancedInputComponent->BindAction(ChangeSkillSlotAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_ChangeSkillSlot);
-		EnhancedInputComponent->BindAction(ChangePotionSlotAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_ChangePotionSlot);
-		EnhancedInputComponent->BindAction(ChangeConsumableSlotAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_ChangeConsumableSlot);
-		EnhancedInputComponent->BindAction(ActiveSkillSlotAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_ActiveSkillSlot);
-		EnhancedInputComponent->BindAction(ActivePotionSlotAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_ActivePotionSlot);
-		EnhancedInputComponent->BindAction(ActiveConsumableSlotAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_ActiveConsumableSlot);
-
 	}
 }
 
 void AT3PlayerController::Input_Move(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
+	if (bIsInventoryOpen)
 	{
 		return;
 	}
 
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
-	if (OwnerChar)
+	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
 	{
-		OwnerChar->Move(MovementVector);
+		T3Char->Move(MovementVector);
 	}
 }
 
 void AT3PlayerController::Input_Look(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
+	if (bIsInventoryOpen)
 	{
 		return;
 	}
 
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
 
-	if (OwnerChar)
+	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
 	{
-		OwnerChar->Look(LookAxisVector);
+		T3Char->Look(LookAxisVector);
 	}
 }
 
 
 void AT3PlayerController::Input_LockOn(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
+	if (bIsInventoryOpen)
 	{
 		return;
 	}
 	
-	if (Combat)
+	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
 	{
-		Combat->ToggleLockOn();
+		if (UT3CombatComponent* Combat = T3Char->GetCombatComponent())
+		{
+			Combat->ToggleLockOn();
+		}
 	}
 }
 
 void AT3PlayerController::Input_BlockStart(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
+	if (bIsInventoryOpen)
 	{
 		return;
 	}
 	
-	if (Combat)
+	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
 	{
+		if (UT3CombatComponent* Combat = T3Char->GetCombatComponent())
+		{
 			Combat->StartBlock();
+		}
 	}
 }
 
 void AT3PlayerController::Input_BlockEnd(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
+	if (bIsInventoryOpen)
 	{
 		return;
 	}
 	
-	if (Combat)
+	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
 	{
+		if (UT3CombatComponent* Combat = T3Char->GetCombatComponent())
+		{
 			Combat->EndBlock();
+		}
 	}
 }
 
@@ -158,20 +141,20 @@ void AT3PlayerController::Input_BlockEnd(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_Roll(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
+	if (bIsInventoryOpen)
 	{
 		return;
 	}
 	
-	if (OwnerChar)
+	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
 	{
-		OwnerChar->Roll(Value);
+		T3Char->Roll(Value);
 	}
 }
 
 void AT3PlayerController::Input_Interact(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
+	if (bIsInventoryOpen)
 	{
 		return;
 	}
@@ -181,20 +164,20 @@ void AT3PlayerController::Input_Interact(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_Test(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
+	if (bIsInventoryOpen)
 	{
 		return;
 	}
 	
-	if (OwnerChar)
+	if (AT3CharacterBase* T3Char = Cast<AT3CharacterBase>(GetPawn()))
 	{
-		if (OwnerChar->PlayerInputState.bIsCombatState == false)
+		if (T3Char->PlayerInputState.bIsCombatState == false)
 		{
-			OwnerChar->PlayerInputState.bIsCombatState = true;
+			T3Char->PlayerInputState.bIsCombatState = true;
 		}
 		else
 		{
-			OwnerChar->PlayerInputState.bIsCombatState = false;
+			T3Char->PlayerInputState.bIsCombatState = false;
 		}
 		
 	}
@@ -202,14 +185,17 @@ void AT3PlayerController::Input_Test(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_Attack(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
+	if (bIsInventoryOpen)
 	{
 		return;
 	}
 	
-	if (Combat)
+	if (AT3CharacterBase* T3Char= Cast<AT3CharacterBase>(GetPawn()))
 	{
+		if (UT3CombatComponent* Combat = T3Char->GetCombatComponent())
+		{
 			Combat->Attack();
+		}
 	}
 }
 
@@ -240,46 +226,7 @@ void AT3PlayerController::ToggleInventoryInput()
 	}
 }
 
-
-void AT3PlayerController::Input_ChangeSkillSlot(const FInputActionValue& Value)
-{	
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())	{return;}
-	if (Combat)	{Combat->ChangeActiveSlot(ESlotType::Skill);}
-}
-
-void AT3PlayerController::Input_ChangePotionSlot(const FInputActionValue& Value)
-{
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction()) { return; }
-	if (Combat) { Combat->ChangeActiveSlot(ESlotType::Potion); } 
-}
-
-void AT3PlayerController::Input_ChangeConsumableSlot(const FInputActionValue& Value)
-{
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction()) { return; }
-	if (Combat) { Combat->ChangeActiveSlot(ESlotType::Consumable); } 
-}
-
-void AT3PlayerController::Input_ActiveSkillSlot(const FInputActionValue& Value)
-{
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction()) { return; }
-	if (Combat) { Combat->ExecuteCurrentSlotAction(ESlotType::Skill); } 
-}
-
-void AT3PlayerController::Input_ActivePotionSlot(const FInputActionValue& Value)
-{
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction()) { return; }
-	if (Combat) { Combat->ExecuteCurrentSlotAction(ESlotType::Potion); } 
-}
-
-void AT3PlayerController::Input_ActiveConsumableSlot(const FInputActionValue& Value)
-{
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction()) { return; }
-	if (Combat) { Combat->ExecuteCurrentSlotAction(ESlotType::Consumable); } 
-}
-
 void AT3PlayerController::SetInventoryOpen(bool bIsOpen)
 {
 	bIsInventoryOpen = bIsOpen;
 }
-
-

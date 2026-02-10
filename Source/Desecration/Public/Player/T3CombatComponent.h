@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "T3CharacterDataAsset.h"
-#include "Player/T3DamageTypes.h"
 #include "T3CombatComponent.generated.h"
 
 class AAICharacter;
@@ -19,8 +18,7 @@ enum class ECharacterCombatState : uint8
 	Parrying,
 	Dodge,
 	Attacking,
-	Dead,
-	Cooldown
+	Dead
 };
 
 // 노티파이용 ENUM
@@ -45,20 +43,6 @@ enum class EHitDirection : uint8
 	Right   UMETA(DisplayName = "Right")
 };
 
-// 슬롯 체인지 타입 구분
-UENUM(BlueprintType)
-enum class ESlotType : uint8
-{
-	Skill,
-	Consumable, // 소모아이템
-	Potion
-};
-
-// 현재 선택된 슬롯이 바뀔 때 (전투 화면에서 슬롯 체인지)
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSlotSelectionChanged, ESlotType, SlotType, int32, NewSlotIndex);
-
-// 슬롯에 장착된 내용물이 바뀔 때 (인벤토리에서 슬롯 내용 체인지)
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSlotContentChanged, ESlotType, SlotType, int32, SlotIndex, int32, NewID);
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -71,19 +55,11 @@ public:
 
 	void InitializeWeapons(const TMap<EEquipSlot, FWeaponEquipInfo>& WeaponMap);
 
+	// 2. 실제 로직용 (우리가 원하는 Intensity 포함)
 	void ExecuteHitLogic(AActor* DamageCauser, float Damage, const UDamageType* DamageType, AController* InstigatedBy, EHitIntensity Intensity, float ReceievedDamageMultiplier);
 
+public:
 	void SetOwnerChar(ACharacter* InChar) { AIChar = InChar; };
-
-
-	UPROPERTY(BlueprintAssignable, Category = "Combat|UI")
-	FOnSlotSelectionChanged OnSlotSelectionChanged;
-
-	UPROPERTY(BlueprintAssignable, Category = "Combat|UI")
-	FOnSlotContentChanged OnSlotContentChanged;
-
-	// 슬롯 내용물 변경 함수 (인벤토리에서 호출용)
-	void UpdateSlotContent(ESlotType Type, int32 SlotIndex, int32 NewID);
 
 protected:
 	virtual void BeginPlay() override;
@@ -95,9 +71,6 @@ public:
 	EHitDirection HitDirection;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EHitIntensity HitIntensity;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FVector CurrentDamageCauserLocation;
 	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
@@ -116,24 +89,13 @@ public:
 
 	// 록온
 	void ToggleLockOn();
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LockOn")
-	float TargetHeightPercent = 0.3f;
-	TObjectPtr<class USpringArmComponent> SpringArm;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LockOn")
-	float DefaultArmLength = 400.f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LockOn")
-	float MaxArmLength = 2000.f; // 보스가 높이 뜰 때 멀어질 최대 거리
-
-	AActor* GetCurrentTarget() const { return CurrentTarget; }
 
 	// 캐릭터 상태 Getter
 	FORCEINLINE ECharacterCombatState GetCurrentState() const { return CurrentState; }
 
 	// 공격 함수
 	UFUNCTION(BlueprintCallable)
-	void RequestAttackDamage(AActor* TargetActor, float DamageAmount, EHitIntensity Intensity = EHitIntensity::Light, float DamageMultiflier = 1.0f , TSubclassOf<class UT3DamageType_Base> DamageTypeClass = nullptr);
+	void RequestAttackDamage(AActor* TargetActor, float DamageAmount, EHitIntensity Intensity, float DamageMultiflier, TSubclassOf<class UT3DamageType_Base> DamageTypeClass);
 
 	// 스태미너 소모 함수
 	void ConsumeStamina(float Amount);
@@ -150,45 +112,7 @@ public:
 	void ClearWeapons();
 
 
-	// ======== 스킬, 아이템 슬롯 전환 및 슬롯 실행 ==========
-
-public:
-	// 슬롯 전환 함수 (키 입력에 대응)
-	UFUNCTION(BlueprintCallable, Category = "Input")
-	void ChangeActiveSlot(ESlotType Type);
-
-	// 현재 슬롯 실행 (실제 키 입력 시 호출)
-	UFUNCTION(BlueprintCallable, Category = "Input")
-	void ExecuteCurrentSlotAction(ESlotType Type);
-
-	void SetSkillComponent(UT3SkillComponentBase* InSkillComp) { SkillComp = InSkillComp; }
-
-
 private:
-	// 현재 선택된 인덱스들
-	int32 CurrentSkillSlot = 1;
-	int32 CurrentConsumableSlot = 1;
-	int32 CurrentPotionSlot = 1;
-
-	// 최대 슬롯 수 (직업별 확장성 고려)
-	int32 MaxSkillSlots = 2;
-	int32 MaxConsumableSlots = 2;
-	int32 MaxPotionSlots = 2;
-
-	// 캐싱된 컴포넌트
-	UPROPERTY()
-	class UT3SkillComponentBase* SkillComp;
-
-	UPROPERTY()
-	class UT3ItemUseComponent* ItemComp;
-	
-	
-	
-	
-	
-	
-	
-	
 	// 상태별 데미지 경감 로직
 	float CalculateFinalDamage(float IncomingDamage, const class UDamageType* DamageType, float ReceievedDamageMultiplier);
 	
@@ -197,7 +121,6 @@ private:
 	void ResetLockOn();
 	void UpdateTargetUI(AActor* Target, bool bIsVisible);
 	bool IsTargetVisible(AActor* Target) const;
-	void SetLockOnTarget(AActor* NewTarget);
 
 	// 패링
 	FTimerHandle ParryingToBlockingTimerHandle;
@@ -221,12 +144,14 @@ private:
 
 	// 록온 변수
 	bool bIsLockOn = false;
+	UPROPERTY()
+	TObjectPtr<AActor> CurrentTarget;
 
 	// 록온 타깃 식별 태그
 	UPROPERTY(EditAnywhere, Category = "Combat|LockOn")
 	FName TargetTag = FName("Enemy");
 
-	float SearchRadius = 2500.f;
+	float SearchRadius = 2000.f;
 	float InterpSpeed = 20.f;
 
 
@@ -236,17 +161,6 @@ private:
 
 	// 방향 계산 함수
 	EHitDirection CalculateHitDirection(const FVector& HitLocation);
-
-
-	protected:
-	// 블락 타이머 (무한 패링 방지)
-	FTimerHandle BlockingCooldownTimerHandle;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Block")
-	float BlockCooldownTime = 1.f;
-	bool bCanBlock = true;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	TObjectPtr<AActor> CurrentTarget;
-	void ResetBlockCooldown();
 
 
 };

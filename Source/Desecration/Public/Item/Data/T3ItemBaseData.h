@@ -21,6 +21,9 @@ struct DESECRATION_API FT3ItemBaseData
 	FText Name; // 플레이어에게 보여질 아이템 이름
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
+	int32 Price; // 아이템 가격
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
 	UTexture2D* Icon; // 아이콘
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")

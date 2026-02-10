@@ -8,7 +8,6 @@ DECLARE_DYNAMIC_DELEGATE(FOnCoolTimeEnded);
 
 struct FT3ConsumableItemData;
 class AT3CharacterBase;
-class USoundCue;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class DESECRATION_API UT3ItemUseComponent : public UActorComponent
@@ -94,9 +93,6 @@ private:
 	UPROPERTY()
 	AT3CharacterBase* OwnerCharacter;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Sound")
-	TObjectPtr<USoundCue> HealSound;
-	
 public:
 	bool ApplyConsumableItem(const FT3ConsumableItemData& ItemData);
 };

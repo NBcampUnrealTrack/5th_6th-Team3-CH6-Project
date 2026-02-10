@@ -4,9 +4,11 @@
 #include "Blueprint/UserWidget.h"
 #include "T3TitleLevelWidget.generated.h"
 
-class UT3ConfirmPanel;
 class AT3TitlePlayerController;
 class UTextBlock;
+class UT3SaveGame;
+class UT3GameInstance;
+class AT3TitleGameMode;
 class UButton;
 
 UCLASS()
@@ -54,14 +56,15 @@ private:
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
 	TObjectPtr<UButton> QuitButton;
 	
-	//확인 패널
-	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
-	TObjectPtr<UT3ConfirmPanel> ConfirmPanel;
-
+	//게임 모드
+	UPROPERTY()
+	TObjectPtr<AT3TitleGameMode> TitleGameMode;
+	
+	//게임 인스턴스
+	UPROPERTY()
+	TObjectPtr<UT3GameInstance> T3GameInstance;
+	
 	//풀레이어 컨트롤러
 	UPROPERTY()
 	TObjectPtr<AT3TitlePlayerController> TitlePlayerController;
-	
-	const FString CHECK_NEW_GAME = TEXT("처음부터 하시겠습니까?\n저장된 게임이 사라집니다.");
-	const FString QUIT_GAME_STRING = TEXT("종료하시겠습니까?");
 };
