@@ -47,18 +47,18 @@ void UT3UpgradeUIWidget::NativeConstruct()
 				Img_NormalStone->SetBrushFromTexture(Icon);
 			}
 		}
-		if (Img_RareStone)
-		{
-			if (UTexture2D* Icon = UpgradeStation->GetStoneIcon(ET3UpgradeStoneGrade::Rare))
-			{
-				Img_RareStone->SetBrushFromTexture(Icon);
-			}
-		}
 		if (Img_EpicStone)
 		{
 			if (UTexture2D* Icon = UpgradeStation->GetStoneIcon(ET3UpgradeStoneGrade::Epic))
 			{
 				Img_EpicStone->SetBrushFromTexture(Icon);
+			}
+		}
+		if (Img_LegendaryStone)
+		{
+			if (UTexture2D* Icon = UpgradeStation->GetStoneIcon(ET3UpgradeStoneGrade::Legendary))
+			{
+				Img_LegendaryStone->SetBrushFromTexture(Icon);
 			}
 		}
 	}
@@ -172,17 +172,17 @@ void UT3UpgradeUIWidget::RefreshUI()
 			&& UpgradeStation->GetStoneCount(ET3UpgradeStoneGrade::Normal) > 0;
 		Img_NormalStone->SetColorAndOpacity(bCanUse ? ActiveColor : InactiveColor);
 	}
-	if (Img_RareStone)
-	{
-		bool bCanUse = UpgradeStation->CanUseStone(ET3UpgradeStoneGrade::Rare, UIData.CurrentLevel)
-			&& UpgradeStation->GetStoneCount(ET3UpgradeStoneGrade::Rare) > 0;
-		Img_RareStone->SetColorAndOpacity(bCanUse ? ActiveColor : InactiveColor);
-	}
 	if (Img_EpicStone)
 	{
 		bool bCanUse = UpgradeStation->CanUseStone(ET3UpgradeStoneGrade::Epic, UIData.CurrentLevel)
 			&& UpgradeStation->GetStoneCount(ET3UpgradeStoneGrade::Epic) > 0;
 		Img_EpicStone->SetColorAndOpacity(bCanUse ? ActiveColor : InactiveColor);
+	}
+	if (Img_LegendaryStone)
+	{
+		bool bCanUse = UpgradeStation->CanUseStone(ET3UpgradeStoneGrade::Legendary, UIData.CurrentLevel)
+			&& UpgradeStation->GetStoneCount(ET3UpgradeStoneGrade::Legendary) > 0;
+		Img_LegendaryStone->SetColorAndOpacity(bCanUse ? ActiveColor : InactiveColor);
 	}
 
 	// 소모 예정 강화석 Border 강조 (배경색으로 표시, 이미지에 영향 없음)
@@ -197,15 +197,15 @@ void UT3UpgradeUIWidget::RefreshUI()
 		bool bIsSelected = bHasNextStone && NextGrade == ET3UpgradeStoneGrade::Normal;
 		Border_NormalStone->SetBrushColor(bIsSelected ? SelectedBorderColor : DefaultBorderColor);
 	}
-	if (Border_RareStone)
-	{
-		bool bIsSelected = bHasNextStone && NextGrade == ET3UpgradeStoneGrade::Rare;
-		Border_RareStone->SetBrushColor(bIsSelected ? SelectedBorderColor : DefaultBorderColor);
-	}
 	if (Border_EpicStone)
 	{
 		bool bIsSelected = bHasNextStone && NextGrade == ET3UpgradeStoneGrade::Epic;
 		Border_EpicStone->SetBrushColor(bIsSelected ? SelectedBorderColor : DefaultBorderColor);
+	}
+	if (Border_LegendaryStone)
+	{
+		bool bIsSelected = bHasNextStone && NextGrade == ET3UpgradeStoneGrade::Legendary;
+		Border_LegendaryStone->SetBrushColor(bIsSelected ? SelectedBorderColor : DefaultBorderColor);
 	}
 
 	// 강화석 보유량 표시
@@ -213,13 +213,13 @@ void UT3UpgradeUIWidget::RefreshUI()
 	{
 		Txt_NormalStoneCount->SetText(FText::AsNumber(UpgradeStation->GetStoneCount(ET3UpgradeStoneGrade::Normal)));
 	}
-	if (Txt_RareStoneCount)
-	{
-		Txt_RareStoneCount->SetText(FText::AsNumber(UpgradeStation->GetStoneCount(ET3UpgradeStoneGrade::Rare)));
-	}
 	if (Txt_EpicStoneCount)
 	{
 		Txt_EpicStoneCount->SetText(FText::AsNumber(UpgradeStation->GetStoneCount(ET3UpgradeStoneGrade::Epic)));
+	}
+	if (Txt_LegendaryStoneCount)
+	{
+		Txt_LegendaryStoneCount->SetText(FText::AsNumber(UpgradeStation->GetStoneCount(ET3UpgradeStoneGrade::Legendary)));
 	}
 
 	// 강화 버튼 활성화/비활성화

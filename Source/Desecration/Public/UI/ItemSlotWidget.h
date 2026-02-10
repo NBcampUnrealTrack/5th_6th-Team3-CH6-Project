@@ -7,6 +7,7 @@
 class UT3InventoryComponent;
 class UImage;
 class UBorder;
+struct FInventorySlot;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInventorySlotClicked, UItemSlotWidget*, OnSlotClicked);
 
@@ -25,6 +26,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetSelected(bool bSelected);
 
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Item Slot")
+	bool GetSlotData(FInventorySlot& OutSlotData) const;
+	
 	UPROPERTY(BlueprintAssignable)
 	FOnInventorySlotClicked OnSlotClicked;
 	

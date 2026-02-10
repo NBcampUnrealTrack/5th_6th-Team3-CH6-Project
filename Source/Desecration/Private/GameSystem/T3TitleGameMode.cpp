@@ -2,6 +2,7 @@
 
 #include "GameSystem/GlobalEnums.h"
 #include "GameSystem/T3GameInstance.h"
+#include "GameSystem/T3SaveGame.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 void AT3TitleGameMode::BeginPlay()
@@ -24,7 +25,10 @@ void AT3TitleGameMode::MoveToSelectClassLevel()
 
 void AT3TitleGameMode::MoveToLastSavedLevel()
 {
-	//TODO : 마지막 저장 장소인 맵으로 이동
+	if (const TObjectPtr<UT3SaveGame> SavedGame = T3GameInstance->GetSavedGameData())
+	{
+		T3GameInstance->OpenLevel(SavedGame->SavedLevelName);
+	}
 }
 
 void AT3TitleGameMode::QuitGame()

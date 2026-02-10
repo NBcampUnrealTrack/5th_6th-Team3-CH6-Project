@@ -86,6 +86,70 @@ void UT3PlayerEquipmentComponent::EquipArmor(UT3TestItemInstance* NewItem)
         GetCurrentDefensePower());
 }
 
+// ============================================================================
+// 세이브/로드 (세이브팀에서 호출)
+// ============================================================================
+
+void UT3PlayerEquipmentComponent::LoadEquipmentFromSave(const FT3ItemSaveData& WeaponData, const FT3ItemSaveData& ArmorData)
+{
+	// 무기 복원
+	if (WeaponData.ItemID != NAME_None)
+	{
+		UT3TestItemInstance* LoadedWeapon = NewObject<UT3TestItemInstance>(this);
+		LoadedWeapon->Init(WeaponData.ItemID, WeaponData.Level, ET3EquipmentType::Weapon);
+		EquipWeapon(LoadedWeapon);
+
+		UE_LOG(LogDesecration, Log, TEXT("[Save] 무기 복원: %s (Lv.%d)"),
+			*WeaponData.ItemID.ToString(), WeaponData.Level);
+	}
+
+	// 방어구 복원
+	if (ArmorData.ItemID != NAME_None)
+	{
+		UT3TestItemInstance* LoadedArmor = NewObject<UT3TestItemInstance>(this);
+		LoadedArmor->Init(ArmorData.ItemID, ArmorData.Level, ET3EquipmentType::Armor);
+		EquipArmor(LoadedArmor);
+
+		UE_LOG(LogDesecration, Log, TEXT("[Save] 방어구 복원: %s (Lv.%d)"),
+			*ArmorData.ItemID.ToString(), ArmorData.Level);
+	}
+}
+
+void UT3PlayerEquipmentComponent::GetEquipmentSaveData(FT3ItemSaveData& OutWeaponData, FT3ItemSaveData& OutArmorData) const
+{
+	// 무기 데이터 추출
+	if (WeaponInstance)
+	{
+		OutWeaponData.ItemID = WeaponInstance->ItemID;
+		OutWeaponData.Level = WeaponInstance->CurrentLevel;
+		OutWeaponData.Type = ET3EquipmentType::Weapon;
+	}
+	else
+	{
+		OutWeaponData.ItemID = NAME_None;
+		OutWeaponData.Level = 0;
+		OutWeaponData.Type = ET3EquipmentType::Weapon;
+	}
+
+	// 방어구 데이터 추출
+	if (ArmorInstance)
+	{
+		OutArmorData.ItemID = ArmorInstance->ItemID;
+		OutArmorData.Level = ArmorInstance->CurrentLevel;
+		OutArmorData.Type = ET3EquipmentType::Armor;
+	}
+	else
+	{
+		OutArmorData.ItemID = NAME_None;
+		OutArmorData.Level = 0;
+		OutArmorData.Type = ET3EquipmentType::Armor;
+	}
+}
+
+// ============================================================================
+// 룬 시스템
+// ============================================================================
+
 bool UT3PlayerEquipmentComponent::TrySocketRune(UT3TestItemInstance* TargetItem, FName RuneID)
 {
     if (!TargetItem || !RuneTable) return false;
