@@ -256,7 +256,7 @@ void AT3PlayerController::Input_ChangePotionSlot(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_ChangeConsumableSlot(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction()) { return; }
+	if (!OwnerChar->CanExecuteAction()) { return; }
 	
 	if (IsValid(OwnerChar))
 	{
