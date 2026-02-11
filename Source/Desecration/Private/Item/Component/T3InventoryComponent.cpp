@@ -365,3 +365,52 @@ void UT3InventoryComponent::SwapEquippedItem()
 	OnToggleItemEquipped.Broadcast(TempName);
 	OnInventoryUpdated.Broadcast();
 }
+
+void UT3InventoryComponent::InitializePotionIDs()
+{
+	
+}
+
+void UT3InventoryComponent::SetHPPotionCount(int32 Count)
+{
+}
+
+void UT3InventoryComponent::SetMPPotionCount(int32 Count)
+{
+}
+
+void UT3InventoryComponent::UseCurrentPotion()
+{
+}
+
+void UT3InventoryComponent::SwapHPMPSlot()
+{
+}
+
+FName UT3InventoryComponent::GetCurrentPotionID() const
+{
+	return CurrentPotionID;
+}
+
+FName UT3InventoryComponent::GetNextPotionID() const
+{
+	return NAME_None;
+}
+
+int32 UT3InventoryComponent::GetHPPotionCount() const
+{
+	return HPPotionCount;
+}
+
+int32 UT3InventoryComponent::GetMPPotionCount() const
+{
+	return MPPotionCount;
+}
+
+void UT3InventoryComponent::UseHPPotion()
+{
+}
+
+void UT3InventoryComponent::UseMPPotion()
+{
+}

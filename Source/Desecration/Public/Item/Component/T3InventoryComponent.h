@@ -72,6 +72,7 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Money")
 	int32 Money;
+	
 #pragma region Stone // 강화석
 	int32 NormalStoneCount;
 	
@@ -136,19 +137,54 @@ public:
 	FOnToggleItemEquipped OnToggleItemEquipped;
 #pragma endregion
 	
+#pragma region Recover Potion
 protected:
-	UPROPERTY(BlueprintReadOnly, Category = "Potion")
+	UPROPERTY(BlueprintReadOnly, Category = "Recover")
 	int32 HPPotionCount = 0;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Potion")
+	UPROPERTY(BlueprintReadOnly, Category = "Recover")
 	int32 MPPotionCount = 0;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Potion")
+	UPROPERTY(BlueprintReadOnly, Category = "Recover")
 	FName HPPotionID = NAME_None;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Potion")
+	UPROPERTY(BlueprintReadOnly, Category = "Recover")
 	FName MPPotionID = NAME_None;
 	
-	UPROPERTY(BlueprintReadOnly, Category = "Potion")
+	UPROPERTY(BlueprintReadOnly, Category = "Recover")
 	FName CurrentPotionID = NAME_None;
+	
+public:
+	UFUNCTION(BlueprintCallable, Category = "Recover")
+	void InitializePotionIDs();
+
+	UFUNCTION(BlueprintCallable, Category = "Recover")
+	void SetHPPotionCount(int32 Count);
+
+	UFUNCTION(BlueprintCallable, Category = "Recover")
+	void SetMPPotionCount(int32 Count);
+
+	UFUNCTION(BlueprintCallable, Category = "Recover")
+	void UseCurrentPotion();
+
+	UFUNCTION(BlueprintCallable, Category = "Recover")
+	void SwapHPMPSlot();
+
+	UFUNCTION(BlueprintCallable, Category = "Recover")
+	FName GetCurrentPotionID() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Recover")
+	FName GetNextPotionID() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Recover")
+	int32 GetHPPotionCount() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Recover")
+	int32 GetMPPotionCount() const;
+
+private:
+	void UseHPPotion();
+	
+	void UseMPPotion();
+#pragma endregion
 };
