@@ -54,24 +54,6 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	int32 SetMoney(int32 NewMoney);
-
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	int32 GetNormalStoneCount() const;
-	
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	int32 GetEpicStoneCount() const;
-	
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	int32 GetLegendaryStoneCount() const;
-	
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	int32 SetNormalStoneCount(int32 NewCount);
-	
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	int32 SetEpicStoneCount(int32 NewCount);
-	
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	int32 SetLegendaryStoneCount(int32 NewCount);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TArray<FInventorySlot> Items;
@@ -90,11 +72,32 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Money")
 	int32 Money;
-
+#pragma region Stone // 강화석
 	int32 NormalStoneCount;
+	
 	int32 EpicStoneCount;
+	
 	int32 LegendaryStoneCount;
 	
+public:
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 GetNormalStoneCount() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 GetEpicStoneCount() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 GetLegendaryStoneCount() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 SetNormalStoneCount(int32 NewCount);
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 SetEpicStoneCount(int32 NewCount);
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 SetLegendaryStoneCount(int32 NewCount);
+#pragma endregion
 private:
 	UPROPERTY()
 	AT3CharacterBase* OwnerCharacter;
@@ -109,6 +112,7 @@ private:
 	
 	void UpdateCooldowns();
 	
+#pragma region Equipment
 public:
 	UPROPERTY(BlueprintReadOnly, Category = "Equipment")
 	TArray<FName> EquippedItemIDs;
@@ -130,4 +134,21 @@ public:
 	
 	UPROPERTY(BlueprintAssignable, Category = "Equipment")
 	FOnToggleItemEquipped OnToggleItemEquipped;
+#pragma endregion
+	
+protected:
+	UPROPERTY(BlueprintReadOnly, Category = "Potion")
+	int32 HPPotionCount = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Potion")
+	int32 MPPotionCount = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Potion")
+	FName HPPotionID = NAME_None;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Potion")
+	FName MPPotionID = NAME_None;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Potion")
+	FName CurrentPotionID = NAME_None;
 };

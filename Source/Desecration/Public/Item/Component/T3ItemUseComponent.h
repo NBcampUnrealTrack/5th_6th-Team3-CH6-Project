@@ -99,4 +99,6 @@ private:
 	
 public:
 	bool ApplyConsumableItem(const FT3ConsumableItemData& ItemData);
+	
+	bool UseEquipmentItem(const FT3ConsumableItemData& ItemData);
 };
