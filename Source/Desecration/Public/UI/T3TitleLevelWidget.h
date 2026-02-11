@@ -42,10 +42,6 @@ private:
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
 	TObjectPtr<UButton> LoadButton;
 	
-	//이어하기 버튼의 텍스트
-	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
-	TObjectPtr<UTextBlock> LoadButtonText;
-	
 	//설정 버튼
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
 	TObjectPtr<UButton> SettingsButton;
