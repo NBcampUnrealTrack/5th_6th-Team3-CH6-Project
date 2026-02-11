@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Equipment/T3EquipmentTypes.h"
 #include "GameFramework/SaveGame.h"
 #include "GameSystem/GlobalEnums.h"
 #include "T3SaveGame.generated.h"
@@ -109,25 +110,25 @@ public:
 #pragma endregion
 	
 #pragma region 장비
-	//현재 무기 강화 단계
+	// 무기 저장 데이터 (ItemID + 강화 레벨 + 타입)
 	UPROPERTY()
-	int32 CurrentWeaponLevel;
+	FT3ItemSaveData WeaponSaveData;
+
+	// 방어구 저장 데이터
+	UPROPERTY()
+	FT3ItemSaveData ArmorSaveData;
 	
-	//현재 방어구 강화 단계
+	// 하급 강화석 보유량
 	UPROPERTY()
-	int32 CurrentArmorLevel;
-	
-	//강화석1
+	int32 NormalStoneCount;
+
+	// 중급 강화석 보유량
 	UPROPERTY()
-	int32 StoneCount1;
-	
-	//강화석2
+	int32 EpicStoneCount;
+
+	// 상급 강화석 보유량
 	UPROPERTY()
-	int32 StoneCount2;
-	
-	//강화석3
-	UPROPERTY()
-	int32 StoneCount3;
+	int32 LegendaryStoneCount;
 #pragma endregion
 
 #pragma region 스킬

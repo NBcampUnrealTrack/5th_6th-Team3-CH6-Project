@@ -41,25 +41,66 @@ struct FSkillData
     float LastActivatedTime = -100.f;
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSkillSlotUpdated, int32, SlotIndex, int32, SkillID, const FSkillData&, SkillData);
+
+
 UCLASS( Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class DESECRATION_API UT3SkillComponentBase : public UActorComponent
 {
     GENERATED_BODY()
 
 public:
-    // 슬롯 1, 2에 장착된 스킬 번호 -> 스킬 갈아끼울때 여기만 수정하면 된다.
+    // 슬롯 1, 2에 장착된 스킬 번호 -> 스킬 갈아끼울때 여기만 수정하면 된다. 기본 빈스킬.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill")
-    int32 Slot_1_SkillID = 0;
+    int32 CurrentSkillSlot = 1; // 메인 슬롯
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill")
-    int32 Slot_2_SkillID = 1;
+    int32 NextSkillSlot = 2; // 서브 슬롯
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill")
+    bool bUsingSkill = false;
+
+    // 몽타주 종료 콜백 함수
+    UFUNCTION()
+    void OnSkillMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
+    //  == UI팀 전용
+    UPROPERTY(BlueprintAssignable, Category = "Events")
+    FOnSkillSlotUpdated OnSkillSlotUpdated;
+    
+    // UI팀이 현재 장착된 모든 스킬 정보를 한 번에 가져가고 싶을 때
+    UFUNCTION(BlueprintCallable, Category = "Skill")
+    void GetCurrentEquippedSkills(FSkillData& OutSlot1, FSkillData& OutSlot2)
+    {
+        OutSlot1 = *GetSkillDataByID(CurrentSkillSlot);
+        OutSlot2 = *GetSkillDataByID(NextSkillSlot);
+    }
+    
+    UFUNCTION(BlueprintCallable, Category = "Skill")
+    UTexture2D* GetSkillIconByID(int32 SkillID)
+    {
+        FSkillData* Data = GetSkillDataByID(SkillID);
+        return (Data) ? Data->SkillIcon : nullptr;
+    }
+
+    UFUNCTION(BlueprintCallable, Category = "Skill")
+    void SetSkillSlot( int32 NewSkillID, bool bIsEquip);
+
+    UFUNCTION(BlueprintCallable, Category = "Skill")
+
+    int32 GetSkillIDBySlotIndex(int32 Index) const;
+
+    virtual FSkillData* GetSkillDataByID(int32 SkillID) { return nullptr; }
+    
+
 
     // 슬롯 번호를 입력받아 스킬 실행
     virtual void ExecuteSkillNotify(int32 Index);
     virtual void ExecuteSkill(int32 SkillSlot);
 
-    UFUNCTION(BlueprintCallable, Category = "Skill")
-    void SetSkillSlot(int32 SlotNumber, int32 NewSkillID);
+    // 스킬 스왑 함수 (CombatComponent에서 호출)
+    void SwapSkills();
+
 
 protected:
 

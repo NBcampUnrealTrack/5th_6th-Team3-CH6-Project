@@ -62,6 +62,7 @@ TObjectPtr <UDataTable> ItemDataTable;
 
 protected:
 	virtual void BeginPlay() override;
+	// virtual void PostInitializeComponents();
 	virtual void Tick( float DeltaTime ) override;
 	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
 	
@@ -115,6 +116,11 @@ public:
 	void OnAttack();
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnHit();
+	UFUNCTION(BlueprintCallable, Category = "Death")
+	void OnDeath();
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Death")
+	bool bIsDead = false;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TObjectPtr<UT3InventoryComponent> InventoryComponent; 
@@ -159,7 +165,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float CriticalDamage = 1.5f;  // 크뎀
-
+	
+	UFUNCTION(BlueprintImplementableEvent, Category = "Death")
+	void OnDeathAnimation();
 
 public:
 	// 7개 스탯 + 이동속도 Get / Set 함수

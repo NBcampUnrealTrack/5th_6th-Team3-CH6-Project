@@ -1,4 +1,4 @@
-// T3CharacterBase.cpp
+﻿// T3CharacterBase.cpp
 
 
 #include "Player/T3CharacterBase.h"
@@ -81,6 +81,11 @@ void AT3CharacterBase::BeginPlay()
 
 
 }
+
+//void AT3CharacterBase::PostInitializeComponents()
+//{
+//	 Super::PostInitializeComponents();
+//}
 
 
 void AT3CharacterBase::Tick(float DeltaTime)
@@ -442,6 +447,12 @@ void AT3CharacterBase::ResetMoveSpeed()
 		BroadcastStatChange(ET3StatType::Stamina);
 		UE_LOG(LogTemp, Log, TEXT("MoveSpeed Restored to: %f"), OriginalMoveSpeed);
 	}
+}
+
+void AT3CharacterBase::OnDeath()
+{
+	bMoveLock = true;
+	OnDeathAnimation();
 }
 
 void AT3CharacterBase::ConsumeMana(float Amount)

@@ -31,7 +31,6 @@ void UT3TitleLevelWidget::NativeConstruct()
 	else
 	{
 		LoadButton->SetIsEnabled(false);
-		LoadButtonText->SetIsEnabled(false);
 	}
 }
 
