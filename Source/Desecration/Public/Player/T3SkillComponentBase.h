@@ -23,7 +23,7 @@ struct FSkillData
     UPROPERTY(EditAnywhere, Category = "Common")
     float ManaCost = 10.f;
 
-    UPROPERTY(EditAnywhere, Category = "Common")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Common")
     float Cooldown = 3.f;
 
     // --- 공격 데이터 ---
