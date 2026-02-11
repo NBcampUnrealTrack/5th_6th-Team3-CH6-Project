@@ -76,6 +76,7 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Combat|UI")
 	FOnSlotSelectionChanged OnSlotSelectionChanged;
 
+	UFUNCTION(BlueprintCallable)
 	void RequestUpdateSkill(int32 SkillID, bool bIsEquip);
 
 protected:
@@ -124,6 +125,8 @@ public:
 
 	AActor* GetCurrentTarget() const { return CurrentTarget; }
 
+	void UpdateLockOnWidgetScale();
+
 	// 캐릭터 상태 Getter
 	FORCEINLINE ECharacterCombatState GetCurrentState() const { return CurrentState; }
 
@@ -158,6 +161,7 @@ public:
 	void ExecuteCurrentSlotAction(ESlotType Type);
 
 	void SetSkillComponent(UT3SkillComponentBase* InSkillComp) { SkillComp = InSkillComp; }
+	UFUNCTION(BlueprintCallable, Category = "Skill")
 	UT3SkillComponentBase* GetSkillComponent() const { return SkillComp; }
 
 private:
