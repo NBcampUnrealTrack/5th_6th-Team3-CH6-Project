@@ -699,6 +699,7 @@ void UT3CombatComponent::ExecuteCurrentSlotAction(ESlotType Type)
 }
 
 // 인벤토리에서 호출할 스킬 슬롯 업데이트 함수
+UFUNCTION(BlueprintCallable)
 void UT3CombatComponent::RequestUpdateSkill(int32 SkillID, bool bIsEquip)
 {
 	if (SkillComp)
@@ -706,3 +707,4 @@ void UT3CombatComponent::RequestUpdateSkill(int32 SkillID, bool bIsEquip)
 		SkillComp->SetSkillSlot(SkillID, bIsEquip);
 	}
 }
+

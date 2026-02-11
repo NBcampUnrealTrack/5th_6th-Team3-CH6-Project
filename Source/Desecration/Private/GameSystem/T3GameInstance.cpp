@@ -121,7 +121,7 @@ void UT3GameInstance::SetGraphicQuality(const EGraphicQuality GraphicQuality)
 void UT3GameInstance::OpenLevel(const ELevelName LevelName) const
 {
 	//타이틀 또는 클래스 선택 레벨이 아닐 경우 이동한 곳을 저장한다.
-	if (LevelName != ELevelName::Title && LevelName != ELevelName::SelectClass)
+	if (SavedGameData && LevelName > ELevelName::SelectClass)
 	{
 		SavedGameData->SavedLevelName = LevelName;
 	}
