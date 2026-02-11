@@ -41,7 +41,7 @@ enum class EGraphicQuality
 };
 
 //레벨(맵) 이름
-UENUM()
+UENUM(BlueprintType)
 enum class ELevelName : uint8
 {
 	Title = 0 UMETA(DisplayName = "T3TitleLevel"),
