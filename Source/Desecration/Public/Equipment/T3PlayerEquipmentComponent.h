@@ -71,6 +71,14 @@ public:
 	// [신규] 방어구 장착 (이게 없어서 안 됐던 것!)
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
 	void EquipArmor(UT3TestItemInstance* NewItem);
+	// 세이브 데이터로 장비 복원 (세이브팀에서 호출)
+	// 기존 장비를 교체하고 스탯을 재계산함
+	UFUNCTION(BlueprintCallable, Category = "Equipment|Save")
+	void LoadEquipmentFromSave(const FT3ItemSaveData& WeaponData, const FT3ItemSaveData& ArmorData);
+
+	// 현재 장비 상태를 세이브 데이터로 반환 (세이브팀에서 호출)
+	UFUNCTION(BlueprintCallable, Category = "Equipment|Save")
+	void GetEquipmentSaveData(FT3ItemSaveData& OutWeaponData, FT3ItemSaveData& OutArmorData) const;
 
 	// [통합] 강화 함수
 	UFUNCTION(BlueprintCallable, Category = "Upgrade")

@@ -31,8 +31,10 @@ private:
 	void MakeFirstSettings();
 	
 public:
+	//첫 게임 데이터 생성
+	TObjectPtr<UT3SaveGame> MakeFirstGameData();
+	
 	//게임 저장하기 (true : 저장 성공)
-	//TODO : 게임 저장을 위한 매개변수 추가
 	bool SaveGame();
 	
 	//해상도 설정하기
@@ -50,8 +52,12 @@ public:
 	//그래픽 설정하기
 	void SetGraphicQuality(const EGraphicQuality GraphicQuality);
 	
+	//레벨(맵) 이동하기
+	UFUNCTION(BlueprintCallable)
+	void OpenLevel(UPARAM() ELevelName LevelName) const;
+	
 	//저장된 게임
-	FORCEINLINE TObjectPtr<UT3SaveGame> LoadGame() { return SavedGameData; }
+	FORCEINLINE TObjectPtr<UT3SaveGame> GetSavedGameData() { return SavedGameData; }
 	
 	//현재 설정
 	FORCEINLINE TSharedPtr<FSettings> GetCurrentSettings() const { return CurrentSettings; }

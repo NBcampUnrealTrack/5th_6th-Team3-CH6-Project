@@ -7,7 +7,10 @@
 UT3InventoryComponent::UT3InventoryComponent()
 	:
 InventorySize(20),
-Money(0)
+Money(0),
+NormalStoneCount(0),
+EpicStoneCount(0),
+LegendaryStoneCount(0)
 {
 	PrimaryComponentTick.bCanEverTick = false;
 	
@@ -207,7 +210,7 @@ float UT3InventoryComponent::GetCooldownProgressByItemID(const FName& ItemName)
 	return Progress;
 }
 
-int32 UT3InventoryComponent::GetMoney()
+int32 UT3InventoryComponent::GetMoney() const
 {
 	return Money;
 }
@@ -217,6 +220,39 @@ int32 UT3InventoryComponent::SetMoney(int32 NewMoney)
 	Money = NewMoney;
 	
 	return Money;
+}
+
+int32 UT3InventoryComponent::GetNormalStoneCount() const
+{
+	return NormalStoneCount;
+}
+
+int32 UT3InventoryComponent::GetEpicStoneCount() const
+{
+	return EpicStoneCount;
+}
+
+int32 UT3InventoryComponent::GetLegendaryStoneCount() const
+{
+	return LegendaryStoneCount;
+}
+
+int32 UT3InventoryComponent::SetNormalStoneCount(int32 NewCount)
+{
+	NormalStoneCount = NewCount;
+	return NormalStoneCount;
+}
+
+int32 UT3InventoryComponent::SetEpicStoneCount(int32 NewCount)
+{
+	EpicStoneCount = NewCount;
+	return EpicStoneCount;
+}
+
+int32 UT3InventoryComponent::SetLegendaryStoneCount(int32 NewCount)
+{
+	LegendaryStoneCount = NewCount;
+	return LegendaryStoneCount;
 }
 
 void UT3InventoryComponent::UpdateCooldowns()
@@ -260,4 +296,72 @@ void UT3InventoryComponent::UpdateCooldowns()
 	{
 		GetWorld()->GetTimerManager().ClearTimer(CooldownUpdateTimerHandle);
 	}
+}
+
+void UT3InventoryComponent::ToggleEquipItem(const FName& ItemName)
+{
+	if (ItemName == NAME_None)
+	{
+		return;
+	}
+	
+	if (EquippedItemIDs.Contains(ItemName))
+	{
+		UnequipItem(ItemName);
+		return;
+	}
+	
+	EquippedItemIDs.Emplace(ItemName);
+	
+	OnToggleItemEquipped.Broadcast(ItemName);
+	OnInventoryUpdated.Broadcast();
+}
+
+void UT3InventoryComponent::UnequipItem(const FName& ItemName)
+{
+	if (ItemName == NAME_None)
+	{
+		return;
+	}
+	
+	if (!EquippedItemIDs.Contains(ItemName))
+	{
+		return;
+	}
+	
+	int32 Index = GetEquippedItemIndex(ItemName);
+	
+	if (Index != INDEX_NONE)
+	{
+		EquippedItemIDs.RemoveAt(Index);
+		
+		OnToggleItemEquipped.Broadcast(ItemName);
+		OnInventoryUpdated.Broadcast();
+	}
+}
+
+int32 UT3InventoryComponent::GetEquippedItemIndex(const FName& ItemName) const
+{
+	return EquippedItemIDs.IndexOfByKey(ItemName);
+}
+
+bool UT3InventoryComponent::IsItemEquipped(const FName& ItemName) const
+{
+	return EquippedItemIDs.Contains(ItemName);
+}
+
+void UT3InventoryComponent::SwapEquippedItem()
+{
+	if (EquippedItemIDs.Num() <= 1)
+	{
+		return;
+	}
+	
+	FName TempName = EquippedItemIDs[0];
+	
+	EquippedItemIDs.RemoveAt(0);
+	EquippedItemIDs.Emplace(TempName);
+
+	OnToggleItemEquipped.Broadcast(TempName);
+	OnInventoryUpdated.Broadcast();
 }

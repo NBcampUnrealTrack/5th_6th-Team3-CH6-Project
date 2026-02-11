@@ -59,6 +59,17 @@ void UT3GameInstance::MakeFirstSettings()
 	CurrentSettings->MouseSensitivity = 1.0f;
 }
 
+TObjectPtr<UT3SaveGame> UT3GameInstance::MakeFirstGameData()
+{
+	if (!SavedGameData)
+	{
+		SavedGameData = NewObject<UT3SaveGame>();
+	}
+	SavedGameData->ResetGameData();
+	
+	return SavedGameData;
+}
+
 bool UT3GameInstance::SaveGame()
 {
 	return UGameplayStatics::SaveGameToSlot(SavedGameData, SAVE_GAME_NAME, 0);
@@ -105,4 +116,17 @@ void UT3GameInstance::SetGraphicQuality(const EGraphicQuality GraphicQuality)
 	CurrentSettings->GraphicQuality = GraphicQuality;
 	UserSettings->SetOverallScalabilityLevel(static_cast<int32>(GraphicQuality));
 	UserSettings->ApplySettings(true);
+}
+
+void UT3GameInstance::OpenLevel(const ELevelName LevelName) const
+{
+	//타이틀 또는 클래스 선택 레벨이 아닐 경우 이동한 곳을 저장한다.
+	if (SavedGameData && LevelName > ELevelName::SelectClass)
+	{
+		SavedGameData->SavedLevelName = LevelName;
+	}
+	
+	//레벨 이동
+	const FName DisplayName = FName(UEnum::GetDisplayValueAsText(LevelName).ToString());
+	UGameplayStatics::OpenLevel(GetWorld(), DisplayName);
 }

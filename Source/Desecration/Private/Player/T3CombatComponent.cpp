@@ -6,7 +6,6 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Engine/OverlapResult.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "Player/T3DamageTypes.h"
 #include "Player/T3CharacterBase.h"
 #include "Player/T3PlayerController.h"
 #include "Kismet/GameplayStatics.h"
@@ -14,6 +13,10 @@
 #include "Player/T3CharacterDataAsset.h"
 #include "Player/T3WeaponBase.h"
 #include "Monster/T3BossMonster.h"
+#include "Components/CapsuleComponent.h"
+#include "DrawDebugHelpers.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "Player/T3SkillComponentBase.h"
 
 
 UT3CombatComponent::UT3CombatComponent()
@@ -26,6 +29,8 @@ void UT3CombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	OwnerChar = Cast<AT3CharacterBase>(GetOwner());
+	SpringArm = OwnerChar->FindComponentByClass<USpringArmComponent>();
+
 	if (OwnerChar)
 	{
 		OwnerPC = OwnerChar->GetController<APlayerController>();
@@ -67,8 +72,8 @@ void UT3CombatComponent::InitializeWeapons(const TMap<EEquipSlot, FWeaponEquipIn
 			NewWeapon->SetActorRelativeTransform(Info.RelativeTransform);
 			EquippedWeapons.Add(Slot, NewWeapon);
 		}
-	}
 }
+	}
 
 AT3WeaponBase* UT3CombatComponent::GetWeaponBySlot(EEquipSlot Slot) const
 {
@@ -98,11 +103,13 @@ void UT3CombatComponent::StartBlock()
 		return;
 	}
 
-	if (CurrentState != ECharacterCombatState::Idle) return;
+	if (OwnerChar->PlayerInputState.bIsBlocking || CurrentState != ECharacterCombatState::Idle || !bCanBlock) return;
 
 	// 2. 초기 상태 설정: 패링(Parrying) 모드 진입
+	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Blue, TEXT("BlockingModeOn"));
 	CurrentState = ECharacterCombatState::Parrying;
 	OwnerChar->PlayerInputState.bIsBlocking = true;
+	bCanBlock = false;
 	OwnerChar->GetCharacterMovement()->MaxWalkSpeed = 200.0f;
 
 
@@ -119,10 +126,27 @@ void UT3CombatComponent::StartBlock()
 
 void UT3CombatComponent::EndBlock()
 {
+	if (!OwnerChar || !OwnerChar->PlayerInputState.bIsBlocking) return;
+
 	CurrentState = ECharacterCombatState::Idle;
 	OwnerChar->PlayerInputState.bIsBlocking = false;
 	OwnerChar->GetCharacterMovement()->MaxWalkSpeed = 500.0f;
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("BlockingModeOff"));
+	
+	GetWorld()->GetTimerManager().ClearTimer(ParryingToBlockingTimerHandle);
+
+	GetWorld()->GetTimerManager().SetTimer(
+		BlockingCooldownTimerHandle,
+		this,
+		&UT3CombatComponent::ResetBlockCooldown,
+		BlockCooldownTime,
+		false
+	);
+}
+
+void UT3CombatComponent::ResetBlockCooldown()
+{
+	bCanBlock = true;
+	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Block Ready Again"));
 }
 
 void UT3CombatComponent::Attack()
@@ -145,6 +169,7 @@ void UT3CombatComponent::SetDodgingEnabled(bool bEnabled)
 	if (bEnabled)
 	{
 		CurrentState = ECharacterCombatState::Dodge;
+		UE_LOG(LogTemp, Display, TEXT("DodgeOn"));
 	}
 	else
 	{
@@ -152,6 +177,7 @@ void UT3CombatComponent::SetDodgingEnabled(bool bEnabled)
 		if (CurrentState == ECharacterCombatState::Dodge)
 		{
 			CurrentState = ECharacterCombatState::Idle;
+			UE_LOG(LogTemp, Display, TEXT("DodgeOff"));
 		}
 	}
 }
@@ -185,6 +211,10 @@ void UT3CombatComponent::ToggleLockOn()
 		SetComponentTickEnabled(true);
 		UpdateTargetUI(CurrentTarget, true);
 
+		// 카메라 랙 설정
+		SpringArm->bEnableCameraRotationLag = true;
+		SpringArm->bEnableCameraLag = true;
+
 		OwnerChar->GetCharacterMovement()->bOrientRotationToMovement = false;
 		OwnerChar->GetCharacterMovement()->bUseControllerDesiredRotation = true;
 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("LockOn"));
@@ -195,30 +225,70 @@ void UT3CombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	// 1. 유효성 검사 (타겟이 사라졌는지 확인)
-	if (!bIsLockOn || !IsValid(CurrentTarget) || !OwnerChar || !OwnerPC)
+	if (!bIsLockOn || !IsValid(CurrentTarget) || !OwnerChar || !OwnerPC || !SpringArm)
 	{
 		ResetLockOn();
 		return;
 	}
 
-	// 2. 거리 체크 (일정 거리 이상 멀어지면 해제)
-	float Distance = FVector::Dist(OwnerChar->GetActorLocation(), CurrentTarget->GetActorLocation());
-	const float MaxLockOnDistance = 2000.f;
+	// 타겟의 실시간 월드 위치
+	FVector TargetLocation = CurrentTarget->GetActorLocation();
 
-	if (Distance > MaxLockOnDistance)
+	// 타겟의 록온 높이 퍼센트 적용
+	if (ACharacter* TargetChar = Cast<ACharacter>(CurrentTarget))
 	{
-		ResetLockOn();
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Target Out of Range - LockOn Released"));
-		return;
+		float HalfHeight = TargetChar->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+		float FootZ = TargetLocation.Z - HalfHeight;
+		TargetLocation.Z = FootZ + (HalfHeight * 2.0f * TargetHeightPercent);
 	}
 
-	// 3. 바라보기 로직 (기존 로직)
-	FRotator LookAtRot = UKismetMathLibrary::FindLookAtRotation(OwnerChar->GetActorLocation(), CurrentTarget->GetActorLocation());
+	// 높이 차이 계산
+	float HeightDifference = TargetLocation.Z - OwnerChar->GetActorLocation().Z;
 
 
-	// 컨트롤러 회전 적용
-	OwnerPC->SetControlRotation(LookAtRot);
+	// 록온 대상의 높이가 높아질수록 광각으로 카메라가 멀어짐
+	float RawAlpha = FMath::GetMappedRangeValueClamped(FVector2D(100.f, 1000.f), FVector2D(0.f, 1.f), HeightDifference);
+	float ExponentialAlpha = FMath::Clamp(RawAlpha * 1.5f, 0.f, 1.f);
+
+	// 스프링암 길이
+	float DynamicMaxExtra = 2500.f;
+	float TargetArmLength = DefaultArmLength + (ExponentialAlpha * DynamicMaxExtra);
+
+	float TargetDistance = FMath::Lerp(DefaultArmLength, 2500.f, ExponentialAlpha);
+
+	// 광각 범위
+	float TargetFOV = FMath::Lerp(90.f, 120.f, ExponentialAlpha);
+
+	// SocketOffset: 카메라를 더 위로 올려서 아래를 내려다보게 함 (High Angle)
+	float TargetSocketZ = FMath::Lerp(50.f, 500.f, ExponentialAlpha);
+
+	// 부드러운 카메라 전환
+	SpringArm->TargetArmLength = FMath::FInterpTo(SpringArm->TargetArmLength, TargetDistance, DeltaTime, 5.0f);
+	SpringArm->SocketOffset.Z = FMath::FInterpTo(SpringArm->SocketOffset.Z, TargetSocketZ, DeltaTime, 5.0f);
+
+	if (OwnerPC->PlayerCameraManager)
+	{
+		float CurrentFOV = OwnerPC->PlayerCameraManager->GetFOVAngle();
+		OwnerPC->PlayerCameraManager->SetFOV(FMath::FInterpTo(CurrentFOV, TargetFOV, DeltaTime, 4.0f));
+	}
+
+	// 바라보기 회전 
+	FVector CameraLocation = SpringArm->GetComponentLocation(); // 캐릭터 위치가 아닌 카메라 기준
+	FRotator LookAtRot = UKismetMathLibrary::FindLookAtRotation(CameraLocation, TargetLocation);
+	
+	LookAtRot.Pitch = FMath::Clamp(LookAtRot.Pitch, -75.f, 20.f);
+	
+	// 2. ControlRotation에 직접 Set하는 대신 RInterpTo를 사용
+	// 갑작스러운 타겟 이동이나 수직 위치 변화 시 카메라가 튀는 것을 방지합니다.
+	FRotator CurrentRot = OwnerPC->GetControlRotation();
+
+	// Smoothness를 위해 InterpSpeed를 조절 (예: 7.0f)
+	FRotator SmoothRot = FMath::RInterpTo(CurrentRot, LookAtRot, DeltaTime, 7.0f);
+
+	OwnerPC->SetControlRotation(SmoothRot);
+
+	// 4. 디버깅 
+	DrawDebugSphere(GetWorld(), TargetLocation, 20.f, 12, FColor::Red, false, -1.f, 0, 2.f);
 }
 
 AActor* UT3CombatComponent::FindBestTarget()
@@ -292,6 +362,29 @@ bool UT3CombatComponent::IsTargetVisible(AActor* Target) const
 	return !bBlocked || (Hit.GetActor() == Target);
 }
 
+//void UT3CombatComponent::SetLockOnTarget(AActor* NewTarget)
+//{
+//	// 1. 기존 타겟의 마커 숨기기
+//	if (CurrentTarget)
+//	{
+//		UWidgetComponent* OldMarker = CurrentTarget->FindComponentByClass<UWidgetComponent>();
+//		if (OldMarker) OldMarker->SetHiddenInGame(true);
+//	}
+//
+//	CurrentTarget = NewTarget;
+//
+//	// 2. 새 타겟의 마커 보여주기
+//	if (CurrentTarget)
+//	{
+//		UWidgetComponent* NewMarker = CurrentTarget->FindComponentByClass<UWidgetComponent>();
+//		if (NewMarker)
+//		{
+//			NewMarker->SetHiddenInGame(false);
+//			// 필요하다면 여기서 마커의 애니메이션을 재생시킬 수도 있어
+//		}
+//	}
+//}
+
 void UT3CombatComponent::ResetLockOn()
 {
 	UpdateTargetUI(CurrentTarget, false);
@@ -306,6 +399,11 @@ void UT3CombatComponent::ResetLockOn()
 
 		OwnerChar->GetCharacterMovement()->bOrientRotationToMovement = true;
 		OwnerChar->GetCharacterMovement()->bUseControllerDesiredRotation = false;
+
+		SpringArm->bEnableCameraRotationLag = false;
+		SpringArm->bEnableCameraLag = false;
+		SpringArm->TargetArmLength = DefaultArmLength;
+		OwnerPC->PlayerCameraManager->SetFOV(90.f);
 	}
 
 	SetComponentTickEnabled(false); // 틱 중지하여 자원 절약
@@ -380,6 +478,7 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 	{
 		CurrentState = ECharacterCombatState::Dead;
 		// 사망 로직 실행
+		OwnerChar->OnDeath();
 		return;
 	}
 
@@ -414,7 +513,7 @@ float UT3CombatComponent::CalculateFinalDamage(float IncomingDamage, const class
 		return IncomingDamage;
 	}
 
-	// 1. 회피 상태 (무적)
+	// 1. 회피 상태
 	if (CurrentState == ECharacterCombatState::Dodge)
 	{
 		return 0.f;
@@ -487,15 +586,25 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 {
 	if (!TargetActor) { UE_LOG(LogTemp, Warning, TEXT("Target Missing!")); return; }
 	if (!OwnerChar && !AIChar) { UE_LOG(LogTemp, Warning, TEXT("Owner Missing!")); return; }
-	if (!DamageTypeClass) { UE_LOG(LogTemp, Warning, TEXT("DamageType Missing!")); return; }
+	if (!DamageTypeClass) { DamageTypeClass = UT3DamageType_Base::StaticClass(); }
+	
 
 	// 커스텀 데미지 이벤트 생성
 	FT3DamageEvent T3DamageEvent(DamageTypeClass);
 	T3DamageEvent.HitIntensity = Intensity; // 공격 강도를 구조체에 직접 삽입
 	T3DamageEvent.HitDamageMultiplier = DamageMultiflier;
 
+	AT3BossMonster* HitBoss = Cast<AT3BossMonster>(TargetActor);
+
+	if (HitBoss)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Hit Boss!"));
+		HitBoss->Damage(DamageAmount, 20.f);  // 테스트용 스턴 20
+		// HitBoss->Damage(CurrentAttackDamage, StunAmount);
+	}
+
 	// TakeDamage 호출 시 커스텀 이벤트 구조체를 전달
-	if (OwnerChar)
+	else if (OwnerChar)
 	{
 		TargetActor->TakeDamage(DamageAmount, T3DamageEvent, OwnerPC, OwnerChar);
 	}
@@ -505,13 +614,13 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 	}
 	
 	// 디버그 출력
-	const UEnum* EnumPtr = StaticEnum<EHitIntensity>();
-	FString IntensityString = EnumPtr ? EnumPtr->GetNameStringByValue((int64)Intensity) : TEXT("Unknown");
+	// const UEnum* EnumPtr = StaticEnum<EHitIntensity>();
+	// FString IntensityString = EnumPtr ? EnumPtr->GetNameStringByValue((int64)Intensity) : TEXT("Unknown");
 
 	if (GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
-			FString::Printf(TEXT("Attack Sent -> Target: %s, Intensity: %s"), *TargetActor->GetName(), *IntensityString));
+		FString::Printf(TEXT("Attack Sent -> Target: %s, Damage: %.1f"), *TargetActor->GetName(), DamageAmount));
 	}
 }
 
@@ -527,3 +636,75 @@ void UT3CombatComponent::ConsumeStamina(float Amount)
 			FString::Printf(TEXT("Remaining Stamina: %.1f"), OwnerChar->GetCurrentStamina()));
 	}
 }
+
+
+// 스킬&아이템 슬롯 함수
+void UT3CombatComponent::ChangeActiveSlot(ESlotType Type)
+{
+	switch (Type)
+	{
+	case ESlotType::Skill:
+	{
+		if (Type != ESlotType::Skill) return;
+
+		if (SkillComp)
+		{
+			// 넥스트 슬롯이 0인지 확인
+			if (SkillComp->GetSkillIDBySlotIndex(2) == 0)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("넥스트 슬롯이 비어있어 교체할 수 없습니다."));
+				return;
+			}
+
+			// 실제 스왑 실행
+			SkillComp->SwapSkills();
+		}
+		break;
+
+	}
+	case ESlotType::Consumable:
+		CurrentConsumableSlot = (CurrentConsumableSlot % MaxConsumableSlots) + 1;
+		UE_LOG(LogTemp, Log, TEXT("Consumable Slot Switched: %d"), CurrentConsumableSlot);
+		break;
+
+
+	case ESlotType::Potion:
+		CurrentPotionSlot = (CurrentPotionSlot % MaxPotionSlots) + 1;
+		UE_LOG(LogTemp, Log, TEXT("Potion Slot Switched: %d"), CurrentPotionSlot);
+		break;
+	}
+
+	if (OnSlotSelectionChanged.IsBound())
+	{
+		OnSlotSelectionChanged.Broadcast(Type, 1);
+	}
+}
+
+void UT3CombatComponent::ExecuteCurrentSlotAction(ESlotType Type)
+{
+	switch (Type)
+	{
+	case ESlotType::Skill:
+		if (SkillComp) SkillComp->ExecuteSkill(CurrentSkillSlot);
+		break;
+	case ESlotType::Consumable:
+		// ItemComp->UseConsumable(CurrentConsumableSlot);
+		UE_LOG(LogTemp, Log, TEXT("Using Consumable Slot: %d"), CurrentConsumableSlot);
+		break;
+	case ESlotType::Potion:
+		// ItemComp->UsePotion(CurrentPotionSlot);
+		UE_LOG(LogTemp, Log, TEXT("Using Potion Slot: %d"), CurrentPotionSlot);
+		break;
+	}
+}
+
+// 인벤토리에서 호출할 스킬 슬롯 업데이트 함수
+UFUNCTION(BlueprintCallable)
+void UT3CombatComponent::RequestUpdateSkill(int32 SkillID, bool bIsEquip)
+{
+	if (SkillComp)
+	{
+		SkillComp->SetSkillSlot(SkillID, bIsEquip);
+	}
+}
+
