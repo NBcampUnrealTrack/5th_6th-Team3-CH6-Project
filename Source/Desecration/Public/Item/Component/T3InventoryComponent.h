@@ -8,6 +8,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCooldownUpdated, FName, ItemID, float, RemainingTime);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnToggleItemEquipped, FName, ItemID);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSwapRecoverSlot);
 
 class AT3CharacterBase;
 
@@ -133,6 +134,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
 	void SwapEquippedItem();
 	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	void UseEquippedItem();
+	
 	UPROPERTY(BlueprintAssignable, Category = "Equipment")
 	FOnToggleItemEquipped OnToggleItemEquipped;
 #pragma endregion
@@ -182,6 +186,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Recover")
 	int32 GetMPPotionCount() const;
 
+	UPROPERTY(BlueprintAssignable, Category = "Recover")
+	FOnSwapRecoverSlot OnSwapRecoverSlot;
 private:
 	void UseHPPotion();
 	

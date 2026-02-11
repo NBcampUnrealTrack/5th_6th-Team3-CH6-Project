@@ -22,6 +22,10 @@ void UT3InventoryComponent::BeginPlay()
 	Super::BeginPlay();
 	
 	OwnerCharacter = Cast<AT3CharacterBase>(GetOwner());
+	
+	InitializePotionIDs();
+	SetHPPotionCount(3);
+	SetMPPotionCount(3);
 }
 
 void UT3InventoryComponent::AddItem(const FName& ItemName)
@@ -110,15 +114,13 @@ void UT3InventoryComponent::UseItem(int32 SlotIndex)
 		return;
 	}
 	
-	bool bUsed = OwnerCharacter->ItemUseComponent->ApplyConsumableItem(*ItemRow);
-	
-	if (!bUsed)
+	if (!OwnerCharacter->ItemUseComponent->ApplyConsumableItem(*ItemRow))
 	{
 		return;
 	}
 	
-	ItemCooldownStartTimes.Add(ItemIDToUse, GetWorld()->GetTimeSeconds());
-	ItemCooldownDurations.Add(ItemIDToUse, ItemRow->CoolTime);
+	ItemCooldownStartTimes.Emplace(ItemIDToUse, GetWorld()->GetTimeSeconds());
+	ItemCooldownDurations.Emplace(ItemIDToUse, ItemRow->CoolTime);
 	
 	if (!GetWorld()->GetTimerManager().IsTimerActive(CooldownUpdateTimerHandle))
 	{
@@ -366,25 +368,161 @@ void UT3InventoryComponent::SwapEquippedItem()
 	OnInventoryUpdated.Broadcast();
 }
 
+void UT3InventoryComponent::UseEquippedItem()
+{
+	if (EquippedItemIDs.Num() <= 0)
+	{
+		UE_LOG(LogTemp, Error, TEXT("장착한 아이템이 없음"));
+		return;
+	}
+	
+	if (!IsValid(OwnerCharacter) || !IsValid(OwnerCharacter->ItemDataTable))
+	{
+		UE_LOG(LogTemp, Error, TEXT("캐릭터 또는 아이템 데이터테이블이 유효하지않음"));
+		return;
+	}
+	
+	FName ItemIDToUse = EquippedItemIDs[0];
+	
+	FT3ConsumableItemData* ItemRow =
+		OwnerCharacter->ItemDataTable->FindRow<FT3ConsumableItemData>(ItemIDToUse, TEXT("UseEquipped"));
+	
+	if (!ItemRow)
+	{
+		return;
+	}
+	
+	if (!OwnerCharacter->ItemUseComponent->ApplyConsumableItem(*ItemRow))
+	{
+		return;
+	}
+	
+	ItemCooldownStartTimes.Emplace(ItemIDToUse, GetWorld()->GetTimeSeconds());
+	ItemCooldownDurations.Emplace(ItemIDToUse, ItemRow->CoolTime);
+	
+	if (!GetWorld()->GetTimerManager().IsTimerActive(CooldownUpdateTimerHandle))
+	{
+		GetWorld()->GetTimerManager().SetTimer(
+			CooldownUpdateTimerHandle,
+			this,
+			&UT3InventoryComponent::UpdateCooldowns,
+			0.1f,
+			true);
+	}
+	
+	for (FInventorySlot& Item : Items)
+	{
+		if (Item.ItemID == ItemIDToUse)
+		{
+			Item.ItemStack--;
+			
+			UE_LOG(LogTemp, Log, TEXT("[%s]를 1개 사용했습니다. 현재 개수: %d"), *Item.ItemID.ToString(), Item.ItemStack)
+
+			if (Item.ItemStack <= 0)
+			{
+				UE_LOG(LogTemp, Log, TEXT("[%s]를 모두 사용했습니다."), *Item.ItemID.ToString())
+		
+				Item.ItemID = NAME_None;
+				Item.ItemStack = 0;
+			}
+			
+			OnInventoryUpdated.Broadcast();
+			
+			break;
+		}
+	}
+}
+
 void UT3InventoryComponent::InitializePotionIDs()
 {
+	if (!IsValid(OwnerCharacter) || !IsValid(OwnerCharacter->ItemDataTable))
+	{
+		UE_LOG(LogTemp, Error, TEXT("캐릭터 또는 아이템 데이터테이블이 유효하지않음"));
+		return;
+	}
 	
+	TArray<FName> RowNames = OwnerCharacter->ItemDataTable->GetRowNames();
+	
+	for (const FName& RowName : RowNames)
+	{
+		FT3ConsumableItemData* ItemRow =
+			OwnerCharacter->ItemDataTable->FindRow<FT3ConsumableItemData>(RowName, TEXT("InitializePotionIDs"));
+		
+		if (!ItemRow)
+		{
+			continue;
+		}
+		
+		if (ItemRow->EffectType == EEffectType::HP)
+		{
+			HPPotionID = RowName;
+		}
+		else if (ItemRow->EffectType == EEffectType::MP)
+		{
+			MPPotionID = RowName;
+		}
+		
+		if (HPPotionID != NAME_None && MPPotionID != NAME_None)
+		{
+			break;
+		}
+	}
+	
+	if (CurrentPotionID == NAME_None && HPPotionID != NAME_None)
+	{
+		CurrentPotionID = HPPotionID;
+	}
 }
 
 void UT3InventoryComponent::SetHPPotionCount(int32 Count)
 {
+	HPPotionCount = Count;
 }
 
 void UT3InventoryComponent::SetMPPotionCount(int32 Count)
 {
+	MPPotionCount = Count;
 }
 
 void UT3InventoryComponent::UseCurrentPotion()
 {
+	if (CurrentPotionID == NAME_None)
+	{
+		return;
+	}
+	
+	if (CurrentPotionID == HPPotionID)
+	{
+		UseHPPotion();
+	}
+	else if (CurrentPotionID == MPPotionID)
+	{
+		UseMPPotion();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("회복 포션 사용 실패"));
+		return;
+	}
 }
 
 void UT3InventoryComponent::SwapHPMPSlot()
 {
+	if (CurrentPotionID == NAME_None)
+	{
+		return;
+	}
+	
+	if (CurrentPotionID == HPPotionID)
+	{
+		CurrentPotionID = MPPotionID;
+	}
+	else if (CurrentPotionID == MPPotionID)
+	{
+		CurrentPotionID = HPPotionID;
+	}
+	
+	OnSwapRecoverSlot.Broadcast();
 }
 
 FName UT3InventoryComponent::GetCurrentPotionID() const
@@ -394,6 +532,20 @@ FName UT3InventoryComponent::GetCurrentPotionID() const
 
 FName UT3InventoryComponent::GetNextPotionID() const
 {
+	if (CurrentPotionID == NAME_None)
+	{
+		return NAME_None;
+	}
+	
+	if (CurrentPotionID == HPPotionID)
+	{
+		return MPPotionID;
+	}
+	else if (CurrentPotionID == MPPotionID)
+	{
+		return HPPotionID;
+	}
+	
 	return NAME_None;
 }
 
@@ -409,8 +561,90 @@ int32 UT3InventoryComponent::GetMPPotionCount() const
 
 void UT3InventoryComponent::UseHPPotion()
 {
+	if (!IsValid(OwnerCharacter) || !IsValid(OwnerCharacter->ItemDataTable))
+	{
+		UE_LOG(LogTemp, Error, TEXT("캐릭터 또는 아이템 데이터테이블이 유효하지않음"));
+		return;
+	}
+	
+	if (HPPotionID == NAME_None || HPPotionCount <= 0)
+	{
+		UE_LOG(LogTemp, Error, TEXT("HPPotion 이름이 비었거나 0개 이하"));
+		return;
+	}
+	
+	FT3ConsumableItemData* ItemRow =
+		OwnerCharacter->ItemDataTable->FindRow<FT3ConsumableItemData>(HPPotionID, TEXT("UseHPPotion"));
+	
+	if (!ItemRow)
+	{
+		return;
+	}
+	
+	if (!OwnerCharacter->ItemUseComponent->ApplyConsumableItem(*ItemRow))
+	{
+		return;
+	}
+	
+	ItemCooldownStartTimes.Emplace(HPPotionID, GetWorld()->GetTimeSeconds());
+	ItemCooldownDurations.Emplace(HPPotionID, ItemRow->CoolTime);
+	
+	if (!GetWorld()->GetTimerManager().IsTimerActive(CooldownUpdateTimerHandle))
+	{
+		GetWorld()->GetTimerManager().SetTimer(
+			CooldownUpdateTimerHandle,
+			this,
+			&UT3InventoryComponent::UpdateCooldowns,
+			0.1f,
+			true);
+	}
+	
+	HPPotionCount--;
+	
+	OnInventoryUpdated.Broadcast();
 }
 
 void UT3InventoryComponent::UseMPPotion()
 {
+	if (!IsValid(OwnerCharacter) || !IsValid(OwnerCharacter->ItemDataTable))
+	{
+		UE_LOG(LogTemp, Error, TEXT("캐릭터 또는 아이템 데이터테이블이 유효하지않음"));
+		return;
+	}
+	
+	if (MPPotionID == NAME_None || MPPotionCount <= 0)
+	{
+		UE_LOG(LogTemp, Error, TEXT("MPPotion 이름이 비었거나 0개 이하"));
+		return;
+	}
+	
+	FT3ConsumableItemData* ItemRow =
+		OwnerCharacter->ItemDataTable->FindRow<FT3ConsumableItemData>(MPPotionID, TEXT("UseMPPotion"));
+	
+	if (!ItemRow)
+	{
+		return;
+	}
+	
+	if (!OwnerCharacter->ItemUseComponent->ApplyConsumableItem(*ItemRow))
+	{
+		return;
+	}
+	
+	ItemCooldownStartTimes.Emplace(MPPotionID, GetWorld()->GetTimeSeconds());
+	ItemCooldownDurations.Emplace(MPPotionID, ItemRow->CoolTime);
+	
+	if (!GetWorld()->GetTimerManager().IsTimerActive(CooldownUpdateTimerHandle))
+	{
+		GetWorld()->GetTimerManager().SetTimer(
+			CooldownUpdateTimerHandle,
+			this,
+			&UT3InventoryComponent::UpdateCooldowns,
+			0.1f,
+			true);
+	}
+	
+	MPPotionCount--;
+	
+	OnInventoryUpdated.Broadcast();
 }
