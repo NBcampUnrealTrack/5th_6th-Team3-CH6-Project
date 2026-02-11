@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Equipment/T3UpgradeStation.h"
 #include "Desecration.h"
@@ -155,7 +155,7 @@ void AT3UpgradeStation::OpenUpgradeUI()
 			if (PC)
 			{
 				PC->SetShowMouseCursor(true);
-				FInputModeUIOnly InputMode;
+				FInputModeGameAndUI InputMode;
 				InputMode.SetWidgetToFocus(UpgradeWidgetInstance->TakeWidget());
 				PC->SetInputMode(InputMode);
 			}
