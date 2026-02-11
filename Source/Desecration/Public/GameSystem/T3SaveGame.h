@@ -84,6 +84,7 @@ public:
 	UPROPERTY()
 	int32 Money;
 	
+	//TODO : 포션 강화 완성시 변수 타입 및 이름 변경하기
 	//현재 HP포션 개수
 	UPROPERTY()
 	int32 CurrentHPPotionCount;
@@ -132,6 +133,7 @@ public:
 #pragma endregion
 
 #pragma region 스킬
+	//TODO : 스킬 타입 및 이름에 맞게 변경하기
 	//보유 스킬
 	UPROPERTY()
 	TArray<int32> OwnedSkills;
