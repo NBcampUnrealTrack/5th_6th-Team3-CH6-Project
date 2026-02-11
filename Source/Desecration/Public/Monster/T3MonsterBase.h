@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// T3MonsterBase.h
 
 #pragma once
 
@@ -18,7 +18,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -28,4 +28,10 @@ public:
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	class UT3HealthComponent* HealthComponent;
+
+protected:
+	UFUNCTION()
+	void OnCapsuleBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	void ReportTouchStimulus(AActor* OtherActor, const FVector& TouchLocation);
 };
