@@ -1,5 +1,6 @@
 ﻿#include "GameSystem/T3GameMode.h"
 
+#include "Equipment/T3PlayerEquipmentComponent.h"
 #include "GameSystem/T3GameInstance.h"
 #include "GameSystem/T3SaveGame.h"
 #include "Item/Component/T3InventoryComponent.h"
@@ -42,6 +43,14 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character)
 		SaveGame->Items.Add(Slot);
 	}
 	SaveGame->Money = InventoryComponent->GetMoney();
+	SaveGame->NormalStoneCount = InventoryComponent->GetNormalStoneCount();
+	SaveGame->EpicStoneCount = InventoryComponent->GetEpicStoneCount();
+	SaveGame->LegendaryStoneCount = InventoryComponent->GetLegendaryStoneCount();
+	//장비
+	if (UT3PlayerEquipmentComponent* EquipComp = Character->FindComponentByClass<UT3PlayerEquipmentComponent>())
+	{
+		EquipComp->GetEquipmentSaveData(SaveGame->WeaponSaveData, SaveGame->ArmorSaveData);
+	}
 	
 	//저장
 	return T3GameInstance->SaveGame();
@@ -69,4 +78,12 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 		InventoryComponent->Items[iNum] = SaveGame->Items[iNum];
 	}
 	InventoryComponent->SetMoney(SaveGame->Money);
+	InventoryComponent->SetNormalStoneCount(SaveGame->NormalStoneCount);
+	InventoryComponent->SetEpicStoneCount(SaveGame->EpicStoneCount);
+	InventoryComponent->SetLegendaryStoneCount(SaveGame->LegendaryStoneCount);
+	//장비
+	if (UT3PlayerEquipmentComponent* EquipComp = Character->FindComponentByClass<UT3PlayerEquipmentComponent>())
+	{
+		EquipComp->LoadEquipmentFromSave(SaveGame->WeaponSaveData, SaveGame->ArmorSaveData);
+	}
 }
