@@ -6,6 +6,7 @@
 
 class UT3GameInstance;
 class AT3CharacterBase;
+enum class EPlayerClass;
 
 UCLASS()
 class DESECRATION_API AT3GameMode : public AGameMode
@@ -16,8 +17,12 @@ protected:
 	virtual void BeginPlay() override;
 	
 public:
+	//캐릭터의 클래스
+	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
+	EPlayerClass GetPlayerClass();
+	
 	//게임 저장하기 (true : 저장 성공)
-	UFUNCTION(BlueprintPure, Category = "Saved Game Data")
+	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
 	bool SaveGame(const AT3CharacterBase* Character);
 	
 	//저장된 게임 데이터를 기반으로 캐릭터 세팅

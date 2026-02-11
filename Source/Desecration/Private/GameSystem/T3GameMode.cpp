@@ -19,6 +19,12 @@ void AT3GameMode::BeginPlay()
 	}
 }
 
+EPlayerClass AT3GameMode::GetPlayerClass()
+{
+	const TObjectPtr<UT3SaveGame> SaveGame = T3GameInstance->GetSavedGameData();
+	return SaveGame->PlayerClass;
+}
+
 bool AT3GameMode::SaveGame(const AT3CharacterBase* Character)
 {
 	//캐릭터 정보를 저장된 게임 데이터에 저장한다.
