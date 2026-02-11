@@ -5,152 +5,18 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "GameplayTagContainer.h"
-#include "Player/T3DamageTypes.h"
+#include "Monster/T3MidBossTypes.h"
 #include "Monster/T3MidBossNotifyModifier.h"
 #include "Components/StateTreeComponent.h"
-#include "Components/BoxComponent.h"
 #include "MotionWarpingComponent.h"
+#include "NativeGameplayTags.h"
 #include "T3MidBossMonster.generated.h"
 
-// ============================================================
-// Enum: 패턴 분류 (고정 — 거리 기반 선택에 사용)
-// ============================================================
+class UT3BossWeaponComponent;
 
-UENUM(BlueprintType)
-enum class EMidBossPatternCategory : uint8
-{
-	Melee		UMETA(DisplayName = "Melee"),
-	Ranged		UMETA(DisplayName = "Ranged"),
-	Skill		UMETA(DisplayName = "Skill"),
-	Evasion		UMETA(DisplayName = "Evasion")
-};
-
-// ============================================================
-// Struct: 공격 패턴 데이터
-// ============================================================
-
-// 체인 내 개별 몽타주 데이터
-USTRUCT(BlueprintType)
-struct FPatternMontageData
-{
-	GENERATED_BODY()
-
-	// 재생할 몽타주
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UAnimMontage> Montage = nullptr;
-
-	// 시작 배속
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float PlayRate = 1.0f;
-
-	// 이 구간 데미지
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float Damage = 20.f;
-
-	// 경직 강도
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EHitIntensity HitIntensity = EHitIntensity::Light;
-
-	// 데미지 타입 (Base, Unparryable 등)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<UDamageType> DamageTypeClass;
-};
-
-// 노티파이별 기본 발동 확률
-USTRUCT(BlueprintType)
-struct FNotifyChanceConfig
-{
-	GENERATED_BODY()
-
-	// Slow 노티파이 발동 확률 (엇박자 감속)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0.0", ClampMax = "1.0"))
-	float SlowChance = 1.0f;
-
-	// Fast 노티파이 발동 확률 (엇박자 가속)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0.0", ClampMax = "1.0"))
-	float FastChance = 1.0f;
-
-	// Step 노티파이 발동 확률 (추적 이동)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0.0", ClampMax = "1.0"))
-	float StepChance = 1.0f;
-};
-
-// 공격 패턴 전체 데이터
-USTRUCT(BlueprintType)
-struct FMidBossAttackPattern
-{
-	GENERATED_BODY()
-
-	// 패턴 이름 (자유 입력 — "Melee_1", "DK_HeavySlash" 등)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FName PatternName = NAME_None;
-
-	// 분류 (Melee / Ranged / Skill / Evasion)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EMidBossPatternCategory Category = EMidBossPatternCategory::Melee;
-
-	// 체인 몽타주 배열 (순서대로 재생, 1개면 단타, 2개면 2타 체인)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<FPatternMontageData> MontageChain;
-
-	// 해금 스테이지 (1 = 항상 사용 가능)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 RequiredStage = 1;
-
-	// 쿨다운 초 (0이면 쿨다운 없음)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float Cooldown = 0.f;
-
-	// ActionCount 소모량 (0 = 소모 안 함, 예: Evasion)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 ActionCountCost = 1;
-
-	// 노티파이별 기본 발동 확률 (BP에서 ModifyNotifyChance로 상황별 보정 가능)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FNotifyChanceConfig NotifyChances;
-};
-
-// ============================================================
-// Delegate
-// ============================================================
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMidBossHit);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMidBossStun);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMidBossDeath);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMidBossDamaged);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMidBossSpawned);
-
-// 패턴 완료 델리게이트 — FName으로 어떤 패턴이 끝났는지 전달
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPatternCompleted, FName, CompletedPatternName);
-
-// C++ 전용 Non-dynamic 델리게이트 (StateTree Task 바인딩용)
-DECLARE_MULTICAST_DELEGATE(FOnStunRecoveredNative);
-DECLARE_MULTICAST_DELEGATE(FOnPatternCompletedNative);
-
-// ============================================================
-// Struct: 스탯
-// ============================================================
-
-USTRUCT(BlueprintType)
-struct FMidBossStats
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MaxHP = 1500.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float CurrentHP = 1500.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float AttackPower = 20.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float StunThreshold = 100.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float CurrentStunGauge = 0.f;
-};
+// StateTree 이벤트 태그 (extern — STNodes에서 참조)
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_Event_StunRecovered);
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_Event_ActionCountDepleted);
 
 // ============================================================
 // AT3MidBossMonster
@@ -181,15 +47,32 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MidBoss|Movement")
 	TObjectPtr<UMotionWarpingComponent> MotionWarpingComponent;
 
-	// 타겟 앞에서 멈출 오프셋 거리
+	// 이동 워프: 타겟 앞에서 멈출 오프셋 거리 (거리에 따라 동적 클램프)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Movement")
 	float WarpTargetOffset = 150.f;
 
+	// 이동 워프: 최소 접근 거리 (이 이하로는 오프셋이 0이 되어 후진 방지)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Movement")
+	float MinWarpDistance = 50.f;
+
+	// 이동용 워프 타겟 (오프셋 적용)
 	static inline const FName MotionWarpTargetName = FName(TEXT("CombatTarget"));
 
-	// MotionWarping 타겟 갱신
+	// 회전용 워프 타겟 (오프셋 없음 — 플레이어 정확한 위치)
+	static inline const FName MotionWarpTargetRotationName = FName(TEXT("CombatTargetRotation"));
+
+	// MotionWarping 타겟 갱신 (이동용 + 회전용)
 	UFUNCTION(BlueprintCallable, Category = "MidBoss|Movement")
 	void UpdateMotionWarpTarget();
+
+	// ==========================================================
+	// 입장 (Entry) — 트리거에서 호출, StateTree 시작
+	// ==========================================================
+	UFUNCTION(BlueprintCallable, Category = "MidBoss|Flow")
+	void ActivateBoss(AActor* Activator);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "MidBoss|Flow")
+	bool IsActivated() const { return bIsActivated; }
 
 	// ==========================================================
 	// 전투 타겟
@@ -251,6 +134,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "MidBoss|Movement")
 	void FaceTarget(float InterpSpeed = 10.f);
 
+	// 비공격 시 회전 속도 (SetFocus 기반, 도/초)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Movement")
+	float IdleRotationRate = 360.f;
+
+	// 공격 중 회전 속도 — 느리게 트래킹해서 다음 공격 시 스냅 방지 (도/초, 0이면 완전 고정)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Movement")
+	float AttackRotationRate = 90.f;
+
 	// ==========================================================
 	// 피격 카메라 쉐이크 (공격 중에도 항상 재생)
 	// ==========================================================
@@ -292,24 +183,26 @@ public:
 	TObjectPtr<UAnimMontage> HitReactMontage_R;
 
 	// ==========================================================
-	// 무기 시스템
+	// 사망 연출
 	// ==========================================================
 
-	// 무기 외형 메시 (소켓에 부착)
+	// 사망 몽타주 (없으면 즉시 FinishDeathSequence)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Animation")
+	TObjectPtr<UAnimMontage> DeathMontage;
+
+	// 사망 연출 완료 후 액터 제거까지 대기 시간 (초)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Flow")
+	float DeathCleanupDelay = 30.f;
+
+	// true: FinishDeathSequence에서 자동 무기 드롭 / false: AnimNotify 등에서 수동 호출
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Flow")
+	bool bAutoDropWeapon = true;
+
+	// ==========================================================
+	// 무기 컴포넌트
+	// ==========================================================
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MidBoss|Weapon")
-	TObjectPtr<UStaticMeshComponent> WeaponMeshComponent;
-
-	// 무기 판정 박스 (WeaponMeshComponent의 자식)
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MidBoss|Weapon")
-	TObjectPtr<UBoxComponent> WeaponHitBox;
-
-	// 무기 부착 소켓 이름 (스켈레탈 메시에 정의된 소켓)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Weapon")
-	FName WeaponSocketName = FName(TEXT("weapon_r"));
-
-	// 무기 드롭 (사망 연출용)
-	UFUNCTION(BlueprintCallable, Category = "MidBoss|Weapon")
-	void DropWeapon();
+	TObjectPtr<UT3BossWeaponComponent> WeaponComponent;
 
 	// ==========================================================
 	// 공격 패턴 데이터 (에디터에서 세팅)
@@ -318,10 +211,6 @@ public:
 	// 전체 패턴 배열 — BP 에디터에서 몽타주/데미지/스테이지 등 설정
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Patterns")
 	TArray<FMidBossAttackPattern> AttackPatterns;
-
-	// 무기 판정용 컴포넌트 (WeaponHitBox에 자동 할당)
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MidBoss|Combat")
-	TObjectPtr<UPrimitiveComponent> WeaponCollisionComponent;
 
 	// ==========================================================
 	// 노티파이 보정기 시스템
@@ -389,9 +278,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "MidBoss|Movement")
 	void MoveToTarget(float Duration, float Distance);
 
-	UFUNCTION(BlueprintCallable, Category = "MidBoss|Combat")
-	void SetAttackCollisionEnabled(bool bEnable);
-
 	UFUNCTION(BlueprintCallable, Category = "MidBoss|Pattern")
 	bool IsPatternOffCooldown(FName PatternName) const;
 
@@ -412,6 +298,14 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "MidBoss|Events")
 	FOnMidBossSpawned OnMidBossSpawned;
+
+	// 보스 활성화 (트리거 진입 → AI 시작) — Level BP에서 안개벽 등 연출
+	UPROPERTY(BlueprintAssignable, Category = "MidBoss|Events")
+	FOnMidBossActivated OnMidBossActivated;
+
+	// 사망 연출 완료 (몽타주+무기드롭+충돌해제 후) — Level BP에서 안개벽 해제, 보상
+	UPROPERTY(BlueprintAssignable, Category = "MidBoss|Events")
+	FOnMidBossDeathFinished OnMidBossDeathFinished;
 
 	// ==========================================================
 	// 데미지 처리 (기존)
@@ -442,10 +336,18 @@ public:
 	void RecoverFromStun();
 
 	// C++ 전용 델리게이트 (StateTree Task에서 Lambda 바인딩)
-	FOnStunRecoveredNative OnStunRecoveredNative;
 	FOnPatternCompletedNative OnPatternCompletedNative;
 
 private:
+	// --- 입장/사망 내부 상태 ---
+	bool bIsActivated = false;
+
+	void BeginDeathSequence();
+	void FinishDeathSequence();
+
+	UFUNCTION()
+	void OnDeathMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
 	// --- 패턴 실행 내부 상태 ---
 	FName CurrentPatternName = NAME_None;
 	int32 CurrentChainIndex = 0;
@@ -464,9 +366,6 @@ private:
 	FVector MoveToTargetDirection = FVector::ZeroVector;
 	float MoveToTargetSpeed = 0.f;
 
-	// 무기 드롭 여부
-	bool bIsWeaponDropped = false;
-
 	// --- 내부 함수 ---
 	const FMidBossAttackPattern* FindPatternData(FName PatternName) const;
 	void PlayCurrentChainMontage();
@@ -483,4 +382,8 @@ private:
 
 	// 피격 방향 기반 히트 리액션 몽타주 선택
 	UAnimMontage* GetDirectionalHitReactMontage(AActor* DamageCauser) const;
+
+	// 무기 히트 → 데미지 적용
+	UFUNCTION()
+	void OnWeaponHit(AActor* HitActor);
 };
