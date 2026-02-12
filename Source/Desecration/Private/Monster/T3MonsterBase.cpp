@@ -4,11 +4,33 @@
 #include "Components/CapsuleComponent.h"
 #include "Perception/AIPerceptionSystem.h"
 #include "Perception/AISense_Touch.h"
+#include "Blueprint/UserWidget.h"
+#include "Components/WidgetComponent.h"
 
 
 AT3MonsterBase::AT3MonsterBase()
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	bIsDead = false;
+
+	// 1. 컴포넌트 생성
+	LockOnWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("LockOnWidget"));
+
+	// 2. 부착 
+	LockOnWidgetComponent->SetupAttachment(GetMesh(), TEXT("LockOn_Socket"));
+
+	// 3. 설정
+	LockOnWidgetComponent->SetWidgetSpace(EWidgetSpace::World);
+	LockOnWidgetComponent->SetVisibility(false);
+	LockOnWidgetComponent->SetRelativeLocation(FVector::ZeroVector); // 소켓 위치로 초기화
+
+	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
+	{
+		float Radius = Capsule->GetScaledCapsuleRadius();
+		float TargetScale = Radius * 0.02f;
+		LockOnWidgetComponent->SetWorldScale3D(FVector(TargetScale));
+	}
 }
 
 void AT3MonsterBase::BeginPlay()
@@ -19,6 +41,17 @@ void AT3MonsterBase::BeginPlay()
 	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
 	{
 		Capsule->OnComponentBeginOverlap.AddDynamic(this, &AT3MonsterBase::OnCapsuleBeginOverlap);
+	}
+
+	if (LockOnWidgetComponent && GetMesh())
+	{
+		// 이미 부착되어 있더라도 안전하게 다시 부착 (KeepRelativeTransform 사용)
+		LockOnWidgetComponent->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("LockOn_Socket"));
+
+		// 위치 초기화 (소켓 정중앙으로)
+		LockOnWidgetComponent->SetRelativeLocation(FVector::ZeroVector);
+
+		UE_LOG(LogTemp, Log, TEXT("[Confirmed] LockOnWidget forced to Socket: %s"), *LockOnWidgetComponent->GetAttachSocketName().ToString());
 	}
 }
 
@@ -72,4 +105,12 @@ void AT3MonsterBase::OnCapsuleBeginOverlap(UPrimitiveComponent* OverlappedComp, 
             TargetActor->GetActorLocation()
         );
     }
+}
+
+void AT3MonsterBase::SetLockOnWidgetVisible(bool bVisible)
+{
+	if (LockOnWidgetComponent)
+	{
+		LockOnWidgetComponent->SetVisibility(bVisible);
+	}
 }

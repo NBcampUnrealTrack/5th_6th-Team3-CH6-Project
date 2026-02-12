@@ -58,6 +58,11 @@ private:
 	UPROPERTY()
 	TObjectPtr<AT3TitlePlayerController> TitlePlayerController;
 	
-	const FString CHECK_NEW_GAME = TEXT("처음부터 하시겠습니까?\n저장된 게임이 사라집니다.");
-	const FString QUIT_GAME_STRING = TEXT("종료하시겠습니까?");
+	//저장된 데이터가 있을 때 새로하기 버튼을 누르면 나오는 메세지
+	UPROPERTY(EditDefaultsOnly, Category = "Message", meta = (AllowPrivateAccess = true))
+	FString CheckNewGame;
+	
+	//게임 종료시의 메세지
+	UPROPERTY(EditDefaultsOnly, Category = "Message", meta = (AllowPrivateAccess = true))
+	FString QuitGameMessage;
 };

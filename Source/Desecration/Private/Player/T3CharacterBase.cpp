@@ -16,6 +16,7 @@
 #include "Player/T3SkillComponentBase.h"
 #include "Equipment/T3PlayerEquipmentComponent.h"
 #include "GameSystem/T3GameMode.h"
+#include "Player/T3PlayerController.h"
 
 
 AT3CharacterBase::AT3CharacterBase()
@@ -53,6 +54,8 @@ AT3CharacterBase::AT3CharacterBase()
 	InventoryComponent = CreateDefaultSubobject<UT3InventoryComponent>(TEXT("InventoryComponent")); 
 	ItemUseComponent = CreateDefaultSubobject<UT3ItemUseComponent>(TEXT("ItemUseComponent"));
 	EquipComp = CreateDefaultSubobject<UT3PlayerEquipmentComponent>(TEXT("EquipmentComponent"));
+	
+	LoadTimeAfterDeath = 3.0f;
 }
 
 void AT3CharacterBase::RequestSellItem(const FInventorySlot& SlotData)
@@ -100,10 +103,6 @@ void AT3CharacterBase::OnEquipmentStatsUpdated(float Atk, float Def)
 
 	UE_LOG(LogTemp, Display, TEXT("Atk : %.1f, Def : %.1f"), AttackPower, Defense);
 }
-//void AT3CharacterBase::PostInitializeComponents()
-//{
-//	 Super::PostInitializeComponents();
-//}
 
 
 void AT3CharacterBase::Tick(float DeltaTime)
@@ -313,6 +312,11 @@ void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)
 					CombatComponent->SetSkillComponent(NewSkillComp);
 				}
 
+				// 위젯에 컴포넌트 전달 (의존성 주입)
+				if (AT3PlayerController* PC = GetController<AT3PlayerController>())
+				{
+
+				}
 				UE_LOG(LogTemp, Log, TEXT("Skill Component Attached: %s"), *Data->SkillComponent->GetName());
 			}
 		}
@@ -472,6 +476,14 @@ void AT3CharacterBase::OnDeath()
 {
 	bMoveLock = true;
 	OnDeathAnimation();
+	
+	GetWorld()->GetTimerManager().SetTimer(AfterDeathTimerHandle, FTimerDelegate::CreateLambda([&]()
+	{
+		if (const TObjectPtr<AT3GameMode> T3GameMode = Cast<AT3GameMode>(GetWorld()->GetAuthGameMode()))
+		{
+			T3GameMode->LoadGame();
+		}
+	}), LoadTimeAfterDeath, false);
 }
 
 void AT3CharacterBase::ConsumeMana(float Amount)

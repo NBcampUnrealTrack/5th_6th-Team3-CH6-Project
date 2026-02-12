@@ -58,6 +58,10 @@ void AT3TitlePlayerController::MoveToSelectClassLevel()
 
 void AT3TitlePlayerController::MoveToLastSavedLevel()
 {
+	bShowMouseCursor = false;
+	const FInputModeGameOnly InputModeGameOnly;
+	SetInputMode(InputModeGameOnly);
+	
 	TitleGameMode->MoveToLastSavedLevel();
 }
 

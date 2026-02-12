@@ -243,6 +243,24 @@ void UT3CombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		return;
 	}
 
+	// 몬스터 사망 시 록온 해제 
+	//if (AT3MonsterBase* TargetMonster = Cast<AT3MonsterBase>(CurrentTarget))
+	//{
+	//	if (TargetMonster->bIsDead) // 또는 IsDead() 함수 호출
+	//	{
+	//		ResetLockOn();
+	//		return;
+	//	}
+	//}
+
+	// 거리 초과 시 록온 해제 
+	float DistanceToTarget = FVector::Dist(OwnerChar->GetActorLocation(), CurrentTarget->GetActorLocation());
+	if (DistanceToTarget > SearchRadius)
+	{
+		ResetLockOn();
+		return;
+	}
+
 	// 타겟의 실시간 월드 위치
 	FVector TargetLocation = CurrentTarget->GetActorLocation();
 
