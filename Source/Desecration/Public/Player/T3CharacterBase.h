@@ -121,6 +121,8 @@ public:
 	void OnHit();
 	UFUNCTION(BlueprintCallable, Category = "Death")
 	void OnDeath();
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnInteract();
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Death")
 	bool bIsDead = false;

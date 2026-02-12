@@ -119,7 +119,7 @@ void UT3Paladin_SkillComponent::SpawnSwordWaveProjectile()
     if (World)
     {
         // 위치가 애매하면 소켓을 생성해서 소켓의 위치 가져오기
-        FVector SpawnLocation = GetOwner()->GetActorLocation() + GetOwner()->GetActorForwardVector() * 100.f;
+        FVector SpawnLocation = GetOwner()->GetActorLocation() + GetOwner()->GetActorForwardVector() * 10.f;
         FRotator SpawnRotation = GetOwner()->GetActorRotation();
 
         FActorSpawnParameters SpawnParams;

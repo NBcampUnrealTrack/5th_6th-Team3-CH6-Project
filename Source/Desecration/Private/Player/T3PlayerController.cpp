@@ -1,4 +1,4 @@
-// T3PlayerController.cpp
+﻿// T3PlayerController.cpp
 
 
 #include "Player/T3PlayerController.h"
@@ -191,7 +191,10 @@ void AT3PlayerController::Input_Interact(const FInputActionValue& Value)
 		return;
 	}
 	
-	// TODO: 상호작용 시스템 연결
+	if (OwnerChar)
+	{
+		OwnerChar->OnInteract();
+	}
 }
 
 void AT3PlayerController::Input_Test(const FInputActionValue& Value)
