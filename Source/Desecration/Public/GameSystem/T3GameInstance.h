@@ -38,6 +38,9 @@ public:
 	//게임 저장하기 (true : 저장 성공)
 	bool SaveGame();
 	
+	//저장된 게임 불러오기 (true : 불러오기 성공)
+	bool LoadGame();
+	
 	//해상도 설정하기
 	void SetResolution(ET3Resolution Resolution);
 	

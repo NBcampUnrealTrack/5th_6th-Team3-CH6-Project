@@ -23,7 +23,7 @@ void UT3GameInstance::Init()
 		return;
 	}
 	
-	SavedGameData = Cast<UT3SaveGame>(UGameplayStatics::LoadGameFromSlot(SAVE_GAME_NAME, 0));
+	LoadGame();
 }
 
 void UT3GameInstance::MakeFirstSettings()
@@ -73,6 +73,18 @@ TObjectPtr<UT3SaveGame> UT3GameInstance::MakeFirstGameData()
 bool UT3GameInstance::SaveGame()
 {
 	return UGameplayStatics::SaveGameToSlot(SavedGameData, SAVE_GAME_NAME, 0);
+}
+
+bool UT3GameInstance::LoadGame()
+{
+	TObjectPtr<UT3SaveGame> SavedData = Cast<UT3SaveGame>(UGameplayStatics::LoadGameFromSlot(SAVE_GAME_NAME, 0));
+	if (!SavedData)
+	{
+		return false;
+	}
+	
+	SavedGameData = SavedData;
+	return true;
 }
 
 void UT3GameInstance::SetResolution(ET3Resolution Resolution)
