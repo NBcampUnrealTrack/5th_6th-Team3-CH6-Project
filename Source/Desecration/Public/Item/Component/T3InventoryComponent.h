@@ -10,6 +10,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCooldownUpdated, FName, ItemID, 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnToggleItemEquipped, FName, ItemID);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSwapRecoverSlot);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCooldownProgressUpdated, FName, ItemID, float, Progress);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryInitialized);
 
 class AT3CharacterBase;
 
@@ -72,6 +73,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Cooldown")
 	FOnCooldownProgressUpdated OnCooldownProgressUpdated;
 
+	UPROPERTY(BlueprintAssignable, Category = "Inventory")
+	FOnInventoryInitialized OnInventoryInitialized;
+	
 protected:
 	virtual void BeginPlay() override;
 	

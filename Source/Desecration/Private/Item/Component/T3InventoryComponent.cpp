@@ -26,6 +26,8 @@ void UT3InventoryComponent::BeginPlay()
 	InitializePotionIDs();
 	SetHPPotionCount(3);
 	SetMPPotionCount(3);
+	
+	OnInventoryInitialized.Broadcast();
 }
 
 void UT3InventoryComponent::AddItem(const FName& ItemName)
