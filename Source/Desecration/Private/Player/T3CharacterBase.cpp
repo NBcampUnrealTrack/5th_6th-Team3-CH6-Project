@@ -54,6 +54,8 @@ AT3CharacterBase::AT3CharacterBase()
 	InventoryComponent = CreateDefaultSubobject<UT3InventoryComponent>(TEXT("InventoryComponent")); 
 	ItemUseComponent = CreateDefaultSubobject<UT3ItemUseComponent>(TEXT("ItemUseComponent"));
 	EquipComp = CreateDefaultSubobject<UT3PlayerEquipmentComponent>(TEXT("EquipmentComponent"));
+	
+	LoadTimeAfterDeath = 3.0f;
 }
 
 void AT3CharacterBase::RequestSellItem(const FInventorySlot& SlotData)
@@ -474,6 +476,14 @@ void AT3CharacterBase::OnDeath()
 {
 	bMoveLock = true;
 	OnDeathAnimation();
+	
+	GetWorld()->GetTimerManager().SetTimer(AfterDeathTimerHandle, FTimerDelegate::CreateLambda([&]()
+	{
+		if (const TObjectPtr<AT3GameMode> T3GameMode = Cast<AT3GameMode>(GetWorld()->GetAuthGameMode()))
+		{
+			T3GameMode->LoadGame();
+		}
+	}), LoadTimeAfterDeath, false);
 }
 
 void AT3CharacterBase::ConsumeMana(float Amount)
