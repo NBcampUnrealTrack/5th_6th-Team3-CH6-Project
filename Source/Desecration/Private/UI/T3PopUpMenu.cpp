@@ -58,6 +58,7 @@ void UT3PopUpMenu::SetActivePopUpMenu(const bool bActive)
 		const FInputModeGameOnly GameOnly;
 		T3PlayerController->SetInputMode(GameOnly);
 	}
+	T3PlayerController->SetShowMouseCursor(bActive);
 	
 	SetVisibility(bActive ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 }
