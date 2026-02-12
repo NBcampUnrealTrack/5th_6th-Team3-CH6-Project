@@ -75,25 +75,43 @@ void AT3SwordWaveProjectile::PostInitializeComponents()
 
 void AT3SwordWaveProjectile::OnProjectileOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-    // 1. 유효성 검사 (자기 자신이나 이미 맞은 액터 제외)
+    // 1. 유효성 검사 및 방어적 코드
     if (!OtherActor || OtherActor == GetOwner() || HitActors.Contains(OtherActor)) return;
 
     TObjectPtr<AT3CharacterBase> OwnerChar = Cast<AT3CharacterBase>(GetOwner());
-    TObjectPtr<UT3CombatComponent> Combat = OwnerChar->GetCombatComponent();
-    
+    if (!OwnerChar) return;
 
-    // 2. 대상 확인
+    TObjectPtr<UT3CombatComponent> Combat = OwnerChar->GetCombatComponent();
+    if (!Combat) return;
+
+    // 2. 중복 히트 방지 리스트 추가 및 로그
+    HitActors.Add(OtherActor);
     UE_LOG(LogTemp, Warning, TEXT("[Projectile] Overlap with: %s"), *OtherActor->GetName());
 
-    // 3. 중복 히트 방지 리스트 추가
-    HitActors.Add(OtherActor);
+    // 3. 데미지 전달
+    Combat->RequestAttackDamage(OtherActor, Damage);
 
-    // 데미지 전달
-    if (Combat)
+    // -----------------------------------------------------------
+    // [감속 및 지연 소멸 연출]
+    // -----------------------------------------------------------
+
+    // A. 충돌 비활성화 (추가 히트 방지)
+    if (BoxCollision)
     {
-        Combat->RequestAttackDamage(OtherActor, Damage);
+        BoxCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     }
 
-    //  일단 오버랩되면 소멸시키기관통형인지 확인하기
-    Destroy(); 
+    // B. 속도 감속 연출 
+    //if (MovementComp)
+    //{
+    //    // 투사체만 슬로우 모션 (0.2배속)
+    //    CustomTimeDilation = 0.2f;
+
+    //    // 속도를 10%로 감속
+    //    MovementComp->Velocity *= 0.1f;
+    //    MovementComp->UpdateComponentVelocity(); 
+    //}
+
+    // C. 0.5초 뒤 소멸
+    SetLifeSpan(0.5f);
 }

@@ -16,6 +16,7 @@
 #include "Player/T3SkillComponentBase.h"
 #include "Equipment/T3PlayerEquipmentComponent.h"
 #include "GameSystem/T3GameMode.h"
+#include "Player/T3PlayerController.h"
 
 
 AT3CharacterBase::AT3CharacterBase()
@@ -100,10 +101,6 @@ void AT3CharacterBase::OnEquipmentStatsUpdated(float Atk, float Def)
 
 	UE_LOG(LogTemp, Display, TEXT("Atk : %.1f, Def : %.1f"), AttackPower, Defense);
 }
-//void AT3CharacterBase::PostInitializeComponents()
-//{
-//	 Super::PostInitializeComponents();
-//}
 
 
 void AT3CharacterBase::Tick(float DeltaTime)
@@ -313,6 +310,11 @@ void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)
 					CombatComponent->SetSkillComponent(NewSkillComp);
 				}
 
+				// 위젯에 컴포넌트 전달 (의존성 주입)
+				if (AT3PlayerController* PC = GetController<AT3PlayerController>())
+				{
+
+				}
 				UE_LOG(LogTemp, Log, TEXT("Skill Component Attached: %s"), *Data->SkillComponent->GetName());
 			}
 		}
