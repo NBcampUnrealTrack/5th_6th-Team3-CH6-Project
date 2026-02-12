@@ -19,6 +19,7 @@
 #include "Player/T3SkillComponentBase.h"
 #include "Player/T3LockOnTarget.h"
 #include "Components/WidgetComponent.h"
+#include "Monster/T3MonsterBase.h"
 
 
 UT3CombatComponent::UT3CombatComponent()
@@ -244,14 +245,14 @@ void UT3CombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	}
 
 	// 몬스터 사망 시 록온 해제 
-	//if (AT3MonsterBase* TargetMonster = Cast<AT3MonsterBase>(CurrentTarget))
-	//{
-	//	if (TargetMonster->bIsDead) // 또는 IsDead() 함수 호출
-	//	{
-	//		ResetLockOn();
-	//		return;
-	//	}
-	//}
+	if (AT3MonsterBase* TargetMonster = Cast<AT3MonsterBase>(CurrentTarget))
+	{
+		if (TargetMonster->bIsDead) // 또는 IsDead() 함수 호출
+		{
+			ResetLockOn();
+			return;
+		}
+	}
 
 	// 거리 초과 시 록온 해제 
 	float DistanceToTarget = FVector::Dist(OwnerChar->GetActorLocation(), CurrentTarget->GetActorLocation());

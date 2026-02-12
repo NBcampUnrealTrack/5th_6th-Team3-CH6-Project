@@ -12,21 +12,23 @@ void UT3HUDSlotWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	APawn* OwningPawn = GetOwningPlayerPawn();
-	if (OwningPawn)
-	{
-		UT3SkillComponentBase* FoundComp = OwningPawn->FindComponentByClass<UT3SkillComponentBase>();
-		if (FoundComp)
-		{
-			SkillComp = FoundComp;
-			// 1. 쿨타임 시작 알림 바인딩
-			if (!SkillComp->OnSkillCooldownStarted.IsBound())
-			SkillComp->OnSkillCooldownStarted.AddDynamic(this, &UT3HUDSlotWidget::HandleCooldownStarted);
-			// 2. 슬롯 교체 알림 바인딩
-			if (!SkillComp->OnSkillSlotUpdated.IsBound())
-			SkillComp->OnSkillSlotUpdated.AddDynamic(this, &UT3HUDSlotWidget::HandleSkillSlotUpdated);
-		}
-	}
+}
+
+void UT3HUDSlotWidget::InitializeWidget(UT3SkillComponentBase* InSkillComp)
+{
+	if (!InSkillComp) return;
+
+	SkillComp = InSkillComp;
+
+	// 안전하게 기존 바인딩 제거 후 재등록 (중복 방지)
+	SkillComp->OnSkillCooldownStarted.RemoveDynamic(this, &UT3HUDSlotWidget::HandleCooldownStarted);
+	SkillComp->OnSkillCooldownStarted.AddDynamic(this, &UT3HUDSlotWidget::HandleCooldownStarted);
+
+	SkillComp->OnSkillSlotUpdated.RemoveDynamic(this, &UT3HUDSlotWidget::HandleSkillSlotUpdated);
+	SkillComp->OnSkillSlotUpdated.AddDynamic(this, &UT3HUDSlotWidget::HandleSkillSlotUpdated);
+
+	bIsTickActive = true; // 초기 상태 확인을 위해 틱 활성화
+	UE_LOG(LogTemp, Log, TEXT("HUD Widget Initialized with SkillComponent"));
 }
 
 void UT3HUDSlotWidget::HandleCooldownStarted(int32 SkillID, float CooldownTime)
@@ -40,6 +42,8 @@ void UT3HUDSlotWidget::HandleSkillSlotUpdated(int32 SlotIndex, int32 SkillID, co
 	// 스킬이 바뀌었을 때, 바뀐 스킬이 이미 쿨타임 중일 수 있으므로 틱을 켬
 	bIsTickActive = true;
 }
+
+
 
 void UT3HUDSlotWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {

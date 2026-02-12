@@ -12,6 +12,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Item/Component/T3InventoryComponent.h"
 #include "UI/T3PopUpMenu.h"
+#include "UI/T3HUDSlotWidget.h"
 
 void AT3PlayerController::BeginPlay()
 {
@@ -49,8 +50,11 @@ void AT3PlayerController::BeginPlay()
 	
 	if (IsValid(HUDSlotWidgetClass))
 	{
-		HUDSlotWidget = CreateWidget<UUserWidget>(this, HUDSlotWidgetClass);
-		HUDSlotWidget->AddToViewport();
+		HUDSlotWidget = CreateWidget<UT3HUDSlotWidget>(this, HUDSlotWidgetClass);
+		if (HUDSlotWidget)
+		{
+			HUDSlotWidget->AddToViewport();
+		}
 	}
 
 	if (LockOnWidgetClass)
