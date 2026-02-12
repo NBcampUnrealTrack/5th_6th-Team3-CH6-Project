@@ -144,6 +144,13 @@ void UT3MidBossHPBarWidget::OnBossDeath()
 
 void UT3MidBossHPBarWidget::RemoveWidget()
 {
+	// 타이머 클리어 — GC 후 댕글링 포인터 방지
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(YellowDelayTimerHandle);
+		World->GetTimerManager().ClearTimer(DeathRemoveTimerHandle);
+	}
+
 	// 델리게이트 해제
 	if (TargetBoss)
 	{

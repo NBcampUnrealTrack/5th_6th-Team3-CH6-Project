@@ -145,15 +145,16 @@ void AT3UpgradeStation::OpenUpgradeUI()
 	// 위젯 생성 + Viewport 추가
 	if (UpgradeWidgetClass)
 	{
-		APlayerController* PC = GetWorld()->GetFirstPlayerController();
-		UpgradeWidgetInstance = CreateWidget<UUserWidget>(PC, UpgradeWidgetClass);
-		if (UpgradeWidgetInstance)
+		UWorld* World = GetWorld();
+		APlayerController* PC = World ? World->GetFirstPlayerController() : nullptr;
+		if (PC)
 		{
-			UpgradeWidgetInstance->AddToViewport();
-
-			// 마우스 커서 표시 + UI 입력 모드
-			if (PC)
+			UpgradeWidgetInstance = CreateWidget<UUserWidget>(PC, UpgradeWidgetClass);
+			if (UpgradeWidgetInstance)
 			{
+				UpgradeWidgetInstance->AddToViewport();
+
+				// 마우스 커서 표시 + UI 입력 모드
 				PC->SetShowMouseCursor(true);
 				FInputModeGameAndUI InputMode;
 				InputMode.SetWidgetToFocus(UpgradeWidgetInstance->TakeWidget());
@@ -181,7 +182,8 @@ void AT3UpgradeStation::CloseUpgradeUI()
 	}
 
 	// 게임 입력 모드 복원
-	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+	UWorld* World = GetWorld();
+	if (APlayerController* PC = World ? World->GetFirstPlayerController() : nullptr)
 	{
 		PC->SetShowMouseCursor(false);
 		PC->SetInputMode(FInputModeGameOnly());
