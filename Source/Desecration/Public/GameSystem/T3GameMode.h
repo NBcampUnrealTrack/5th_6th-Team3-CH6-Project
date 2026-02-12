@@ -7,6 +7,7 @@
 class UT3GameInstance;
 class AT3CharacterBase;
 enum class EPlayerClass;
+enum class ELevelName : uint8;
 
 UCLASS()
 class DESECRATION_API AT3GameMode : public AGameMode
@@ -23,7 +24,11 @@ public:
 	
 	//게임 저장하기 (true : 저장 성공)
 	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
-	bool SaveGame(const AT3CharacterBase* Character);
+	bool SaveGame(const AT3CharacterBase* Character, const ELevelName LevelName, const bool bTemporarySave);
+	
+	//게임 불러오기 : 마지막으로 저장한 데이터를 다시 불러오고 그 데이터에 기록된 맵으로 이동
+	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
+	void LoadGame();
 	
 	//저장된 게임 데이터를 기반으로 캐릭터 세팅
 	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")

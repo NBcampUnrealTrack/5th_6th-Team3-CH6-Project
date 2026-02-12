@@ -15,7 +15,7 @@
 #include "Player/T3DamageTypes.h"
 #include "Player/T3SkillComponentBase.h"
 #include "Equipment/T3PlayerEquipmentComponent.h"
-
+#include "GameSystem/T3GameMode.h"
 
 
 AT3CharacterBase::AT3CharacterBase()
@@ -67,6 +67,12 @@ void AT3CharacterBase::BeginPlay()
 	if (CharacterData)
 	{
 		ApplyCharacterData(CharacterData);
+	}
+	
+	//캐릭터 정보 세팅
+	if (const TObjectPtr<AT3GameMode> T3GameMode = Cast<AT3GameMode>(GetWorld()->GetAuthGameMode()))
+	{
+		T3GameMode->SetCharacterBySavedData(this);
 	}
 
 	// 스태미너 자동 회복
@@ -212,6 +218,7 @@ void AT3CharacterBase::UpdateForcedRotation(float DeltaTime)
 		{
 			PC->SetIgnoreMoveInput(false);
 			PC->ResetIgnoreInputFlags(); // 시점 제한까지 모두 해제
+			GetCharacterMovement()->MaxWalkSpeed = DefaultMaxWalkSpeed; // 속도 원상 복구
 		}
 
 		if (OnForcedMoveEnd.IsBound())
@@ -360,7 +367,7 @@ void AT3CharacterBase::Roll(const FInputActionValue& Value)
 	
 	OnWakeUp();
 	
-	if (PlayerInputState.bWantsToRoll == false && bIsLying == false)
+	if (PlayerInputState.bWantsToRoll == false && bIsLying == false && bIsKnockback == false)
 	{
 
 		// 스태미나 20 차감
