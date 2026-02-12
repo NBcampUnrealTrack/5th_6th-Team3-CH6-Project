@@ -20,7 +20,7 @@ void UT3SaveGame::ResetGameData()
 	PlayerName = TEXT("");
 	//캐릭터 위치
 	SavedLevelName = ELevelName::Tutorial;
-	PlayerLocation = FVector::ZeroVector;
+	PlayerLocation = FVector(-80, 185, 102);
 	bSetLocation = true;
 	
 	//스탯
@@ -35,6 +35,7 @@ void UT3SaveGame::ResetGameData()
 	AttackPower = 50.0f;
 	CriticalChance = 0.1f;
 	CriticalDamage = 1.5f;
+	MoveSpeed = 500.0f;
 	
 	//인벤토리
 	//TODO : 인벤토리 크기 확인하기

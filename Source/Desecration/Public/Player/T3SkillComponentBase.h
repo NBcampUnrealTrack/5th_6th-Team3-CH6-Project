@@ -42,6 +42,8 @@ struct FSkillData
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSkillSlotUpdated, int32, SlotIndex, int32, SkillID, const FSkillData&, SkillData);
+// SkillID(int32), CooldownTime(float)을 전달
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSkillCooldownStarted, int32, SkillID, float, CooldownTime);
 
 
 UCLASS( Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -101,6 +103,14 @@ public:
     // 스킬 스왑 함수 (CombatComponent에서 호출)
     void SwapSkills();
 
+    void StartCooldown(int32 SkillID, FSkillData& Data);
+
+    UPROPERTY(BlueprintAssignable, Category = "Events | UI")
+    FOnSkillCooldownStarted OnSkillCooldownStarted;
+
+    // 남은 쿨다운 시간과 비율을 가져오는 함수
+    float GetRemainingCooldown(int32 SkillID);
+    float GetCooldownRemainingRatio(int32 SkillID);
 
 protected:
 
@@ -114,7 +124,6 @@ protected:
 
     // 스킬 사용 가능여부 체크 위한 쿨타임 마나 계산
     virtual bool CanExecuteSkill(FSkillData& Data);
-    void StartCooldown(FSkillData& Data);
 };
 
 
