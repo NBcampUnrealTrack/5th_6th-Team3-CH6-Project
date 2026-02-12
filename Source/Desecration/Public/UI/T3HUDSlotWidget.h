@@ -43,6 +43,7 @@ public:
 	UFUNCTION()
 	void HandleSkillSlotUpdated(int32 SlotIndex, int32 SkillID, const struct FSkillData& SkillData);
 
+	virtual void InitializeWidget(class UT3SkillComponentBase* InSkillComp);
 private:
 
 	UPROPERTY()
