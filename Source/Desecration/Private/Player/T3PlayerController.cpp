@@ -11,6 +11,7 @@
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Blueprint/UserWidget.h"
 #include "Item/Component/T3InventoryComponent.h"
+#include "UI/T3PopUpMenu.h"
 
 void AT3PlayerController::BeginPlay()
 {
@@ -38,6 +39,18 @@ void AT3PlayerController::BeginPlay()
 
 		//CombatWidget->SetVisibility(ESlateVisibility::Collapsed);
 		CombatWidget->AddToViewport();
+	}
+	
+	if (IsValid(PopUpMenuClass))
+	{
+		PopUpMenu = CreateWidget<UT3PopUpMenu>(this, PopUpMenuClass);
+		PopUpMenu->AddToViewport();
+	}
+	
+	if (IsValid(HUDSlotWidgetClass))
+	{
+		HUDSlotWidget = CreateWidget<UUserWidget>(this, HUDSlotWidgetClass);
+		HUDSlotWidget->AddToViewport();
 	}
 
 	if (LockOnWidgetClass)
