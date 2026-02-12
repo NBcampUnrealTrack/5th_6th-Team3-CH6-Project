@@ -89,6 +89,8 @@ protected:
 	bool bCameraLock = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	bool bIsKnockback = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
+	bool bIsLying = false;
 	
 	void ApplyCharacterData(UT3CharacterDataAsset* Data);
 
@@ -122,8 +124,6 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Death")
 	bool bIsDead = false;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bIsLying = false;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TObjectPtr<UT3InventoryComponent> InventoryComponent; 

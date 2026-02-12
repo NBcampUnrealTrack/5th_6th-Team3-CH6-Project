@@ -360,7 +360,7 @@ void AT3CharacterBase::Roll(const FInputActionValue& Value)
 	
 	OnWakeUp();
 	
-	if (PlayerInputState.bWantsToRoll == false && bIsLying == false)
+	if (PlayerInputState.bWantsToRoll == false && bIsLying == false && bIsKnockback == false)
 	{
 
 		// 스태미나 20 차감
