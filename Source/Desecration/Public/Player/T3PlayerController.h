@@ -91,6 +91,10 @@ protected:
 
 	TObjectPtr<class AT3CharacterBase> OwnerChar;
 	TObjectPtr<class UT3CombatComponent> Combat;
+
+
+
+
 private:
 	bool bIsInventoryOpen = false;
 	void Input_Move(const FInputActionValue& Value);
