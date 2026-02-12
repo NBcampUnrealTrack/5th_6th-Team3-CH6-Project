@@ -5,6 +5,7 @@
 #include "GlobalEnums.h"
 #include "T3GameInstance.generated.h"
 
+class UT3CharacterDataAsset;
 class UT3SaveGame;
 
 //설정값을 저장하는 구조체
@@ -37,6 +38,9 @@ public:
 	//게임 저장하기 (true : 저장 성공)
 	bool SaveGame();
 	
+	//저장된 게임 불러오기 (true : 불러오기 성공)
+	bool LoadGame();
+	
 	//해상도 설정하기
 	void SetResolution(ET3Resolution Resolution);
 	
@@ -60,7 +64,10 @@ public:
 	FORCEINLINE TObjectPtr<UT3SaveGame> GetSavedGameData() { return SavedGameData; }
 	
 	//현재 설정
-	FORCEINLINE TSharedPtr<FSettings> GetCurrentSettings() const { return CurrentSettings; }
+	FORCEINLINE TSharedPtr<FSettings> GetCurrentSettings() { return CurrentSettings; }
+	
+	//캐릭터 데이터
+	FORCEINLINE TObjectPtr<UT3CharacterDataAsset> GetCharacterData() { return CharacterData; }
 
 private:
 	//현재 설정
@@ -82,5 +89,10 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Sound Class", meta = (AllowPrivateAccess = true))
 	TObjectPtr<USoundClass> SoundClassBGM;
 	
+	//캐릭터 데이터
+	UPROPERTY(EditDefaultsOnly, Category = "Character Data", meta = (AllowPrivateAccess = true))
+	TObjectPtr<UT3CharacterDataAsset> CharacterData;
+	
+	//저장, 불러오기에 사용할 슬롯 이름
 	const FString SAVE_GAME_NAME = TEXT("SaveSlot1");
 };

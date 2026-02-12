@@ -1,18 +1,24 @@
 #include "Monster/T3MidBossMonster.h"
+#include "Monster/T3BossWeaponComponent.h"
+#include "Monster/T3MidBossHPBarWidget.h"
 #include "Desecration.h"
+#include "AIController.h"
 #include "Engine/DamageEvents.h"
+#include "Components/AudioComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/TimelineComponent.h"
+#include "Curves/CurveFloat.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "NativeGameplayTags.h"
 
-// Gameplay Tag 네이티브 정의 — 상태 태그
+// Gameplay Tag 네이티브 정의 — 상태 태그 (State + Event 겸용: SendStateTreeEvent에도 사용)
 UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_State_Dead, "Boss.State.Dead");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_State_Stunned, "Boss.State.Stunned");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_State_ExecutingPattern, "Boss.State.ExecutingPattern");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_State_SuperArmor, "Boss.State.SuperArmor");
 
-// Gameplay Tag 네이티브 정의 — StateTree 이벤트 태그
-UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_Event_Dead, "Boss.Event.Dead");
-UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_Event_Stunned, "Boss.Event.Stunned");
+// Gameplay Tag 네이티브 정의 — StateTree 전용 이벤트 태그 (대응 State 없음)
 UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_Event_StunRecovered, "Boss.Event.StunRecovered");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_Event_ActionCountDepleted, "Boss.Event.ActionCountDepleted");
 
@@ -20,8 +26,30 @@ AT3MidBossMonster::AT3MidBossMonster()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	// 회전 설정 — 컨트롤러 회전 직접 적용 비활성화, MovementComponent가 부드럽게 보간
+	bUseControllerRotationYaw = false;
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationRoll = false;
+
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		MoveComp->bOrientRotationToMovement = false;       // 이동 방향 회전 OFF (스트레이프 시 타겟 바라보기 위해)
+		MoveComp->bUseControllerDesiredRotation = true;    // 컨트롤러 SetFocus 방향으로 부드럽게 보간
+		MoveComp->RotationRate = FRotator(0.f, 360.f, 0.f); // 초당 360도 (에디터에서 조절 가능)
+	}
+
 	// StateTree 컴포넌트 (standalone 스키마 — AI Controller 없이 동작)
 	StateTreeComponent = CreateDefaultSubobject<UStateTreeComponent>(TEXT("StateTreeComponent"));
+	StateTreeComponent->SetStartLogicAutomatically(false);
+
+	// MotionWarping 컴포넌트
+	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarpingComponent"));
+
+	// 무기 컴포넌트
+	WeaponComponent = CreateDefaultSubobject<UT3BossWeaponComponent>(TEXT("WeaponComponent"));
+
+	// 디졸브 타임라인 컴포넌트
+	DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("DissolveTimeline"));
 }
 
 // ============================================================
@@ -71,6 +99,13 @@ void AT3MidBossMonster::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// 무기 소켓 부착 + 히트 델리게이트 바인딩
+	if (WeaponComponent)
+	{
+		WeaponComponent->AttachToSocket(GetMesh());
+		WeaponComponent->OnWeaponHitActor.AddDynamic(this, &AT3MidBossMonster::OnWeaponHit);
+	}
+
 	MidBossStats.CurrentHP = MidBossStats.MaxHP;
 	MidBossStats.CurrentStunGauge = 0.f;
 
@@ -81,11 +116,43 @@ void AT3MidBossMonster::BeginPlay()
 	NotifyModifier = NewObject<UMidBossNotifyModifier>(this);
 	NotifyModifier->Initialize(ModifierDataAsset);
 
+	// 디졸브용 Dynamic Material 생성 + Timeline 셋업
+	if (bEnableDissolve)
+	{
+		CreateDynamicMaterials();
+
+		// 커브 결정 — 에디터에서 할당한 커브 우선, 없으면 선형 자동 생성
+		UCurveFloat* CurveToUse = DissolveCurve;
+		if (!CurveToUse)
+		{
+			DefaultDissolveCurve = NewObject<UCurveFloat>(this);
+			DefaultDissolveCurve->FloatCurve.AddKey(0.f, 0.f);
+			DefaultDissolveCurve->FloatCurve.AddKey(DissolveDuration, 1.f);
+			CurveToUse = DefaultDissolveCurve;
+		}
+
+		// Timeline 바인딩
+		if (DissolveTimeline && CurveToUse)
+		{
+			FOnTimelineFloat UpdateDelegate;
+			UpdateDelegate.BindUFunction(this, FName("OnDissolveUpdate"));
+
+			FOnTimelineEvent FinishedDelegate;
+			FinishedDelegate.BindUFunction(this, FName("OnDissolveFinished"));
+
+			DissolveTimeline->AddInterpFloat(CurveToUse, UpdateDelegate, FName("DissolveTrack"));
+			DissolveTimeline->SetTimelineFinishedFunc(FinishedDelegate);
+			DissolveTimeline->SetTimelineLength(DissolveDuration);
+			DissolveTimeline->SetLooping(false);
+		}
+	}
+
 	OnMidBossSpawned.Broadcast();
 
-	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 스폰 완료 (HP: %.0f, Stage: %d, 등록 패턴: %d개, Modifier: %s)"),
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 스폰 완료 (HP: %.0f, Stage: %d, 등록 패턴: %d개, Modifier: %s, Dissolve: %s)"),
 		*BossName, MidBossStats.MaxHP, BossStage, AttackPatterns.Num(),
-		ModifierDataAsset ? TEXT("O") : TEXT("X"));
+		ModifierDataAsset ? TEXT("O") : TEXT("X"),
+		bEnableDissolve ? TEXT("O") : TEXT("X"));
 }
 
 void AT3MidBossMonster::Tick(float DeltaTime)
@@ -105,6 +172,26 @@ void AT3MidBossMonster::Tick(float DeltaTime)
 		{
 			const FVector Delta = MoveToTargetDirection * MoveToTargetSpeed * DeltaTime;
 			AddActorWorldOffset(Delta, true);
+		}
+	}
+
+	// AIController SetFocus — MovementComponent가 RotationRate로 부드럽게 보간
+	if (AAIController* AIC = Cast<AAIController>(GetController()))
+	{
+		if (CombatTarget && !IsStunned() && !IsDead())
+		{
+			AIC->SetFocus(CombatTarget);
+
+			// 공격 중: 느린 트래킹 (다음 공격 시 스냅 방지) / 비공격: 빠른 트래킹
+			if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+			{
+				const float Rate = IsExecutingPattern() ? AttackRotationRate : IdleRotationRate;
+				MoveComp->RotationRate = FRotator(0.f, Rate, 0.f);
+			}
+		}
+		else
+		{
+			AIC->ClearFocus(EAIFocusPriority::Gameplay);
 		}
 	}
 }
@@ -204,8 +291,9 @@ void AT3MidBossMonster::CancelCurrentPattern()
 		StopAnimMontage();
 	}
 
-	SetAttackCollisionEnabled(false);
+	if (WeaponComponent) { WeaponComponent->SetAttackCollisionEnabled(false); }
 	bIsMovingToTarget = false;
+	if (MotionWarpingComponent) { MotionWarpingComponent->RemoveWarpTarget(MotionWarpTargetName); MotionWarpingComponent->RemoveWarpTarget(MotionWarpTargetRotationName); }
 	ResetPatternState();
 }
 
@@ -259,12 +347,23 @@ bool AT3MidBossMonster::GetPatternData(FName PatternName, FMidBossAttackPattern&
 
 void AT3MidBossMonster::HandlePatternNotify(FName NotifyName)
 {
+	const FString Name = NotifyName.ToString();
+
+	// --- 상태 무관 노티파이 (사망 몽타주 등에서도 동작) ---
+	if (Name.Equals(TEXT("DropWeapon")))
+	{
+		if (WeaponComponent)
+		{
+			WeaponComponent->DropWeapon();
+			UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 노티파이로 무기 드롭"));
+		}
+		return;
+	}
+
 	if (!IsExecutingPattern())
 	{
 		return;
 	}
-
-	const FString Name = NotifyName.ToString();
 
 	UE_LOG(LogDesecration, Verbose,
 		TEXT("T3_MidBoss: 노티파이 수신 — %s (패턴:'%s', 체인:%d)"),
@@ -332,11 +431,14 @@ void AT3MidBossMonster::HandlePatternNotify(FName NotifyName)
 	// --- 판정 ON/OFF (항상 실행) ---
 	else if (Name.Equals(TEXT("AttackStart")))
 	{
-		SetAttackCollisionEnabled(true);
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: AttackStart 노티파이 수신 (WeaponComponent: %s)"),
+			WeaponComponent ? TEXT("유효") : TEXT("nullptr"));
+		if (WeaponComponent) { WeaponComponent->SetAttackCollisionEnabled(true); }
 	}
 	else if (Name.Equals(TEXT("AttackEnd")))
 	{
-		SetAttackCollisionEnabled(false);
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: AttackEnd 노티파이 수신"));
+		if (WeaponComponent) { WeaponComponent->SetAttackCollisionEnabled(false); }
 	}
 }
 
@@ -455,16 +557,35 @@ void AT3MidBossMonster::MoveToTarget(float Duration, float Distance)
 		TEXT("T3_MidBoss: MoveToTarget 시작 (Duration:%.2f, Distance:%.0f)"), Duration, Distance);
 }
 
-void AT3MidBossMonster::SetAttackCollisionEnabled(bool bEnable)
+void AT3MidBossMonster::UpdateMotionWarpTarget()
 {
-	if (WeaponCollisionComponent)
+	if (!MotionWarpingComponent || !CombatTarget)
 	{
-		WeaponCollisionComponent->SetCollisionEnabled(
-			bEnable ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
-
-		UE_LOG(LogDesecration, Verbose,
-			TEXT("T3_MidBoss: 무기 콜리전 %s"), bEnable ? TEXT("ON") : TEXT("OFF"));
+		return;
 	}
+
+	// 회전용 — 오프셋 없이 플레이어 정확한 위치 (근거리 회전 뒤집힘 방지)
+	MotionWarpingComponent->AddOrUpdateWarpTargetFromComponent(
+		MotionWarpTargetRotationName,
+		CombatTarget->GetRootComponent(),
+		NAME_None,
+		true,  // bFollowComponent
+		EWarpTargetLocationOffsetDirection::VectorFromTargetToOwner,
+		FVector::ZeroVector
+	);
+
+	// 이동용 — 거리 기반 동적 오프셋 (근거리 후진 방지)
+	const float Distance = FVector::Dist(GetActorLocation(), CombatTarget->GetActorLocation());
+	const float ClampedOffset = FMath::Clamp(WarpTargetOffset, 0.f, Distance - MinWarpDistance);
+
+	MotionWarpingComponent->AddOrUpdateWarpTargetFromComponent(
+		MotionWarpTargetName,
+		CombatTarget->GetRootComponent(),
+		NAME_None,
+		true,  // bFollowComponent
+		EWarpTargetLocationOffsetDirection::VectorFromTargetToOwner,
+		FVector(ClampedOffset, 0.f, 0.f)
+	);
 }
 
 bool AT3MidBossMonster::IsPatternOffCooldown(FName PatternName) const
@@ -515,6 +636,9 @@ void AT3MidBossMonster::PlayCurrentChainMontage()
 		return;
 	}
 
+	// MotionWarping 타겟 갱신 (ANS_MotionWarping 있는 몽타주에서만 실제 워프 발생)
+	UpdateMotionWarpTarget();
+
 	// 몽타주 재생 먼저 → 그 다음 EndDelegate 등록 (재생 중이어야 delegate가 걸림)
 	PlayAnimMontage(MontageData.Montage, MontageData.PlayRate);
 
@@ -539,7 +663,7 @@ void AT3MidBossMonster::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 		return;
 	}
 
-	SetAttackCollisionEnabled(false);
+	if (WeaponComponent) { WeaponComponent->SetAttackCollisionEnabled(false); }
 	bIsMovingToTarget = false;
 
 	if (bInterrupted)
@@ -587,6 +711,7 @@ void AT3MidBossMonster::ResetPatternState()
 	CurrentPatternName = NAME_None;
 	CurrentChainIndex = 0;
 	RemoveStateTag(TAG_Boss_State_ExecutingPattern);
+	if (MotionWarpingComponent) { MotionWarpingComponent->RemoveWarpTarget(MotionWarpTargetName); MotionWarpingComponent->RemoveWarpTarget(MotionWarpTargetRotationName); }
 }
 
 // ============================================================
@@ -638,10 +763,34 @@ void AT3MidBossMonster::ApplyDamageToMidBoss(float DamageAmount, float StunAmoun
 	MidBossStats.CurrentHP -= DamageAmount;
 	OnMidBossDamaged.Broadcast();
 
+	// 피격 사운드 재생
+	if (HitSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this, HitSound, GetActorLocation(),
+			SoundVolume * HitVolumeMultiplier);
+	}
+
 	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 피격 (데미지: %.0f, 남은HP: %.0f, 스턴게이지: %.0f/%.0f)"),
 		*BossName, DamageAmount, MidBossStats.CurrentHP, MidBossStats.CurrentStunGauge, MidBossStats.StunThreshold);
 
-	if (HasSuperArmor())
+	// 카메라 쉐이크 — 상태 무관하게 항상 재생 (피격 피드백)
+	if (HitCameraShakeClass)
+	{
+		UGameplayStatics::PlayWorldCameraShake(
+			this, HitCameraShakeClass, GetActorLocation(),
+			0.f, HitShakeOuterRadius, HitShakeFalloff);
+
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 카메라 쉐이크 재생 (Class: %s, Radius: %.0f)"),
+			*HitCameraShakeClass->GetName(), HitShakeOuterRadius);
+	}
+	else
+	{
+		UE_LOG(LogDesecration, Warning, TEXT("T3_MidBoss: HitCameraShakeClass가 할당되지 않음!"));
+	}
+
+	// 히트 리액션 — 슈퍼아머 + 비기절 + 비공격 + 생존 시에만 재생
+	if (HasSuperArmor() && !IsStunned() && !IsExecutingPattern() && MidBossStats.CurrentHP > 0.f)
 	{
 		PlayAdditiveHitReaction(DamageCauser);
 	}
@@ -658,11 +807,13 @@ void AT3MidBossMonster::ApplyDamageToMidBoss(float DamageAmount, float StunAmoun
 		CancelCurrentPattern();
 		OnMidBossDeath.Broadcast();
 
-		// StateTree 이벤트 전송 — 즉시 Dead 상태로 전환
+		// StateTree 이벤트 전송 — 즉시 Dead 상태로 전환 (State 태그를 이벤트로 겸용)
 		if (StateTreeComponent)
 		{
-			StateTreeComponent->SendStateTreeEvent(TAG_Boss_Event_Dead);
+			StateTreeComponent->SendStateTreeEvent(TAG_Boss_State_Dead);
 		}
+
+		BeginDeathSequence();
 
 		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 사망 (StateTree 이벤트 전송)"), *BossName);
 		return;
@@ -728,17 +879,36 @@ UAnimMontage* AT3MidBossMonster::GetDirectionalHitReactMontage(AActor* DamageCau
 	return Selected ? Selected : HitReactMontage_Default.Get();
 }
 
+// ============================================================
+// 스턴 / 회복
+// ============================================================
+
 void AT3MidBossMonster::ApplyStun()
 {
 	AddStateTag(TAG_Boss_State_Stunned);
 	MidBossStats.CurrentStunGauge = 0.f;
 	CancelCurrentPattern();
+
+	// 스턴 몽타주 재생
+	if (StunMontage)
+	{
+		PlayAnimMontage(StunMontage);
+	}
+
+	// 스턴 사운드 재생
+	if (StunSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this, StunSound, GetActorLocation(),
+			SoundVolume * StunVolumeMultiplier);
+	}
+
 	OnMidBossStun.Broadcast();
 
-	// StateTree 이벤트 전송 — 즉시 Stunned 상태로 전환
+	// StateTree 이벤트 전송 — 즉시 Stunned 상태로 전환 (State 태그를 이벤트로 겸용)
 	if (StateTreeComponent)
 	{
-		StateTreeComponent->SendStateTreeEvent(TAG_Boss_Event_Stunned);
+		StateTreeComponent->SendStateTreeEvent(TAG_Boss_State_Stunned);
 	}
 
 	// 스턴 자동 해제 타이머 시작
@@ -757,9 +927,6 @@ void AT3MidBossMonster::RecoverFromStun()
 	RemoveStateTag(TAG_Boss_State_Stunned);
 	MidBossStats.CurrentStunGauge = 0.f;
 
-	// C++ 델리게이트 → StateTree Task에 완료 알림 (레거시, 제거 예정)
-	OnStunRecoveredNative.Broadcast();
-
 	// StateTree 이벤트 전송 — Stunned 상태 종료, Approach로 복귀
 	if (StateTreeComponent)
 	{
@@ -767,4 +934,271 @@ void AT3MidBossMonster::RecoverFromStun()
 	}
 
 	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 스턴 해제 (StateTree 이벤트 전송)"), *BossName);
+}
+
+// ============================================================
+// 입장 (Entry) — 외부 트리거에서 호출
+// ============================================================
+
+void AT3MidBossMonster::ActivateBoss(AActor* Activator)
+{
+	if (bIsActivated || IsDead())
+	{
+		return;
+	}
+
+	if (!Activator)
+	{
+		UE_LOG(LogDesecration, Warning, TEXT("T3_MidBoss: ActivateBoss — Activator가 nullptr"));
+		return;
+	}
+
+	bIsActivated = true;
+	CombatTarget = Activator;
+
+	// StateTree 시작 (생성자에서 자동 시작 비활성화)
+	if (StateTreeComponent)
+	{
+		StateTreeComponent->StartLogic();
+	}
+
+	// BGM 재생 (2D — 공간 감쇠 없이 음악처럼 재생)
+	if (BossBGM)
+	{
+		BGMAudioComponent = UGameplayStatics::SpawnSound2D(this, BossBGM, BGMVolume);
+	}
+
+	// 보스 HP바 위젯 생성 (PlayerController 기반)
+	if (BossHPBarWidgetClass)
+	{
+		if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+		{
+			BossHPBarWidget = CreateWidget<UT3MidBossHPBarWidget>(PC, BossHPBarWidgetClass);
+			if (BossHPBarWidget)
+			{
+				BossHPBarWidget->TargetBoss = this;
+				BossHPBarWidget->AddToViewport();
+			}
+		}
+	}
+
+	OnMidBossActivated.Broadcast();
+
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 활성화 (타겟: %s, StateTree 시작, BGM: %s, HPBar: %s)"),
+		*BossName, *Activator->GetName(),
+		BossBGM ? TEXT("O") : TEXT("X"),
+		BossHPBarWidget ? TEXT("O") : TEXT("X"));
+}
+
+// ============================================================
+// 사망 연출 (Death Sequence)
+// ============================================================
+
+void AT3MidBossMonster::BeginDeathSequence()
+{
+	// 사망 사운드 재생
+	if (DeathSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this, DeathSound, GetActorLocation(),
+			SoundVolume * DeathVolumeMultiplier);
+	}
+
+	// BGM 페이드아웃
+	if (BGMAudioComponent && BGMAudioComponent->IsPlaying())
+	{
+		BGMAudioComponent->FadeOut(BGMFadeOutDuration, 0.f);
+	}
+
+	// 사망 몽타주 재생
+	if (DeathMontage)
+	{
+		const float Duration = PlayAnimMontage(DeathMontage);
+		if (Duration > 0.f)
+		{
+			UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+			if (AnimInstance)
+			{
+				// BlendingOut 시점에 콜백 — 블렌드아웃 전에 포즈 고정
+				FOnMontageBlendingOutStarted BlendOutDelegate;
+				BlendOutDelegate.BindUObject(this, &AT3MidBossMonster::OnDeathMontageEnded);
+				AnimInstance->Montage_SetBlendingOutDelegate(BlendOutDelegate, DeathMontage);
+			}
+
+			UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 사망 몽타주 재생 (%.1f초)"), Duration);
+			return;
+		}
+	}
+
+	// 몽타주 없거나 재생 실패 시 즉시 완료
+	FinishDeathSequence();
+}
+
+void AT3MidBossMonster::OnDeathMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	// 사망 포즈 고정 — ABP가 Idle로 복귀하지 않도록 애니메이션 정지
+	GetMesh()->bPauseAnims = true;
+
+	FinishDeathSequence();
+}
+
+void AT3MidBossMonster::FinishDeathSequence()
+{
+	// 무기 드롭 (bAutoDropWeapon=false면 AnimNotify 등에서 수동 호출)
+	if (bAutoDropWeapon && WeaponComponent)
+	{
+		WeaponComponent->DropWeapon();
+	}
+
+	// 캡슐 충돌 해제 — 플레이어 통과 가능
+	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
+	{
+		Capsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+	// 이동 비활성화
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		MoveComp->DisableMovement();
+	}
+
+	// AI 회전 정지
+	if (AAIController* AIC = Cast<AAIController>(GetController()))
+	{
+		AIC->ClearFocus(EAIFocusPriority::Gameplay);
+	}
+
+	// StateTree 정지
+	if (StateTreeComponent)
+	{
+		StateTreeComponent->StopLogic(TEXT("Death"));
+	}
+
+	// 사망 연출 완료 델리게이트 — Level BP에서 안개벽 해제, 보상 등
+	OnMidBossDeathFinished.Broadcast();
+
+	// 디졸브 시작 (활성화 시) — 디졸브 완료 후 SetLifeSpan
+	if (bEnableDissolve && DynamicMaterials.Num() > 0)
+	{
+		StartDissolve();
+		return;
+	}
+
+	// 디졸브 비활성화 시 기존 방식
+	SetLifeSpan(DeathCleanupDelay);
+
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 사망 연출 완료 (%.0f초 후 제거)"),
+		*BossName, DeathCleanupDelay);
+}
+
+// ============================================================
+// 디졸브 연출
+// ============================================================
+
+void AT3MidBossMonster::CreateDynamicMaterials()
+{
+	USkeletalMeshComponent* MeshComp = GetMesh();
+	if (!MeshComp) return;
+
+	const int32 NumMaterials = MeshComp->GetNumMaterials();
+	DynamicMaterials.Reserve(NumMaterials);
+
+	for (int32 i = 0; i < NumMaterials; ++i)
+	{
+		UMaterialInstanceDynamic* DynMat = MeshComp->CreateAndSetMaterialInstanceDynamic(i);
+		if (DynMat)
+		{
+			DynamicMaterials.Add(DynMat);
+		}
+	}
+
+	UE_LOG(LogDesecration, Verbose, TEXT("T3_MidBoss: DynamicMaterial %d개 생성"), DynamicMaterials.Num());
+}
+
+void AT3MidBossMonster::StartDissolve()
+{
+	if (!DissolveTimeline)
+	{
+		UE_LOG(LogDesecration, Warning, TEXT("T3_MidBoss: DissolveTimeline이 nullptr — 디졸브 스킵"));
+		SetLifeSpan(DeathCleanupDelay);
+		return;
+	}
+
+	// 디졸브 사운드 재생
+	if (DissolveSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, DissolveSound, GetActorLocation());
+	}
+
+	DissolveTimeline->PlayFromStart();
+
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 디졸브 시작 (%.1f초, 머티리얼 %d개)"),
+		*BossName, DissolveDuration, DynamicMaterials.Num());
+}
+
+void AT3MidBossMonster::OnDissolveUpdate(float Value)
+{
+	for (UMaterialInstanceDynamic* DynMat : DynamicMaterials)
+	{
+		if (DynMat)
+		{
+			DynMat->SetScalarParameterValue(DissolveParameterName, Value);
+		}
+	}
+}
+
+void AT3MidBossMonster::OnDissolveFinished()
+{
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 디졸브 완료 — 액터 제거 예정"),
+		*BossName);
+
+	// 디졸브 완료 후 짧은 딜레이로 제거
+	SetLifeSpan(0.5f);
+}
+
+// ============================================================
+// 무기 히트 → 데미지 적용
+// ============================================================
+
+void AT3MidBossMonster::OnWeaponHit(AActor* HitActor)
+{
+	if (!HitActor || IsDead())
+	{
+		return;
+	}
+
+	// 현재 패턴의 데미지 데이터 조회
+	const FMidBossAttackPattern* PatternData = FindPatternData(CurrentPatternName);
+	if (!PatternData || !PatternData->MontageChain.IsValidIndex(CurrentChainIndex))
+	{
+		return;
+	}
+
+	const FPatternMontageData& MontageData = PatternData->MontageChain[CurrentChainIndex];
+
+	// FT3DamageEvent 생성 — HitIntensity + DamageType 전달
+	TSubclassOf<UDamageType> DamageTypeClass = MontageData.DamageTypeClass;
+	if (!DamageTypeClass)
+	{
+		DamageTypeClass = UT3DamageType_Base::StaticClass();
+	}
+
+	FT3DamageEvent DamageEvent(DamageTypeClass);
+	DamageEvent.HitIntensity = MontageData.HitIntensity;
+	DamageEvent.HitDamageMultiplier = 1.0f;
+
+	// 플레이어의 TakeDamage 직접 호출
+	// → AT3CharacterBase::TakeDamage → CombatComponent::ExecuteHitLogic
+	// → 블록/패링/회피 판정 → HP 차감
+	HitActor->TakeDamage(
+		MontageData.Damage,
+		DamageEvent,
+		GetController(),    // 보스의 AIController
+		this                // DamageCauser = 보스
+	);
+
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s에게 TakeDamage (데미지:%.0f, 강도:%s, 패턴:'%s'[%d])"),
+		*HitActor->GetName(), MontageData.Damage,
+		*UEnum::GetValueAsString(MontageData.HitIntensity),
+		*CurrentPatternName.ToString(), CurrentChainIndex);
 }
