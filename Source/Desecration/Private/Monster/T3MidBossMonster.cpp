@@ -4,9 +4,11 @@
 #include "Desecration.h"
 #include "AIController.h"
 #include "Engine/DamageEvents.h"
+#include "Blueprint/UserWidget.h"
 #include "Components/AudioComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/TimelineComponent.h"
+#include "Components/WidgetComponent.h"
 #include "Curves/CurveFloat.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -50,6 +52,14 @@ AT3MidBossMonster::AT3MidBossMonster()
 
 	// 디졸브 타임라인 컴포넌트
 	DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("DissolveTimeline"));
+
+	// 록온 위젯 컴포넌트
+	LockOnWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("LockOnWidget"));
+	LockOnWidgetComponent->SetupAttachment(GetMesh(), TEXT("LockOn_Socket"));
+	LockOnWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	LockOnWidgetComponent->SetDrawSize(FVector2D(30.f, 15.f));
+	LockOnWidgetComponent->SetVisibility(false);
+	LockOnWidgetComponent->SetRelativeLocation(FVector::ZeroVector);
 }
 
 // ============================================================
@@ -98,6 +108,17 @@ bool AT3MidBossMonster::HasSuperArmor() const
 void AT3MidBossMonster::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// 록온 위젯 소켓 재부착 (SetupAttachment는 런타임 보장 안 됨)
+	if (LockOnWidgetComponent && GetMesh())
+	{
+		LockOnWidgetComponent->AttachToComponent(
+			GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("LockOn_Socket"));
+		LockOnWidgetComponent->SetRelativeLocation(FVector::ZeroVector);
+
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: LockOnWidget 소켓 부착 완료 (%s)"),
+			*LockOnWidgetComponent->GetAttachSocketName().ToString());
+	}
 
 	// 무기 소켓 부착 + 히트 델리게이트 바인딩
 	if (WeaponComponent)
@@ -1154,6 +1175,18 @@ void AT3MidBossMonster::OnDissolveFinished()
 
 	// 디졸브 완료 후 짧은 딜레이로 제거
 	SetLifeSpan(0.5f);
+}
+
+// ============================================================
+// 록온 위젯 표시
+// ============================================================
+
+void AT3MidBossMonster::SetLockOnWidgetVisible(bool bVisible)
+{
+	if (LockOnWidgetComponent)
+	{
+		LockOnWidgetComponent->SetVisibility(bVisible);
+	}
 }
 
 // ============================================================

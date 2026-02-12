@@ -39,7 +39,7 @@ void UT3TitleLevelWidget::OnClickNewGameButton()
 	//저장된 게임이 있는 경우 패널을 통해 물어보기
 	if (TitlePlayerController->DoesSavedDataExist())
 	{
-		ConfirmPanel->ShowConfirmPanel(CHECK_NEW_GAME);
+		ConfirmPanel->ShowConfirmPanel(CheckNewGame);
 		ConfirmPanel->OnClickConfirmButtonAction.AddDynamic(TitlePlayerController, &AT3TitlePlayerController::MoveToSelectClassLevel);
 		return;
 	}
@@ -66,6 +66,6 @@ void UT3TitleLevelWidget::OnClickSettingsButton()
 
 void UT3TitleLevelWidget::OnClickQuitButton()
 {
-	ConfirmPanel->ShowConfirmPanel(QUIT_GAME_STRING);
+	ConfirmPanel->ShowConfirmPanel(QuitGameMessage);
 	ConfirmPanel->OnClickConfirmButtonAction.AddDynamic(TitlePlayerController, &AT3TitlePlayerController::QuitGame);
 }
