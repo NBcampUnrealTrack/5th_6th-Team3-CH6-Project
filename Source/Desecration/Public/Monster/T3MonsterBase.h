@@ -26,6 +26,9 @@ public:
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
+	bool bIsDead;
+
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	class UT3HealthComponent* HealthComponent;

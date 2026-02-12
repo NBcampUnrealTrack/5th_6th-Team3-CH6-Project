@@ -123,6 +123,8 @@ public:
 	void OnDeath();
 	UFUNCTION(BlueprintImplementableEvent, Category = "Item")
 	void OnActivatePotion();
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnInteract();
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Death")
 	bool bIsDead = false;

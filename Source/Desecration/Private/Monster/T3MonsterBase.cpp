@@ -12,6 +12,8 @@ AT3MonsterBase::AT3MonsterBase()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	bIsDead = false;
+
 	// 1. 컴포넌트 생성
 	LockOnWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("LockOnWidget"));
 
