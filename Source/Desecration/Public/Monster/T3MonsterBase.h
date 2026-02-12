@@ -5,10 +5,11 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Monster/T3HealthComponent.h"
+#include "Player/T3LockOnTarget.h"
 #include "T3MonsterBase.generated.h"
 
 UCLASS()
-class DESECRATION_API AT3MonsterBase : public ACharacter
+class DESECRATION_API AT3MonsterBase : public ACharacter, public IT3LockOnTarget
 {
 	GENERATED_BODY()
 
@@ -25,6 +26,9 @@ public:
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
+	bool bIsDead;
+
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	class UT3HealthComponent* HealthComponent;
@@ -34,4 +38,14 @@ protected:
 	void OnCapsuleBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	void ReportTouchStimulus(AActor* OtherActor, const FVector& TouchLocation);
+
+
+
+protected:
+	// 록온 위젯을 담을 컴포넌트
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	class UWidgetComponent* LockOnWidgetComponent;
+
+public:
+	virtual void SetLockOnWidgetVisible(bool bVisible) override;
 };

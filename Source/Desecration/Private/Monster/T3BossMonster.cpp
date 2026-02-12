@@ -76,8 +76,7 @@ AT3BossMonster::AT3BossMonster()
 	// 1. 컴포넌트 생성
 	LockOnWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("LockOnWidget"));
 
-	// 2. 부착 (이게 핵심입니다!)
-	// Mesh 컴포넌트의 "LockOn_Socket"에 부착하라고 명시해야 합니다.
+	// 2. 부착 
 	LockOnWidgetComponent->SetupAttachment(GetMesh(), TEXT("LockOn_Socket"));
 
 	// 3. 설정
@@ -85,8 +84,6 @@ AT3BossMonster::AT3BossMonster()
 	LockOnWidgetComponent->SetVisibility(false);
 	LockOnWidgetComponent->SetRelativeLocation(FVector::ZeroVector); // 소켓 위치로 초기화
 
-	// 생성자에서 캡슐 반지름을 가져와 스케일을 조정하는 것은 좋으나, 
-	// 나중에 데이터 테이블 등으로 관리하는 것이 넷마블 스타일입니다.
 	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
 	{
 		float Radius = Capsule->GetScaledCapsuleRadius();

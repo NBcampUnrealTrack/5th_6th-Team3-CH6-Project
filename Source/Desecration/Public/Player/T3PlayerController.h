@@ -7,6 +7,7 @@
 #include "InputActionValue.h"
 #include "T3PlayerController.generated.h"
 
+class UT3PopUpMenu;
 class UInputMappingContext;
 class UInputAction;
 class UUserWidget;
@@ -75,6 +76,18 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "UI")
 	TObjectPtr<UUserWidget> CombatWidget;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UT3PopUpMenu> PopUpMenuClass;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "UI")
+	TObjectPtr<UT3PopUpMenu> PopUpMenu;
+	
+	UPROPERTY(EditDefaultsOnly, Category="UI")
+	TSubclassOf<UUserWidget> HUDSlotWidgetClass;
+	
+	UPROPERTY(BlueprintReadOnly, Category="UI")
+	TObjectPtr<UUserWidget> HUDSlotWidget;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> ChangeSkillSlotAction;
@@ -91,6 +104,10 @@ protected:
 
 	TObjectPtr<class AT3CharacterBase> OwnerChar;
 	TObjectPtr<class UT3CombatComponent> Combat;
+
+
+
+
 private:
 	bool bIsInventoryOpen = false;
 	void Input_Move(const FInputActionValue& Value);
