@@ -4,6 +4,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "T3SelectClassGameMode.generated.h"
 
+enum class EPlayerClass;
 class UT3GameInstance;
 
 UCLASS()

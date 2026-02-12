@@ -29,6 +29,10 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 {
 	//캐릭터 정보를 저장된 게임 데이터에 저장한다.
 	const TObjectPtr<UT3SaveGame> SaveGame = T3GameInstance->GetSavedGameData();
+	if (!SaveGame)
+	{
+		return false;
+	}
 	//현재 위치
 	SaveGame->SavedLevelName = LevelName;
 	SaveGame->PlayerLocation = Character->GetActorLocation();
@@ -88,8 +92,17 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 {
 	//저장된 게임 데이터에서 캐릭터 정보를 가져온다. 
 	const TObjectPtr<UT3SaveGame> SaveGame = T3GameInstance->GetSavedGameData();
+	if (!SaveGame)
+	{
+		return;
+	}
 	//캐릭터 상태
-	Character->SetActorLocation(SaveGame->PlayerLocation);
+	//이동은 데이터 로드 후 1회만 적용
+	if (SaveGame->bSetLocation)
+	{
+		SaveGame->bSetLocation = false;
+		Character->SetActorLocation(SaveGame->PlayerLocation);
+	}
 	//스탯
 	Character->SetCurrentHP(SaveGame->CurrentHP);
 	Character->SetCurrentMana(SaveGame->CurrentMana);
@@ -103,7 +116,10 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 	const int32 SlotNums = SaveGame->Items.Num();
 	for (int32 iNum = 0; iNum < SlotNums; ++iNum)
 	{
-		InventoryComponent->Items[iNum] = SaveGame->Items[iNum];
+		if (InventoryComponent->Items.IsValidIndex(iNum))
+		{
+			InventoryComponent->Items[iNum] = SaveGame->Items[iNum];
+		}
 	}
 	InventoryComponent->SetMoney(SaveGame->Money);
 	InventoryComponent->SetNormalStoneCount(SaveGame->NormalStoneCount);
