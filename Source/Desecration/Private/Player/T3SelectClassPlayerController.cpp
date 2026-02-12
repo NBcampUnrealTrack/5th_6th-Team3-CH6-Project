@@ -35,6 +35,10 @@ void AT3SelectClassPlayerController::BeginPlay()
 
 void AT3SelectClassPlayerController::TutorialStart(const FString& PlayerName, const EPlayerClass SelectedPlayerClass)
 {
+	bShowMouseCursor = false;
+	const FInputModeGameOnly InputModeGameOnly;
+	SetInputMode(InputModeGameOnly);
+	
 	SelectClassGameMode->MakeFirstGameData(PlayerName, SelectedPlayerClass);
 	SelectClassGameMode->TutorialStart();
 }
