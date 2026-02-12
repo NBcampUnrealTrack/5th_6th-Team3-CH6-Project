@@ -433,6 +433,58 @@ void UT3InventoryComponent::UseEquippedItem()
 	}
 }
 
+int32 UT3InventoryComponent::GetCurrentItemCount() const
+{
+	if (EquippedItemIDs.Num() <= 0)
+	{
+		UE_LOG(LogTemp, Error, TEXT("장착한 아이템이 없음"));
+		return 0;
+	}
+	
+	FName CurrentItemName = EquippedItemIDs[0];
+	
+	if (CurrentItemName == NAME_None)
+	{
+		return 0;
+	}
+	
+	for (const FInventorySlot& Item : Items)
+	{
+		if (Item.ItemID == CurrentItemName)
+		{
+			return Item.ItemStack;
+		}
+	}
+	
+	return 0;
+}
+
+int32 UT3InventoryComponent::GetNextItemCount() const
+{
+	if (EquippedItemIDs.Num() <= 1)
+	{
+		UE_LOG(LogTemp, Error, TEXT("장착한 아이템이 없음"));
+		return 0;
+	}
+	
+	FName NextItemName = EquippedItemIDs[1];
+	
+	if (NextItemName == NAME_None)
+	{
+		return 0;
+	}
+	
+	for (const FInventorySlot& Item : Items)
+	{
+		if (Item.ItemID == NextItemName)
+		{
+			return Item.ItemStack;
+		}
+	}
+	
+	return 0;
+}
+
 void UT3InventoryComponent::InitializePotionIDs()
 {
 	if (!IsValid(OwnerCharacter) || !IsValid(OwnerCharacter->ItemDataTable))
