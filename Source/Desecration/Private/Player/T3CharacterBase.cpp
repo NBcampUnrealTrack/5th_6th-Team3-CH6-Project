@@ -1,4 +1,4 @@
-// T3CharacterBase.cpp
+﻿// T3CharacterBase.cpp
 
 
 #include "Player/T3CharacterBase.h"
@@ -14,7 +14,8 @@
 #include "Player/T3CharacterDataAsset.h"
 #include "Player/T3DamageTypes.h"
 #include "Player/T3SkillComponentBase.h"
-
+#include "Equipment/T3PlayerEquipmentComponent.h"
+#include "GameSystem/T3GameMode.h"
 
 
 AT3CharacterBase::AT3CharacterBase()
@@ -51,6 +52,7 @@ AT3CharacterBase::AT3CharacterBase()
 
 	InventoryComponent = CreateDefaultSubobject<UT3InventoryComponent>(TEXT("InventoryComponent")); 
 	ItemUseComponent = CreateDefaultSubobject<UT3ItemUseComponent>(TEXT("ItemUseComponent"));
+	EquipComp = CreateDefaultSubobject<UT3PlayerEquipmentComponent>(TEXT("EquipmentComponent"));
 }
 
 void AT3CharacterBase::RequestSellItem(const FInventorySlot& SlotData)
@@ -66,6 +68,12 @@ void AT3CharacterBase::BeginPlay()
 	{
 		ApplyCharacterData(CharacterData);
 	}
+	
+	//캐릭터 정보 세팅
+	if (const TObjectPtr<AT3GameMode> T3GameMode = Cast<AT3GameMode>(GetWorld()->GetAuthGameMode()))
+	{
+		T3GameMode->SetCharacterBySavedData(this);
+	}
 
 	// 스태미너 자동 회복
 		GetWorldTimerManager().SetTimer(
@@ -79,8 +87,23 @@ void AT3CharacterBase::BeginPlay()
 		// 시작 시 전투모드 활성화
 		PlayerInputState.bIsCombatState = true;
 
+		
+		EquipComp->OnEquipmentStatsChanged.AddDynamic(this, &AT3CharacterBase::OnEquipmentStatsUpdated);
+
 
 }
+
+void AT3CharacterBase::OnEquipmentStatsUpdated(float Atk, float Def)
+{
+	SetAttackPower(Atk);
+	SetDefense(Def * 0.01);
+
+	UE_LOG(LogTemp, Display, TEXT("Atk : %.1f, Def : %.1f"), AttackPower, Defense);
+}
+//void AT3CharacterBase::PostInitializeComponents()
+//{
+//	 Super::PostInitializeComponents();
+//}
 
 
 void AT3CharacterBase::Tick(float DeltaTime)
@@ -343,7 +366,7 @@ void AT3CharacterBase::Roll(const FInputActionValue& Value)
 	
 	OnWakeUp();
 	
-	if (PlayerInputState.bWantsToRoll == false)
+	if (PlayerInputState.bWantsToRoll == false && bIsLying == false)
 	{
 
 		// 스태미나 20 차감
@@ -442,6 +465,12 @@ void AT3CharacterBase::ResetMoveSpeed()
 		BroadcastStatChange(ET3StatType::Stamina);
 		UE_LOG(LogTemp, Log, TEXT("MoveSpeed Restored to: %f"), OriginalMoveSpeed);
 	}
+}
+
+void AT3CharacterBase::OnDeath()
+{
+	bMoveLock = true;
+	OnDeathAnimation();
 }
 
 void AT3CharacterBase::ConsumeMana(float Amount)

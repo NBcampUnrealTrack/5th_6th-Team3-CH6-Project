@@ -14,6 +14,7 @@ class UCameraComponent;
 class UT3CombatComponent;
 class UDataTable;
 class UT3InventoryComponent; 
+class UT3PlayerEquipmentComponent;
 class UT3ItemUseComponent;
 class UT3CharacterDataAsset;
 
@@ -62,6 +63,7 @@ TObjectPtr <UDataTable> ItemDataTable;
 
 protected:
 	virtual void BeginPlay() override;
+	// virtual void PostInitializeComponents();
 	virtual void Tick( float DeltaTime ) override;
 	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
 	
@@ -115,12 +117,23 @@ public:
 	void OnAttack();
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnHit();
+	UFUNCTION(BlueprintCallable, Category = "Death")
+	void OnDeath();
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Death")
+	bool bIsDead = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsLying = false;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TObjectPtr<UT3InventoryComponent> InventoryComponent; 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TObjectPtr<UT3ItemUseComponent> ItemUseComponent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
+	TObjectPtr<UT3PlayerEquipmentComponent> EquipComp;
 
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	void OnEquipmentStatsUpdated(float Atk, float Def);
 
 
 	// Stat 관련
@@ -159,7 +172,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float CriticalDamage = 1.5f;  // 크뎀
-
+	
+	UFUNCTION(BlueprintImplementableEvent, Category = "Death")
+	void OnDeathAnimation();
 
 public:
 	// 7개 스탯 + 이동속도 Get / Set 함수

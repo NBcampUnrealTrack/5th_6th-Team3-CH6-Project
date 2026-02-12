@@ -29,25 +29,13 @@ private:
 	//클래스 선택 버튼
 	void OnClickSelectClassButton(const EPlayerClass ButtonValue);
 	
-	//선택 버튼
+	//타이틀로 돌아가기
 	UFUNCTION()
-	void OnClickSelectButton();
-	
-	//돌아가기 버튼
-	UFUNCTION()
-	void OnClickReturnButton();
+	void ReturnToTitle();
 
 	//캐릭터 선택 버튼이 있는 패널
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
 	TObjectPtr<UHorizontalBox> SelectClassBox;
-	
-	//선택 버튼
-	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
-	TObjectPtr<UButton> SelectButton;
-	
-	//돌아가기 버튼
-	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
-	TObjectPtr<UButton> ReturnButton;
 	
 	//이름 입력 패널이 있는 부모 위젯
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))

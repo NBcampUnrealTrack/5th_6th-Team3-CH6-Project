@@ -1,5 +1,6 @@
 ﻿#include "GameSystem/T3GameMode.h"
 
+#include "Equipment/T3PlayerEquipmentComponent.h"
 #include "GameSystem/T3GameInstance.h"
 #include "GameSystem/T3SaveGame.h"
 #include "Item/Component/T3InventoryComponent.h"
@@ -18,13 +19,21 @@ void AT3GameMode::BeginPlay()
 	}
 }
 
-bool AT3GameMode::SaveGame(const AT3CharacterBase* Character)
+EPlayerClass AT3GameMode::GetPlayerClass()
+{
+	const TObjectPtr<UT3SaveGame> SaveGame = T3GameInstance->GetSavedGameData();
+	return SaveGame->PlayerClass;
+}
+
+bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName LevelName, const bool bTemporarySave)
 {
 	//캐릭터 정보를 저장된 게임 데이터에 저장한다.
 	const TObjectPtr<UT3SaveGame> SaveGame = T3GameInstance->GetSavedGameData();
-	//캐릭터 상태
+	//현재 위치
+	SaveGame->SavedLevelName = LevelName;
 	SaveGame->PlayerLocation = Character->GetActorLocation();
 	//스탯
+	SaveGame->MaxHP = Character->GetMaxHP();
 	SaveGame->CurrentHP = Character->GetCurrentHP();
 	SaveGame->MaxMana = Character->GetMaxMana();
 	SaveGame->CurrentMana = Character->GetCurrentMana();
@@ -42,9 +51,37 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character)
 		SaveGame->Items.Add(Slot);
 	}
 	SaveGame->Money = InventoryComponent->GetMoney();
+	SaveGame->NormalStoneCount = InventoryComponent->GetNormalStoneCount();
+	SaveGame->EpicStoneCount = InventoryComponent->GetEpicStoneCount();
+	SaveGame->LegendaryStoneCount = InventoryComponent->GetLegendaryStoneCount();
+	//장비
+	if (UT3PlayerEquipmentComponent* EquipComp = Character->FindComponentByClass<UT3PlayerEquipmentComponent>())
+	{
+		EquipComp->GetEquipmentSaveData(SaveGame->WeaponSaveData, SaveGame->ArmorSaveData);
+	}
+	
+	//임시 저장이라면 세이브 데이터를 가지고만 있고 직접 저장하지 않는다.
+	if (bTemporarySave)
+	{
+		return true;
+	}
 	
 	//저장
 	return T3GameInstance->SaveGame();
+}
+
+void AT3GameMode::LoadGame()
+{
+	//저장된 게임을 불러오는데 성공하면 그 맵으로 이동
+	if (T3GameInstance->LoadGame())
+	{
+		const TObjectPtr<UT3SaveGame> SaveGame = T3GameInstance->GetSavedGameData();
+		T3GameInstance->OpenLevel(SaveGame->SavedLevelName);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s : Can't load the save game"), *GetNameSafe(this));
+	}
 }
 
 void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
@@ -69,4 +106,12 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 		InventoryComponent->Items[iNum] = SaveGame->Items[iNum];
 	}
 	InventoryComponent->SetMoney(SaveGame->Money);
+	InventoryComponent->SetNormalStoneCount(SaveGame->NormalStoneCount);
+	InventoryComponent->SetEpicStoneCount(SaveGame->EpicStoneCount);
+	InventoryComponent->SetLegendaryStoneCount(SaveGame->LegendaryStoneCount);
+	//장비
+	if (UT3PlayerEquipmentComponent* EquipComp = Character->FindComponentByClass<UT3PlayerEquipmentComponent>())
+	{
+		EquipComp->LoadEquipmentFromSave(SaveGame->WeaponSaveData, SaveGame->ArmorSaveData);
+	}
 }
