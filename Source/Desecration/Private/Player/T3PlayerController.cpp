@@ -281,7 +281,7 @@ void AT3PlayerController::Input_ActivePotionSlot(const FInputActionValue& Value)
 	
 	if (IsValid(OwnerChar))
 	{
-		OwnerChar->InventoryComponent->UseCurrentPotion();
+		OwnerChar->OnActivatePotion();
 	}
 }
 
