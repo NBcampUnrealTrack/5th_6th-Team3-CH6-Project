@@ -47,5 +47,5 @@ private:
 	TObjectPtr<AT3GameMode> T3GameMode;
 	
 	//플레이어 태그
-	const FName PLAYER_TAG = TEXT("Player");
+	const FName PLAYER_TAG = TEXT("PlayerCharacter");
 };

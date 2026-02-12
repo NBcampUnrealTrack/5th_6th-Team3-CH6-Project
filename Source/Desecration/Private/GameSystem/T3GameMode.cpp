@@ -25,7 +25,7 @@ EPlayerClass AT3GameMode::GetPlayerClass()
 	return SaveGame->PlayerClass;
 }
 
-bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName LevelName)
+bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName LevelName, const bool bTemporarySave)
 {
 	//캐릭터 정보를 저장된 게임 데이터에 저장한다.
 	const TObjectPtr<UT3SaveGame> SaveGame = T3GameInstance->GetSavedGameData();
@@ -60,8 +60,28 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 		EquipComp->GetEquipmentSaveData(SaveGame->WeaponSaveData, SaveGame->ArmorSaveData);
 	}
 	
+	//임시 저장이라면 세이브 데이터를 가지고만 있고 직접 저장하지 않는다.
+	if (bTemporarySave)
+	{
+		return true;
+	}
+	
 	//저장
 	return T3GameInstance->SaveGame();
+}
+
+void AT3GameMode::LoadGame()
+{
+	//저장된 게임을 불러오는데 성공하면 그 맵으로 이동
+	if (T3GameInstance->LoadGame())
+	{
+		const TObjectPtr<UT3SaveGame> SaveGame = T3GameInstance->GetSavedGameData();
+		T3GameInstance->OpenLevel(SaveGame->SavedLevelName);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s : Can't load the save game"), *GetNameSafe(this));
+	}
 }
 
 void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
