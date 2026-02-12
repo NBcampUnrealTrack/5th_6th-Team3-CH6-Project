@@ -252,7 +252,11 @@ void AT3PlayerController::Input_ChangeSkillSlot(const FInputActionValue& Value)
 void AT3PlayerController::Input_ChangePotionSlot(const FInputActionValue& Value)
 {
 	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction()) { return; }
-	if (Combat) { Combat->ChangeActiveSlot(ESlotType::Potion); } 
+	
+	if (IsValid(OwnerChar))
+	{
+		OwnerChar->InventoryComponent->SwapHPMPSlot();
+	}
 }
 
 void AT3PlayerController::Input_ChangeConsumableSlot(const FInputActionValue& Value)
@@ -274,13 +278,21 @@ void AT3PlayerController::Input_ActiveSkillSlot(const FInputActionValue& Value)
 void AT3PlayerController::Input_ActivePotionSlot(const FInputActionValue& Value)
 {
 	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction()) { return; }
-	if (Combat) { Combat->ExecuteCurrentSlotAction(ESlotType::Potion); } 
+	
+	if (IsValid(OwnerChar))
+	{
+		OwnerChar->InventoryComponent->UseCurrentPotion();
+	}
 }
 
 void AT3PlayerController::Input_ActiveConsumableSlot(const FInputActionValue& Value)
 {
 	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction()) { return; }
-	if (Combat) { Combat->ExecuteCurrentSlotAction(ESlotType::Consumable); } 
+	
+	if (IsValid(OwnerChar))
+	{
+		OwnerChar->InventoryComponent->UseEquippedItem();
+	}
 }
 
 void AT3PlayerController::SetInventoryOpen(bool bIsOpen)

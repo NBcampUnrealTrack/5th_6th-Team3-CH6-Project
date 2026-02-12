@@ -250,7 +250,7 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 	this,
 	HealSound,
 	OwnerCharacter->GetActorLocation()
-);
+	);
 	
 	switch (ItemData.EffectType)
 	{

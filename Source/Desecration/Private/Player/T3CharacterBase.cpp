@@ -14,6 +14,7 @@
 #include "Player/T3CharacterDataAsset.h"
 #include "Player/T3DamageTypes.h"
 #include "Player/T3SkillComponentBase.h"
+#include "Equipment/T3PlayerEquipmentComponent.h"
 
 
 
@@ -51,6 +52,7 @@ AT3CharacterBase::AT3CharacterBase()
 
 	InventoryComponent = CreateDefaultSubobject<UT3InventoryComponent>(TEXT("InventoryComponent")); 
 	ItemUseComponent = CreateDefaultSubobject<UT3ItemUseComponent>(TEXT("ItemUseComponent"));
+	EquipComp = CreateDefaultSubobject<UT3PlayerEquipmentComponent>(TEXT("EquipmentComponent"));
 }
 
 void AT3CharacterBase::RequestSellItem(const FInventorySlot& SlotData)
@@ -79,9 +81,19 @@ void AT3CharacterBase::BeginPlay()
 		// 시작 시 전투모드 활성화
 		PlayerInputState.bIsCombatState = true;
 
+		
+		EquipComp->OnEquipmentStatsChanged.AddDynamic(this, &AT3CharacterBase::OnEquipmentStatsUpdated);
+
 
 }
 
+void AT3CharacterBase::OnEquipmentStatsUpdated(float Atk, float Def)
+{
+	SetAttackPower(Atk);
+	SetDefense(Def * 0.01);
+
+	UE_LOG(LogTemp, Display, TEXT("Atk : %.1f, Def : %.1f"), AttackPower, Defense);
+}
 //void AT3CharacterBase::PostInitializeComponents()
 //{
 //	 Super::PostInitializeComponents();
