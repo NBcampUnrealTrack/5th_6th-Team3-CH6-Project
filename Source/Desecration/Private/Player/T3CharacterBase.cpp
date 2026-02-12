@@ -15,7 +15,7 @@
 #include "Player/T3DamageTypes.h"
 #include "Player/T3SkillComponentBase.h"
 #include "Equipment/T3PlayerEquipmentComponent.h"
-
+#include "GameSystem/T3GameMode.h"
 
 
 AT3CharacterBase::AT3CharacterBase()
@@ -67,6 +67,12 @@ void AT3CharacterBase::BeginPlay()
 	if (CharacterData)
 	{
 		ApplyCharacterData(CharacterData);
+	}
+	
+	//캐릭터 정보 세팅
+	if (const TObjectPtr<AT3GameMode> T3GameMode = Cast<AT3GameMode>(GetWorld()->GetAuthGameMode()))
+	{
+		T3GameMode->SetCharacterBySavedData(this);
 	}
 
 	// 스태미너 자동 회복
