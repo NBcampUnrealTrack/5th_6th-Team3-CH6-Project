@@ -21,6 +21,7 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
 
+
 	// 에디터에서 할당할 위젯 클래스
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TSubclassOf<class UUserWidget> LockOnWidgetClass;
@@ -84,11 +85,13 @@ protected:
 	TObjectPtr<UT3PopUpMenu> PopUpMenu;
 	
 	UPROPERTY(EditDefaultsOnly, Category="UI")
-	TSubclassOf<UUserWidget> HUDSlotWidgetClass;
+	TSubclassOf<class UT3HUDSlotWidget> HUDSlotWidgetClass;
 	
+public:
 	UPROPERTY(BlueprintReadOnly, Category="UI")
-	TObjectPtr<UUserWidget> HUDSlotWidget;
+	TObjectPtr<class UT3HUDSlotWidget> HUDSlotWidget;
 
+protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> ChangeSkillSlotAction;
 	UPROPERTY(EditAnywhere, Category = "Input")
