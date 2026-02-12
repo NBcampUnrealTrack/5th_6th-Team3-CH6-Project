@@ -36,7 +36,7 @@ void UT3Paladin_SkillComponent::ExecuteSkill(int32 SlotNumber)
     if (!CanExecuteSkill(*TargetData)) return;
 
     // 4. 쿨타임 시작 및 스킬 실행
-    StartCooldown(*TargetData);
+    StartCooldown(SkillID, *TargetData);
 
     // ID에 따른 분기
     switch (SkillID)

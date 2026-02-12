@@ -17,9 +17,6 @@ void UT3SelectClassWidget::NativeConstruct()
 		return;
 	}
 	
-	//버튼 바인딩
-	SelectButton->OnClicked.AddDynamic(this, &ThisClass::OnClickSelectButton);
-	ReturnButton->OnClicked.AddDynamic(this, &ThisClass::OnClickReturnButton);
 	//각 클래스 버튼은 SButton에 Lambda로 바인딩한다.
 	int32 TempClassValue = static_cast<int32>(EPlayerClass::Warrior);
 	for (TObjectPtr<UWidget> ChildWidget : SelectClassBox->GetAllChildren())
@@ -63,32 +60,18 @@ void UT3SelectClassWidget::TutorialStart(const FString& PlayerName)
 
 void UT3SelectClassWidget::OnClickSelectClassButton(const EPlayerClass ButtonValue)
 {
-	//연속으로 같은 버튼을 누르면 선택으로 간주
+	//연속으로 같은 버튼을 누르면 이름 입력하기
 	if (SelectedPlayerClass == ButtonValue)
 	{
-		OnClickSelectButton();
+		SetActiveInputNamePanel(true);
 		return;
 	}
 	
 	//TODO : 누른 버튼의 변화
 	SelectedPlayerClass = ButtonValue;
-	
-	SelectButton->SetIsEnabled(true);
 }
 
-void UT3SelectClassWidget::OnClickSelectButton()
-{
-	//클래스 미선택시 무시
-	if (SelectedPlayerClass == EPlayerClass::None)
-	{
-		return;
-	}
-	
-	//이름 입력하기
-	SetActiveInputNamePanel(true);
-}
-
-void UT3SelectClassWidget::OnClickReturnButton()
+void UT3SelectClassWidget::ReturnToTitle()
 {
 	SelectClassPlayerController->ReturnToTitleLevel();
 }

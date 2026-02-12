@@ -23,7 +23,7 @@ void UT3GameInstance::Init()
 		return;
 	}
 	
-	SavedGameData = Cast<UT3SaveGame>(UGameplayStatics::LoadGameFromSlot(SAVE_GAME_NAME, 0));
+	LoadGame();
 }
 
 void UT3GameInstance::MakeFirstSettings()
@@ -75,6 +75,19 @@ bool UT3GameInstance::SaveGame()
 	return UGameplayStatics::SaveGameToSlot(SavedGameData, SAVE_GAME_NAME, 0);
 }
 
+bool UT3GameInstance::LoadGame()
+{
+	TObjectPtr<UT3SaveGame> SavedData = Cast<UT3SaveGame>(UGameplayStatics::LoadGameFromSlot(SAVE_GAME_NAME, 0));
+	if (!SavedData)
+	{
+		return false;
+	}
+	
+	SavedGameData = SavedData;
+	SavedGameData->bSetLocation = true;
+	return true;
+}
+
 void UT3GameInstance::SetResolution(ET3Resolution Resolution)
 {
 	CurrentSettings->Resolution = Resolution;
@@ -119,13 +132,7 @@ void UT3GameInstance::SetGraphicQuality(const EGraphicQuality GraphicQuality)
 }
 
 void UT3GameInstance::OpenLevel(const ELevelName LevelName) const
-{
-	//타이틀 또는 클래스 선택 레벨이 아닐 경우 이동한 곳을 저장한다.
-	if (SavedGameData && LevelName > ELevelName::SelectClass)
-	{
-		SavedGameData->SavedLevelName = LevelName;
-	}
-	
+{	
 	//레벨 이동
 	const FName DisplayName = FName(UEnum::GetDisplayValueAsText(LevelName).ToString());
 	UGameplayStatics::OpenLevel(GetWorld(), DisplayName);

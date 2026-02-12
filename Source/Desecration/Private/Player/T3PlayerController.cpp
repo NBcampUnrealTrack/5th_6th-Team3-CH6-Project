@@ -1,4 +1,4 @@
-﻿// T3PlayerController.cpp
+// T3PlayerController.cpp
 
 
 #include "Player/T3PlayerController.h"
@@ -29,7 +29,7 @@ void AT3PlayerController::BeginPlay()
 		MainInventoryWidget = CreateWidget<UUserWidget>(this, MainInventoryWidgetClass);
 		
 		MainInventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
-		MainInventoryWidget->AddToViewport();
+		MainInventoryWidget->AddToViewport(3);
 	}
 
 	if (IsValid(CombatWidgetClass))
@@ -50,7 +50,8 @@ void AT3PlayerController::BeginPlay()
 		}
 	}
 
-	OwnerChar = Cast<AT3CharacterBase>(GetPawn());
+	APawn* NewPawn = GetPawn();
+	OwnerChar = Cast<AT3CharacterBase>(NewPawn);
 	Combat = OwnerChar->GetCombatComponent();
 	
 }

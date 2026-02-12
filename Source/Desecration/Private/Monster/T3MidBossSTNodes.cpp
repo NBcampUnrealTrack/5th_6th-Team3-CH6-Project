@@ -8,15 +8,13 @@
 
 // ============================================================
 // Evaluator: FT3STE_MidBossCombat
-// 이벤트 기반으로 전환됨 — 폴링 최소화
-// - bIsDead, bIsStunned: SendStateTreeEvent()로 트랜지션
-// - Distance: 필요 시점에 Task에서 직접 계산
-// - ActionCount: Task에서 직접 Boss->ActionCount 읽기/쓰기
+// Boss 포인터를 하위 노드에 전달하는 역할만 담당
+// 모든 상태 전환은 SendStateTreeEvent()로 처리 (폴링 없음)
 // ============================================================
 
 void FT3STE_MidBossCombat::TreeStart(FStateTreeExecutionContext& Context) const
 {
-	FT3STE_MidBossCombatInstanceData& Data = Context.GetInstanceData(*this);
+	const FT3STE_MidBossCombatInstanceData& Data = Context.GetInstanceData(*this);
 
 	if (!Data.Boss)
 	{
@@ -24,28 +22,7 @@ void FT3STE_MidBossCombat::TreeStart(FStateTreeExecutionContext& Context) const
 		return;
 	}
 
-	// 초기값만 설정 — 이후 폴링 없음
-	Data.bIsStunned = Data.Boss->IsStunned();
-	Data.bIsDead = Data.Boss->IsDead();
-	Data.BossStage = Data.Boss->BossStage;
-	Data.ActionCount = Data.Boss->ActionCount;
-
-	if (Data.Boss->CombatTarget)
-	{
-		Data.Distance = FVector::Dist(
-			Data.Boss->GetActorLocation(),
-			Data.Boss->CombatTarget->GetActorLocation());
-	}
-
-	UE_LOG(LogDesecration, Log, TEXT("T3_ST: Evaluator 초기화 (이벤트 기반 — 폴링 없음)"));
-}
-
-void FT3STE_MidBossCombat::Tick(FStateTreeExecutionContext& Context, const float DeltaTime) const
-{
-	// 완전 이벤트 기반 — 폴링 없음
-	// - Dead/Stunned: SendStateTreeEvent()로 트랜지션
-	// - ActionCount: 패턴 완료 시 ActionCountDepleted 이벤트로 Disengage 전환
-	// - Distance: 필요 시점에 Task에서 직접 계산
+	UE_LOG(LogDesecration, Log, TEXT("T3_ST: Evaluator 초기화 완료 (Boss 바인딩)"));
 }
 
 // ============================================================
@@ -126,8 +103,7 @@ EStateTreeRunStatus FT3STT_ExecutePattern::Tick(
 		// ActionCount <= 0이면 이벤트 전송 → Disengage 트랜지션 트리거
 		if (Data.Boss->ActionCount <= 0 && Data.Boss->StateTreeComponent)
 		{
-			Data.Boss->StateTreeComponent->SendStateTreeEvent(
-				FGameplayTag::RequestGameplayTag(FName("Boss.Event.ActionCountDepleted")));
+			Data.Boss->StateTreeComponent->SendStateTreeEvent(TAG_Boss_Event_ActionCountDepleted);
 			UE_LOG(LogDesecration, Log, TEXT("T3_ST: ActionCountDepleted 이벤트 전송"));
 		}
 
@@ -230,9 +206,7 @@ EStateTreeRunStatus FT3STT_ApproachTarget::Tick(
 
 	if (!Data.bArrived)
 	{
-		// Phase 1: NavMesh 이동 중 — 도달 체크
-		Data.Boss->FaceTarget();
-
+		// Phase 1: NavMesh 이동 중 — 도달 체크 (회전은 MovementComponent가 SetFocus로 처리)
 		const float Dist = FVector::Dist(
 			Data.Boss->GetActorLocation(),
 			Data.Boss->CombatTarget->GetActorLocation());
@@ -266,8 +240,7 @@ EStateTreeRunStatus FT3STT_ApproachTarget::Tick(
 	}
 	else
 	{
-		// Phase 2: 도달 후 대기
-		Data.Boss->FaceTarget();
+		// Phase 2: 도달 후 대기 (회전은 MovementComponent가 SetFocus로 처리)
 		Data.DelayElapsed += DeltaTime;
 
 		if (Data.DelayElapsed >= Data.PostArrivalDelay)
@@ -404,9 +377,7 @@ EStateTreeRunStatus FT3STT_Disengage::Tick(
 
 	Data.ElapsedTime += DeltaTime;
 
-	// 항상 타겟을 바라봄
-	Data.Boss->FaceTarget();
-
+	// 회전은 MovementComponent가 SetFocus로 처리
 	if (Data.ElapsedTime >= Data.Duration)
 	{
 		return EStateTreeRunStatus::Succeeded;
