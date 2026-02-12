@@ -14,6 +14,7 @@ class UCameraComponent;
 class UT3CombatComponent;
 class UDataTable;
 class UT3InventoryComponent; 
+class UT3PlayerEquipmentComponent;
 class UT3ItemUseComponent;
 class UT3CharacterDataAsset;
 
@@ -62,6 +63,7 @@ TObjectPtr <UDataTable> ItemDataTable;
 
 protected:
 	virtual void BeginPlay() override;
+	// virtual void PostInitializeComponents();
 	virtual void Tick( float DeltaTime ) override;
 	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
 	
@@ -125,7 +127,11 @@ public:
 	TObjectPtr<UT3InventoryComponent> InventoryComponent; 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TObjectPtr<UT3ItemUseComponent> ItemUseComponent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
+	TObjectPtr<UT3PlayerEquipmentComponent> EquipComp;
 
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	void OnEquipmentStatsUpdated(float Atk, float Def);
 
 
 	// Stat 관련

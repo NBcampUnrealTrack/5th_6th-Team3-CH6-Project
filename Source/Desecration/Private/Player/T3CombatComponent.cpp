@@ -17,6 +17,8 @@
 #include "DrawDebugHelpers.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Player/T3SkillComponentBase.h"
+#include "Player/T3LockOnTarget.h"
+#include "Components/WidgetComponent.h"
 
 
 UT3CombatComponent::UT3CombatComponent()
@@ -198,27 +200,37 @@ void UT3CombatComponent::ToggleLockOn()
 
 	if (bIsLockOn)
 	{
+		// 록온 해제 시 기존 타겟 위젯 끄기
+		if (IT3LockOnTarget* TargetInterface = Cast<IT3LockOnTarget>(CurrentTarget))
+		{
+			TargetInterface->SetLockOnWidgetVisible(false);
+		}
 		ResetLockOn();
 		return;
 	}
 
 	CurrentTarget = FindBestTarget();
-	if (CurrentTarget)
+	// 인터페이스를 상속받았는지 확인 (안전한 캐스팅)
+	IT3LockOnTarget* LockOnInterface = Cast<IT3LockOnTarget>(CurrentTarget);
+	if (CurrentTarget && LockOnInterface)
 	{
 		bIsLockOn = true;
 		OwnerChar->PlayerInputState.bIsLockOn = true;
 		OwnerPC->SetIgnoreLookInput(true);
 		SetComponentTickEnabled(true);
-		UpdateTargetUI(CurrentTarget, true);
 
 		// 카메라 랙 설정
 		SpringArm->bEnableCameraRotationLag = true;
 		SpringArm->bEnableCameraLag = true;
-
 		OwnerChar->GetCharacterMovement()->bOrientRotationToMovement = false;
 		OwnerChar->GetCharacterMovement()->bUseControllerDesiredRotation = true;
+
+		// 위젯 켜기 (인터페이스 함수 호출)
+		LockOnInterface->SetLockOnWidgetVisible(true);
+
 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("LockOn"));
 	}
+
 }
 
 void UT3CombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -287,8 +299,37 @@ void UT3CombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 
 	OwnerPC->SetControlRotation(SmoothRot);
 
+	// 록온 표시 상대적 스케일 조정
+	if (bIsLockOn && CurrentTarget)
+	{
+		UpdateLockOnWidgetScale();
+	}
+
 	// 4. 디버깅 
 	DrawDebugSphere(GetWorld(), TargetLocation, 20.f, 12, FColor::Red, false, -1.f, 0, 2.f);
+}
+
+void UT3CombatComponent::UpdateLockOnWidgetScale()
+{
+	if (!CurrentTarget || !OwnerChar) return;
+
+	// 1. 거리 계산
+	float Distance = FVector::Dist(OwnerChar->GetActorLocation(), CurrentTarget->GetActorLocation());
+
+	// 2. 스케일 값 계산 (거리가 멀어질수록 NewScale은 작아짐)
+	// 1000.f는 기준 거리입니다. 본인 프로젝트의 스케일에 맞춰 조절하세요.
+	float NewScale = FMath::Clamp(1000.f / Distance, 0.3f, 1.5f);
+
+	// 3. 인터페이스를 통해 위젯 컴포넌트 접근 (또는 직접 접근)
+	// 여기서는 간단하게 CurrentTarget에서 컴포넌트를 찾아 스케일을 조절합니다.
+	if (UWidgetComponent* TargetWidget = CurrentTarget->FindComponentByClass<UWidgetComponent>())
+	{
+		TargetWidget->SetWorldScale3D(FVector(NewScale));
+
+		// [꿀팁] 위젯이 항상 카메라를 정면으로 바라보게 함 (Billboard 효과)
+		FRotator TargetRotation = OwnerPC->GetControlRotation();
+		TargetWidget->SetWorldRotation(TargetRotation);
+	}
 }
 
 AActor* UT3CombatComponent::FindBestTarget()
@@ -699,6 +740,7 @@ void UT3CombatComponent::ExecuteCurrentSlotAction(ESlotType Type)
 }
 
 // 인벤토리에서 호출할 스킬 슬롯 업데이트 함수
+UFUNCTION(BlueprintCallable)
 void UT3CombatComponent::RequestUpdateSkill(int32 SkillID, bool bIsEquip)
 {
 	if (SkillComp)
@@ -706,3 +748,4 @@ void UT3CombatComponent::RequestUpdateSkill(int32 SkillID, bool bIsEquip)
 		SkillComp->SetSkillSlot(SkillID, bIsEquip);
 	}
 }
+
