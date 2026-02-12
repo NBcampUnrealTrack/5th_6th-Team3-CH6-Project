@@ -7,6 +7,7 @@
 #include "GameplayTagContainer.h"
 #include "Monster/T3MidBossTypes.h"
 #include "Monster/T3MidBossNotifyModifier.h"
+#include "Player/T3LockOnTarget.h"
 #include "Components/StateTreeComponent.h"
 #include "Components/TimelineComponent.h"
 #include "MotionWarpingComponent.h"
@@ -17,6 +18,7 @@ class UT3BossWeaponComponent;
 class UT3MidBossHPBarWidget;
 class UCurveFloat;
 class UAudioComponent;
+class UWidgetComponent;
 
 // StateTree 이벤트 태그 (extern — STNodes에서 참조)
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_Event_StunRecovered);
@@ -27,7 +29,7 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_Event_ActionCountDepleted);
 // ============================================================
 
 UCLASS()
-class DESECRATION_API AT3MidBossMonster : public ACharacter
+class DESECRATION_API AT3MidBossMonster : public ACharacter, public IT3LockOnTarget
 {
 	GENERATED_BODY()
 
@@ -38,7 +40,13 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
+	// 록온 위젯을 담을 컴포넌트
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MidBoss|UI")
+	TObjectPtr<UWidgetComponent> LockOnWidgetComponent;
+
 public:
+	// IT3LockOnTarget 인터페이스 구현
+	virtual void SetLockOnWidgetVisible(bool bVisible) override;
 	// ==========================================================
 	// StateTree (standalone 스키마 — AI Controller 미사용)
 	// ==========================================================
