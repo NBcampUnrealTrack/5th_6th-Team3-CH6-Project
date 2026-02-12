@@ -565,7 +565,7 @@ void UT3InventoryComponent::UseCurrentPotion()
 
 void UT3InventoryComponent::SwapHPMPSlot()
 {
-	if (CurrentPotionID == NAME_None)
+	if (CurrentPotionID == NAME_None || OwnerCharacter->bIsUsingItem)
 	{
 		return;
 	}
@@ -614,6 +614,25 @@ int32 UT3InventoryComponent::GetHPPotionCount() const
 int32 UT3InventoryComponent::GetMPPotionCount() const
 {
 	return MPPotionCount;
+}
+
+int32 UT3InventoryComponent::GetCurrentPotionCount() const
+{
+	if (CurrentPotionID == NAME_None)
+	{
+		return 0;
+	}
+	
+	if (CurrentPotionID == HPPotionID)
+	{
+		return HPPotionCount;
+	}
+	else if (CurrentPotionID == MPPotionID)
+	{
+		return MPPotionCount;
+	}
+	
+	return 0;
 }
 
 void UT3InventoryComponent::UseHPPotion()

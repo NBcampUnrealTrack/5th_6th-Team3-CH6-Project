@@ -199,6 +199,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Recover")
 	int32 GetMPPotionCount() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Recover")
+	int32 GetCurrentPotionCount() const;
 
 	UPROPERTY(BlueprintAssignable, Category = "Recover")
 	FOnSwapRecoverSlot OnSwapRecoverSlot;
