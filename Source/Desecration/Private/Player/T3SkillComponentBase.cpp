@@ -47,10 +47,29 @@ void UT3SkillComponentBase::SetSkillSlot(int32 NewSkillID, bool bIsEquip)
     //UI팀 : 1번은 큰 슬롯(Current), 2번은 작은 슬롯(Next)
     if (OnSkillSlotUpdated.IsBound())
     {
-        // 현재 슬롯(1번) 정보 갱신
-        OnSkillSlotUpdated.Broadcast(1, CurrentSkillSlot, *GetSkillDataByID(CurrentSkillSlot));
-        // 다음 슬롯(2번) 정보 갱신
-        OnSkillSlotUpdated.Broadcast(2, NextSkillSlot, *GetSkillDataByID(NextSkillSlot));
+        FSkillData* NextData = GetSkillDataByID(NextSkillSlot);
+        // 현재 슬롯 갱신
+        FSkillData* CurrentData = GetSkillDataByID(CurrentSkillSlot);
+        if (CurrentData)
+        {
+            OnSkillSlotUpdated.Broadcast(1, CurrentSkillSlot, *CurrentData);
+        }
+        else
+        {
+            // 데이터가 없을 때 전송할 빈 구조체 정의 혹은 처리 로직
+            OnSkillSlotUpdated.Broadcast(1, CurrentSkillSlot, FSkillData());
+        }
+
+        // 다음 슬롯 갱신
+        if (NextData)
+        {
+            OnSkillSlotUpdated.Broadcast(2, NextSkillSlot, *NextData);
+        }
+        else
+        {
+            // 탈착 시 데이터가 nullptr이면 빈 구조체를 넘겨 UI에서 '비어있음'을 표현하게 함
+            OnSkillSlotUpdated.Broadcast(2, NextSkillSlot, FSkillData());
+        }
     }
 
     UE_LOG(LogTemp, Log, TEXT("슬롯 상태 - CurrentSlot: %d, NextSlot: %d"), CurrentSkillSlot, NextSkillSlot);
@@ -85,7 +104,8 @@ void UT3SkillComponentBase::BeginPlay()
 
 bool UT3SkillComponentBase::CanExecuteSkill(FSkillData& Data)
 {
-    if (bUsingSkill) return false;
+   
+    if (bUsingSkill || !OwnerChar->PlayerInputState.bCanAttack) return false;
     
     // 1. 마나 체크
     if (OwnerChar->GetCurrentMana() < Data.ManaCost)
