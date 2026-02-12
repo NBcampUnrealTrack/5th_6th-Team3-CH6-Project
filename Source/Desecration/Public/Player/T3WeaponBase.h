@@ -30,7 +30,7 @@ protected:
     TObjectPtr<class UBoxComponent> WeaponCollision;
 
     // 무기 외형
-    UPROPERTY(VisibleAnywhere, Category = "Visual")
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Visual")
     TObjectPtr<class UStaticMeshComponent> WeaponMesh;
 
     float CurrentAttackDamage;

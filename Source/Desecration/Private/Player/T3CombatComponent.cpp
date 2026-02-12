@@ -306,7 +306,7 @@ void UT3CombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	}
 
 	// 4. 디버깅 
-	DrawDebugSphere(GetWorld(), TargetLocation, 20.f, 12, FColor::Red, false, -1.f, 0, 2.f);
+	// DrawDebugSphere(GetWorld(), TargetLocation, 20.f, 12, FColor::Red, false, -1.f, 0, 2.f);
 }
 
 void UT3CombatComponent::UpdateLockOnWidgetScale()
@@ -715,10 +715,10 @@ void UT3CombatComponent::ChangeActiveSlot(ESlotType Type)
 		break;
 	}
 
-	if (OnSlotSelectionChanged.IsBound())
-	{
-		OnSlotSelectionChanged.Broadcast(Type, 1);
-	}
+	// 현재 슬롯(1번) 정보 갱신
+	SkillComp->OnSkillSlotUpdated.Broadcast(1, SkillComp->CurrentSkillSlot, *SkillComp->GetSkillDataByID(SkillComp->CurrentSkillSlot));
+	// 다음 슬롯(2번) 정보 갱신
+	SkillComp->OnSkillSlotUpdated.Broadcast(2, SkillComp->NextSkillSlot, *SkillComp->GetSkillDataByID(SkillComp->NextSkillSlot));
 }
 
 void UT3CombatComponent::ExecuteCurrentSlotAction(ESlotType Type)
