@@ -103,7 +103,10 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 	const int32 SlotNums = SaveGame->Items.Num();
 	for (int32 iNum = 0; iNum < SlotNums; ++iNum)
 	{
-		InventoryComponent->Items[iNum] = SaveGame->Items[iNum];
+		if (InventoryComponent->Items.IsValidIndex(iNum))
+		{
+			InventoryComponent->Items[iNum] = SaveGame->Items[iNum];
+		}
 	}
 	InventoryComponent->SetMoney(SaveGame->Money);
 	InventoryComponent->SetNormalStoneCount(SaveGame->NormalStoneCount);
