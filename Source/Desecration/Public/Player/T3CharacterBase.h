@@ -121,11 +121,15 @@ public:
 	void OnHit();
 	UFUNCTION(BlueprintCallable, Category = "Death")
 	void OnDeath();
+	UFUNCTION(BlueprintImplementableEvent, Category = "Item")
+	void OnActivatePotion();
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnInteract();
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Death")
 	bool bIsDead = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+	bool bIsUsingItem = false;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TObjectPtr<UT3InventoryComponent> InventoryComponent; 
