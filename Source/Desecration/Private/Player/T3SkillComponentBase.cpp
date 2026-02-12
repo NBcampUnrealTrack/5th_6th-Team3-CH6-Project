@@ -126,11 +126,53 @@ bool UT3SkillComponentBase::CanExecuteSkill(FSkillData& Data)
     return true;
 }
 
-void UT3SkillComponentBase::StartCooldown(FSkillData& Data)
+void UT3SkillComponentBase::StartCooldown(int32 SkillID, FSkillData& Data)
 {
-    // 스킬을 사용한 시간 캐싱, 마나 소모
+    // 1. 데이터 업데이트
     Data.LastActivatedTime = GetWorld()->GetTimeSeconds();
-    OwnerChar->ConsumeMana(Data.ManaCost);
+
+    if (OwnerChar)
+    {
+        OwnerChar->ConsumeMana(Data.ManaCost);
+    }
+
+    // 2. UI 알림
+    if (OnSkillCooldownStarted.IsBound())
+    {
+        OnSkillCooldownStarted.Broadcast(SkillID, Data.Cooldown);
+    }
+
+    UE_LOG(LogTemp, Log, TEXT("SkillID %d Cooldown Started: %.1f seconds"), SkillID, Data.Cooldown);
+}
+
+float UT3SkillComponentBase::GetRemainingCooldown(int32 SkillID)
+{
+    FSkillData* Data = GetSkillDataByID(SkillID);
+    if (!Data) return 0.f;
+
+    float ElapsedTime = GetWorld()->GetTimeSeconds() - Data->LastActivatedTime;
+    float Remaining = Data->Cooldown - ElapsedTime;
+
+    return (Remaining > 0.f) ? Remaining : 0.f;
+}
+
+float UT3SkillComponentBase::GetCooldownRemainingRatio(int32 SkillID)
+{
+    // 1. ID로 스킬 데이터 찾기
+    const FSkillData* Data = GetSkillDataByID(SkillID);
+
+    if (!Data || Data->Cooldown <= 0.f) return 0.f;
+
+    float CurrentTime = GetWorld()->GetTimeSeconds();
+    float ElapsedTime = CurrentTime - Data->LastActivatedTime;
+
+    // 2. 남은 시간 계산
+    float RemainingTime = Data->Cooldown - ElapsedTime;
+
+    if (RemainingTime <= 0.f) return 0.f;
+
+    // 3. 0~1 사이의 비율 반환 (UI 프로그레스바용)
+    return FMath::Clamp(RemainingTime / Data->Cooldown, 0.f, 1.0f);
 }
 
 void UT3SkillComponentBase::SwapSkills()

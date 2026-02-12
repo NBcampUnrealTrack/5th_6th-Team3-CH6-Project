@@ -218,6 +218,7 @@ void AT3CharacterBase::UpdateForcedRotation(float DeltaTime)
 		{
 			PC->SetIgnoreMoveInput(false);
 			PC->ResetIgnoreInputFlags(); // 시점 제한까지 모두 해제
+			GetCharacterMovement()->MaxWalkSpeed = DefaultMaxWalkSpeed; // 속도 원상 복구
 		}
 
 		if (OnForcedMoveEnd.IsBound())
@@ -366,7 +367,7 @@ void AT3CharacterBase::Roll(const FInputActionValue& Value)
 	
 	OnWakeUp();
 	
-	if (PlayerInputState.bWantsToRoll == false && bIsLying == false)
+	if (PlayerInputState.bWantsToRoll == false && bIsLying == false && bIsKnockback == false)
 	{
 
 		// 스태미나 20 차감
