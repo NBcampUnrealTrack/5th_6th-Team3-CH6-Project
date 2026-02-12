@@ -24,25 +24,9 @@ struct FT3STE_MidBossCombatInstanceData
 {
 	GENERATED_BODY()
 
-	// 입력 — 컨텍스트에서 바인딩
+	// 입력 — 컨텍스트에서 바인딩 (Boss 포인터를 하위 노드에 전달)
 	UPROPERTY(EditAnywhere, Category = "Context")
 	TObjectPtr<AT3MidBossMonster> Boss = nullptr;
-
-	// 출력 — 레거시 (이벤트 기반 전환으로 폴링 제거됨, 초기값만 유지)
-	UPROPERTY(EditAnywhere, Category = "Output")
-	float Distance = 0.f;
-
-	UPROPERTY(EditAnywhere, Category = "Output")
-	bool bIsStunned = false;
-
-	UPROPERTY(EditAnywhere, Category = "Output")
-	bool bIsDead = false;
-
-	UPROPERTY(EditAnywhere, Category = "Output")
-	int32 BossStage = 1;
-
-	UPROPERTY(EditAnywhere, Category = "Output")
-	int32 ActionCount = 3;
 };
 
 USTRUCT(meta = (DisplayName = "Mid-Boss Combat Evaluator"))
@@ -58,7 +42,6 @@ struct DESECRATION_API FT3STE_MidBossCombat : public FStateTreeEvaluatorCommonBa
 	}
 
 	virtual void TreeStart(FStateTreeExecutionContext& Context) const override;
-	virtual void Tick(FStateTreeExecutionContext& Context, const float DeltaTime) const override;
 };
 
 // ============================================================
