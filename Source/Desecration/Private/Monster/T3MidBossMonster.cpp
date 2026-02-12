@@ -1,9 +1,13 @@
 #include "Monster/T3MidBossMonster.h"
 #include "Monster/T3BossWeaponComponent.h"
+#include "Monster/T3MidBossHPBarWidget.h"
 #include "Desecration.h"
 #include "AIController.h"
 #include "Engine/DamageEvents.h"
+#include "Components/AudioComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/TimelineComponent.h"
+#include "Curves/CurveFloat.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "NativeGameplayTags.h"
@@ -43,6 +47,9 @@ AT3MidBossMonster::AT3MidBossMonster()
 
 	// 무기 컴포넌트
 	WeaponComponent = CreateDefaultSubobject<UT3BossWeaponComponent>(TEXT("WeaponComponent"));
+
+	// 디졸브 타임라인 컴포넌트
+	DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("DissolveTimeline"));
 }
 
 // ============================================================
@@ -109,11 +116,43 @@ void AT3MidBossMonster::BeginPlay()
 	NotifyModifier = NewObject<UMidBossNotifyModifier>(this);
 	NotifyModifier->Initialize(ModifierDataAsset);
 
+	// 디졸브용 Dynamic Material 생성 + Timeline 셋업
+	if (bEnableDissolve)
+	{
+		CreateDynamicMaterials();
+
+		// 커브 결정 — 에디터에서 할당한 커브 우선, 없으면 선형 자동 생성
+		UCurveFloat* CurveToUse = DissolveCurve;
+		if (!CurveToUse)
+		{
+			DefaultDissolveCurve = NewObject<UCurveFloat>(this);
+			DefaultDissolveCurve->FloatCurve.AddKey(0.f, 0.f);
+			DefaultDissolveCurve->FloatCurve.AddKey(DissolveDuration, 1.f);
+			CurveToUse = DefaultDissolveCurve;
+		}
+
+		// Timeline 바인딩
+		if (DissolveTimeline && CurveToUse)
+		{
+			FOnTimelineFloat UpdateDelegate;
+			UpdateDelegate.BindUFunction(this, FName("OnDissolveUpdate"));
+
+			FOnTimelineEvent FinishedDelegate;
+			FinishedDelegate.BindUFunction(this, FName("OnDissolveFinished"));
+
+			DissolveTimeline->AddInterpFloat(CurveToUse, UpdateDelegate, FName("DissolveTrack"));
+			DissolveTimeline->SetTimelineFinishedFunc(FinishedDelegate);
+			DissolveTimeline->SetTimelineLength(DissolveDuration);
+			DissolveTimeline->SetLooping(false);
+		}
+	}
+
 	OnMidBossSpawned.Broadcast();
 
-	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 스폰 완료 (HP: %.0f, Stage: %d, 등록 패턴: %d개, Modifier: %s)"),
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 스폰 완료 (HP: %.0f, Stage: %d, 등록 패턴: %d개, Modifier: %s, Dissolve: %s)"),
 		*BossName, MidBossStats.MaxHP, BossStage, AttackPatterns.Num(),
-		ModifierDataAsset ? TEXT("O") : TEXT("X"));
+		ModifierDataAsset ? TEXT("O") : TEXT("X"),
+		bEnableDissolve ? TEXT("O") : TEXT("X"));
 }
 
 void AT3MidBossMonster::Tick(float DeltaTime)
@@ -724,6 +763,14 @@ void AT3MidBossMonster::ApplyDamageToMidBoss(float DamageAmount, float StunAmoun
 	MidBossStats.CurrentHP -= DamageAmount;
 	OnMidBossDamaged.Broadcast();
 
+	// 피격 사운드 재생
+	if (HitSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this, HitSound, GetActorLocation(),
+			SoundVolume * HitVolumeMultiplier);
+	}
+
 	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 피격 (데미지: %.0f, 남은HP: %.0f, 스턴게이지: %.0f/%.0f)"),
 		*BossName, DamageAmount, MidBossStats.CurrentHP, MidBossStats.CurrentStunGauge, MidBossStats.StunThreshold);
 
@@ -841,6 +888,21 @@ void AT3MidBossMonster::ApplyStun()
 	AddStateTag(TAG_Boss_State_Stunned);
 	MidBossStats.CurrentStunGauge = 0.f;
 	CancelCurrentPattern();
+
+	// 스턴 몽타주 재생
+	if (StunMontage)
+	{
+		PlayAnimMontage(StunMontage);
+	}
+
+	// 스턴 사운드 재생
+	if (StunSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this, StunSound, GetActorLocation(),
+			SoundVolume * StunVolumeMultiplier);
+	}
+
 	OnMidBossStun.Broadcast();
 
 	// StateTree 이벤트 전송 — 즉시 Stunned 상태로 전환 (State 태그를 이벤트로 겸용)
@@ -900,10 +962,32 @@ void AT3MidBossMonster::ActivateBoss(AActor* Activator)
 		StateTreeComponent->StartLogic();
 	}
 
+	// BGM 재생 (2D — 공간 감쇠 없이 음악처럼 재생)
+	if (BossBGM)
+	{
+		BGMAudioComponent = UGameplayStatics::SpawnSound2D(this, BossBGM, BGMVolume);
+	}
+
+	// 보스 HP바 위젯 생성 (PlayerController 기반)
+	if (BossHPBarWidgetClass)
+	{
+		if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+		{
+			BossHPBarWidget = CreateWidget<UT3MidBossHPBarWidget>(PC, BossHPBarWidgetClass);
+			if (BossHPBarWidget)
+			{
+				BossHPBarWidget->TargetBoss = this;
+				BossHPBarWidget->AddToViewport();
+			}
+		}
+	}
+
 	OnMidBossActivated.Broadcast();
 
-	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 활성화 (타겟: %s, StateTree 시작)"),
-		*BossName, *Activator->GetName());
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 활성화 (타겟: %s, StateTree 시작, BGM: %s, HPBar: %s)"),
+		*BossName, *Activator->GetName(),
+		BossBGM ? TEXT("O") : TEXT("X"),
+		BossHPBarWidget ? TEXT("O") : TEXT("X"));
 }
 
 // ============================================================
@@ -912,6 +996,20 @@ void AT3MidBossMonster::ActivateBoss(AActor* Activator)
 
 void AT3MidBossMonster::BeginDeathSequence()
 {
+	// 사망 사운드 재생
+	if (DeathSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this, DeathSound, GetActorLocation(),
+			SoundVolume * DeathVolumeMultiplier);
+	}
+
+	// BGM 페이드아웃
+	if (BGMAudioComponent && BGMAudioComponent->IsPlaying())
+	{
+		BGMAudioComponent->FadeOut(BGMFadeOutDuration, 0.f);
+	}
+
 	// 사망 몽타주 재생
 	if (DeathMontage)
 	{
@@ -970,14 +1068,92 @@ void AT3MidBossMonster::FinishDeathSequence()
 		AIC->ClearFocus(EAIFocusPriority::Gameplay);
 	}
 
+	// StateTree 정지
+	if (StateTreeComponent)
+	{
+		StateTreeComponent->StopLogic(TEXT("Death"));
+	}
+
 	// 사망 연출 완료 델리게이트 — Level BP에서 안개벽 해제, 보상 등
 	OnMidBossDeathFinished.Broadcast();
 
-	// 일정 시간 후 액터 제거
+	// 디졸브 시작 (활성화 시) — 디졸브 완료 후 SetLifeSpan
+	if (bEnableDissolve && DynamicMaterials.Num() > 0)
+	{
+		StartDissolve();
+		return;
+	}
+
+	// 디졸브 비활성화 시 기존 방식
 	SetLifeSpan(DeathCleanupDelay);
 
 	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 사망 연출 완료 (%.0f초 후 제거)"),
 		*BossName, DeathCleanupDelay);
+}
+
+// ============================================================
+// 디졸브 연출
+// ============================================================
+
+void AT3MidBossMonster::CreateDynamicMaterials()
+{
+	USkeletalMeshComponent* MeshComp = GetMesh();
+	if (!MeshComp) return;
+
+	const int32 NumMaterials = MeshComp->GetNumMaterials();
+	DynamicMaterials.Reserve(NumMaterials);
+
+	for (int32 i = 0; i < NumMaterials; ++i)
+	{
+		UMaterialInstanceDynamic* DynMat = MeshComp->CreateAndSetMaterialInstanceDynamic(i);
+		if (DynMat)
+		{
+			DynamicMaterials.Add(DynMat);
+		}
+	}
+
+	UE_LOG(LogDesecration, Verbose, TEXT("T3_MidBoss: DynamicMaterial %d개 생성"), DynamicMaterials.Num());
+}
+
+void AT3MidBossMonster::StartDissolve()
+{
+	if (!DissolveTimeline)
+	{
+		UE_LOG(LogDesecration, Warning, TEXT("T3_MidBoss: DissolveTimeline이 nullptr — 디졸브 스킵"));
+		SetLifeSpan(DeathCleanupDelay);
+		return;
+	}
+
+	// 디졸브 사운드 재생
+	if (DissolveSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, DissolveSound, GetActorLocation());
+	}
+
+	DissolveTimeline->PlayFromStart();
+
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 디졸브 시작 (%.1f초, 머티리얼 %d개)"),
+		*BossName, DissolveDuration, DynamicMaterials.Num());
+}
+
+void AT3MidBossMonster::OnDissolveUpdate(float Value)
+{
+	for (UMaterialInstanceDynamic* DynMat : DynamicMaterials)
+	{
+		if (DynMat)
+		{
+			DynMat->SetScalarParameterValue(DissolveParameterName, Value);
+		}
+	}
+}
+
+void AT3MidBossMonster::OnDissolveFinished()
+{
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 디졸브 완료 — 액터 제거 예정"),
+		*BossName);
+
+	// 디졸브 완료 후 짧은 딜레이로 제거
+	SetLifeSpan(0.5f);
 }
 
 // ============================================================

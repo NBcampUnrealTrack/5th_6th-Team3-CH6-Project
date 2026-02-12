@@ -8,11 +8,15 @@
 #include "Monster/T3MidBossTypes.h"
 #include "Monster/T3MidBossNotifyModifier.h"
 #include "Components/StateTreeComponent.h"
+#include "Components/TimelineComponent.h"
 #include "MotionWarpingComponent.h"
 #include "NativeGameplayTags.h"
 #include "T3MidBossMonster.generated.h"
 
 class UT3BossWeaponComponent;
+class UT3MidBossHPBarWidget;
+class UCurveFloat;
+class UAudioComponent;
 
 // StateTree 이벤트 태그 (extern — STNodes에서 참조)
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_Event_StunRecovered);
@@ -199,6 +203,86 @@ public:
 	bool bAutoDropWeapon = true;
 
 	// ==========================================================
+	// 디졸브 연출
+	// ==========================================================
+
+	// 디졸브 활성화 여부 (false면 디졸브 없이 기존 방식으로 사라짐)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Dissolve")
+	bool bEnableDissolve = true;
+
+	// 디졸브 재생 시간 (초)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Dissolve", meta = (EditCondition = "bEnableDissolve"))
+	float DissolveDuration = 3.f;
+
+	// 디졸브 커브 (nullptr이면 선형 0→1 자동 생성)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Dissolve", meta = (EditCondition = "bEnableDissolve"))
+	TObjectPtr<UCurveFloat> DissolveCurve;
+
+	// 디졸브 머티리얼 파라미터 이름
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Dissolve", meta = (EditCondition = "bEnableDissolve"))
+	FName DissolveParameterName = TEXT("Dissolve");
+
+	// 디졸브 사운드 (선택사항)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Dissolve", meta = (EditCondition = "bEnableDissolve"))
+	TObjectPtr<USoundBase> DissolveSound;
+
+	// 디졸브 시작 (외부에서 호출 가능 — AnimNotify 등)
+	UFUNCTION(BlueprintCallable, Category = "MidBoss|Dissolve")
+	void StartDissolve();
+
+	// ==========================================================
+	// 사운드
+	// ==========================================================
+
+	// 효과음 볼륨 기본값 (개별 배수와 곱하여 최종 볼륨 결정)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound")
+	float SoundVolume = 1.0f;
+
+	// 피격 사운드 (매 피격마다 재생)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound")
+	TObjectPtr<USoundBase> HitSound;
+
+	// 피격 볼륨 배수
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound")
+	float HitVolumeMultiplier = 3.0f;
+
+	// 스턴 사운드
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound")
+	TObjectPtr<USoundBase> StunSound;
+
+	// 스턴 볼륨 배수
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound")
+	float StunVolumeMultiplier = 1.5f;
+
+	// 사망 사운드
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound")
+	TObjectPtr<USoundBase> DeathSound;
+
+	// 사망 볼륨 배수
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound")
+	float DeathVolumeMultiplier = 1.5f;
+
+	// 보스전 BGM (ActivateBoss에서 재생, 사망 시 페이드아웃)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound")
+	TObjectPtr<USoundBase> BossBGM;
+
+	// BGM 볼륨
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound")
+	float BGMVolume = 1.0f;
+
+	// BGM 페이드아웃 시간 (사망 시, 초)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound")
+	float BGMFadeOutDuration = 3.0f;
+
+	// ==========================================================
+	// 보스 HP바 위젯
+	// ==========================================================
+
+	// HP바 위젯 클래스 (에디터에서 WBP_T3MidBossHPBar 할당)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|UI")
+	TSubclassOf<UT3MidBossHPBarWidget> BossHPBarWidgetClass;
+
+	// ==========================================================
 	// 무기 컴포넌트
 	// ==========================================================
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MidBoss|Weapon")
@@ -325,6 +409,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "MidBoss|Combat")
 	void PlayAdditiveHitReaction(AActor* DamageCauser = nullptr);
 
+	// 스턴 몽타주 (스턴 진입 시 재생)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Animation")
+	TObjectPtr<UAnimMontage> StunMontage;
+
 	// 스턴 지속 시간 (타이머로 자동 해제)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Combat")
 	float StunDuration = 3.0f;
@@ -344,6 +432,33 @@ private:
 
 	void BeginDeathSequence();
 	void FinishDeathSequence();
+
+	// --- BGM AudioComponent ---
+	UPROPERTY()
+	TObjectPtr<UAudioComponent> BGMAudioComponent;
+
+	// --- HP바 위젯 인스턴스 ---
+	UPROPERTY()
+	TObjectPtr<UT3MidBossHPBarWidget> BossHPBarWidget;
+
+	// --- 디졸브 내부 ---
+	UPROPERTY()
+	TObjectPtr<UTimelineComponent> DissolveTimeline;
+
+	UPROPERTY()
+	TArray<TObjectPtr<UMaterialInstanceDynamic>> DynamicMaterials;
+
+	// 기본 선형 커브 (DissolveCurve가 nullptr일 때 자동 생성)
+	UPROPERTY()
+	TObjectPtr<UCurveFloat> DefaultDissolveCurve;
+
+	void CreateDynamicMaterials();
+
+	UFUNCTION()
+	void OnDissolveUpdate(float Value);
+
+	UFUNCTION()
+	void OnDissolveFinished();
 
 	UFUNCTION()
 	void OnDeathMontageEnded(UAnimMontage* Montage, bool bInterrupted);
