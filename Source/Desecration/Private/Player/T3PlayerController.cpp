@@ -29,7 +29,7 @@ void AT3PlayerController::BeginPlay()
 		MainInventoryWidget = CreateWidget<UUserWidget>(this, MainInventoryWidgetClass);
 		
 		MainInventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
-		MainInventoryWidget->AddToViewport();
+		MainInventoryWidget->AddToViewport(3);
 	}
 
 	if (IsValid(CombatWidgetClass))

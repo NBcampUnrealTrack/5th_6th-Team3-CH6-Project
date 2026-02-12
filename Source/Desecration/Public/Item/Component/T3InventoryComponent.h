@@ -137,6 +137,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
 	void UseEquippedItem();
 	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	int32 GetCurrentItemCount() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	int32 GetNextItemCount() const;
+	
 	UPROPERTY(BlueprintAssignable, Category = "Equipment")
 	FOnToggleItemEquipped OnToggleItemEquipped;
 #pragma endregion
