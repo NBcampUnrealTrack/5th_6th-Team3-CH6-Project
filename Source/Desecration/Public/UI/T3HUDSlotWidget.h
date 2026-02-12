@@ -32,6 +32,13 @@ protected:
 	UPROPERTY(Transient, meta = (BindWidgetAnim))
 	class UWidgetAnimation* FinishAnim;
 
+	// 슬롯 이미지 바인딩
+	UPROPERTY(meta = (BindWidget))
+	class UImage* FirstSkillImage;
+
+	UPROPERTY(meta = (BindWidget))
+	class UImage* NextSkillImage;
+
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 	virtual void NativeConstruct() override;
 
@@ -45,6 +52,12 @@ public:
 
 	virtual void InitializeWidget(class UT3SkillComponentBase* InSkillComp);
 private:
+
+	UFUNCTION()
+	void UpdateSkillSlotVisual(int32 SlotIndex, int32 SkillID, const FSkillData& SkillData);
+
+	// 공용 업데이트 로직
+	void SetSlotVisual(int32 SlotIndex, UTexture2D* Icon);
 
 	UPROPERTY()
 	class UT3SkillComponentBase* SkillComp;

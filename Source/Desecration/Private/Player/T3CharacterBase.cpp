@@ -367,8 +367,8 @@ void AT3CharacterBase::Look(const FVector2D& Value)
 void AT3CharacterBase::Roll(const FInputActionValue& Value)
 {
 	TObjectPtr<UT3CombatComponent> Combat = GetCombatComponent();
-	if (!Combat || GetCurrentStamina() < 20.f) 
-		return GEngine->AddOnScreenDebugMessage(-1,1.f,FColor::Emerald,FString::Printf(TEXT("You Need Stamina"))); // 스태미나 부족 시 실행 불가
+	if (!Combat || GetCurrentStamina() < 20.f)
+		return; //GEngine->AddOnScreenDebugMessage(-1,1.f,FColor::Emerald,FString::Printf(TEXT("You Need Stamina"))); // 스태미나 부족 시 실행 불가
 	
 	OnWakeUp();
 	
@@ -493,9 +493,9 @@ void AT3CharacterBase::ConsumeMana(float Amount)
 	{
 		float NewMana = CurrentMana - Amount;
 		SetCurrentMana(NewMana);
-
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
-		FString::Printf(TEXT("Remaining Mana: %.1f"), CurrentMana));
+		
+		//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
+		//FString::Printf(TEXT("Remaining Mana: %.1f"), CurrentMana));
 	}
 }
 
