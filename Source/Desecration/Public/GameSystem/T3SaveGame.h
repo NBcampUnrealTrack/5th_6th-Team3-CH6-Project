@@ -33,6 +33,9 @@ public:
 	UPROPERTY()
 	FVector PlayerLocation;
 	
+	//위치 적용 여부 (이 값은 저장 목적이 아님)
+	bool bSetLocation;
+	
 #pragma region 캐릭터 스탯
 	//최대 HP
 	UPROPERTY()

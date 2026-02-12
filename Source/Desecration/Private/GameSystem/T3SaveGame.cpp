@@ -21,6 +21,7 @@ void UT3SaveGame::ResetGameData()
 	//캐릭터 위치
 	SavedLevelName = ELevelName::Tutorial;
 	PlayerLocation = FVector::ZeroVector;
+	bSetLocation = true;
 	
 	//스탯
 	//TODO : 하드코딩된 초기 스탯 수정하기

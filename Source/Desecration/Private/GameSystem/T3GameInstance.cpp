@@ -84,6 +84,7 @@ bool UT3GameInstance::LoadGame()
 	}
 	
 	SavedGameData = SavedData;
+	SavedGameData->bSetLocation = true;
 	return true;
 }
 

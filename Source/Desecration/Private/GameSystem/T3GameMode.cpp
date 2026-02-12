@@ -97,7 +97,12 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 		return;
 	}
 	//캐릭터 상태
-	Character->SetActorLocation(SaveGame->PlayerLocation);
+	//이동은 데이터 로드 후 1회만 적용
+	if (SaveGame->bSetLocation)
+	{
+		SaveGame->bSetLocation = false;
+		Character->SetActorLocation(SaveGame->PlayerLocation);
+	}
 	//스탯
 	Character->SetCurrentHP(SaveGame->CurrentHP);
 	Character->SetCurrentMana(SaveGame->CurrentMana);
