@@ -275,7 +275,10 @@ void UT3InventoryComponent::UpdateCooldowns()
 		float Elapsed = GetWorld()->GetTimeSeconds() - Pair.Value;
 		float Remaining = FMath::Max(0.0f, *Duration - Elapsed);
         
+		float Progress = FMath::Clamp(Elapsed / *Duration, 0.0f, 1.0f);
+		
 		OnCooldownUpdated.Broadcast(ItemID, Remaining);
+		OnCooldownProgressUpdated.Broadcast(ItemID, Progress);
         
 		if (Remaining > 0.0f)
 		{
