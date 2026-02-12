@@ -212,6 +212,7 @@ void AT3CharacterBase::UpdateForcedRotation(float DeltaTime)
 		{
 			PC->SetIgnoreMoveInput(false);
 			PC->ResetIgnoreInputFlags(); // 시점 제한까지 모두 해제
+			GetCharacterMovement()->MaxWalkSpeed = DefaultMaxWalkSpeed; // 속도 원상 복구
 		}
 
 		if (OnForcedMoveEnd.IsBound())
