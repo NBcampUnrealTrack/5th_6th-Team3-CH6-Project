@@ -105,7 +105,7 @@ void UT3SkillComponentBase::BeginPlay()
 bool UT3SkillComponentBase::CanExecuteSkill(FSkillData& Data)
 {
    
-    if (bUsingSkill && OwnerChar->PlayerInputState.bIsAttacking) return false;
+    if (bUsingSkill || !OwnerChar->PlayerInputState.bCanAttack) return false;
     
     // 1. 마나 체크
     if (OwnerChar->GetCurrentMana() < Data.ManaCost)
