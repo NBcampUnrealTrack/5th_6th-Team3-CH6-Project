@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/Actor.h"
+#include "Player/T3LockOnTarget.h"
 #include "T3BossMonster.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBossHitDelegate);
@@ -28,7 +29,7 @@ struct FBossMonsterStats
 };
 
 UCLASS()
-class DESECRATION_API AT3BossMonster : public ACharacter
+class DESECRATION_API AT3BossMonster : public ACharacter, public IT3LockOnTarget
 {
 	GENERATED_BODY()
 
@@ -74,4 +75,14 @@ public:
 
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
+
+
+protected:
+	// 록온 위젯을 담을 컴포넌트
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	class UWidgetComponent* LockOnWidgetComponent;
+
+public:
+	AT3BossMonster();
+	virtual void SetLockOnWidgetVisible(bool bVisible) override;
 };

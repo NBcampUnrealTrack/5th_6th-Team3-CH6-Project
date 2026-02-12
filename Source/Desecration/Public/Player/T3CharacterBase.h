@@ -14,6 +14,7 @@ class UCameraComponent;
 class UT3CombatComponent;
 class UDataTable;
 class UT3InventoryComponent; 
+class UT3PlayerEquipmentComponent;
 class UT3ItemUseComponent;
 class UT3CharacterDataAsset;
 
@@ -121,12 +122,18 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Death")
 	bool bIsDead = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsLying = false;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TObjectPtr<UT3InventoryComponent> InventoryComponent; 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TObjectPtr<UT3ItemUseComponent> ItemUseComponent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
+	TObjectPtr<UT3PlayerEquipmentComponent> EquipComp;
 
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	void OnEquipmentStatsUpdated(float Atk, float Def);
 
 
 	// Stat 관련

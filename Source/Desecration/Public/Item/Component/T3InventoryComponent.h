@@ -8,6 +8,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCooldownUpdated, FName, ItemID, float, RemainingTime);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnToggleItemEquipped, FName, ItemID);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSwapRecoverSlot);
 
 class AT3CharacterBase;
 
@@ -54,24 +55,6 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	int32 SetMoney(int32 NewMoney);
-
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	int32 GetNormalStoneCount() const;
-	
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	int32 GetEpicStoneCount() const;
-	
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	int32 GetLegendaryStoneCount() const;
-	
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	int32 SetNormalStoneCount(int32 NewCount);
-	
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	int32 SetEpicStoneCount(int32 NewCount);
-	
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	int32 SetLegendaryStoneCount(int32 NewCount);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TArray<FInventorySlot> Items;
@@ -90,11 +73,33 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Money")
 	int32 Money;
-
+	
+#pragma region Stone // 강화석
 	int32 NormalStoneCount;
+	
 	int32 EpicStoneCount;
+	
 	int32 LegendaryStoneCount;
 	
+public:
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 GetNormalStoneCount() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 GetEpicStoneCount() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 GetLegendaryStoneCount() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 SetNormalStoneCount(int32 NewCount);
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 SetEpicStoneCount(int32 NewCount);
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 SetLegendaryStoneCount(int32 NewCount);
+#pragma endregion
 private:
 	UPROPERTY()
 	AT3CharacterBase* OwnerCharacter;
@@ -109,6 +114,7 @@ private:
 	
 	void UpdateCooldowns();
 	
+#pragma region Equipment
 public:
 	UPROPERTY(BlueprintReadOnly, Category = "Equipment")
 	TArray<FName> EquippedItemIDs;
@@ -128,6 +134,69 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
 	void SwapEquippedItem();
 	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	void UseEquippedItem();
+	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	int32 GetCurrentItemCount() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	int32 GetNextItemCount() const;
+	
 	UPROPERTY(BlueprintAssignable, Category = "Equipment")
 	FOnToggleItemEquipped OnToggleItemEquipped;
+#pragma endregion
+	
+#pragma region Recover Potion
+protected:
+	UPROPERTY(BlueprintReadOnly, Category = "Recover")
+	int32 HPPotionCount = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Recover")
+	int32 MPPotionCount = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Recover")
+	FName HPPotionID = NAME_None;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Recover")
+	FName MPPotionID = NAME_None;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Recover")
+	FName CurrentPotionID = NAME_None;
+	
+public:
+	UFUNCTION(BlueprintCallable, Category = "Recover")
+	void InitializePotionIDs();
+
+	UFUNCTION(BlueprintCallable, Category = "Recover")
+	void SetHPPotionCount(int32 Count);
+
+	UFUNCTION(BlueprintCallable, Category = "Recover")
+	void SetMPPotionCount(int32 Count);
+
+	UFUNCTION(BlueprintCallable, Category = "Recover")
+	void UseCurrentPotion();
+
+	UFUNCTION(BlueprintCallable, Category = "Recover")
+	void SwapHPMPSlot();
+
+	UFUNCTION(BlueprintCallable, Category = "Recover")
+	FName GetCurrentPotionID() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Recover")
+	FName GetNextPotionID() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Recover")
+	int32 GetHPPotionCount() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Recover")
+	int32 GetMPPotionCount() const;
+
+	UPROPERTY(BlueprintAssignable, Category = "Recover")
+	FOnSwapRecoverSlot OnSwapRecoverSlot;
+private:
+	void UseHPPotion();
+	
+	void UseMPPotion();
+#pragma endregion
 };
