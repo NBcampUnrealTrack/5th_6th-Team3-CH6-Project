@@ -102,14 +102,14 @@ void UT3CombatComponent::StartBlock()
 	// 스태미너 50이상만 막기 가능
 	if (!OwnerChar || OwnerChar->GetCurrentStamina() < 50.f)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("You Need Stamina."));
+		// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("You Need Stamina."));
 		return;
 	}
 
 	if (OwnerChar->PlayerInputState.bIsBlocking || CurrentState != ECharacterCombatState::Idle || !bCanBlock) return;
 
 	// 2. 초기 상태 설정: 패링(Parrying) 모드 진입
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Blue, TEXT("BlockingModeOn"));
+	// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Blue, TEXT("BlockingModeOn"));
 	CurrentState = ECharacterCombatState::Parrying;
 	OwnerChar->PlayerInputState.bIsBlocking = true;
 	bCanBlock = false;
@@ -149,7 +149,7 @@ void UT3CombatComponent::EndBlock()
 void UT3CombatComponent::ResetBlockCooldown()
 {
 	bCanBlock = true;
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Block Ready Again"));
+	// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Block Ready Again"));
 }
 
 void UT3CombatComponent::Attack()
@@ -229,7 +229,7 @@ void UT3CombatComponent::ToggleLockOn()
 		// 위젯 켜기 (인터페이스 함수 호출)
 		LockOnInterface->SetLockOnWidgetVisible(true);
 
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("LockOn"));
+		// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("LockOn"));
 	}
 
 }
@@ -455,7 +455,7 @@ void UT3CombatComponent::ResetLockOn()
 	if (OwnerPC)
 	{
 		OwnerPC->ResetIgnoreLookInput(); // 마우스 입력 다시 허용
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("LockOff"));
+		// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("LockOff"));
 
 		OwnerChar->GetCharacterMovement()->bOrientRotationToMovement = true;
 		OwnerChar->GetCharacterMovement()->bUseControllerDesiredRotation = false;
@@ -491,9 +491,9 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 	
 	// 1. [디버그] 공격자 정보 및 데미지 타입 확인
 	FString TypeName = DamageType ? DamageType->GetClass()->GetName() : TEXT("Normal");
-	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::White,
-		FString::Printf(TEXT("Hit by: %s | Original Damage: %.1f | Type: %s | multi: %.1f"),
-			*DamageCauser->GetName(), Damage, *TypeName, ReceievedDamageMultiplier));
+	// GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::White,
+		// FString::Printf(TEXT("Hit by: %s | Original Damage: %.1f | Type: %s | multi: %.1f"),
+			// *DamageCauser->GetName(), Damage, *TypeName, ReceievedDamageMultiplier));
 
 	// 최종 데미지 계산
 	float FinalDamage = CalculateFinalDamage(Damage, DamageType, ReceievedDamageMultiplier);
@@ -502,10 +502,12 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 	if (FinalDamage <= 0.f)
 	{
 		if (CurrentState == ECharacterCombatState::Dodge)
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Result: [EVADE] - Invincible Frame!"));
+		{ }
+			// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Result: [EVADE] - Invincible Frame!"));
 
 		else if (CurrentState == ECharacterCombatState::Parrying)
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("Result: [PARRY] - Success!"));
+		{ }
+			// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("Result: [PARRY] - Success!"));
 		// 패링 성공 시 보스에게 스턴치 10 부여
 		AT3BossMonster* HitBoss = Cast<AT3BossMonster>(DamageCauser);
 		if (HitBoss) { HitBoss->Damage(0, 10.f); }
@@ -516,8 +518,8 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 		// 1. 스태미나 50 차감
 		ConsumeStamina(50.f);
 
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow,
-			FString::Printf(TEXT("Result: [BLOCK] - Reduced Damage: %.1f"), FinalDamage));
+		/*GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow,
+			FString::Printf(TEXT("Result: [BLOCK] - Reduced Damage: %.1f"), FinalDamage));*/
 	}
 
 
@@ -526,8 +528,8 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 	float NewHP = FMath::Max(0.f, OwnerChar->GetCurrentHP() - FinalDamage);
 	OwnerChar->SetCurrentHP(NewHP);
 
-	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red,
-		FString::Printf(TEXT("HP Status: %.1f / %.1f"), NewHP, OwnerChar->GetMaxHP()));
+	//GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red,
+	//	FString::Printf(TEXT("HP Status: %.1f / %.1f"), NewHP, OwnerChar->GetMaxHP()));
 	   UE_LOG(LogTemp, Warning, TEXT("HP Status: %.1f / %.1f"), NewHP, OwnerChar->GetMaxHP());
 	   UE_LOG(LogTemp, Display, TEXT("final : %.1f"), FinalDamage);
 
@@ -555,8 +557,8 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 	EHitDirection HitDir = CalculateHitDirection(DamageCauser->GetActorLocation());
 	HitDirection = HitDir;
 	FString DirName = StaticEnum<EHitDirection>()->GetNameStringByValue((int64)HitDir);
-	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Orange, FString::Printf(TEXT("Hit Direction: [%s]"), *DirName));
-	UE_LOG(LogTemp, Warning, TEXT("Hit Direction: [%s]"), *DirName);
+	//GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Orange, FString::Printf(TEXT("Hit Direction: [%s]"), *DirName));
+	//UE_LOG(LogTemp, Warning, TEXT("Hit Direction: [%s]"), *DirName);
 }
 
 // 피격 데미지 계산
@@ -658,7 +660,7 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 
 	if (HitBoss)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Hit Boss!"));
+		// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Hit Boss!"));
 		HitBoss->Damage(DamageAmount, 20.f);  // 테스트용 스턴 20
 		// HitBoss->Damage(CurrentAttackDamage, StunAmount);
 	}
@@ -679,8 +681,8 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 
 	if (GEngine)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
-		FString::Printf(TEXT("Attack Sent -> Target: %s, Damage: %.1f"), *TargetActor->GetName(), DamageAmount));
+		//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
+		//FString::Printf(TEXT("Attack Sent -> Target: %s, Damage: %.1f"), *TargetActor->GetName(), DamageAmount));
 	}
 }
 
@@ -701,43 +703,21 @@ void UT3CombatComponent::ConsumeStamina(float Amount)
 // 스킬&아이템 슬롯 함수
 void UT3CombatComponent::ChangeActiveSlot(ESlotType Type)
 {
-	switch (Type)
+	if (Type == ESlotType::Skill && SkillComp)
 	{
-	case ESlotType::Skill:
-	{
-		if (Type != ESlotType::Skill) return;
+		if (SkillComp->GetSkillIDBySlotIndex(2) == 0) return;
 
-		if (SkillComp)
-		{
-			// 넥스트 슬롯이 0인지 확인
-			if (SkillComp->GetSkillIDBySlotIndex(2) == 0)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("넥스트 슬롯이 비어있어 교체할 수 없습니다."));
-				return;
-			}
+		// 1. 실제 데이터 스왑
+		SkillComp->SwapSkills();
 
-			// 실제 스왑 실행
-			SkillComp->SwapSkills();
-		}
-		break;
+		// 2. 스왑 후의 데이터를 가져와서 정확하게 보고
+		int32 S1_ID = SkillComp->GetSkillIDBySlotIndex(1);
+		int32 S2_ID = SkillComp->GetSkillIDBySlotIndex(2);
 
+		// GetSkillDataByID가 Const 포인터나 레퍼런스를 반환하는지 확인 필수
+		SkillComp->OnSkillSlotUpdated.Broadcast(1, S1_ID, *SkillComp->GetSkillDataByID(S1_ID));
+		SkillComp->OnSkillSlotUpdated.Broadcast(2, S2_ID, *SkillComp->GetSkillDataByID(S2_ID));
 	}
-	case ESlotType::Consumable:
-		CurrentConsumableSlot = (CurrentConsumableSlot % MaxConsumableSlots) + 1;
-		UE_LOG(LogTemp, Log, TEXT("Consumable Slot Switched: %d"), CurrentConsumableSlot);
-		break;
-
-
-	case ESlotType::Potion:
-		CurrentPotionSlot = (CurrentPotionSlot % MaxPotionSlots) + 1;
-		UE_LOG(LogTemp, Log, TEXT("Potion Slot Switched: %d"), CurrentPotionSlot);
-		break;
-	}
-
-	// 현재 슬롯(1번) 정보 갱신
-	SkillComp->OnSkillSlotUpdated.Broadcast(1, SkillComp->CurrentSkillSlot, *SkillComp->GetSkillDataByID(SkillComp->CurrentSkillSlot));
-	// 다음 슬롯(2번) 정보 갱신
-	SkillComp->OnSkillSlotUpdated.Broadcast(2, SkillComp->NextSkillSlot, *SkillComp->GetSkillDataByID(SkillComp->NextSkillSlot));
 }
 
 void UT3CombatComponent::ExecuteCurrentSlotAction(ESlotType Type)

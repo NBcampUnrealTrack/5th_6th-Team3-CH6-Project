@@ -78,22 +78,22 @@ void AT3WeaponBase::OnWeaponOverlap(UPrimitiveComponent* OverlappedComponent, AA
         // 적과 닿았을 때만 실행
 
         AlreadyHitActors.Add(OtherActor);
-        GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("Overlap Success with Enemy!"));
+        //GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("Overlap Success with Enemy!"));
 
         AT3BossMonster* HitBoss = Cast<AT3BossMonster>(OtherActor);
 
         if (HitBoss)
         {
             HitBoss->Damage(CurrentAttackDamage, StunAmount); 
-            GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Hit Boss! Damage :  %.1f,  Stun : %.1f"), CurrentAttackDamage, StunAmount));
+            //GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Hit Boss! Damage :  %.1f,  Stun : %.1f"), CurrentAttackDamage, StunAmount));
             UE_LOG(LogTemp, Warning, TEXT("Hit Boss! Damage: %.1f, Stun: %.1f"), CurrentAttackDamage, StunAmount);
         }
 
         if (Combat && !HitBoss)
         {
             Combat->RequestAttackDamage(OtherActor, CurrentAttackDamage, CurrentIntensity, 1.f, CurrentDamageType);
-            GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Hit Monster!"));
-            GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Hit Monster! Damage :  %.1f"), CurrentAttackDamage));
+            //GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Hit Monster!"));
+            //GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Hit Monster! Damage :  %.1f"), CurrentAttackDamage));
             UE_LOG(LogTemp, Warning, TEXT("Hit Monster! Damage: %.1f"), CurrentAttackDamage);
         }
         UE_LOG(LogTemp, Log, TEXT("Hit: %s"), *OtherActor->GetName());
