@@ -256,6 +256,11 @@ private:
 
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* InstigatedBy, AActor* DamageCauser) override;
 
+	//사망 후 이 시간이 지나면 게임 로드 실행 (단위 : 초)
+	UPROPERTY(EditAnywhere, Category = "Death")
+	float LoadTimeAfterDeath;
+	//사망 후 게임 로드용 핸들
+	FTimerHandle AfterDeathTimerHandle;
 
 	// 강제 이동 구현
 	protected:
