@@ -121,6 +121,8 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Death")
 	bool bIsDead = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsLying = false;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TObjectPtr<UT3InventoryComponent> InventoryComponent; 
