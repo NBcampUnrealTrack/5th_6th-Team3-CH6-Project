@@ -277,21 +277,25 @@ void UT3CombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	float HeightDifference = TargetLocation.Z - OwnerChar->GetActorLocation().Z;
 
 
-	// 록온 대상의 높이가 높아질수록 광각으로 카메라가 멀어짐
-	float RawAlpha = FMath::GetMappedRangeValueClamped(FVector2D(100.f, 1000.f), FVector2D(0.f, 1.f), HeightDifference);
-	float ExponentialAlpha = FMath::Clamp(RawAlpha * 1.5f, 0.f, 1.f);
+	//// 록온 대상의 높이가 높아질수록 광각으로 카메라가 멀어짐
+	//float RawAlpha = FMath::GetMappedRangeValueClamped(FVector2D(100.f, 1000.f), FVector2D(0.f, 1.f), HeightDifference);
+	//float ExponentialAlpha = FMath::Clamp(RawAlpha * 1.5f, 0.f, 1.f);
 
-	// 스프링암 길이
-	float DynamicMaxExtra = 2500.f;
-	float TargetArmLength = DefaultArmLength + (ExponentialAlpha * DynamicMaxExtra);
+	//// 스프링암 길이
+	//float DynamicMaxExtra = 2500.f;
+	//float TargetArmLength = DefaultArmLength + (ExponentialAlpha * DynamicMaxExtra);
 
-	float TargetDistance = FMath::Lerp(DefaultArmLength, 2500.f, ExponentialAlpha);
+	//float TargetDistance = FMath::Lerp(DefaultArmLength, 2500.f, ExponentialAlpha);
 
-	// 광각 범위
-	float TargetFOV = FMath::Lerp(90.f, 120.f, ExponentialAlpha);
+	//// 광각 범위
+	//float TargetFOV = FMath::Lerp(90.f, 120.f, ExponentialAlpha);
 
-	// SocketOffset: 카메라를 더 위로 올려서 아래를 내려다보게 함 (High Angle)
-	float TargetSocketZ = FMath::Lerp(50.f, 500.f, ExponentialAlpha);
+	//// SocketOffset: 카메라를 더 위로 올려서 아래를 내려다보게 함 (High Angle)
+	//float TargetSocketZ = FMath::Lerp(50.f, 500.f, ExponentialAlpha);
+
+	float TargetDistance = DefaultArmLength; // 기본 길이에 고정
+	float TargetFOV = 90.f;                // 기본 시야각에 고정 (원하는 기본값으로 설정하세요)
+	float TargetSocketZ = 50.f;
 
 	// 부드러운 카메라 전환
 	SpringArm->TargetArmLength = FMath::FInterpTo(SpringArm->TargetArmLength, TargetDistance, DeltaTime, 5.0f);
@@ -644,7 +648,7 @@ EHitDirection UT3CombatComponent::CalculateHitDirection(const FVector& HitLocati
 
 // 공격 로직
 
-void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAmount, EHitIntensity Intensity, float DamageMultiflier, TSubclassOf<UT3DamageType_Base> DamageTypeClass)
+void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAmount, EHitIntensity Intensity, float DamageMultiflier, TSubclassOf<UT3DamageType_Base> DamageTypeClass, float InStunAmount)
 {
 	if (!TargetActor) { UE_LOG(LogTemp, Warning, TEXT("Target Missing!")); return; }
 	if (!OwnerChar && !AIChar) { UE_LOG(LogTemp, Warning, TEXT("Owner Missing!")); return; }
@@ -655,6 +659,7 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 	FT3DamageEvent T3DamageEvent(DamageTypeClass);
 	T3DamageEvent.HitIntensity = Intensity; // 공격 강도를 구조체에 직접 삽입
 	T3DamageEvent.HitDamageMultiplier = DamageMultiflier;
+	T3DamageEvent.StunAmount = InStunAmount;
 
 	AT3BossMonster* HitBoss = Cast<AT3BossMonster>(TargetActor);
 
@@ -694,8 +699,8 @@ void UT3CombatComponent::ConsumeStamina(float Amount)
 		float NewStamina = OwnerChar->GetCurrentStamina() - Amount;
 		OwnerChar->SetCurrentStamina(NewStamina);
 
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
-			FString::Printf(TEXT("Remaining Stamina: %.1f"), OwnerChar->GetCurrentStamina()));
+		/*GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
+			FString::Printf(TEXT("Remaining Stamina: %.1f"), OwnerChar->GetCurrentStamina()));*/
 	}
 }
 
