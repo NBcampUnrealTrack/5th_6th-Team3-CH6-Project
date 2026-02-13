@@ -443,7 +443,7 @@ void UT3InventoryComponent::UseEquippedItem()
 	UE_LOG(LogTemp, Log, TEXT("ConsumableItemType 설정: %s"), *ConsumableTypeString);
 }
 
-int32 UT3InventoryComponent::GetCurrentItemCount() const
+int32 UT3InventoryComponent::GetCurrentBuffItemCount() const
 {
 	if (EquippedItemIDs.Num() <= 0)
 	{
@@ -469,7 +469,7 @@ int32 UT3InventoryComponent::GetCurrentItemCount() const
 	return 0;
 }
 
-int32 UT3InventoryComponent::GetNextItemCount() const
+int32 UT3InventoryComponent::GetNextBuffItemCount() const
 {
 	if (EquippedItemIDs.Num() <= 1)
 	{
@@ -493,6 +493,28 @@ int32 UT3InventoryComponent::GetNextItemCount() const
 	}
 	
 	return 0;
+}
+
+FName UT3InventoryComponent::GetCurrentBuffItemName() const
+{
+	if (EquippedItemIDs.Num() <= 0)
+	{
+		UE_LOG(LogTemp, Error, TEXT("장착된 버프 아이템이 없습니다"))
+		return NAME_None;
+	}
+	
+	return EquippedItemIDs[0];
+}
+
+FName UT3InventoryComponent::GetNextBuffItemName() const
+{
+	if (EquippedItemIDs.Num() <= 1)
+	{
+		UE_LOG(LogTemp, Error, TEXT("장착된 버프 아이템이 1개 입니다"))
+		return NAME_None;
+	}
+	
+	return EquippedItemIDs[1];
 }
 
 void UT3InventoryComponent::InitializePotionIDs()
