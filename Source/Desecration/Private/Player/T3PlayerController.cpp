@@ -39,13 +39,13 @@ void AT3PlayerController::BeginPlay()
 		CombatWidget = CreateWidget<UUserWidget>(this, CombatWidgetClass);
 
 		//CombatWidget->SetVisibility(ESlateVisibility::Collapsed);
-		CombatWidget->AddToViewport();
+		CombatWidget->AddToViewport(99);
 	}
 	
 	if (IsValid(PopUpMenuClass))
 	{
 		PopUpMenu = CreateWidget<UT3PopUpMenu>(this, PopUpMenuClass);
-		PopUpMenu->AddToViewport();
+		PopUpMenu->AddToViewport(100);
 	}
 	
 	if (IsValid(HUDSlotWidgetClass))

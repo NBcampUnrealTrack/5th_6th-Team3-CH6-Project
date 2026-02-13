@@ -29,11 +29,14 @@ void UT3UpgradeUIWidget::NativeConstruct()
 	// UpgradeStation 자동 탐색
 	if (!UpgradeStation)
 	{
-		TArray<AActor*> FoundActors;
-		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AT3UpgradeStation::StaticClass(), FoundActors);
-		if (FoundActors.Num() > 0)
+		if (UWorld* World = GetWorld())
 		{
-			UpgradeStation = Cast<AT3UpgradeStation>(FoundActors[0]);
+			TArray<AActor*> FoundActors;
+			UGameplayStatics::GetAllActorsOfClass(World, AT3UpgradeStation::StaticClass(), FoundActors);
+			if (FoundActors.Num() > 0)
+			{
+				UpgradeStation = Cast<AT3UpgradeStation>(FoundActors[0]);
+			}
 		}
 	}
 
