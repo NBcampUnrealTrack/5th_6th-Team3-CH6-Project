@@ -17,6 +17,10 @@
 void AT3PlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	bShowMouseCursor = false;
+	const FInputModeGameOnly InputModeGameOnly;
+	SetInputMode(InputModeGameOnly);
 
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 	{
