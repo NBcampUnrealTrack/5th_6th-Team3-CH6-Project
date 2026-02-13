@@ -91,7 +91,7 @@ void AT3WeaponBase::OnWeaponOverlap(UPrimitiveComponent* OverlappedComponent, AA
 
         if (Combat && !HitBoss)
         {
-            Combat->RequestAttackDamage(OtherActor, CurrentAttackDamage, CurrentIntensity, 1.f, CurrentDamageType, StunAmount);
+            Combat->RequestAttackDamage(OtherActor, CurrentAttackDamage, CurrentIntensity, 1.f, CurrentDamageType);
             //GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Hit Monster!"));
             //GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Hit Monster! Damage :  %.1f"), CurrentAttackDamage));
             UE_LOG(LogTemp, Warning, TEXT("Hit Monster! Damage: %.1f"), CurrentAttackDamage);

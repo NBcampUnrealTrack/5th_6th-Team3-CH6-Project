@@ -28,13 +28,9 @@ struct FT3DamageEvent : public FDamageEvent
 	UPROPERTY()
 	float HitDamageMultiplier = 1.0f;
 
-	//스턴치
-	UPROPERTY()
-	float StunAmount = 0.f;
-
-	FT3DamageEvent() : FDamageEvent(), HitDamageMultiplier(1.0f), StunAmount(0.f){}
+	FT3DamageEvent() : FDamageEvent(), HitDamageMultiplier(1.0f) {}
 	FT3DamageEvent(TSubclassOf<UDamageType> InDamageTypeClass)
-		: FDamageEvent(InDamageTypeClass), HitDamageMultiplier(1.0f), StunAmount(0.f) {
+		: FDamageEvent(InDamageTypeClass), HitDamageMultiplier(1.0f) {
 	}
 
 	// 기본 FDamageEvent와 구분하기 위한 ID (임의의 고유값)
