@@ -478,13 +478,13 @@ void AT3CharacterBase::OnDeath()
 	bMoveLock = true;
 	OnDeathAnimation();
 	
-	GetWorld()->GetTimerManager().SetTimer(AfterDeathTimerHandle, FTimerDelegate::CreateLambda([&]()
-	{
-		if (const TObjectPtr<AT3GameMode> T3GameMode = Cast<AT3GameMode>(GetWorld()->GetAuthGameMode()))
-		{
-			T3GameMode->LoadGame();
-		}
-	}), LoadTimeAfterDeath, false);
+	//GetWorld()->GetTimerManager().SetTimer(AfterDeathTimerHandle, FTimerDelegate::CreateLambda([&]()
+	//{
+	//	if (const TObjectPtr<AT3GameMode> T3GameMode = Cast<AT3GameMode>(GetWorld()->GetAuthGameMode()))
+	//	{
+	//		T3GameMode->LoadGame();
+	//	}
+	//}), LoadTimeAfterDeath, false);
 }
 
 void AT3CharacterBase::ConsumeMana(float Amount)
