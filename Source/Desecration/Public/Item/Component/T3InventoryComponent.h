@@ -157,10 +157,16 @@ public:
 	void UseEquippedItem();
 	
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
-	int32 GetCurrentItemCount() const;
+	int32 GetCurrentBuffItemCount() const;
 	
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
-	int32 GetNextItemCount() const;
+	int32 GetNextBuffItemCount() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	FName GetCurrentBuffItemName() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	FName GetNextBuffItemName() const;
 	
 	UPROPERTY(BlueprintAssignable, Category = "Equipment")
 	FOnToggleItemEquipped OnToggleItemEquipped;

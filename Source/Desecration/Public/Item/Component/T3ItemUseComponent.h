@@ -45,6 +45,7 @@ private:
 	void ClearBerserkPotionCoolTime();
 	
 	void PlayItemUseEffect(FT3ConsumableItemData ItemData);
+	void PlayItemUseSound();
 	
 	float OriginalPowerValue;
 	float OriginalDefenseValue;
