@@ -84,14 +84,15 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Inventory")
 	FOnInventoryInitialized OnInventoryInitialized;
 	
+	UPROPERTY(BlueprintReadOnly)
+	EConsumableItemType ConsumableItemType = EConsumableItemType::None;
+	
 protected:
 	virtual void BeginPlay() override;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Money")
 	int32 Money;
-	
-	UPROPERTY(BlueprintReadOnly)
-	EConsumableItemType ConsumableItemType = EConsumableItemType::None;
+
 	
 #pragma region Stone // 강화석
 	int32 NormalStoneCount;

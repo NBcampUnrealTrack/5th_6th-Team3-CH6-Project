@@ -436,11 +436,6 @@ void UT3InventoryComponent::UseEquippedItem()
 			break;
 		}
 	}
-	
-	ConsumableItemType = EConsumableItemType::Buff;
-	
-	FString ConsumableTypeString = StaticEnum<EConsumableItemType>()->GetNameStringByValue(static_cast<int64>(ConsumableItemType));
-	UE_LOG(LogTemp, Log, TEXT("ConsumableItemType 설정: %s"), *ConsumableTypeString);
 }
 
 int32 UT3InventoryComponent::GetCurrentItemCount() const
@@ -566,11 +561,6 @@ void UT3InventoryComponent::UseCurrentPotion()
 		UE_LOG(LogTemp, Error, TEXT("회복 포션 사용 실패"));
 		return;
 	}
-	
-	ConsumableItemType = EConsumableItemType::Recover;
-	
-	FString ConsumableTypeString = StaticEnum<EConsumableItemType>()->GetNameStringByValue(static_cast<int64>(ConsumableItemType));
-	UE_LOG(LogTemp, Log, TEXT("ConsumableItemType 설정: %s"), *ConsumableTypeString);
 }
 
 void UT3InventoryComponent::SwapHPMPSlot()
