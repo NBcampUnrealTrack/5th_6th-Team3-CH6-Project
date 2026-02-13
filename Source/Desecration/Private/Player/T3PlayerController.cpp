@@ -35,7 +35,7 @@ void AT3PlayerController::BeginPlay()
 		MainInventoryWidget = CreateWidget<UUserWidget>(this, MainInventoryWidgetClass);
 		
 		MainInventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
-		MainInventoryWidget->AddToViewport(3);
+		MainInventoryWidget->AddToViewport(99);
 	}
 
 	if (IsValid(CombatWidgetClass))
@@ -43,7 +43,7 @@ void AT3PlayerController::BeginPlay()
 		CombatWidget = CreateWidget<UUserWidget>(this, CombatWidgetClass);
 
 		//CombatWidget->SetVisibility(ESlateVisibility::Collapsed);
-		CombatWidget->AddToViewport(99);
+		CombatWidget->AddToViewport(98);
 	}
 	
 	if (IsValid(PopUpMenuClass))
