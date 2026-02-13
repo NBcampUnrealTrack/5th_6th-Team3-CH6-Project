@@ -755,18 +755,7 @@ float AT3MidBossMonster::TakeDamage(float DamageAmount, FDamageEvent const& Dama
 		const FT3DamageEvent* T3Event = static_cast<const FT3DamageEvent*>(&DamageEvent);
 		if (T3Event)
 		{
-			switch (T3Event->HitIntensity)
-			{
-			case EHitIntensity::Light:
-				StunAmount = 10.f;
-				break;
-			case EHitIntensity::Medium:
-				StunAmount = 25.f;
-				break;
-			case EHitIntensity::Heavy:
-				StunAmount = 50.f;
-				break;
-			}
+			StunAmount = T3Event->StunAmount;
 		}
 	}
 
