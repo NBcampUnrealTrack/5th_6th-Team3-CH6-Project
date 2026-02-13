@@ -12,6 +12,14 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSwapRecoverSlot);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCooldownProgressUpdated, FName, ItemID, float, Progress);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryInitialized);
 
+UENUM(BlueprintType)
+enum class EConsumableItemType : uint8
+{
+	None,
+	Recover,
+	Buff
+};
+
 class AT3CharacterBase;
 
 USTRUCT(BlueprintType)
@@ -81,6 +89,9 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Money")
 	int32 Money;
+	
+	UPROPERTY(BlueprintReadOnly)
+	EConsumableItemType ConsumableItemType = EConsumableItemType::None;
 	
 #pragma region Stone // 강화석
 	int32 NormalStoneCount;
