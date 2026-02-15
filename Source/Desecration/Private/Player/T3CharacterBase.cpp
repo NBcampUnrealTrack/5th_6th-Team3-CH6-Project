@@ -356,7 +356,7 @@ void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)
 				// 위젯에 컴포넌트 전달 (의존성 주입)
 				if (AT3PlayerController* PC = GetController<AT3PlayerController>())
 				{
-					//PC->HUDSlotWidget->InitializeWidget(NewSkillComp);
+					PC->HUDSlotWidget->InitializeWidget(NewSkillComp);
 				}
 				UE_LOG(LogTemp, Log, TEXT("Skill Component Attached: %s"), *Data->SkillComponent->GetName());
 			}

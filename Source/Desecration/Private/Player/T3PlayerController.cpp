@@ -153,7 +153,7 @@ void AT3PlayerController::Input_LockOn(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_BlockStart(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse)
 	{
 		return;
 	}
@@ -166,7 +166,7 @@ void AT3PlayerController::Input_BlockStart(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_BlockEnd(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse)
 	{
 		return;
 	}
@@ -181,7 +181,7 @@ void AT3PlayerController::Input_BlockEnd(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_Roll(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse)
 	{
 		return;
 	}
@@ -194,7 +194,7 @@ void AT3PlayerController::Input_Roll(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_Interact(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse)
 	{
 		return;
 	}
@@ -228,7 +228,7 @@ void AT3PlayerController::Input_Test(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_Attack(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse)
 	{
 		return;
 	}
@@ -295,13 +295,13 @@ void AT3PlayerController::Input_ChangeConsumableSlot(const FInputActionValue& Va
 
 void AT3PlayerController::Input_ActiveSkillSlot(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction()) { return; }
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse) { return; }
 	if (Combat) { Combat->ExecuteCurrentSlotAction(ESlotType::Skill); } 
 }
 
 void AT3PlayerController::Input_ActivePotionSlot(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction()) { return; }
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse) { return; }
 	
 	if (IsValid(OwnerChar))
 	{
@@ -311,7 +311,7 @@ void AT3PlayerController::Input_ActivePotionSlot(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_ActiveConsumableSlot(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction()) { return; }
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse) { return; }
 	
 	if (IsValid(OwnerChar))
 	{
