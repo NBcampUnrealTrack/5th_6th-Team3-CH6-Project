@@ -88,6 +88,7 @@ void AT3GameMode::LoadGame()
 	}
 }
 
+/*
 void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 {
 	//저장된 게임 데이터에서 캐릭터 정보를 가져온다. 
@@ -130,4 +131,66 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 	{
 		EquipComp->LoadEquipmentFromSave(SaveGame->WeaponSaveData, SaveGame->ArmorSaveData);
 	}
+}
+*/
+
+
+void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
+{
+    if (!Character) return;
+
+    // 1. GameInstance 유효성 검사 (가장 중요)
+    if (!T3GameInstance) 
+    {
+        // 캐싱이 안 되어 있다면 여기서 시도
+        T3GameInstance = Cast<UT3GameInstance>(GetGameInstance());
+        if (!T3GameInstance) return;
+    }
+
+    const TObjectPtr<UT3SaveGame> SaveGame = T3GameInstance->GetSavedGameData();
+    if (!SaveGame) return;
+
+    // 2. 위치 설정
+    if (SaveGame->bSetLocation)
+    {
+        SaveGame->bSetLocation = false;
+        Character->SetActorLocation(SaveGame->PlayerLocation);
+    }
+
+    // 3. 스탯 적용
+    Character->SetCurrentHP(SaveGame->CurrentHP);
+    Character->SetCurrentMana(SaveGame->CurrentMana);
+    Character->SetCurrentStamina(SaveGame->CurrentStamina);
+    Character->SetAttackPower(SaveGame->AttackPower);
+    Character->SetCriticalChance(SaveGame->CriticalChance);
+    Character->SetCriticalDamage(SaveGame->CriticalDamage);
+    Character->SetMoveSpeed(SaveGame->MoveSpeed);
+
+    // 4. 인벤토리 컴포넌트 유효성 검사 (매우 중요)
+    TObjectPtr<UT3InventoryComponent> InventoryComponent = Character->InventoryComponent;
+    if (InventoryComponent) // 여기서 Null 체크 필수!
+    {
+        const int32 SlotNums = SaveGame->Items.Num();
+        for (int32 iNum = 0; iNum < SlotNums; ++iNum)
+        {
+            if (InventoryComponent->Items.IsValidIndex(iNum) && SaveGame->Items.IsValidIndex(iNum))
+            {
+                InventoryComponent->Items[iNum] = SaveGame->Items[iNum];
+            }
+        }
+        InventoryComponent->SetMoney(SaveGame->Money);
+        InventoryComponent->SetNormalStoneCount(SaveGame->NormalStoneCount);
+        InventoryComponent->SetEpicStoneCount(SaveGame->EpicStoneCount);
+        InventoryComponent->SetLegendaryStoneCount(SaveGame->LegendaryStoneCount);
+    }
+    else 
+    {
+        UE_LOG(LogTemp, Error, TEXT("InventoryComponent is Null on %s"), *Character->GetName());
+    }
+
+    // 5. 장비 컴포넌트 유효성 검사
+    if (UT3PlayerEquipmentComponent* EquipComp = Character->FindComponentByClass<UT3PlayerEquipmentComponent>())
+    {
+        EquipComp->LoadEquipmentFromSave(SaveGame->WeaponSaveData, SaveGame->ArmorSaveData);
+    }
 }
