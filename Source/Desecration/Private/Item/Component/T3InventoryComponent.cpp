@@ -1,6 +1,6 @@
 #include "Public/Item/Component/T3InventoryComponent.h"
 
-#include "IDetailTreeNode.h"
+//#include "IDetailTreeNode.h"
 #include "Item/Component/T3ItemUseComponent.h"
 #include "Player/T3CharacterBase.h"
 #include "Public/Item/Data/T3ConsumableItemData.h"
