@@ -95,4 +95,8 @@ private:
 	
 	//저장, 불러오기에 사용할 슬롯 이름
 	const FString SAVE_GAME_NAME = TEXT("SaveSlot1");
+	
+	// T3GameInstance.h
+	UPROPERTY(EditAnywhere, Category = "Level Settings")
+	TMap<ELevelName, TSoftObjectPtr<UWorld>> LevelMap;
 };

@@ -55,13 +55,13 @@ void AT3WeaponBase::SetWeaponCollisionEnabled(bool bEnabled, float InDamageMulti
         FString CollisionState = (WeaponCollision->GetCollisionEnabled() == ECollisionEnabled::QueryOnly) ? TEXT("Enabled") : TEXT("Disabled");
        // GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, FString::Printf(TEXT("Weapon Collision: %s"), *CollisionState));
         UE_LOG(LogTemp, Display, TEXT("Weapon Collision: %s"), *CollisionState);
-        WeaponCollision->SetHiddenInGame(false);
     }
 
     else
     {
         WeaponCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
         AlreadyHitActors.Empty();
+        WeaponCollision->SetHiddenInGame(true);
     }
 }
 
