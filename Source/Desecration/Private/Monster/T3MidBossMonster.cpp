@@ -7,6 +7,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Components/AudioComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SphereComponent.h"
 #include "Components/TimelineComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Curves/CurveFloat.h"
@@ -60,6 +61,17 @@ AT3MidBossMonster::AT3MidBossMonster()
 	LockOnWidgetComponent->SetDrawSize(FVector2D(30.f, 15.f));
 	LockOnWidgetComponent->SetVisibility(false);
 	LockOnWidgetComponent->SetRelativeLocation(FVector::ZeroVector);
+
+	// 활성화 트리거 (플레이어 접근 감지 — Level BP TriggerBox 대체)
+	ActivationTriggerSphere = CreateDefaultSubobject<USphereComponent>(TEXT("ActivationTrigger"));
+	ActivationTriggerSphere->SetupAttachment(RootComponent);
+	ActivationTriggerSphere->SetSphereRadius(ActivationRadius);
+	ActivationTriggerSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	ActivationTriggerSphere->SetCollisionObjectType(ECC_WorldDynamic);
+	ActivationTriggerSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
+	ActivationTriggerSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	ActivationTriggerSphere->SetGenerateOverlapEvents(true);
+	ActivationTriggerSphere->SetCanEverAffectNavigation(false);
 }
 
 // ============================================================
@@ -168,12 +180,21 @@ void AT3MidBossMonster::BeginPlay()
 		}
 	}
 
+	// 활성화 트리거 반지름 동기화 (에디터에서 변경된 값 적용) + 오버랩 바인딩
+	if (ActivationTriggerSphere)
+	{
+		ActivationTriggerSphere->SetSphereRadius(ActivationRadius);
+		ActivationTriggerSphere->OnComponentBeginOverlap.AddDynamic(
+			this, &AT3MidBossMonster::OnActivationTriggerOverlap);
+	}
+
 	OnMidBossSpawned.Broadcast();
 
-	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 스폰 완료 (HP: %.0f, Stage: %d, 등록 패턴: %d개, Modifier: %s, Dissolve: %s)"),
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 스폰 완료 (HP: %.0f, Stage: %d, 등록 패턴: %d개, Modifier: %s, Dissolve: %s, TriggerRadius: %.0f)"),
 		*BossName, MidBossStats.MaxHP, BossStage, AttackPatterns.Num(),
 		ModifierDataAsset ? TEXT("O") : TEXT("X"),
-		bEnableDissolve ? TEXT("O") : TEXT("X"));
+		bEnableDissolve ? TEXT("O") : TEXT("X"),
+		ActivationRadius);
 }
 
 void AT3MidBossMonster::Tick(float DeltaTime)
@@ -215,6 +236,32 @@ void AT3MidBossMonster::Tick(float DeltaTime)
 			AIC->ClearFocus(EAIFocusPriority::Gameplay);
 		}
 	}
+}
+
+// ============================================================
+// 활성화 트리거 (플레이어 접근 감지)
+// ============================================================
+
+void AT3MidBossMonster::OnActivationTriggerOverlap(
+	UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
+	bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (bIsActivated || IsDead())
+	{
+		return;
+	}
+
+	// 플레이어 폰인지 확인
+	APawn* OtherPawn = Cast<APawn>(OtherActor);
+	if (!OtherPawn || !OtherPawn->IsPlayerControlled())
+	{
+		return;
+	}
+
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 활성화 트리거 — %s 접근 감지"), *OtherActor->GetName());
+
+	ActivateBoss(OtherActor);
 }
 
 // ============================================================
@@ -966,10 +1013,10 @@ void AT3MidBossMonster::ActivateBoss(AActor* Activator)
 	bIsActivated = true;
 	CombatTarget = Activator;
 
-	// StateTree 시작 (생성자에서 자동 시작 비활성화)
-	if (StateTreeComponent)
+	// 트리거 비활성화 (외부 호출 시에도 중복 방지)
+	if (ActivationTriggerSphere)
 	{
-		StateTreeComponent->StartLogic();
+		ActivationTriggerSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 
 	// BGM 재생 (2D — 공간 감쇠 없이 음악처럼 재생)
@@ -994,10 +1041,50 @@ void AT3MidBossMonster::ActivateBoss(AActor* Activator)
 
 	OnMidBossActivated.Broadcast();
 
-	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 활성화 (타겟: %s, StateTree 시작, BGM: %s, HPBar: %s)"),
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 활성화 (타겟: %s, BGM: %s, HPBar: %s)"),
 		*BossName, *Activator->GetName(),
 		BossBGM ? TEXT("O") : TEXT("X"),
 		BossHPBarWidget ? TEXT("O") : TEXT("X"));
+
+	// 인트로 몽타주 재생 → 완료 후 StateTree 시작
+	if (IntroMontage)
+	{
+		const float Duration = PlayAnimMontage(IntroMontage);
+		if (Duration > 0.f)
+		{
+			UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+			if (AnimInstance)
+			{
+				FOnMontageEnded EndDelegate;
+				EndDelegate.BindUObject(this, &AT3MidBossMonster::OnIntroMontageEnded);
+				AnimInstance->Montage_SetEndDelegate(EndDelegate, IntroMontage);
+			}
+
+			UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 인트로 몽타주 재생 (%.1f초)"), Duration);
+			return;
+		}
+	}
+
+	// 인트로 없으면 즉시 AI 로직 시작
+	StartBossLogic();
+}
+
+void AT3MidBossMonster::OnIntroMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 인트로 몽타주 %s — AI 로직 시작"),
+		bInterrupted ? TEXT("중단됨") : TEXT("완료"));
+
+	StartBossLogic();
+}
+
+void AT3MidBossMonster::StartBossLogic()
+{
+	if (StateTreeComponent)
+	{
+		StateTreeComponent->StartLogic();
+	}
+
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s StateTree 시작"), *BossName);
 }
 
 // ============================================================
@@ -1006,6 +1093,11 @@ void AT3MidBossMonster::ActivateBoss(AActor* Activator)
 
 void AT3MidBossMonster::BeginDeathSequence()
 {
+	// 록온 해제 — "Enemy" 태그 제거 + 록온 위젯 숨김
+	// CombatComponent가 TickComponent에서 태그 부재 감지 시 자동 해제
+	Tags.Remove(FName("Enemy"));
+	SetLockOnWidgetVisible(false);
+
 	// 사망 사운드 재생
 	if (DeathSound)
 	{

@@ -19,6 +19,7 @@ class UT3MidBossHPBarWidget;
 class UCurveFloat;
 class UAudioComponent;
 class UWidgetComponent;
+class USphereComponent;
 
 // StateTree 이벤트 태그 (extern — STNodes에서 참조)
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_Event_StunRecovered);
@@ -78,8 +79,22 @@ public:
 	void UpdateMotionWarpTarget();
 
 	// ==========================================================
-	// 입장 (Entry) — 트리거에서 호출, StateTree 시작
+	// 활성화 트리거 (플레이어 접근 시 자동 활성화, Level BP 불필요)
 	// ==========================================================
+
+	// 활성화 감지 영역 (플레이어가 이 범위에 들어오면 자동 ActivateBoss)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MidBoss|Activation")
+	TObjectPtr<USphereComponent> ActivationTriggerSphere;
+
+	// 활성화 범위 (SphereComponent 반지름, 에디터에서 조절)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Activation")
+	float ActivationRadius = 1500.f;
+
+	// 인트로 몽타주 (선택 — 활성화 시 재생, 완료 후 StateTree 시작)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Activation")
+	TObjectPtr<UAnimMontage> IntroMontage;
+
+	// 외부 호출용 (BossTriggerActor 등에서 직접 호출도 가능)
 	UFUNCTION(BlueprintCallable, Category = "MidBoss|Flow")
 	void ActivateBoss(AActor* Activator);
 
@@ -440,6 +455,17 @@ private:
 
 	void BeginDeathSequence();
 	void FinishDeathSequence();
+
+	// --- 활성화 트리거 ---
+	UFUNCTION()
+	void OnActivationTriggerOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void OnIntroMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
+	// StateTree 시작 (인트로 완료 후 또는 인트로 없을 때 즉시)
+	void StartBossLogic();
 
 	// --- BGM AudioComponent ---
 	UPROPERTY()
