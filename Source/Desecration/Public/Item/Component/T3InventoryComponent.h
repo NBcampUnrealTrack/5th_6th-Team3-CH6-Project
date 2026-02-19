@@ -49,9 +49,6 @@ public:
 	void UseItem(int32 SlotIndex);
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void DropItem(int32 SlotIndex);
-	
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	bool RemoveItem(const FName& ItemName);
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
