@@ -13,6 +13,7 @@
 #include "Item/Component/T3InventoryComponent.h"
 #include "UI/T3PopUpMenu.h"
 #include "UI/T3HUDSlotWidget.h"
+#include "UI/T3ShopWidget.h"
 
 void AT3PlayerController::BeginPlay()
 {
@@ -324,4 +325,32 @@ void AT3PlayerController::SetInventoryOpen(bool bIsOpen)
 	bIsInventoryOpen = bIsOpen;
 }
 
-
+void AT3PlayerController::ShowShopUI(UT3ShopComponent* ShopComp)
+{
+	if (!IsValid(ShopWidgetClass))
+	{
+		UE_LOG(LogTemp, Error, TEXT("상점 위젯 할당안됨"));
+		return;
+	}
+	
+	ShopWidget = CreateWidget<UT3ShopWidget>(this, ShopWidgetClass);
+	
+	if (!IsValid(ShopWidget))
+	{
+		return;
+	}
+	
+	AT3CharacterBase* T3Character = Cast<AT3CharacterBase>(GetPawn());
+	
+	if (!IsValid(T3Character))
+	{
+		UE_LOG(LogTemp, Error, TEXT("캐릭터 캐스트 실패"));
+		return;
+	}
+	
+	ShopWidget->Init(T3Character->InventoryComponent, ShopComp, T3Character);
+	ShopWidget->AddToViewport();
+	
+	SetShowMouseCursor(true);
+	SetInventoryOpen(true);
+}
