@@ -235,7 +235,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Stat")
 	void RestoreMP(float Amount);
 
+	// 클래스
+	FORCEINLINE ECharacterClass GetCurrentClass() const { return CurrentClass; }
+
 protected:
+
+	ECharacterClass CurrentClass;
+
 	// 스태미나 자연 회복
 	void RegenerateStamina();
 	// 스테미나 회복 주기

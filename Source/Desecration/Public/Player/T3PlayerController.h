@@ -22,6 +22,7 @@ protected:
 	virtual void SetupInputComponent() override;
 
 
+
 	// 에디터에서 할당할 위젯 클래스
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TSubclassOf<class UUserWidget> LockOnWidgetClass;
@@ -84,6 +85,12 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "UI")
 	TObjectPtr<UT3PopUpMenu> PopUpMenu;
 	
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<class UT3HolyGaugeWidget> HolyGaugeWidgetClass;
+
+	UPROPERTY(BlueprintReadOnly, Category = "UI")
+	TObjectPtr<class UT3HolyGaugeWidget> HolyGaugeWidget;
+
 	UPROPERTY(EditDefaultsOnly, Category="UI")
 	TSubclassOf<class UT3HUDSlotWidget> HUDSlotWidgetClass;
 	

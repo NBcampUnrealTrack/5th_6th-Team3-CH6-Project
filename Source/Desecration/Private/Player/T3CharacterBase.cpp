@@ -320,6 +320,12 @@ void AT3CharacterBase::OnMovementModeChanged(EMovementMode PrevMovementMode, uin
 void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)
 {
 	if (!Data) return;
+	
+	// 0. 클래스 저장
+	CurrentClass = Data->CharacterClass;
+	
+	FString ClassName = UEnum::GetDisplayValueAsText(CurrentClass).ToString();
+	UE_LOG(LogTemp, Log, TEXT("Your Class is: %s"), *ClassName);
 
 	// 1. 외형 변경
 	if (GetMesh() && Data->CharacterMesh)
