@@ -7,10 +7,12 @@
 #include "InputActionValue.h"
 #include "T3PlayerController.generated.h"
 
+class UT3ShopComponent;
 class UT3PopUpMenu;
 class UInputMappingContext;
 class UInputAction;
 class UUserWidget;
+class UT3ShopWidget;
 
 UCLASS()
 class DESECRATION_API AT3PlayerController : public APlayerController
@@ -87,10 +89,18 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="UI")
 	TSubclassOf<class UT3HUDSlotWidget> HUDSlotWidgetClass;
 	
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UT3ShopWidget> ShopWidgetClass;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "UI")
+	TObjectPtr<UT3ShopWidget> ShopWidget;
+	
 public:
 	UPROPERTY(BlueprintReadOnly, Category="UI")
 	TObjectPtr<class UT3HUDSlotWidget> HUDSlotWidget;
 
+	void ShowShopUI(UT3ShopComponent* ShopComp);
+	
 protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> ChangeSkillSlotAction;
@@ -107,9 +117,6 @@ protected:
 
 	TObjectPtr<class AT3CharacterBase> OwnerChar;
 	TObjectPtr<class UT3CombatComponent> Combat;
-
-
-
 
 private:
 	bool bIsInventoryOpen = false;
