@@ -6,6 +6,7 @@
 
 class UDataTable;
 class UT3InventoryComponent;
+class AT3PlayerController;
 
 UENUM(BlueprintType)
 enum class EShopBuyResult : uint8
@@ -71,6 +72,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Shop")
 	void GetShopItemUIData(TArray<FT3ShopItemUIData>& OutItems) const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Shop")
+	void OpenShop(AT3PlayerController* T3PC);
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Data")
 	TObjectPtr<UDataTable> ShopData;
