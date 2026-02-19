@@ -168,6 +168,9 @@ protected:
 	float StaminaRegenRate = 25.f; // 스태미나 초당 회복량
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+	float StaminaRegenLowRate = 5.f; // 스태미나 초당 회복량
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float MaxMana = 100.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")

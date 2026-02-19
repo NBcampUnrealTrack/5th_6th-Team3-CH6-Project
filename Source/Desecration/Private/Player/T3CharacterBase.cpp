@@ -490,9 +490,14 @@ void AT3CharacterBase::BroadcastStatChange(ET3StatType StatType)
 // 스테미너 자연 회복
 void AT3CharacterBase::RegenerateStamina()
 {
-	if (!CombatComponent || !bCanRegenStamina) return;
+	if (!CombatComponent) return;
 
-	if (CurrentStamina < MaxStamina)
+	if (!bCanRegenStamina || PlayerInputState.bIsBlocking) // 공격, 구르기, 막기 중 스태미너 소량 회복
+	{
+		AddStamina(StaminaRegenLowRate * StaminaRegenInterval);
+	}
+
+	else if (CurrentStamina < MaxStamina)
 	{
 		AddStamina(StaminaRegenRate * StaminaRegenInterval);
 	}
