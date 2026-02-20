@@ -28,7 +28,7 @@ struct FInventorySlot
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory Slot")
-	FName ItemID;
+	FName ItemID = NAME_None;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory Slot")
 	int32 ItemStack = 0;

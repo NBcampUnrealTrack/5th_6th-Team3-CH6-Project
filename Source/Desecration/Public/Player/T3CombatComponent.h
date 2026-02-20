@@ -57,6 +57,9 @@ enum class ESlotType : uint8
 // 현재 선택된 슬롯이 바뀔 때 (전투 화면에서 슬롯 체인지)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSlotSelectionChanged, ESlotType, SlotType, int32, NewSlotIndex);
 
+// 팔라딘 전용 신성게이지 업데이트 델리게이트
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHolyGaugeChangedSignature, float, CurrentGauge, float, MaxGauge);
+
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class DESECRATION_API UT3CombatComponent : public UActorComponent
@@ -182,20 +185,12 @@ private:
 	UPROPERTY()
 	class UT3ItemUseComponent* ItemComp;
 	
-	
-	
-	
-	
-	
-	
-	
 	// 상태별 데미지 경감 로직
 	float CalculateFinalDamage(float IncomingDamage, const class UDamageType* DamageType, float ReceievedDamageMultiplier);
 	
 	// 내부 로직용
 	AActor* FindBestTarget();
 	void ResetLockOn();
-	void UpdateTargetUI(AActor* Target, bool bIsVisible);
 	bool IsTargetVisible(AActor* Target) const;
 	// void SetLockOnTarget(AActor* NewTarget);
 
@@ -246,4 +241,33 @@ private:
 	void ResetBlockCooldown();
 
 
+
+	// 팔라딘 전용
+	public:
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Paladin|Stats")
+		float HolyGauge = 0.f; // 신성 게이지
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Paladin|Stats")
+		float MaxHolyGauge = 100.f;
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Paladin|Stats")
+		bool bIsHolyMode = false; // 100 달성 시 강화 상태 여부
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Paladin|Stats")
+		float AttackSpeedMultiplier = 1.0f;
+
+		FTimerHandle HolyModeTimerHandle;
+
+		UPROPERTY(BlueprintAssignable, Category = "Paladin|Events")
+		FOnHolyGaugeChangedSignature OnHolyGaugeChanged;
+
+		// 게이지 추가 함수 (패링/막기 시 호출)
+		UFUNCTION(BlueprintCallable, Category = "Paladin|Logic")
+		void AddHolyGauge(float Amount);
+
+		// 강화 모드 시작
+		void ActivateHolyMode();
+
+		// 강화 모드 종료
+		void DeactivateHolyMode();
 };

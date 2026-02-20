@@ -18,10 +18,10 @@ struct DESECRATION_API FT3ItemBaseData
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
-	FText Name; // 플레이어에게 보여질 아이템 이름
+	FText Name = FText::GetEmpty(); // 플레이어에게 보여질 아이템 이름
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
-	UTexture2D* Icon; // 아이콘
+	UTexture2D* Icon = nullptr; // 아이콘
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
 	EItemType ItemType = EItemType::None;
