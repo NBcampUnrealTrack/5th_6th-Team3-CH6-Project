@@ -100,7 +100,9 @@ void UT3ShopComponent::GetShopItemUIData(TArray<FT3ShopItemUIData>& OutItems) co
 		UIData.Icon = Row->Icon;
 		UIData.BuyPrice = Row->BuyPrice;
 		UIData.SellPrice = Row->SellPrice;
-
+		UIData.bCanBuy = Row->bCanBuy;
+		UIData.bCanSell = Row->bCanSell;
+		
 		OutItems.Add(UIData);
 	}
 }
