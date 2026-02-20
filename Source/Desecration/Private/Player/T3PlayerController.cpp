@@ -13,6 +13,7 @@
 #include "Item/Component/T3InventoryComponent.h"
 #include "UI/T3PopUpMenu.h"
 #include "UI/T3HUDSlotWidget.h"
+#include "Player/T3HolyGaugeWidget.h"
 #include "UI/T3ShopWidget.h"
 
 void AT3PlayerController::BeginPlay()
@@ -22,6 +23,11 @@ void AT3PlayerController::BeginPlay()
 	bShowMouseCursor = false;
 	const FInputModeGameOnly InputModeGameOnly;
 	SetInputMode(InputModeGameOnly);
+
+	APawn* NewPawn = GetPawn();
+	OwnerChar = Cast<AT3CharacterBase>(NewPawn);
+	Combat = OwnerChar->GetCombatComponent();
+
 
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 	{
@@ -62,7 +68,7 @@ void AT3PlayerController::BeginPlay()
 		}
 	}
 
-	if (LockOnWidgetClass)
+	if (IsValid(LockOnWidgetClass))
 	{
 		LockOnWidget = CreateWidget<UUserWidget>(this, LockOnWidgetClass);
 		if (LockOnWidget)
@@ -72,10 +78,20 @@ void AT3PlayerController::BeginPlay()
 		}
 	}
 
-	APawn* NewPawn = GetPawn();
-	OwnerChar = Cast<AT3CharacterBase>(NewPawn);
-	Combat = OwnerChar->GetCombatComponent();
-	
+	// 팔라딘일 때만 신성게이지 위젯 생성
+	if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
+	{
+		if (IsValid(HolyGaugeWidgetClass))
+		{
+			HolyGaugeWidget = CreateWidget<UT3HolyGaugeWidget>(this, HolyGaugeWidgetClass);
+			if (HolyGaugeWidget)
+			{
+				HolyGaugeWidget->AddToViewport();
+			}
+		}
+	}
+
+
 }
 
 void AT3PlayerController::SetupInputComponent()
