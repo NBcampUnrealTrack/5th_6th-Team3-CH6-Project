@@ -168,10 +168,6 @@ void UT3InventoryComponent::SwapSlots(int32 SourceSlotIndex, int32 TargetSlotInd
 	OnInventoryUpdated.Broadcast();
 }
 
-void UT3InventoryComponent::DropItem(int32 SlotIndex)
-{
-}
-
 bool UT3InventoryComponent::RemoveItem(const FName& ItemName)
 {
 	for (int32 i = 0; i < Items.Num(); i++)

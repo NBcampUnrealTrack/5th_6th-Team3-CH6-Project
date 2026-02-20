@@ -1,6 +1,7 @@
 #include "Shop/Component/T3ShopComponent.h"
 
 #include "Item/Component/T3InventoryComponent.h"
+#include "Player/T3PlayerController.h"
 #include "Shop/Data/T3ShopData.h"
 
 UT3ShopComponent::UT3ShopComponent()
@@ -102,6 +103,16 @@ void UT3ShopComponent::GetShopItemUIData(TArray<FT3ShopItemUIData>& OutItems) co
 
 		OutItems.Add(UIData);
 	}
+}
+
+void UT3ShopComponent::OpenShop(AT3PlayerController* T3PC)
+{
+	if (!T3PC)
+	{
+		return;
+	}
+	
+	T3PC->ShowShopUI(this);
 }
 
 void UT3ShopComponent::BeginPlay()
