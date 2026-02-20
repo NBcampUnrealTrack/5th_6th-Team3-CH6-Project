@@ -269,7 +269,9 @@ private:
 	// 강제 이동 구현
 	protected:
 		// 강제 이동 관련 변수
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ForceMove")
 		bool bIsForcedMoving = false;
+
 		FVector ForcedTargetLocation;
 		FRotator ForcedTargetRotation;
 		float ForcedMoveSpeed = 200.f;
@@ -284,4 +286,9 @@ public:
 
 	void UpdateForcedMovement(float DeltaTime);
 	void UpdateForcedRotation(float DeltaTime);
+
+	//스킬 사용 불가 변수
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ForceMove")
+	bool bIsSkillCanNotUse = false;
+
 };

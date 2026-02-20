@@ -105,6 +105,22 @@ void UT3SkillComponentBase::BeginPlay()
 bool UT3SkillComponentBase::CanExecuteSkill(FSkillData& Data)
 {
    
+    // 0. 안전 장치 추가
+    if (!OwnerChar)
+    {
+        // 다시 한 번 캐싱 시도 (만약을 대비)
+        OwnerChar = Cast<AT3CharacterBase>(GetOwner());
+        if (!OwnerChar)
+        {
+            UE_LOG(LogTemp, Error, TEXT("CanExecuteSkill Failed: OwnerChar is NULL!"));
+            return false;
+        }
+    }
+
+    // 1. 입력 상태 체크 (OwnerChar가 확실히 있을 때만 접근)
+    if (bUsingSkill || !OwnerChar->PlayerInputState.bCanAttack) return false;
+
+
     if (bUsingSkill || !OwnerChar->PlayerInputState.bCanAttack) return false;
     
     // 1. 마나 체크

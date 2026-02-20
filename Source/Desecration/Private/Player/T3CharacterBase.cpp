@@ -2,7 +2,7 @@
 
 
 #include "Player/T3CharacterBase.h"
-#include "SNegativeActionButton.h"
+//#include "SNegativeActionButton.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -64,37 +64,77 @@ void AT3CharacterBase::RequestSellItem(const FInventorySlot& SlotData)
 	OnSellItemRequested.Broadcast(SlotData);
 }
 
+//void AT3CharacterBase::BeginPlay()
+//{
+//	Super::BeginPlay();
+//
+//	if (CharacterData)
+//	{
+//		ApplyCharacterData(CharacterData);
+//	}
+//	
+//	//캐릭터 정보 세팅
+//	if (const TObjectPtr<AT3GameMode> T3GameMode = Cast<AT3GameMode>(GetWorld()->GetAuthGameMode()))
+//	{
+//		T3GameMode->SetCharacterBySavedData(this);
+//	}
+//
+//	// 스태미너 자동 회복
+//		GetWorldTimerManager().SetTimer(
+//		StaminaRegenTimerHandle,
+//		this,
+//		&AT3CharacterBase::RegenerateStamina,
+//		StaminaRegenInterval,
+//		true
+//	);
+//
+//		// 시작 시 전투모드 활성화
+//		PlayerInputState.bIsCombatState = true;
+//
+//		
+//		EquipComp->OnEquipmentStatsChanged.AddDynamic(this, &AT3CharacterBase::OnEquipmentStatsUpdated);
+//
+//
+//}
+
+
 void AT3CharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	UWorld* World = GetWorld();
+	if (!World) return; // 월드 유효성 검사 추가
 
 	if (CharacterData)
 	{
 		ApplyCharacterData(CharacterData);
 	}
-	
-	//캐릭터 정보 세팅
-	if (const TObjectPtr<AT3GameMode> T3GameMode = Cast<AT3GameMode>(GetWorld()->GetAuthGameMode()))
+
+	// GameMode 참조 안전하게 수정
+	if (AT3GameMode* T3GameMode = Cast<AT3GameMode>(World->GetAuthGameMode()))
 	{
 		T3GameMode->SetCharacterBySavedData(this);
 	}
 
-	// 스태미너 자동 회복
-		GetWorldTimerManager().SetTimer(
-		StaminaRegenTimerHandle,
-		this,
-		&AT3CharacterBase::RegenerateStamina,
-		StaminaRegenInterval,
-		true
-	);
+	// 타이머 및 변수 체크
+	if (StaminaRegenInterval > 0.0f)
+	{
+		World->GetTimerManager().SetTimer(
+			StaminaRegenTimerHandle,
+			this,
+			&AT3CharacterBase::RegenerateStamina,
+			StaminaRegenInterval,
+			true
+		);
+	}
 
-		// 시작 시 전투모드 활성화
-		PlayerInputState.bIsCombatState = true;
+	PlayerInputState.bIsCombatState = true;
 
-		
+	// 컴포넌트 유효성 검사 필수
+	if (EquipComp)
+	{
 		EquipComp->OnEquipmentStatsChanged.AddDynamic(this, &AT3CharacterBase::OnEquipmentStatsUpdated);
-
-
+	}
 }
 
 void AT3CharacterBase::OnEquipmentStatsUpdated(float Atk, float Def)
@@ -313,12 +353,18 @@ void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)
 					CombatComponent->SetSkillComponent(NewSkillComp);
 				}
 
-				// 위젯에 컴포넌트 전달 (의존성 주입)
-				if (AT3PlayerController* PC = GetController<AT3PlayerController>())
-				{
-					PC->HUDSlotWidget->InitializeWidget(NewSkillComp);
-				}
-				UE_LOG(LogTemp, Log, TEXT("Skill Component Attached: %s"), *Data->SkillComponent->GetName());
+				FTimerHandle WidgetInitTimerHandle;
+				GetWorldTimerManager().SetTimer(WidgetInitTimerHandle, [this, NewSkillComp]()
+					{
+						if (AT3PlayerController* PC = GetController<AT3PlayerController>())
+						{
+							if (PC->HUDSlotWidget)
+							{
+								PC->HUDSlotWidget->InitializeWidget(NewSkillComp);
+								UE_LOG(LogTemp, Log, TEXT("Delayed Widget Initialization Success!"));
+							}
+						}
+					}, 1.0f, false);
 			}
 		}
 	}

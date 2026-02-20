@@ -210,6 +210,15 @@ void UT3ItemUseComponent::PlayItemUseEffect(FT3ConsumableItemData ItemData)
 	}
 }
 
+void UT3ItemUseComponent::PlayItemUseSound()
+{
+	UGameplayStatics::PlaySoundAtLocation(
+				this,
+				HealSound,
+				OwnerCharacter->GetActorLocation()
+				);
+}
+
 void UT3ItemUseComponent::RecoverHPTick()
 {
 	float RemainAmount = RecoverHPAmount - AccumulatedRecoverHP;
@@ -246,12 +255,6 @@ void UT3ItemUseComponent::RecoverMPTick()
 
 bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemData)
 {
-	UGameplayStatics::PlaySoundAtLocation(
-	this,
-	HealSound,
-	OwnerCharacter->GetActorLocation()
-	);
-	
 	switch (ItemData.EffectType)
 	{
 	case EEffectType::HP:
@@ -288,6 +291,8 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 					false);
 			
 				PlayItemUseEffect(ItemData);
+				
+				PlayItemUseSound();
 				
 				return true;
 			}
@@ -326,6 +331,8 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 					false);
 			
 				PlayItemUseEffect(ItemData);
+				
+				PlayItemUseSound();
 				
 				return true;
 			}
@@ -375,6 +382,8 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 				
 				PlayItemUseEffect(ItemData);
 				
+				PlayItemUseSound();
+				
 				return true;
 			}
 		}
@@ -421,6 +430,8 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 			
 				PlayItemUseEffect(ItemData);
 				
+				PlayItemUseSound();
+				
 				return true;
 			}
 		}
@@ -458,6 +469,8 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 						false);
 				
 				PlayItemUseEffect(ItemData);
+				
+				PlayItemUseSound();
 				
 				return true;
 			}
@@ -516,6 +529,8 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 						false);
 			
 				PlayItemUseEffect(ItemData);
+				
+				PlayItemUseSound();
 				
 				return true;	
 			}
