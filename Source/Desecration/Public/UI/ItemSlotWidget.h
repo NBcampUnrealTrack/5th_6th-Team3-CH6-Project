@@ -21,7 +21,7 @@ public:
 	int32 SlotIndex = -1;
     
 	UPROPERTY(BlueprintReadWrite, Category = "Slot", meta = (ExposeOnSpawn = "true"))
-	TObjectPtr<class UT3InventoryComponent> InventoryComponent;
+	TObjectPtr<UT3InventoryComponent> InventoryComponent;
 	
 	UFUNCTION(BlueprintCallable)
 	void SetSelected(bool bSelected);
