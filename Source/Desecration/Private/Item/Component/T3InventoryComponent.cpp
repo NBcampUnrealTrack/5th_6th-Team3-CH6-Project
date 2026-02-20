@@ -443,7 +443,6 @@ int32 UT3InventoryComponent::GetCurrentBuffItemCount() const
 {
 	if (EquippedItemIDs.Num() <= 0)
 	{
-		UE_LOG(LogTemp, Error, TEXT("장착한 아이템이 없음"));
 		return 0;
 	}
 	
@@ -469,7 +468,6 @@ int32 UT3InventoryComponent::GetNextBuffItemCount() const
 {
 	if (EquippedItemIDs.Num() <= 1)
 	{
-		UE_LOG(LogTemp, Error, TEXT("장착한 아이템이 없음"));
 		return 0;
 	}
 	
