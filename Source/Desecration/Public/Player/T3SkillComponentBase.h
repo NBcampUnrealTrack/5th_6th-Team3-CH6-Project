@@ -94,10 +94,12 @@ public:
 
     virtual FSkillData* GetSkillDataByID(int32 SkillID) { return nullptr; }
     
-
+    UFUNCTION(BlueprintCallable, Category = "Skill")
+    virtual void CancelCurrentSkill();
 
     // 슬롯 번호를 입력받아 스킬 실행
     virtual void ExecuteSkillNotify(int32 Index);
+    UFUNCTION(BlueprintCallable, Category = "Skill")
     virtual void ExecuteSkill(int32 SkillSlot);
 
     // 스킬 스왑 함수 (CombatComponent에서 호출)
