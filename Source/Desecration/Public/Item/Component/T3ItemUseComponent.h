@@ -44,7 +44,7 @@ private:
 	void ClearSpeedPotionCoolTime();
 	void ClearBerserkPotionCoolTime();
 	
-	void PlayItemUseEffect(FT3ConsumableItemData ItemData);
+	void PlayItemUseEffect(const FT3ConsumableItemData& ItemData);
 	void PlayItemUseSound();
 	
 	float OriginalPowerValue;

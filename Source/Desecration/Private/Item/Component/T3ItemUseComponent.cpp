@@ -190,7 +190,7 @@ void UT3ItemUseComponent::ClearBerserkPotionCoolTime()
 	UE_LOG(LogTemp, Error, TEXT("광전사 포션을 사용할 수 있습니다."));
 }
 
-void UT3ItemUseComponent::PlayItemUseEffect(FT3ConsumableItemData ItemData)
+void UT3ItemUseComponent::PlayItemUseEffect(const FT3ConsumableItemData& ItemData)
 {
 	if (IsValid(ItemData.UseEffect) && IsValid(OwnerCharacter))
 	{
