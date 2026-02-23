@@ -5,6 +5,10 @@
 #include "Player/T3CharacterBase.h"
 #include "Player/T3CombatComponent.h"
 
+void UT3SkillComponentBase::CancelCurrentSkill()
+{
+}
+
 void UT3SkillComponentBase::ExecuteSkillNotify(int32 Index)
 {
 }
