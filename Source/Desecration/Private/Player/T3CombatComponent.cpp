@@ -559,7 +559,15 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 	   UE_LOG(LogTemp, Warning, TEXT("HP Status: %.1f / %.1f"), NewHP, OwnerChar->GetMaxHP());
 	   UE_LOG(LogTemp, Display, TEXT("final : %.1f"), FinalDamage);
 
-
+	   // 팔라딘의 경우 신의 심판 시전 중 피격 당하면 스킬 캔슬
+	   if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
+	   {
+		   if (IsValid(SkillComp))
+		   {
+			   GetSkillComponent()->CancelCurrentSkill();
+			   OwnerChar->StopAnimMontage();
+		   }
+	   }
 
 	// 사망 판정
 	if (NewHP <= 0.f)
