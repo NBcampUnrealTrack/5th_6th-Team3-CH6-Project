@@ -810,7 +810,7 @@ void UT3CombatComponent::ActivateHolyMode()
 	AttackSpeedMultiplier += 0.2f;
 
 	// 2. 20초 뒤 복구 예약
-	GetWorld()->GetTimerManager().SetTimer(HolyModeTimerHandle, this, &UT3CombatComponent::DeactivateHolyMode, 5.f, false);
+	GetWorld()->GetTimerManager().SetTimer(HolyModeTimerHandle, this, &UT3CombatComponent::DeactivateHolyMode, 20.f, false);
 
 	UE_LOG(LogTemp, Warning, TEXT("Holy Mode Activated!"));
 }
