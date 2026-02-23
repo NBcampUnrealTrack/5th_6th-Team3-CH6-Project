@@ -109,10 +109,6 @@ void UT3Paladin_SkillComponent::ExecuteSkillNotify(int32 Index)
     case 0: // 검격 (Sword Wave)
         SpawnSwordWaveProjectile();
         break;
-    case 1: // 방패찍기
-        // UseShieldBash(); // 다음 단계에서 구현
-        break;
-        // ... 나머지 스킬들
     }
 }
 
@@ -178,7 +174,8 @@ void UT3Paladin_SkillComponent::SpawnJudgmentArea()
 
     // 1. 위치 결정 (록온 대상 여부에 따른 분기)  -> 록온 시 록온 대상 주변
     AActor* Target = Combat->GetCurrentTarget();
-    if (Target)
+    float DistanceToTarget = Target ? OwnerChar->GetDistanceTo(Target) : 0.f;
+    if (Target && DistanceToTarget <= 1000.f)
     {
         JudgmentTargetLocation = Target->GetActorLocation();
     }
@@ -312,6 +309,7 @@ void UT3Paladin_SkillComponent::FinishJudgmentSkill()
     {
         CurrentJudgmentLaserActor->Destroy();
         CurrentJudgmentLaserActor = nullptr;
+        OwnerChar->StopAnimMontage(JudgmentData.SkillMontage);
     }
 
     UE_LOG(LogTemp, Log, TEXT("신의 심판 스킬이 정상 종료되어 액터를 제거했습니다."));
