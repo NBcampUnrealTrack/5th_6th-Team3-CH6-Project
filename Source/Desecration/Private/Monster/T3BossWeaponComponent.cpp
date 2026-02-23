@@ -2,6 +2,8 @@
 #include "Desecration.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/TimelineComponent.h"
+#include "Curves/CurveFloat.h"
 
 UT3BossWeaponComponent::UT3BossWeaponComponent()
 {
@@ -172,4 +174,90 @@ void UT3BossWeaponComponent::DropWeapon()
 	WeaponMeshComponent->SetAngularDamping(1.0f);
 
 	UE_LOG(LogDesecration, Log, TEXT("T3_BossWeapon: 무기 드롭"));
+}
+
+void UT3BossWeaponComponent::StartWeaponDissolve(float Duration, FName ParameterName)
+{
+	if (!WeaponMeshComponent)
+	{
+		return;
+	}
+
+	// 물리 시뮬 정지 — 디졸브 중 굴러다니지 않도록
+	WeaponMeshComponent->SetSimulatePhysics(false);
+	WeaponMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	// DynamicMaterial 생성
+	const int32 NumMaterials = WeaponMeshComponent->GetNumMaterials();
+	WeaponDynamicMaterials.Reserve(NumMaterials);
+
+	for (int32 i = 0; i < NumMaterials; ++i)
+	{
+		UMaterialInstanceDynamic* DynMat = WeaponMeshComponent->CreateAndSetMaterialInstanceDynamic(i);
+		if (DynMat)
+		{
+			WeaponDynamicMaterials.Add(DynMat);
+		}
+	}
+
+	if (WeaponDynamicMaterials.Num() == 0)
+	{
+		UE_LOG(LogDesecration, Warning, TEXT("T3_BossWeapon: 무기 디졸브 — DynamicMaterial 0개, 스킵"));
+		return;
+	}
+
+	// 파라미터 이름 저장
+	WeaponDissolveParameterName = ParameterName;
+
+	// 선형 커브 자동 생성
+	WeaponDissolveCurve = NewObject<UCurveFloat>(this);
+	WeaponDissolveCurve->FloatCurve.AddKey(0.f, 0.f);
+	WeaponDissolveCurve->FloatCurve.AddKey(Duration, 1.f);
+
+	// Timeline 생성 + 바인딩
+	AActor* Owner = GetOwner();
+	if (!Owner)
+	{
+		return;
+	}
+
+	WeaponDissolveTimeline = NewObject<UTimelineComponent>(Owner, TEXT("WeaponDissolveTimeline"));
+	WeaponDissolveTimeline->RegisterComponent();
+
+	FOnTimelineFloat UpdateDelegate;
+	UpdateDelegate.BindUFunction(this, FName("OnWeaponDissolveUpdate"));
+
+	FOnTimelineEvent FinishedDelegate;
+	FinishedDelegate.BindUFunction(this, FName("OnWeaponDissolveFinished"));
+
+	WeaponDissolveTimeline->AddInterpFloat(WeaponDissolveCurve, UpdateDelegate, FName("WeaponDissolveTrack"));
+	WeaponDissolveTimeline->SetTimelineFinishedFunc(FinishedDelegate);
+	WeaponDissolveTimeline->SetTimelineLength(Duration);
+	WeaponDissolveTimeline->SetLooping(false);
+	WeaponDissolveTimeline->PlayFromStart();
+
+	UE_LOG(LogDesecration, Log, TEXT("T3_BossWeapon: 무기 디졸브 시작 (%.1f초, 머티리얼 %d개)"),
+		Duration, WeaponDynamicMaterials.Num());
+}
+
+void UT3BossWeaponComponent::OnWeaponDissolveUpdate(float Value)
+{
+	for (UMaterialInstanceDynamic* DynMat : WeaponDynamicMaterials)
+	{
+		if (DynMat)
+		{
+			DynMat->SetScalarParameterValue(WeaponDissolveParameterName, Value);
+		}
+	}
+}
+
+void UT3BossWeaponComponent::OnWeaponDissolveFinished()
+{
+	// 무기 메시 숨김
+	if (WeaponMeshComponent)
+	{
+		WeaponMeshComponent->SetVisibility(false);
+	}
+
+	UE_LOG(LogDesecration, Log, TEXT("T3_BossWeapon: 무기 디졸브 완료"));
 }

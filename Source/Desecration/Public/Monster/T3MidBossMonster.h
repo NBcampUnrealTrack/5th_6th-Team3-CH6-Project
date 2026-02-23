@@ -133,7 +133,7 @@ public:
 
 	// 이 거리 초과 시 이동 워프 비활성화 (제자리 루트모션 공격)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Movement")
-	float MaxWarpDistance = 800.f;
+	float MaxWarpDistance = 350.f;
 
 	static inline const FName MotionWarpTargetName = FName(TEXT("CombatTarget"));
 	static inline const FName MotionWarpTargetRotationName = FName(TEXT("CombatTargetRotation"));
@@ -152,6 +152,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "MidBoss|Movement")
 	void MoveToTarget(float Duration, float Distance);
+
+	// 대시 중 이동 속도
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Movement")
+	float DashMoveSpeed = 600.f;
 
 #pragma endregion Movement
 

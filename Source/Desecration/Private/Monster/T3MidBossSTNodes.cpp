@@ -431,6 +431,119 @@ EStateTreeRunStatus FT3STT_HandleDeath::EnterState(
 }
 
 // ============================================================
+// Task: FT3STT_RunToAttackRange
+// AddMovementInput 기반 돌진 — ABP Run 블렌드 자연스러움
+// ============================================================
+
+EStateTreeRunStatus FT3STT_RunToAttackRange::EnterState(
+	FStateTreeExecutionContext& Context,
+	const FStateTreeTransitionResult& Transition) const
+{
+	FT3STT_RunToAttackRangeInstanceData& Data = Context.GetInstanceData(*this);
+
+	Data.ElapsedTime = 0.f;
+	Data.CachedDefaultSpeed = 0.f;
+
+	if (!Data.Boss)
+	{
+		UE_LOG(LogDesecration, Warning, TEXT("T3_ST: RunToAttackRange — Boss가 바인딩되지 않음"));
+		return EStateTreeRunStatus::Failed;
+	}
+
+	if (!Data.Boss->CombatTarget)
+	{
+		UE_LOG(LogDesecration, Warning, TEXT("T3_ST: RunToAttackRange — CombatTarget이 없음"));
+		return EStateTreeRunStatus::Failed;
+	}
+
+	// MaxWalkSpeed 캐시 → DashSpeed로 변경
+	if (UCharacterMovementComponent* MoveComp = Data.Boss->GetCharacterMovement())
+	{
+		Data.CachedDefaultSpeed = MoveComp->MaxWalkSpeed;
+		MoveComp->MaxWalkSpeed = Data.DashSpeed;
+	}
+
+	// 런 몽타주 재생 (ABP 스테이트 머신 위에서 블렌드)
+	if (Data.RunMontage)
+	{
+		Data.Boss->PlayAnimMontage(Data.RunMontage);
+	}
+
+	UE_LOG(LogDesecration, Log,
+		TEXT("T3_ST: RunToAttackRange 시작 (DashSpeed:%.0f, ApproachDist:%.0f, Timeout:%.1f)"),
+		Data.DashSpeed, Data.ApproachDistance, Data.Timeout);
+
+	return EStateTreeRunStatus::Running;
+}
+
+EStateTreeRunStatus FT3STT_RunToAttackRange::Tick(
+	FStateTreeExecutionContext& Context,
+	const float DeltaTime) const
+{
+	FT3STT_RunToAttackRangeInstanceData& Data = Context.GetInstanceData(*this);
+
+	if (!Data.Boss || !Data.Boss->CombatTarget)
+	{
+		return EStateTreeRunStatus::Failed;
+	}
+
+	Data.ElapsedTime += DeltaTime;
+
+	// 타임아웃 체크 (무한 추적 방지)
+	if (Data.ElapsedTime >= Data.Timeout)
+	{
+		UE_LOG(LogDesecration, Log,
+			TEXT("T3_ST: RunToAttackRange 타임아웃 (%.1f초)"), Data.Timeout);
+		return EStateTreeRunStatus::Failed;
+	}
+
+	// 타겟 방향으로 이동 입력
+	const FVector MyLocation = Data.Boss->GetActorLocation();
+	const FVector TargetLocation = Data.Boss->CombatTarget->GetActorLocation();
+	const FVector Direction = (TargetLocation - MyLocation).GetSafeNormal2D();
+
+	Data.Boss->AddMovementInput(Direction, 1.0f);
+
+	// 거리 도달 체크
+	const float Dist = FVector::Dist2D(MyLocation, TargetLocation);
+	if (Dist <= Data.ApproachDistance)
+	{
+		UE_LOG(LogDesecration, Log,
+			TEXT("T3_ST: RunToAttackRange 도달 (거리:%.0f ≤ %.0f, 소요:%.1f초)"),
+			Dist, Data.ApproachDistance, Data.ElapsedTime);
+		return EStateTreeRunStatus::Succeeded;
+	}
+
+	return EStateTreeRunStatus::Running;
+}
+
+void FT3STT_RunToAttackRange::ExitState(
+	FStateTreeExecutionContext& Context,
+	const FStateTreeTransitionResult& Transition) const
+{
+	FT3STT_RunToAttackRangeInstanceData& Data = Context.GetInstanceData(*this);
+
+	if (Data.Boss)
+	{
+		// 런 몽타주 정지 (블렌드아웃으로 자연스럽게 복귀)
+		if (Data.RunMontage)
+		{
+			Data.Boss->StopAnimMontage(Data.RunMontage);
+		}
+
+		// MaxWalkSpeed 복원
+		if (Data.CachedDefaultSpeed > 0.f)
+		{
+			if (UCharacterMovementComponent* MoveComp = Data.Boss->GetCharacterMovement())
+			{
+				MoveComp->MaxWalkSpeed = Data.CachedDefaultSpeed;
+			}
+			Data.CachedDefaultSpeed = 0.f;
+		}
+	}
+}
+
+// ============================================================
 // Condition: FT3STC_PatternOffCooldown
 // 패턴 쿨다운 체크 — true면 사용 가능, false면 쿨다운 중
 // ============================================================

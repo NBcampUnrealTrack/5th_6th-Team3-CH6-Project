@@ -1,5 +1,5 @@
 // T3MidBossSTNodes.h
-// StateTree 커스텀 노드 — Mid-Boss (Evaluator 1개 + Task 5개 + Condition 1개)
+// StateTree 커스텀 노드 — Mid-Boss (Evaluator 1개 + Task 6개 + Condition 2개)
 
 #pragma once
 
@@ -262,6 +262,63 @@ struct DESECRATION_API FT3STT_HandleDeath : public FStateTreeTaskCommonBase
 	}
 
 	virtual EStateTreeRunStatus EnterState(FStateTreeExecutionContext& Context,
+		const FStateTreeTransitionResult& Transition) const override;
+};
+
+// ============================================================
+// Task: FT3STT_RunToAttackRange
+// AddMovementInput으로 타겟에 돌진 (NavMesh 불필요, ABP Run 재생)
+// 도달 시 Succeeded, 타임아웃 시 Failed
+// ============================================================
+
+USTRUCT()
+struct FT3STT_RunToAttackRangeInstanceData
+{
+	GENERATED_BODY()
+
+	// 파라미터 — 에디터에서 설정
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	float ApproachDistance = 300.f;
+
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	float DashSpeed = 600.f;
+
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	float Timeout = 5.f;
+
+	// 돌진 중 재생할 런 몽타주 (InPlace 권장 — 이동은 AddMovementInput 담당)
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	TObjectPtr<UAnimMontage> RunMontage = nullptr;
+
+	// 입력 — 컨텍스트에서 바인딩
+	UPROPERTY(EditAnywhere, Category = "Context")
+	TObjectPtr<AT3MidBossMonster> Boss = nullptr;
+
+	// 내부 상태
+	UPROPERTY()
+	float CachedDefaultSpeed = 0.f;
+
+	UPROPERTY()
+	float ElapsedTime = 0.f;
+};
+
+USTRUCT(meta = (DisplayName = "Run To Attack Range"))
+struct DESECRATION_API FT3STT_RunToAttackRange : public FStateTreeTaskCommonBase
+{
+	GENERATED_BODY()
+
+	using FInstanceDataType = FT3STT_RunToAttackRangeInstanceData;
+
+	virtual const UStruct* GetInstanceDataType() const override
+	{
+		return FT3STT_RunToAttackRangeInstanceData::StaticStruct();
+	}
+
+	virtual EStateTreeRunStatus EnterState(FStateTreeExecutionContext& Context,
+		const FStateTreeTransitionResult& Transition) const override;
+	virtual EStateTreeRunStatus Tick(FStateTreeExecutionContext& Context,
+		const float DeltaTime) const override;
+	virtual void ExitState(FStateTreeExecutionContext& Context,
 		const FStateTreeTransitionResult& Transition) const override;
 };
 

@@ -393,9 +393,36 @@ void AT3MidBossMonster::OnDissolveUpdate(float Value)
 
 void AT3MidBossMonster::OnDissolveFinished()
 {
-	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 디졸브 완료 — 액터 제거 예정"),
-		*BossName);
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 본체 디졸브 완료"), *BossName);
 
-	// 디졸브 완료 후 짧은 딜레이로 제거
+	// 본체 메시 숨김
+	if (GetMesh())
+	{
+		GetMesh()->SetVisibility(false);
+	}
+
+	// 무기 디졸브 시작 (1초 딜레이)
+	if (WeaponComponent && WeaponComponent->WeaponMeshComponent)
+	{
+		FTimerHandle WeaponDissolveTimer;
+		GetWorldTimerManager().SetTimer(WeaponDissolveTimer, [this]()
+		{
+			if (WeaponComponent)
+			{
+				WeaponComponent->StartWeaponDissolve(
+					WeaponComponent->WeaponDissolveDuration,
+					WeaponComponent->WeaponDissolveParameterName);
+			}
+
+			// 무기 디졸브 완료 후 액터 제거
+			SetLifeSpan(WeaponComponent ? WeaponComponent->WeaponDissolveDuration + 0.5f : 3.f);
+
+		}, 1.f, false);
+
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 1초 후 무기 디졸브 예정"));
+		return;
+	}
+
+	// 무기 없으면 바로 제거
 	SetLifeSpan(0.5f);
 }

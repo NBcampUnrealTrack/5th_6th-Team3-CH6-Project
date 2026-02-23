@@ -10,6 +10,8 @@
 class UStaticMeshComponent;
 class UBoxComponent;
 class USkeletalMeshComponent;
+class UTimelineComponent;
+class UCurveFloat;
 
 // 무기 히트 델리게이트 — 히트된 액터를 전달
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponHitActor, AActor*, HitActor);
@@ -52,6 +54,18 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void DropWeapon();
 
+	// 무기 디졸브 (드롭 후 사라지는 연출)
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void StartWeaponDissolve(float Duration = 2.f, FName ParameterName = TEXT("Dissolve"));
+
+	// 디졸브 파라미터 이름 (머티리얼에 정의된 Scalar Parameter)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Dissolve")
+	FName WeaponDissolveParameterName = TEXT("Dissolve");
+
+	// 무기 디졸브 지속 시간
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Dissolve")
+	float WeaponDissolveDuration = 2.f;
+
 private:
 	// 무기 드롭 여부
 	bool bIsWeaponDropped = false;
@@ -64,4 +78,20 @@ private:
 	void OnWeaponOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
 		bool bFromSweep, const FHitResult& SweepResult);
+
+	// 무기 디졸브용
+	UPROPERTY()
+	TArray<TObjectPtr<UMaterialInstanceDynamic>> WeaponDynamicMaterials;
+
+	UPROPERTY()
+	TObjectPtr<UTimelineComponent> WeaponDissolveTimeline;
+
+	UPROPERTY()
+	TObjectPtr<UCurveFloat> WeaponDissolveCurve;
+
+	UFUNCTION()
+	void OnWeaponDissolveUpdate(float Value);
+
+	UFUNCTION()
+	void OnWeaponDissolveFinished();
 };
