@@ -6,6 +6,12 @@
 #include "Engine/World.h" 
 #include "Player/T3SwordWaveProjectile.h"
 #include "Player/T3CharacterBase.h"
+#include "Player/T3CombatComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Engine/EngineTypes.h"
+#include "Engine/OverlapResult.h"
+#include "DrawDebugHelpers.h"
+#include "Components/CapsuleComponent.h"
 
 UT3Paladin_SkillComponent::UT3Paladin_SkillComponent()
 {
@@ -18,7 +24,7 @@ FSkillData* UT3Paladin_SkillComponent::GetSkillDataByID(int32 SkillID)
     case 1: return &SwordWaveData;
     case 2: return &ShieldStrikeData;
     // case 3: return &Data;
-    // case 4: return &Data;
+    case 4: return &JudgmentData;
     default: return nullptr;
     }
 }
@@ -50,7 +56,7 @@ void UT3Paladin_SkillComponent::ExecuteSkill(int32 SlotNumber)
     case 3: // 도약찍기
         UE_LOG(LogTemp, Warning, TEXT("Flying Attack"));    break;
     case 4: // 신의심판
-        UE_LOG(LogTemp, Warning, TEXT("Judge of God"));    break;
+        ExecuteJudgment();    break;
     default:
         UE_LOG(LogTemp, Warning, TEXT("Unknown Skill ID: %d"), SkillID);   break;
     }
@@ -110,6 +116,10 @@ void UT3Paladin_SkillComponent::ExecuteSkillNotify(int32 Index)
     }
 }
 
+void UT3Paladin_SkillComponent::CancelCurrentSkill()
+{
+    CancleJudgmentLaser();
+}
 
 void UT3Paladin_SkillComponent::SpawnSwordWaveProjectile()
 {
@@ -143,4 +153,166 @@ void UT3Paladin_SkillComponent::SpawnSwordWaveProjectile()
             UE_LOG(LogTemp, Log, TEXT("Paladin SwordWave Launched!"));
         }
     }
+}
+
+
+void UT3Paladin_SkillComponent::ExecuteJudgment()
+{
+    if (!OwnerChar || !JudgmentData.SkillMontage) return;
+
+    // 1. 상태 설정 (집중 시작)
+    bUsingSkill = true;
+
+    // 2. 애니메이션 재생 (4초 이상 지속되는 몽타주)
+    OwnerChar->PlayAnimMontage(JudgmentData.SkillMontage);
+
+    // 3. 장판 생성
+    SpawnJudgmentArea();
+
+    UE_LOG(LogTemp, Log, TEXT("신의 심판 시전: 기 모으는 중..."));
+}
+
+void UT3Paladin_SkillComponent::SpawnJudgmentArea()
+{
+    if (!OwnerChar || !Combat) return;
+
+    // 1. 위치 결정 (록온 대상 여부에 따른 분기)  -> 록온 시 록온 대상 주변
+    AActor* Target = Combat->GetCurrentTarget();
+    if (Target)
+    {
+        JudgmentTargetLocation = Target->GetActorLocation();
+    }
+    else
+    {
+        // 록온 대상이 없을 경우 전방 500 유닛 위치
+        JudgmentTargetLocation = OwnerChar->GetActorLocation() + (OwnerChar->GetActorForwardVector() * JudgementExexcuteDistance);
+    }
+
+    // 2. 바닥 좌표 보정 (LineTrace)
+    FVector TraceStart = JudgmentTargetLocation + FVector(0, 0, 500.f); // 위에서 아래로 쏜다
+    FVector TraceEnd = JudgmentTargetLocation - FVector(0, 0, 1000.f);
+    FHitResult GroundHit;
+    FCollisionQueryParams QueryParams;
+    QueryParams.AddIgnoredActor(OwnerChar); // 시전자 자신은 제외
+
+    // ECC_Visibility 채널을 사용하여 지면(Static Mesh 등)을 감지
+    if (GetWorld()->LineTraceSingleByChannel(GroundHit, TraceStart, TraceEnd, ECC_Visibility, QueryParams))
+    {
+        // 실제 바닥 좌표(ImpactPoint)로 위치를 고정
+        JudgmentTargetLocation = GroundHit.ImpactPoint;
+    }
+
+    // 3. 장판 이펙트 생성
+    if (JudgmentAreaIndicatorClass)
+    {
+        FActorSpawnParameters SpawnParams;
+        SpawnParams.Owner = OwnerChar;
+        GetWorld()->SpawnActor<AActor>(JudgmentAreaIndicatorClass, JudgmentTargetLocation, FRotator::ZeroRotator, SpawnParams);
+    }
+
+    // 3.2초 뒤 레이저 빔 실행 타이머
+    GetWorld()->GetTimerManager().SetTimer(JudgmentTimerHandle, this, &UT3Paladin_SkillComponent::SpawnJudgmentLaser, 2.0f, false);
+}
+
+void UT3Paladin_SkillComponent::SpawnJudgmentLaser()
+{
+    // 1. 레이저 이펙트 소환
+    if (JudgmentLaserClass)
+    {
+        CurrentJudgmentLaserActor = GetWorld()->SpawnActor<AActor>(JudgmentLaserClass, JudgmentTargetLocation, FRotator::ZeroRotator);
+    }
+
+    // 2. 다단 히트 데미지 시작 (0.4초 간격으로 5번)
+    ApplyJudgmentDamage(5);
+}
+
+void UT3Paladin_SkillComponent::ApplyJudgmentDamage(int32 RemainingHits)
+{
+    if (RemainingHits <= 0 || !OwnerChar)
+    {
+        FinishJudgmentSkill();
+        return;
+    }
+
+    // --- 디버깅 범위 표시 (0.4초간 유지되는 구체) ---
+    DrawDebugSphere(GetWorld(), JudgmentTargetLocation, JudgementExexcuteRange, 32, FColor::Red, false, 0.4f, 0, 2.0f);
+
+    // 범위 내 적 감지 (반경 500)
+    TArray<FOverlapResult> OverlapResults;
+    FCollisionShape Sphere = FCollisionShape::MakeSphere(JudgementExexcuteRange);
+    FCollisionQueryParams Params;
+    Params.AddIgnoredActor(OwnerChar);
+
+    bool bHit = GetWorld()->OverlapMultiByChannel(OverlapResults, JudgmentTargetLocation, FQuat::Identity, ECC_Pawn, Sphere, Params);
+
+    if (bHit)
+    {
+        float DamagePerHit = OwnerChar->GetAttackPower() * 2.0f; // 총 10배 중 1타당 2배
+
+        for (auto& Result : OverlapResults)
+        {
+            if (UPrimitiveComponent* OverlappedComp = Result.GetComponent())
+            {
+                // 캡슐 컴포넌트가 아닌 위젯이나 다른 컴포넌트면 무시
+                if (!OverlappedComp->IsA(UCapsuleComponent::StaticClass())) continue;
+            }
+
+            AActor* HitActor = Result.GetActor();
+            ACharacter* TargetCharacter = Cast<ACharacter>(HitActor);
+            if (IsValid(TargetCharacter))
+            {
+                UGameplayStatics::ApplyDamage(TargetCharacter, DamagePerHit, OwnerChar->GetController(), OwnerChar, nullptr);
+                UE_LOG(LogTemp, Log, TEXT("신의 심판 적중: %s 에게 %.1f 데미지"), *TargetCharacter->GetName(), DamagePerHit);
+
+                // 개별 피격 대상 디버그 라인
+                DrawDebugLine(GetWorld(), JudgmentTargetLocation, TargetCharacter->GetActorLocation(), FColor::Yellow, false, 0.4f, 0, 1.0f);
+            }
+        }
+    }
+
+    // 0.4초 후 다음 타격 예약 (재귀적 타이머)
+    if (RemainingHits > 1)
+    {
+        FTimerDelegate TimerDel;
+        TimerDel.BindUObject(this, &UT3Paladin_SkillComponent::ApplyJudgmentDamage, RemainingHits - 1);
+        GetWorld()->GetTimerManager().SetTimer(JudgmentTimerHandle, TimerDel, 0.4f, false);
+    }
+
+    else
+    {
+        FinishJudgmentSkill();
+    }
+}
+
+void UT3Paladin_SkillComponent::CancleJudgmentLaser()
+{
+    // 스킬 사용 중이 아니면 실행할 필요 없음
+    if (!bUsingSkill) return;
+
+    // 1. 진행 중인 모든 타이머(대기, 다단히트) 제거
+    GetWorld()->GetTimerManager().ClearTimer(JudgmentTimerHandle);
+
+    if (CurrentJudgmentLaserActor)
+    {
+        FinishJudgmentSkill();
+    }
+
+    // 2. 상태 변수 초기화
+    bUsingSkill = false;
+
+    UE_LOG(LogTemp, Warning, TEXT("신의 심판 스킬이 캔슬되었습니다."));
+}
+
+// 공통 정리 함수 (정상 종료 & 필요 시 캔슬에서도 재활용 가능)
+void UT3Paladin_SkillComponent::FinishJudgmentSkill()
+{
+    bUsingSkill = false;
+
+    if (IsValid(CurrentJudgmentLaserActor))
+    {
+        CurrentJudgmentLaserActor->Destroy();
+        CurrentJudgmentLaserActor = nullptr;
+    }
+
+    UE_LOG(LogTemp, Log, TEXT("신의 심판 스킬이 정상 종료되어 액터를 제거했습니다."));
 }

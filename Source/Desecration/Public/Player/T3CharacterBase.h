@@ -168,6 +168,9 @@ protected:
 	float StaminaRegenRate = 25.f; // 스태미나 초당 회복량
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+	float StaminaRegenLowRate = 5.f; // 스태미나 초당 회복량
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float MaxMana = 100.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
@@ -235,7 +238,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Stat")
 	void RestoreMP(float Amount);
 
+	// 클래스
+	FORCEINLINE ECharacterClass GetCurrentClass() const { return CurrentClass; }
+
 protected:
+
+	ECharacterClass CurrentClass;
+
 	// 스태미나 자연 회복
 	void RegenerateStamina();
 	// 스테미나 회복 주기
@@ -269,7 +278,9 @@ private:
 	// 강제 이동 구현
 	protected:
 		// 강제 이동 관련 변수
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ForceMove")
 		bool bIsForcedMoving = false;
+
 		FVector ForcedTargetLocation;
 		FRotator ForcedTargetRotation;
 		float ForcedMoveSpeed = 200.f;
@@ -284,4 +295,9 @@ public:
 
 	void UpdateForcedMovement(float DeltaTime);
 	void UpdateForcedRotation(float DeltaTime);
+
+	//스킬 사용 불가 변수
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ForceMove")
+	bool bIsSkillCanNotUse = false;
+
 };

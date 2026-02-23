@@ -131,9 +131,45 @@ void UT3GameInstance::SetGraphicQuality(const EGraphicQuality GraphicQuality)
 	UserSettings->ApplySettings(true);
 }
 
-void UT3GameInstance::OpenLevel(const ELevelName LevelName) const
-{	
+//void UT3GameInstance::OpenLevel(const ELevelName LevelName) const
+//{	
 	//레벨 이동
-	const FName DisplayName = FName(UEnum::GetDisplayValueAsText(LevelName).ToString());
-	UGameplayStatics::OpenLevel(GetWorld(), DisplayName);
+	//const FName DisplayName = FName(UEnum::GetDisplayValueAsText(LevelName).ToString());
+	//UGameplayStatics::OpenLevel(GetWorld(), DisplayName);
+//}
+
+// T3GameInstance.cpp
+
+
+void UT3GameInstance::OpenLevel(const ELevelName LevelName) const // const 유지
+{	
+    // 1. LevelMap에 해당 키가 있는지 확인
+    if (!LevelMap.Contains(LevelName))
+    {
+        UE_LOG(LogTemp, Error, TEXT("Level %d is not registered!"), (int32)LevelName);
+        return;
+    }
+
+    // 2. 소프트 포인터로부터 경로 추출
+    FString LevelPath = LevelMap[LevelName].GetLongPackageName();
+    
+    // 3. 경로가 비어있는지 확인 (패키징 시 데이터 유실 체크)
+    if (LevelPath.IsEmpty())
+    {
+        UE_LOG(LogTemp, Error, TEXT("LevelPath is empty for Level %d!"), (int32)LevelName);
+        return;
+    }
+
+    // 4. WorldContextObject 확인 (GetWorld()가 안전한지 체크)
+    UWorld* CurrentWorld = GetWorld();
+    if (!CurrentWorld)
+    {
+        UE_LOG(LogTemp, Error, TEXT("GetWorld() returned NULL!"));
+        return;
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("Attempting to Open Level: %s"), *LevelPath);
+    
+    // 최종 호출
+    UGameplayStatics::OpenLevel(CurrentWorld, FName(*LevelPath));
 }

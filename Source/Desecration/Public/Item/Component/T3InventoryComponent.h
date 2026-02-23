@@ -28,7 +28,7 @@ struct FInventorySlot
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory Slot")
-	FName ItemID;
+	FName ItemID = NAME_None;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory Slot")
 	int32 ItemStack = 0;
@@ -47,9 +47,6 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void UseItem(int32 SlotIndex);
-	
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void DropItem(int32 SlotIndex);
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	bool RemoveItem(const FName& ItemName);
@@ -158,10 +155,16 @@ public:
 	void UseEquippedItem();
 	
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
-	int32 GetCurrentItemCount() const;
+	int32 GetCurrentBuffItemCount() const;
 	
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
-	int32 GetNextItemCount() const;
+	int32 GetNextBuffItemCount() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	FName GetCurrentBuffItemName() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	FName GetNextBuffItemName() const;
 	
 	UPROPERTY(BlueprintAssignable, Category = "Equipment")
 	FOnToggleItemEquipped OnToggleItemEquipped;

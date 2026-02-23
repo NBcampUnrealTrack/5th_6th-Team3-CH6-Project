@@ -451,7 +451,16 @@ bool UT3CombatComponent::IsTargetVisible(AActor* Target) const
 
 void UT3CombatComponent::ResetLockOn()
 {
-	UpdateTargetUI(CurrentTarget, false);
+	// 1. 인터페이스를 통한 UI 끄기
+	if (CurrentTarget)
+	{
+		if (IT3LockOnTarget* TargetInterface = Cast<IT3LockOnTarget>(CurrentTarget))
+		{
+			TargetInterface->SetLockOnWidgetVisible(false);
+		}
+	}
+
+	// 상태 변수 초기화
 	bIsLockOn = false;
 	OwnerChar->PlayerInputState.bIsLockOn = false;
 	CurrentTarget = nullptr;
@@ -467,22 +476,12 @@ void UT3CombatComponent::ResetLockOn()
 		SpringArm->bEnableCameraRotationLag = false;
 		SpringArm->bEnableCameraLag = false;
 		SpringArm->TargetArmLength = DefaultArmLength;
+		SpringArm->SocketOffset.Z = 50.f;
 		OwnerPC->PlayerCameraManager->SetFOV(90.f);
 	}
 
 	SetComponentTickEnabled(false); // 틱 중지하여 자원 절약
 }
-
-// 록온 타겟 위에 록온 위젯 생성
-void UT3CombatComponent::UpdateTargetUI(AActor* Target, bool bIsVisible)
-{
-	AT3DamageTestActor* Enemy = Cast<AT3DamageTestActor>(Target);
-	if (Enemy)
-	{
-		Enemy->SetLockOnWidgetVisible(bIsVisible);
-	}
-}
-
 
 // ========== 전투 로직 ===============
 
@@ -511,16 +510,39 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 
 		else if (CurrentState == ECharacterCombatState::Parrying)
 		{ }
-			// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("Result: [PARRY] - Success!"));
-		// 패링 성공 시 보스에게 스턴치 10 부여
+		// 패링 성공 시 
+		
+		// 보스에게 스턴치 10 부여
 		AT3BossMonster* HitBoss = Cast<AT3BossMonster>(DamageCauser);
 		if (HitBoss) { HitBoss->Damage(0, 10.f); }
+
+		// 팔라딘의 경우 신성게이지 20 증가
+		if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
+		{
+			AddHolyGauge(20.0f);
+		}
+
+		UE_LOG(LogTemp, Display, TEXT("Parrying!"));
+			// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("Result: [PARRY] - Success!"));
 		return;
 	}
 	else if (CurrentState == ECharacterCombatState::Blocking)
 	{
-		// 1. 스태미나 50 차감
+		// 막기 성공 시
+		
+		// 스태미나 50 차감 후 스태미너 0 이하로 떨어지면 막기 해제
 		ConsumeStamina(50.f);
+
+		if (OwnerChar->GetCurrentStamina() <= 0.f)
+		{
+			EndBlock();
+		}
+
+		// 팔라딘이라면 신성 게이지 10 상승
+		if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
+		{
+			AddHolyGauge(10.0f);
+		}
 
 		/*GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow,
 			FString::Printf(TEXT("Result: [BLOCK] - Reduced Damage: %.1f"), FinalDamage));*/
@@ -537,7 +559,15 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 	   UE_LOG(LogTemp, Warning, TEXT("HP Status: %.1f / %.1f"), NewHP, OwnerChar->GetMaxHP());
 	   UE_LOG(LogTemp, Display, TEXT("final : %.1f"), FinalDamage);
 
-
+	   // 팔라딘의 경우 신의 심판 시전 중 피격 당하면 스킬 캔슬
+	   if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
+	   {
+		   if (IsValid(SkillComp))
+		   {
+			   GetSkillComponent()->CancelCurrentSkill();
+			   OwnerChar->StopAnimMontage();
+		   }
+	   }
 
 	// 사망 판정
 	if (NewHP <= 0.f)
@@ -694,7 +724,7 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 // 스태미나 소모 함수
 void UT3CombatComponent::ConsumeStamina(float Amount)
 {
-	if (OwnerChar && OwnerChar->GetCurrentStamina() >= Amount)
+	if (OwnerChar)
 	{
 		float NewStamina = OwnerChar->GetCurrentStamina() - Amount;
 		OwnerChar->SetCurrentStamina(NewStamina);
@@ -753,3 +783,45 @@ void UT3CombatComponent::RequestUpdateSkill(int32 SkillID, bool bIsEquip)
 	}
 }
 
+
+
+// 팔라딘 전용 신성 게이지 로직
+
+void UT3CombatComponent::AddHolyGauge(float Amount)
+{
+	if (bIsHolyMode) return; // 이미 강화 상태면 무시
+
+	HolyGauge = FMath::Clamp(HolyGauge + Amount, 0.f, MaxHolyGauge);
+
+	// UI 업데이트 델리게이트 호출
+	OnHolyGaugeChanged.Broadcast(HolyGauge, MaxHolyGauge);
+
+	if (HolyGauge >= MaxHolyGauge)
+	{
+		ActivateHolyMode();
+	}
+}
+
+void UT3CombatComponent::ActivateHolyMode()
+{
+	bIsHolyMode = true;
+	
+	// 1. 공격 속도/딜레이 감소 적용
+	AttackSpeedMultiplier += 0.2f;
+
+	// 2. 20초 뒤 복구 예약
+	GetWorld()->GetTimerManager().SetTimer(HolyModeTimerHandle, this, &UT3CombatComponent::DeactivateHolyMode, 5.f, false);
+
+	UE_LOG(LogTemp, Warning, TEXT("Holy Mode Activated!"));
+}
+
+void UT3CombatComponent::DeactivateHolyMode()
+{
+	bIsHolyMode = false;
+	HolyGauge = 0.f; // 게이지 소모
+
+	// 1. 공격 속도/딜레이 리셋
+	AttackSpeedMultiplier = 1.0f;
+	OnHolyGaugeChanged.Broadcast(HolyGauge, MaxHolyGauge);
+	UE_LOG(LogTemp, Warning, TEXT("Holy Mode Deactivated!"));
+}
