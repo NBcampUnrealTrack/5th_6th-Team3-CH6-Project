@@ -364,6 +364,9 @@ void AT3PlayerController::ShowShopUI(UT3ShopComponent* ShopComp)
 		return;
 	}
 	
+	FInputModeGameAndUI InputModeGameAndUI;
+    SetInputMode(InputModeGameAndUI);
+
 	ShopWidget->Init(T3Character->InventoryComponent, ShopComp, T3Character);
 	ShopWidget->AddToViewport();
 	
