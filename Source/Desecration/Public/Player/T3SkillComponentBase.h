@@ -45,6 +45,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSkillSlotUpdated, int32, SlotI
 // SkillID(int32), CooldownTime(float)을 전달
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSkillCooldownStarted, int32, SkillID, float, CooldownTime);
 
+// 게이지 업데이트 델리게이트
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnResourceChanged, float, CurrentAmount);
+
 
 UCLASS( Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class DESECRATION_API UT3SkillComponentBase : public UActorComponent
@@ -113,6 +116,17 @@ public:
     // 남은 쿨다운 시간과 비율을 가져오는 함수
     float GetRemainingCooldown(int32 SkillID);
     float GetCooldownRemainingRatio(int32 SkillID);
+
+    // 신성 게이지 등 캐릭터의 게이지를 추가하는 함수 (직업별 상이)
+    UFUNCTION(BlueprintCallable, Category = "Skill")
+    virtual void AddResource(float Amount) {  }
+
+    // 게이지 델리게이트
+    UPROPERTY(BlueprintAssignable, Category = "Gauge")
+    FOnResourceChanged OnResourceChanged;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+    float AttackSpeedMultiplier = 1.0f;
 
 protected:
 
