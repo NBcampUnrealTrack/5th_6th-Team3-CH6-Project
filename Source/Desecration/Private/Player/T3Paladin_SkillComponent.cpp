@@ -54,7 +54,7 @@ void UT3Paladin_SkillComponent::ExecuteSkill(int32 SlotNumber)
     case 2: // 방패찍기
         ShieldStrike();    break;
     case 3: // 도약찍기
-        UE_LOG(LogTemp, Warning, TEXT("Flying Attack"));    break;
+        LeafAttack();    break;
     case 4: // 신의심판
         ExecuteJudgment();    break;
     default:

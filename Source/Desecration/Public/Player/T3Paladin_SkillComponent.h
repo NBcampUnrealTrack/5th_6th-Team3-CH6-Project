@@ -28,6 +28,9 @@ public:
     
     UFUNCTION(BlueprintImplementableEvent, Category = "Skill")
     void ShieldStrike();
+    
+    UFUNCTION(BlueprintImplementableEvent, Category = "Skill")
+    void LeafAttack();
 
     // 실제 투사체 스폰 (AnimNotify에서 호출될 용도)
     void SpawnSwordWaveProjectile();
