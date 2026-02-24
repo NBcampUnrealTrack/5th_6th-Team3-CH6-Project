@@ -368,7 +368,12 @@ void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)
 							if (PC->HUDSlotWidget)
 							{
 								PC->HUDSlotWidget->InitializeWidget(NewSkillComp);
+								
+								
+								if (CurrentClass == ECharacterClass::Paladin)
+								{
 								PC->HolyGaugeWidget->InitializeWidget(NewSkillComp);
+								}
 								UE_LOG(LogTemp, Log, TEXT("Delayed Widget Initialization Success!"));
 							}
 						}
