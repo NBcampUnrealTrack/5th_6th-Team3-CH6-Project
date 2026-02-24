@@ -7,7 +7,7 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryInitialized);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnToggleItemEquipped);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEquippedItemChanged);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnChangedBuffItemSlot);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBuffItemUsed);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSwapRecoverSlot);
@@ -170,7 +170,7 @@ public:
 	FName GetNextBuffItemName() const;
 	
 	UPROPERTY(BlueprintAssignable, Category = "Equipment")
-	FOnToggleItemEquipped OnToggleItemEquipped;
+	FOnEquippedItemChanged OnEquippedItemChanged;
 	
 	UPROPERTY(BlueprintAssignable, Category = "Equipment")
 	FOnChangedBuffItemSlot OnChangedBuffItemSlot;

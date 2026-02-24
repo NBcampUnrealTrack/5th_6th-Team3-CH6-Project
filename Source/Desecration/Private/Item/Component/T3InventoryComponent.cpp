@@ -170,19 +170,25 @@ void UT3InventoryComponent::SwapSlots(int32 SourceSlotIndex, int32 TargetSlotInd
 
 bool UT3InventoryComponent::RemoveItem(const FName& ItemName)
 {
-	for (int32 i = 0; i < Items.Num(); i++)
+	for (FInventorySlot& Item : Items)
 	{
-		if (Items[i].ItemID == ItemName)
+		if (Item.ItemID == ItemName)
 		{
-			Items[i].ItemStack--;
+			Item.ItemStack--;
 			
-			if (Items[i].ItemStack <= 0)
+			if (Item.ItemStack <= 0)
 			{
-				Items[i].ItemID = NAME_None;
-				Items[i].ItemStack = 0;
+				Item.ItemID = NAME_None;
+				Item.ItemStack = 0;
+				
+				if (EquippedItemIDs.Remove(ItemName) != 0)
+				{
+					OnEquippedItemChanged.Broadcast();
+				}
 			}
 			
 			OnInventoryUpdated.Broadcast();
+			
 			return true;
 		}
 	}
@@ -312,14 +318,14 @@ void UT3InventoryComponent::ToggleEquipItem(const FName& ItemName)
 	{
 		UnequipItem(ItemName);
 		
-		OnToggleItemEquipped.Broadcast();
+		OnEquippedItemChanged.Broadcast();
 		OnInventoryUpdated.Broadcast();
 		return;
 	}
 	
 	EquippedItemIDs.Emplace(ItemName);
 	
-	OnToggleItemEquipped.Broadcast();
+	OnEquippedItemChanged.Broadcast();
 	OnInventoryUpdated.Broadcast();
 }
 
@@ -329,18 +335,8 @@ void UT3InventoryComponent::UnequipItem(const FName& ItemName)
 	{
 		return;
 	}
-	
-	if (!EquippedItemIDs.Contains(ItemName))
-	{
-		return;
-	}
-	
-	int32 Index = GetEquippedItemIndex(ItemName);
-	
-	if (Index != INDEX_NONE)
-	{
-		EquippedItemIDs.RemoveAt(Index);
-	}
+
+	EquippedItemIDs.Remove(ItemName);
 }
 
 int32 UT3InventoryComponent::GetEquippedItemIndex(const FName& ItemName) const
@@ -362,7 +358,7 @@ void UT3InventoryComponent::SwapEquippedItem()
 	
 	FName TempName = EquippedItemIDs[0];
 	
-	EquippedItemIDs.RemoveAt(0);
+	EquippedItemIDs.Remove(TempName);
 	EquippedItemIDs.Emplace(TempName);
 
 	OnChangedBuffItemSlot.Broadcast();
@@ -411,29 +407,9 @@ void UT3InventoryComponent::UseEquippedItem()
 			true);
 	}
 	
-	for (FInventorySlot& Item : Items)
-	{
-		if (Item.ItemID == ItemIDToUse)
-		{
-			Item.ItemStack--;
-			
-			UE_LOG(LogTemp, Log, TEXT("[%s]를 1개 사용했습니다. 현재 개수: %d"), *Item.ItemID.ToString(), Item.ItemStack)
-
-			if (Item.ItemStack <= 0)
-			{
-				UE_LOG(LogTemp, Log, TEXT("[%s]를 모두 사용했습니다."), *Item.ItemID.ToString())
-		
-				Item.ItemID = NAME_None;
-				EquippedItemIDs.RemoveAt(0);
-				
-				Item.ItemStack = 0;
-			}
-			break;
-		}
-	}
+	RemoveItem(ItemIDToUse);
 	
 	OnBuffItemUsed.Broadcast();
-	OnInventoryUpdated.Broadcast();
 }
 
 int32 UT3InventoryComponent::GetCurrentBuffItemCount() const
