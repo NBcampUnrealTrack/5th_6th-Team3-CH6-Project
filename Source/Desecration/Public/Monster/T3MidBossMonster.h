@@ -20,12 +20,15 @@ class UCurveFloat;
 class UAudioComponent;
 class UWidgetComponent;
 class USphereComponent;
+class UNiagaraSystem;
+class AT3BossProjectile;
 
 // 상태 태그 (extern — 분할 .cpp에서 참조)
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_Dead);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_Stunned);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_ExecutingPattern);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_SuperArmor);
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_ParryWindow);
 
 // StateTree 이벤트 태그 (extern — STNodes에서 참조)
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_Event_StunRecovered);
@@ -219,6 +222,64 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "MidBoss|Combat")
 	void RecoverFromStun();
+
+	// --- AoE (장판기) ---
+	UFUNCTION(BlueprintCallable, Category = "MidBoss|Combat")
+	void ExecuteAoEDamage(float Radius, float DamageAmount, EHitIntensity Intensity = EHitIntensity::Heavy);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Skill")
+	float AoERadius = 500.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Skill")
+	TObjectPtr<UNiagaraSystem> AoEEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Skill")
+	TObjectPtr<USoundBase> AoESound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Skill")
+	float AoEVolumeMultiplier = 1.5f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Skill")
+	TSubclassOf<UCameraShakeBase> AoECameraShakeClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Skill")
+	float AoEShakeOuterRadius = 1000.f;
+
+	// --- 투사체 (검기) ---
+	UFUNCTION(BlueprintCallable, Category = "MidBoss|Combat")
+	void SpawnBossProjectile();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Projectile")
+	TSubclassOf<AT3BossProjectile> ProjectileClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Projectile")
+	float ProjectileSpeed = 1500.f;
+
+	// 스폰 오프셋 (보스 전방 기준)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Projectile")
+	float ProjectileSpawnOffset = 100.f;
+
+	// --- 패링 카운터 ---
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "MidBoss|Combat")
+	bool IsParryWindowActive() const;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Parry")
+	float ParryWindowDuration = 1.5f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Parry")
+	TObjectPtr<UAnimMontage> ParryCounterMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Parry")
+	float ParryCounterDamage = 50.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Parry")
+	EHitIntensity ParryCounterIntensity = EHitIntensity::Heavy;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Parry")
+	TObjectPtr<USoundBase> ParrySound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Parry")
+	float ParryVolumeMultiplier = 2.0f;
 
 	// --- 카메라 쉐이크 ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Combat")
@@ -445,8 +506,13 @@ private:
 #pragma region Private_Combat
 
 	FTimerHandle StunTimerHandle;
+	FTimerHandle ParryWindowTimerHandle;
 
 	UAnimMontage* GetDirectionalHitReactMontage(AActor* DamageCauser) const;
+
+	void OpenParryWindow();
+	void CloseParryWindow();
+	void ExecuteParryCounter(AActor* ParriedAttacker);
 
 	UFUNCTION()
 	void OnWeaponHit(AActor* HitActor);

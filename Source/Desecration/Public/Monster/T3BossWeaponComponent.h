@@ -34,9 +34,14 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TObjectPtr<UBoxComponent> WeaponHitBox;
 
+	// 넓은 판정 박스 — 대쉬 내려찍기 등 특수 공격용 (WeaponMeshComponent의 자식)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	TObjectPtr<UBoxComponent> WeaponHitBoxWide;
+
 	// 무기 부착 소켓 이름 (스켈레탈 메시에 정의된 소켓)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	FName WeaponSocketName = FName(TEXT("weapon_r"));
+
 
 	// 무기 히트 델리게이트 — Monster에서 바인딩하여 데미지 적용
 	UPROPERTY(BlueprintAssignable, Category = "Weapon|Events")
@@ -46,9 +51,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void AttachToSocket(USkeletalMeshComponent* TargetMesh);
 
-	// 판정 ON/OFF (ON 시 히트 목록 초기화)
+	// 기본 판정 ON/OFF (ON 시 히트 목록 초기화)
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void SetAttackCollisionEnabled(bool bEnable);
+
+	// 넓은 판정 ON/OFF — 대쉬 내려찍기 등 (ON 시 히트 목록 초기화, 기본 히트박스와 공유)
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void SetWideCollisionEnabled(bool bEnable);
 
 	// 무기 드롭 (사망 연출용)
 	UFUNCTION(BlueprintCallable, Category = "Weapon")

@@ -193,40 +193,37 @@ void AT3MidBossMonster::UpdateMotionWarpTarget()
 		return;
 	}
 
-	const float Distance = FVector::Dist(GetActorLocation(), CombatTarget->GetActorLocation());
-
-	// 회전용 — 거리와 무관하게 항상 갱신 (타겟 방향은 바라봐야 함)
+	// 회전용 — 실시간 추적 (플레이어가 움직여도 방향을 따라감)
 	MotionWarpingComponent->AddOrUpdateWarpTargetFromComponent(
 		MotionWarpTargetRotationName,
 		CombatTarget->GetRootComponent(),
 		NAME_None,
-		true,  // bFollowComponent
+		true,  // bFollowComponent — 회전은 실시간
 		EWarpTargetLocationOffsetDirection::VectorFromTargetToOwner,
 		FVector::ZeroVector
 	);
 
-	// MaxWarpDistance 초과 — 이동 워프 제거 (제자리 루트모션 공격)
-	if (Distance > MaxWarpDistance)
-	{
-		MotionWarpingComponent->RemoveWarpTarget(MotionWarpTargetName);
+	// 이동용 — 호출 시점의 위치를 스냅샷 (실시간 추적하지 않음)
+	const FVector BossLoc = GetActorLocation();
+	const FVector TargetLoc = CombatTarget->GetActorLocation();
+	const float Distance = FVector::Dist(BossLoc, TargetLoc);
 
-		UE_LOG(LogDesecration, Verbose,
-			TEXT("T3_MidBoss: 워프 거리 초과 — 이동 워프 제거 (Distance:%.0f > Max:%.0f)"),
-			Distance, MaxWarpDistance);
-		return;
-	}
+	// MaxWarpDistance 초과 시 — 최대 사거리 지점으로 클램핑
+	const float WarpDistance = FMath::Min(Distance, MaxWarpDistance);
 
-	// 이동용 — 거리 기반 동적 오프셋 (근거리 후진 방지)
-	const float ClampedOffset = FMath::Clamp(WarpTargetOffset, 0.f, Distance - MinWarpDistance);
+	// 타겟 방향으로 워프할 최종 위치 계산 (오프셋 적용)
+	const FVector Direction = (TargetLoc - BossLoc).GetSafeNormal();
+	const float ClampedOffset = FMath::Clamp(WarpTargetOffset, 0.f, WarpDistance - MinWarpDistance);
+	const FVector FinalLocation = BossLoc + Direction * (WarpDistance - ClampedOffset);
 
-	MotionWarpingComponent->AddOrUpdateWarpTargetFromComponent(
+	MotionWarpingComponent->AddOrUpdateWarpTargetFromLocation(
 		MotionWarpTargetName,
-		CombatTarget->GetRootComponent(),
-		NAME_None,
-		true,  // bFollowComponent
-		EWarpTargetLocationOffsetDirection::VectorFromTargetToOwner,
-		FVector(ClampedOffset, 0.f, 0.f)
+		FinalLocation
 	);
+
+	UE_LOG(LogDesecration, Verbose,
+		TEXT("T3_MidBoss: 워프 스냅샷 — Distance:%.0f, WarpDist:%.0f, Offset:%.0f"),
+		Distance, WarpDistance, ClampedOffset);
 }
 
 // ============================================================

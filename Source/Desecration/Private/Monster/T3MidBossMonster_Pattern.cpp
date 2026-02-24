@@ -99,8 +99,13 @@ void AT3MidBossMonster::CancelCurrentPattern()
 		StopAnimMontage();
 	}
 
-	if (WeaponComponent) { WeaponComponent->SetAttackCollisionEnabled(false); }
+	if (WeaponComponent)
+	{
+		WeaponComponent->SetAttackCollisionEnabled(false);
+		WeaponComponent->SetWideCollisionEnabled(false);
+	}
 	bIsMovingToTarget = false;
+	if (IsParryWindowActive()) { CloseParryWindow(); }
 	if (MotionWarpingComponent) { MotionWarpingComponent->RemoveWarpTarget(MotionWarpTargetName); MotionWarpingComponent->RemoveWarpTarget(MotionWarpTargetRotationName); }
 	ResetPatternState();
 }
@@ -248,6 +253,48 @@ void AT3MidBossMonster::HandlePatternNotify(FName NotifyName)
 		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: AttackEnd 노티파이 수신"));
 		if (WeaponComponent) { WeaponComponent->SetAttackCollisionEnabled(false); }
 	}
+	// --- 투사체 스폰 (검기) ---
+	else if (Name.Equals(TEXT("SpawnProjectile")))
+	{
+		SpawnBossProjectile();
+	}
+	// --- AoE 장판기 발동 ---
+	else if (Name.Equals(TEXT("GroundSlam")))
+	{
+		const FMidBossAttackPattern* PatternData = FindPatternData(CurrentPatternName);
+		if (PatternData && PatternData->MontageChain.IsValidIndex(CurrentChainIndex))
+		{
+			const FPatternMontageData& MontageData = PatternData->MontageChain[CurrentChainIndex];
+			ExecuteAoEDamage(AoERadius, MontageData.Damage, MontageData.HitIntensity);
+		}
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: GroundSlam 노티파이 — AoE 발동 (반경:%.0f)"), AoERadius);
+	}
+	// --- 패링 윈도우 ON/OFF ---
+	else if (Name.Equals(TEXT("ParryWindowStart")))
+	{
+		OpenParryWindow();
+	}
+	else if (Name.Equals(TEXT("ParryWindowEnd")))
+	{
+		CloseParryWindow();
+	}
+	// --- 모션 워프 스냅샷 (ANS_MotionWarping 시작 프레임에 배치) ---
+	else if (Name.Equals(TEXT("WarpTarget")))
+	{
+		UpdateMotionWarpTarget();
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: WarpTarget 노티파이 — 워프 위치 스냅샷"));
+	}
+	// --- 넓은 판정 ON/OFF (대쉬 내려찍기 등) ---
+	else if (Name.Equals(TEXT("WideAttackStart")))
+	{
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: WideAttackStart 노티파이 수신"));
+		if (WeaponComponent) { WeaponComponent->SetWideCollisionEnabled(true); }
+	}
+	else if (Name.Equals(TEXT("WideAttackEnd")))
+	{
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: WideAttackEnd 노티파이 수신"));
+		if (WeaponComponent) { WeaponComponent->SetWideCollisionEnabled(false); }
+	}
 }
 
 bool AT3MidBossMonster::ShouldTriggerNotify(FName NotifyName) const
@@ -378,8 +425,8 @@ void AT3MidBossMonster::PlayCurrentChainMontage()
 		return;
 	}
 
-	// MotionWarping 타겟 갱신 (ANS_MotionWarping 있는 몽타주에서만 실제 워프 발생)
-	UpdateMotionWarpTarget();
+	// MotionWarping — 몽타주 시작 시 자동 호출 안 함
+	// 몽타주에 WarpTarget 노티파이를 배치하여 원하는 타이밍에 스냅샷
 
 	// 몽타주 재생 먼저 → 그 다음 EndDelegate 등록 (재생 중이어야 delegate가 걸림)
 	PlayAnimMontage(MontageData.Montage, MontageData.PlayRate);
@@ -405,7 +452,11 @@ void AT3MidBossMonster::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 		return;
 	}
 
-	if (WeaponComponent) { WeaponComponent->SetAttackCollisionEnabled(false); }
+	if (WeaponComponent)
+	{
+		WeaponComponent->SetAttackCollisionEnabled(false);
+		WeaponComponent->SetWideCollisionEnabled(false);
+	}
 	bIsMovingToTarget = false;
 
 	if (bInterrupted)
