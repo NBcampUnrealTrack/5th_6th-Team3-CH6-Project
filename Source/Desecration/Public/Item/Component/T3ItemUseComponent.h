@@ -64,6 +64,13 @@ private:
 	uint8 bIsSpeedPotionActive : 1;
 	uint8 bIsBerserkPotionActive : 1;
 	
+	uint8 bIsHPPotionCooldown : 1;
+	uint8 bIsMPPotionCooldown : 1;
+	uint8 bIsPowerPotionCooldown : 1;
+	uint8 bIsDefensePotionCooldown : 1;
+	uint8 bIsSpeedPotionCooldown : 1;
+	uint8 bIsBerserkPotionCooldown : 1;
+	
 	UPROPERTY(EditDefaultsOnly, Category = "RecoverInterval")
 	float RecoverHPInterval;
 	float RecoverHPTickCount;

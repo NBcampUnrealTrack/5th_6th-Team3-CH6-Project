@@ -490,7 +490,6 @@ FName UT3InventoryComponent::GetCurrentBuffItemName() const
 {
 	if (EquippedItemIDs.Num() <= 0)
 	{
-		UE_LOG(LogTemp, Error, TEXT("장착된 버프 아이템이 없습니다"))
 		return NAME_None;
 	}
 	
@@ -501,7 +500,6 @@ FName UT3InventoryComponent::GetNextBuffItemName() const
 {
 	if (EquippedItemIDs.Num() <= 1)
 	{
-		UE_LOG(LogTemp, Error, TEXT("장착된 버프 아이템이 1개 입니다"))
 		return NAME_None;
 	}
 	
