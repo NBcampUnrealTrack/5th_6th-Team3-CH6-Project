@@ -2,7 +2,7 @@
 
 
 #include "Player/T3CharacterBase.h"
-#include "SNegativeActionButton.h"
+//#include "SNegativeActionButton.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -17,6 +17,7 @@
 #include "Equipment/T3PlayerEquipmentComponent.h"
 #include "GameSystem/T3GameMode.h"
 #include "Player/T3PlayerController.h"
+#include "UI/T3HUDSlotWidget.h"
 
 
 AT3CharacterBase::AT3CharacterBase()
@@ -54,6 +55,8 @@ AT3CharacterBase::AT3CharacterBase()
 	InventoryComponent = CreateDefaultSubobject<UT3InventoryComponent>(TEXT("InventoryComponent")); 
 	ItemUseComponent = CreateDefaultSubobject<UT3ItemUseComponent>(TEXT("ItemUseComponent"));
 	EquipComp = CreateDefaultSubobject<UT3PlayerEquipmentComponent>(TEXT("EquipmentComponent"));
+	
+	LoadTimeAfterDeath = 3.0f;
 }
 
 void AT3CharacterBase::RequestSellItem(const FInventorySlot& SlotData)
@@ -61,37 +64,77 @@ void AT3CharacterBase::RequestSellItem(const FInventorySlot& SlotData)
 	OnSellItemRequested.Broadcast(SlotData);
 }
 
+//void AT3CharacterBase::BeginPlay()
+//{
+//	Super::BeginPlay();
+//
+//	if (CharacterData)
+//	{
+//		ApplyCharacterData(CharacterData);
+//	}
+//	
+//	//캐릭터 정보 세팅
+//	if (const TObjectPtr<AT3GameMode> T3GameMode = Cast<AT3GameMode>(GetWorld()->GetAuthGameMode()))
+//	{
+//		T3GameMode->SetCharacterBySavedData(this);
+//	}
+//
+//	// 스태미너 자동 회복
+//		GetWorldTimerManager().SetTimer(
+//		StaminaRegenTimerHandle,
+//		this,
+//		&AT3CharacterBase::RegenerateStamina,
+//		StaminaRegenInterval,
+//		true
+//	);
+//
+//		// 시작 시 전투모드 활성화
+//		PlayerInputState.bIsCombatState = true;
+//
+//		
+//		EquipComp->OnEquipmentStatsChanged.AddDynamic(this, &AT3CharacterBase::OnEquipmentStatsUpdated);
+//
+//
+//}
+
+
 void AT3CharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	UWorld* World = GetWorld();
+	if (!World) return; // 월드 유효성 검사 추가
 
 	if (CharacterData)
 	{
 		ApplyCharacterData(CharacterData);
 	}
-	
-	//캐릭터 정보 세팅
-	if (const TObjectPtr<AT3GameMode> T3GameMode = Cast<AT3GameMode>(GetWorld()->GetAuthGameMode()))
+
+	// GameMode 참조 안전하게 수정
+	if (AT3GameMode* T3GameMode = Cast<AT3GameMode>(World->GetAuthGameMode()))
 	{
 		T3GameMode->SetCharacterBySavedData(this);
 	}
 
-	// 스태미너 자동 회복
-		GetWorldTimerManager().SetTimer(
-		StaminaRegenTimerHandle,
-		this,
-		&AT3CharacterBase::RegenerateStamina,
-		StaminaRegenInterval,
-		true
-	);
+	// 타이머 및 변수 체크
+	if (StaminaRegenInterval > 0.0f)
+	{
+		World->GetTimerManager().SetTimer(
+			StaminaRegenTimerHandle,
+			this,
+			&AT3CharacterBase::RegenerateStamina,
+			StaminaRegenInterval,
+			true
+		);
+	}
 
-		// 시작 시 전투모드 활성화
-		PlayerInputState.bIsCombatState = true;
+	PlayerInputState.bIsCombatState = true;
 
-		
+	// 컴포넌트 유효성 검사 필수
+	if (EquipComp)
+	{
 		EquipComp->OnEquipmentStatsChanged.AddDynamic(this, &AT3CharacterBase::OnEquipmentStatsUpdated);
-
-
+	}
 }
 
 void AT3CharacterBase::OnEquipmentStatsUpdated(float Atk, float Def)
@@ -277,6 +320,12 @@ void AT3CharacterBase::OnMovementModeChanged(EMovementMode PrevMovementMode, uin
 void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)
 {
 	if (!Data) return;
+	
+	// 0. 클래스 저장
+	CurrentClass = Data->CharacterClass;
+	
+	FString ClassName = UEnum::GetDisplayValueAsText(CurrentClass).ToString();
+	UE_LOG(LogTemp, Log, TEXT("Your Class is: %s"), *ClassName);
 
 	// 1. 외형 변경
 	if (GetMesh() && Data->CharacterMesh)
@@ -310,12 +359,18 @@ void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)
 					CombatComponent->SetSkillComponent(NewSkillComp);
 				}
 
-				// 위젯에 컴포넌트 전달 (의존성 주입)
-				if (AT3PlayerController* PC = GetController<AT3PlayerController>())
-				{
-
-				}
-				UE_LOG(LogTemp, Log, TEXT("Skill Component Attached: %s"), *Data->SkillComponent->GetName());
+				FTimerHandle WidgetInitTimerHandle;
+				GetWorldTimerManager().SetTimer(WidgetInitTimerHandle, [this, NewSkillComp]()
+					{
+						if (AT3PlayerController* PC = GetController<AT3PlayerController>())
+						{
+							if (PC->HUDSlotWidget)
+							{
+								PC->HUDSlotWidget->InitializeWidget(NewSkillComp);
+								UE_LOG(LogTemp, Log, TEXT("Delayed Widget Initialization Success!"));
+							}
+						}
+					}, 1.0f, false);
 			}
 		}
 	}
@@ -364,8 +419,8 @@ void AT3CharacterBase::Look(const FVector2D& Value)
 void AT3CharacterBase::Roll(const FInputActionValue& Value)
 {
 	TObjectPtr<UT3CombatComponent> Combat = GetCombatComponent();
-	if (!Combat || GetCurrentStamina() < 20.f) 
-		return GEngine->AddOnScreenDebugMessage(-1,1.f,FColor::Emerald,FString::Printf(TEXT("You Need Stamina"))); // 스태미나 부족 시 실행 불가
+	if (!Combat || GetCurrentStamina() < 20.f)
+		return; //GEngine->AddOnScreenDebugMessage(-1,1.f,FColor::Emerald,FString::Printf(TEXT("You Need Stamina"))); // 스태미나 부족 시 실행 불가
 	
 	OnWakeUp();
 	
@@ -381,6 +436,14 @@ void AT3CharacterBase::Roll(const FInputActionValue& Value)
 		PlayerInputState.RollDirection = GetRollDirection(CurrentAngle);
 
 		OnRollTriggered();
+
+
+
+		// 팔라딘의 경우 신의 심판 시전 중 구르면 스킬 캔슬
+		if (GetCurrentClass() == ECharacterClass::Paladin)
+		{
+				Combat->GetSkillComponent()->CancelCurrentSkill();
+		}
 	}
 }
 
@@ -435,9 +498,14 @@ void AT3CharacterBase::BroadcastStatChange(ET3StatType StatType)
 // 스테미너 자연 회복
 void AT3CharacterBase::RegenerateStamina()
 {
-	if (!CombatComponent || !bCanRegenStamina) return;
+	if (!CombatComponent) return;
 
-	if (CurrentStamina < MaxStamina)
+	if (!bCanRegenStamina || PlayerInputState.bIsBlocking) // 공격, 구르기, 막기 중 스태미너 소량 회복
+	{
+		AddStamina(StaminaRegenLowRate * StaminaRegenInterval);
+	}
+
+	else if (CurrentStamina < MaxStamina)
 	{
 		AddStamina(StaminaRegenRate * StaminaRegenInterval);
 	}
@@ -474,6 +542,14 @@ void AT3CharacterBase::OnDeath()
 {
 	bMoveLock = true;
 	OnDeathAnimation();
+	
+	//GetWorld()->GetTimerManager().SetTimer(AfterDeathTimerHandle, FTimerDelegate::CreateLambda([&]()
+	//{
+	//	if (const TObjectPtr<AT3GameMode> T3GameMode = Cast<AT3GameMode>(GetWorld()->GetAuthGameMode()))
+	//	{
+	//		T3GameMode->LoadGame();
+	//	}
+	//}), LoadTimeAfterDeath, false);
 }
 
 void AT3CharacterBase::ConsumeMana(float Amount)
@@ -482,9 +558,9 @@ void AT3CharacterBase::ConsumeMana(float Amount)
 	{
 		float NewMana = CurrentMana - Amount;
 		SetCurrentMana(NewMana);
-
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
-		FString::Printf(TEXT("Remaining Mana: %.1f"), CurrentMana));
+		
+		//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
+		//FString::Printf(TEXT("Remaining Mana: %.1f"), CurrentMana));
 	}
 }
 

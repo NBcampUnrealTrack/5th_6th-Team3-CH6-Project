@@ -12,6 +12,14 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSwapRecoverSlot);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCooldownProgressUpdated, FName, ItemID, float, Progress);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryInitialized);
 
+UENUM(BlueprintType)
+enum class EConsumableItemType : uint8
+{
+	None,
+	Recover,
+	Buff
+};
+
 class AT3CharacterBase;
 
 USTRUCT(BlueprintType)
@@ -20,7 +28,7 @@ struct FInventorySlot
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory Slot")
-	FName ItemID;
+	FName ItemID = NAME_None;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory Slot")
 	int32 ItemStack = 0;
@@ -39,9 +47,6 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void UseItem(int32 SlotIndex);
-	
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void DropItem(int32 SlotIndex);
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	bool RemoveItem(const FName& ItemName);
@@ -76,11 +81,15 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Inventory")
 	FOnInventoryInitialized OnInventoryInitialized;
 	
+	UPROPERTY(BlueprintReadOnly)
+	EConsumableItemType ConsumableItemType = EConsumableItemType::None;
+	
 protected:
 	virtual void BeginPlay() override;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Money")
 	int32 Money;
+
 	
 #pragma region Stone // 강화석
 	int32 NormalStoneCount;
@@ -146,10 +155,16 @@ public:
 	void UseEquippedItem();
 	
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
-	int32 GetCurrentItemCount() const;
+	int32 GetCurrentBuffItemCount() const;
 	
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
-	int32 GetNextItemCount() const;
+	int32 GetNextBuffItemCount() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	FName GetCurrentBuffItemName() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	FName GetNextBuffItemName() const;
 	
 	UPROPERTY(BlueprintAssignable, Category = "Equipment")
 	FOnToggleItemEquipped OnToggleItemEquipped;
@@ -199,6 +214,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Recover")
 	int32 GetMPPotionCount() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Recover")
+	int32 GetCurrentPotionCount() const;
 
 	UPROPERTY(BlueprintAssignable, Category = "Recover")
 	FOnSwapRecoverSlot OnSwapRecoverSlot;

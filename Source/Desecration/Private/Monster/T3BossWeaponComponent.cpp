@@ -2,6 +2,8 @@
 #include "Desecration.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/TimelineComponent.h"
+#include "Curves/CurveFloat.h"
 
 UT3BossWeaponComponent::UT3BossWeaponComponent()
 {
@@ -27,6 +29,21 @@ UT3BossWeaponComponent::UT3BossWeaponComponent()
 	WeaponHitBox->bDrawOnlyIfSelected = false;
 	WeaponHitBox->ShapeColor = FColor::Red;
 	WeaponHitBox->SetHiddenInGame(true);
+
+	// 넓은 판정 박스 — 대쉬 내려찍기 등 특수 공격용
+	WeaponHitBoxWide = CreateDefaultSubobject<UBoxComponent>(TEXT("WeaponHitBoxWide"));
+	WeaponHitBoxWide->SetupAttachment(WeaponMeshComponent);
+	WeaponHitBoxWide->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	WeaponHitBoxWide->SetCollisionObjectType(ECC_WorldDynamic);
+	WeaponHitBoxWide->SetCollisionResponseToAllChannels(ECR_Ignore);
+	WeaponHitBoxWide->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	WeaponHitBoxWide->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
+	WeaponHitBoxWide->SetGenerateOverlapEvents(true);
+	WeaponHitBoxWide->SetBoxExtent(FVector(30.f, 30.f, 60.f));
+
+	WeaponHitBoxWide->bDrawOnlyIfSelected = false;
+	WeaponHitBoxWide->ShapeColor = FColor::Orange;
+	WeaponHitBoxWide->SetHiddenInGame(true);
 }
 
 void UT3BossWeaponComponent::BeginPlay()
@@ -47,6 +64,13 @@ void UT3BossWeaponComponent::BeginPlay()
 	else
 	{
 		UE_LOG(LogDesecration, Error, TEXT("T3_BossWeapon: BeginPlay — WeaponHitBox가 nullptr!"));
+	}
+
+	// 넓은 히트박스 오버랩 바인딩 (같은 콜백 공유 — HitActorsThisSwing으로 중복 방지)
+	if (WeaponHitBoxWide)
+	{
+		WeaponHitBoxWide->OnComponentBeginOverlap.AddDynamic(
+			this, &UT3BossWeaponComponent::OnWeaponOverlapBegin);
 	}
 
 	// 무기 메시 부착 상태 확인
@@ -93,6 +117,12 @@ void UT3BossWeaponComponent::AttachToSocket(USkeletalMeshComponent* TargetMesh)
 			WeaponMeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 	}
 
+	if (WeaponHitBoxWide)
+	{
+		WeaponHitBoxWide->AttachToComponent(
+			WeaponMeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	}
+
 	UE_LOG(LogDesecration, Log, TEXT("T3_BossWeapon: 소켓 '%s'에 부착 성공 (Mesh위치:%s, HitBox위치:%s)"),
 		*WeaponSocketName.ToString(),
 		*WeaponMeshComponent->GetComponentLocation().ToString(),
@@ -124,12 +154,35 @@ void UT3BossWeaponComponent::SetAttackCollisionEnabled(bool bEnable)
 	}
 }
 
+void UT3BossWeaponComponent::SetWideCollisionEnabled(bool bEnable)
+{
+	if (WeaponHitBoxWide)
+	{
+		if (bEnable)
+		{
+			HitActorsThisSwing.Reset();
+		}
+
+		WeaponHitBoxWide->SetCollisionEnabled(
+			bEnable ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
+
+		UE_LOG(LogDesecration, Log,
+			TEXT("T3_BossWeapon: 넓은 콜리전 %s (Extent:%s)"),
+			bEnable ? TEXT("ON") : TEXT("OFF"),
+			*WeaponHitBoxWide->GetUnscaledBoxExtent().ToString());
+	}
+}
+
 void UT3BossWeaponComponent::OnWeaponOverlapBegin(UPrimitiveComponent* OverlappedComp,
 	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
 	bool bFromSweep, const FHitResult& SweepResult)
 {
-	// 디버그: 오버랩 발생 자체를 확인 (필터링 전)
-	UE_LOG(LogDesecration, Log, TEXT("T3_BossWeapon: [오버랩 발생] Other:%s, Comp:%s"),
+	// 어떤 히트박스에서 오버랩 발생했는지 구분
+	const bool bIsWideHitBox = (OverlappedComp == WeaponHitBoxWide);
+	const FString HitBoxName = bIsWideHitBox ? TEXT("Wide") : TEXT("Normal");
+
+	UE_LOG(LogDesecration, Log, TEXT("T3_BossWeapon: [오버랩] HitBox:%s, Other:%s, Comp:%s"),
+		*HitBoxName,
 		OtherActor ? *OtherActor->GetName() : TEXT("nullptr"),
 		OtherComp ? *OtherComp->GetName() : TEXT("nullptr"));
 
@@ -138,16 +191,19 @@ void UT3BossWeaponComponent::OnWeaponOverlapBegin(UPrimitiveComponent* Overlappe
 		return;
 	}
 
-	// 스윙당 중복 히트 방지
+	// 스윙당 중복 히트 방지 (Normal과 Wide가 같은 목록 공유)
 	if (HitActorsThisSwing.Contains(OtherActor))
 	{
+		UE_LOG(LogDesecration, Verbose, TEXT("T3_BossWeapon: [중복 무시] HitBox:%s, Actor:%s"),
+			*HitBoxName, *OtherActor->GetName());
 		return;
 	}
 
 	HitActorsThisSwing.Add(OtherActor);
 	OnWeaponHitActor.Broadcast(OtherActor);
 
-	UE_LOG(LogDesecration, Log, TEXT("T3_BossWeapon: 히트 감지 → %s (델리게이트 브로드캐스트)"), *OtherActor->GetName());
+	UE_LOG(LogDesecration, Log, TEXT("T3_BossWeapon: 히트 확정 — HitBox:%s → %s"),
+		*HitBoxName, *OtherActor->GetName());
 }
 
 void UT3BossWeaponComponent::DropWeapon()
@@ -172,4 +228,90 @@ void UT3BossWeaponComponent::DropWeapon()
 	WeaponMeshComponent->SetAngularDamping(1.0f);
 
 	UE_LOG(LogDesecration, Log, TEXT("T3_BossWeapon: 무기 드롭"));
+}
+
+void UT3BossWeaponComponent::StartWeaponDissolve(float Duration, FName ParameterName)
+{
+	if (!WeaponMeshComponent)
+	{
+		return;
+	}
+
+	// 물리 시뮬 정지 — 디졸브 중 굴러다니지 않도록
+	WeaponMeshComponent->SetSimulatePhysics(false);
+	WeaponMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	// DynamicMaterial 생성
+	const int32 NumMaterials = WeaponMeshComponent->GetNumMaterials();
+	WeaponDynamicMaterials.Reserve(NumMaterials);
+
+	for (int32 i = 0; i < NumMaterials; ++i)
+	{
+		UMaterialInstanceDynamic* DynMat = WeaponMeshComponent->CreateAndSetMaterialInstanceDynamic(i);
+		if (DynMat)
+		{
+			WeaponDynamicMaterials.Add(DynMat);
+		}
+	}
+
+	if (WeaponDynamicMaterials.Num() == 0)
+	{
+		UE_LOG(LogDesecration, Warning, TEXT("T3_BossWeapon: 무기 디졸브 — DynamicMaterial 0개, 스킵"));
+		return;
+	}
+
+	// 파라미터 이름 저장
+	WeaponDissolveParameterName = ParameterName;
+
+	// 선형 커브 자동 생성
+	WeaponDissolveCurve = NewObject<UCurveFloat>(this);
+	WeaponDissolveCurve->FloatCurve.AddKey(0.f, 0.f);
+	WeaponDissolveCurve->FloatCurve.AddKey(Duration, 1.f);
+
+	// Timeline 생성 + 바인딩
+	AActor* Owner = GetOwner();
+	if (!Owner)
+	{
+		return;
+	}
+
+	WeaponDissolveTimeline = NewObject<UTimelineComponent>(Owner, TEXT("WeaponDissolveTimeline"));
+	WeaponDissolveTimeline->RegisterComponent();
+
+	FOnTimelineFloat UpdateDelegate;
+	UpdateDelegate.BindUFunction(this, FName("OnWeaponDissolveUpdate"));
+
+	FOnTimelineEvent FinishedDelegate;
+	FinishedDelegate.BindUFunction(this, FName("OnWeaponDissolveFinished"));
+
+	WeaponDissolveTimeline->AddInterpFloat(WeaponDissolveCurve, UpdateDelegate, FName("WeaponDissolveTrack"));
+	WeaponDissolveTimeline->SetTimelineFinishedFunc(FinishedDelegate);
+	WeaponDissolveTimeline->SetTimelineLength(Duration);
+	WeaponDissolveTimeline->SetLooping(false);
+	WeaponDissolveTimeline->PlayFromStart();
+
+	UE_LOG(LogDesecration, Log, TEXT("T3_BossWeapon: 무기 디졸브 시작 (%.1f초, 머티리얼 %d개)"),
+		Duration, WeaponDynamicMaterials.Num());
+}
+
+void UT3BossWeaponComponent::OnWeaponDissolveUpdate(float Value)
+{
+	for (UMaterialInstanceDynamic* DynMat : WeaponDynamicMaterials)
+	{
+		if (DynMat)
+		{
+			DynMat->SetScalarParameterValue(WeaponDissolveParameterName, Value);
+		}
+	}
+}
+
+void UT3BossWeaponComponent::OnWeaponDissolveFinished()
+{
+	// 무기 메시 숨김
+	if (WeaponMeshComponent)
+	{
+		WeaponMeshComponent->SetVisibility(false);
+	}
+
+	UE_LOG(LogDesecration, Log, TEXT("T3_BossWeapon: 무기 디졸브 완료"));
 }

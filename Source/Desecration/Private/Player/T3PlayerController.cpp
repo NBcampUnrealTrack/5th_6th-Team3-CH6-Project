@@ -12,10 +12,22 @@
 #include "Blueprint/UserWidget.h"
 #include "Item/Component/T3InventoryComponent.h"
 #include "UI/T3PopUpMenu.h"
+#include "UI/T3HUDSlotWidget.h"
+#include "Player/T3HolyGaugeWidget.h"
+#include "UI/T3ShopWidget.h"
 
 void AT3PlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	bShowMouseCursor = false;
+	const FInputModeGameOnly InputModeGameOnly;
+	SetInputMode(InputModeGameOnly);
+
+	APawn* NewPawn = GetPawn();
+	OwnerChar = Cast<AT3CharacterBase>(NewPawn);
+	Combat = OwnerChar->GetCombatComponent();
+
 
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 	{
@@ -30,7 +42,7 @@ void AT3PlayerController::BeginPlay()
 		MainInventoryWidget = CreateWidget<UUserWidget>(this, MainInventoryWidgetClass);
 		
 		MainInventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
-		MainInventoryWidget->AddToViewport(3);
+		MainInventoryWidget->AddToViewport(99);
 	}
 
 	if (IsValid(CombatWidgetClass))
@@ -38,22 +50,25 @@ void AT3PlayerController::BeginPlay()
 		CombatWidget = CreateWidget<UUserWidget>(this, CombatWidgetClass);
 
 		//CombatWidget->SetVisibility(ESlateVisibility::Collapsed);
-		CombatWidget->AddToViewport();
+		CombatWidget->AddToViewport(98);
 	}
 	
 	if (IsValid(PopUpMenuClass))
 	{
 		PopUpMenu = CreateWidget<UT3PopUpMenu>(this, PopUpMenuClass);
-		PopUpMenu->AddToViewport();
+		PopUpMenu->AddToViewport(100);
 	}
 	
 	if (IsValid(HUDSlotWidgetClass))
 	{
-		HUDSlotWidget = CreateWidget<UUserWidget>(this, HUDSlotWidgetClass);
-		HUDSlotWidget->AddToViewport();
+		HUDSlotWidget = CreateWidget<UT3HUDSlotWidget>(this, HUDSlotWidgetClass);
+		if (HUDSlotWidget)
+		{
+			HUDSlotWidget->AddToViewport();
+		}
 	}
 
-	if (LockOnWidgetClass)
+	if (IsValid(LockOnWidgetClass))
 	{
 		LockOnWidget = CreateWidget<UUserWidget>(this, LockOnWidgetClass);
 		if (LockOnWidget)
@@ -63,10 +78,20 @@ void AT3PlayerController::BeginPlay()
 		}
 	}
 
-	APawn* NewPawn = GetPawn();
-	OwnerChar = Cast<AT3CharacterBase>(NewPawn);
-	Combat = OwnerChar->GetCombatComponent();
-	
+	// 팔라딘일 때만 신성게이지 위젯 생성
+	if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
+	{
+		if (IsValid(HolyGaugeWidgetClass))
+		{
+			HolyGaugeWidget = CreateWidget<UT3HolyGaugeWidget>(this, HolyGaugeWidgetClass);
+			if (HolyGaugeWidget)
+			{
+				HolyGaugeWidget->AddToViewport();
+			}
+		}
+	}
+
+
 }
 
 void AT3PlayerController::SetupInputComponent()
@@ -145,7 +170,7 @@ void AT3PlayerController::Input_LockOn(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_BlockStart(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse)
 	{
 		return;
 	}
@@ -158,7 +183,7 @@ void AT3PlayerController::Input_BlockStart(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_BlockEnd(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse)
 	{
 		return;
 	}
@@ -173,7 +198,7 @@ void AT3PlayerController::Input_BlockEnd(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_Roll(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse)
 	{
 		return;
 	}
@@ -186,7 +211,7 @@ void AT3PlayerController::Input_Roll(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_Interact(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse)
 	{
 		return;
 	}
@@ -220,7 +245,7 @@ void AT3PlayerController::Input_Test(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_Attack(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction())
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse)
 	{
 		return;
 	}
@@ -287,27 +312,29 @@ void AT3PlayerController::Input_ChangeConsumableSlot(const FInputActionValue& Va
 
 void AT3PlayerController::Input_ActiveSkillSlot(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction()) { return; }
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse) { return; }
 	if (Combat) { Combat->ExecuteCurrentSlotAction(ESlotType::Skill); } 
 }
 
 void AT3PlayerController::Input_ActivePotionSlot(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction()) { return; }
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse) { return; }
 	
 	if (IsValid(OwnerChar))
 	{
-		OwnerChar->InventoryComponent->UseCurrentPotion();
+		OwnerChar->InventoryComponent->	ConsumableItemType = EConsumableItemType::Recover;
+		OwnerChar->OnActivatePotion();
 	}
 }
 
 void AT3PlayerController::Input_ActiveConsumableSlot(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction()) { return; }
+	if (bIsInventoryOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse) { return; }
 	
 	if (IsValid(OwnerChar))
 	{
-		OwnerChar->InventoryComponent->UseEquippedItem();
+		OwnerChar->InventoryComponent->	ConsumableItemType = EConsumableItemType::Buff;
+		OwnerChar->OnActivatePotion();
 	}
 }
 
@@ -316,4 +343,35 @@ void AT3PlayerController::SetInventoryOpen(bool bIsOpen)
 	bIsInventoryOpen = bIsOpen;
 }
 
+void AT3PlayerController::ShowShopUI(UT3ShopComponent* ShopComp)
+{
+	if (!IsValid(ShopWidgetClass))
+	{
+		UE_LOG(LogTemp, Error, TEXT("상점 위젯 할당안됨"));
+		return;
+	}
+	
+	ShopWidget = CreateWidget<UT3ShopWidget>(this, ShopWidgetClass);
+	
+	if (!IsValid(ShopWidget))
+	{
+		return;
+	}
+	
+	AT3CharacterBase* T3Character = Cast<AT3CharacterBase>(GetPawn());
+	
+	if (!IsValid(T3Character))
+	{
+		UE_LOG(LogTemp, Error, TEXT("캐릭터 캐스트 실패"));
+		return;
+	}
+	
+	FInputModeGameAndUI InputModeGameAndUI;
+    SetInputMode(InputModeGameAndUI);
 
+	ShopWidget->Init(T3Character->InventoryComponent, ShopComp, T3Character);
+	ShopWidget->AddToViewport();
+	
+	SetShowMouseCursor(true);
+	SetInventoryOpen(true);
+}

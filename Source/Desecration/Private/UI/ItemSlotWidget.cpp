@@ -35,17 +35,25 @@ FReply UItemSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, con
 			return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 		}
 		
-		FReply Reply = Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
-		
-		OnSlotClicked.Broadcast(this);
-		
-		// 드래그 감지를 활성화
+		// 드래그 감지를 먼저 활성화 (Super 호출 전에)
 		if (TSharedPtr<SWidget> SlateWidget = GetCachedWidget())
 		{
+			UE_LOG(LogTemp, Log, TEXT("[ItemSlotWidget] 마우스 클릭 감지 - 슬롯 %d, 드래그 감지 시작"), SlotIndex);
+			
+			// OnSlotClicked 브로드캐스트는 드래그 감지 후에 호출
+			// 이렇게 하면 드래그가 우선적으로 처리됨
+			OnSlotClicked.Broadcast(this);
+			
 			return FReply::Handled().DetectDrag(SlateWidget.ToSharedRef(), EKeys::LeftMouseButton);
 		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[ItemSlotWidget] SlateWidget이 유효하지 않음 - 슬롯 %d"), SlotIndex);
+		}
 		
-		return Reply;
+		// SlateWidget이 없으면 기본 동작
+		OnSlotClicked.Broadcast(this);
+		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 	}
 	
 	// 다른 버튼이면 기본 동작
@@ -54,13 +62,17 @@ FReply UItemSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, con
 
 void UItemSlotWidget::NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation)
 {
+	UE_LOG(LogTemp, Log, TEXT("[ItemSlotWidget] NativeOnDragDetected 호출됨 - 슬롯 %d"), SlotIndex);
+	
 	if (!IsValid(InventoryComponent) || !InventoryComponent->Items.IsValidIndex(SlotIndex))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("[ItemSlotWidget] InventoryComponent 또는 SlotIndex 유효하지 않음"));
 		return;
 	}
 	
 	if (InventoryComponent->Items[SlotIndex].ItemID == NAME_None)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("[ItemSlotWidget] 슬롯 %d에 아이템이 없음"), SlotIndex);
 		return;
 	}
 	
@@ -92,7 +104,11 @@ void UItemSlotWidget::NativeOnDragDetected(const FGeometry& InGeometry, const FP
 
 bool UItemSlotWidget::NativeOnDragOver(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
 {
-	// 드래그 중인 오퍼레이션이 유효한지 확인
+	if (!IsValid(InventoryComponent))
+	{
+		return false;
+	}
+	
 	if (!IsValid(InOperation))
 	{
 		return false;
@@ -109,19 +125,16 @@ bool UItemSlotWidget::NativeOnDragOver(const FGeometry& InGeometry, const FDragD
 		return false;
 	}
 	
-	if (!IsValid(InventoryComponent))
-	{
-		return false;
-	}
-	
-	// 드롭 가능하다고 표시 (시각적 피드백을 위해)
-	// Blueprint에서 위젯 색상 변경 등을 할 수 있음
-	
 	return true;
 }
 
 bool UItemSlotWidget::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
 {
+	if (!IsValid(InventoryComponent))
+	{
+		return false;
+	}
+	
 	if (!IsValid(InOperation))
 	{
 		return false;
@@ -129,11 +142,6 @@ bool UItemSlotWidget::NativeOnDrop(const FGeometry& InGeometry, const FDragDropE
 	
 	UItemDragDropOperation* ItemDragOp = Cast<UItemDragDropOperation>(InOperation);
 	if (!IsValid(ItemDragOp))
-	{
-		return false;
-	}
-	
-	if (!IsValid(InventoryComponent))
 	{
 		return false;
 	}

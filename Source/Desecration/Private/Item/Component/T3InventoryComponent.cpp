@@ -1,6 +1,6 @@
 #include "Public/Item/Component/T3InventoryComponent.h"
 
-#include "IDetailTreeNode.h"
+//#include "IDetailTreeNode.h"
 #include "Item/Component/T3ItemUseComponent.h"
 #include "Player/T3CharacterBase.h"
 #include "Public/Item/Data/T3ConsumableItemData.h"
@@ -166,10 +166,6 @@ void UT3InventoryComponent::SwapSlots(int32 SourceSlotIndex, int32 TargetSlotInd
 	Items[TargetSlotIndex] = TempSlot;
 	
 	OnInventoryUpdated.Broadcast();
-}
-
-void UT3InventoryComponent::DropItem(int32 SlotIndex)
-{
 }
 
 bool UT3InventoryComponent::RemoveItem(const FName& ItemName)
@@ -438,11 +434,10 @@ void UT3InventoryComponent::UseEquippedItem()
 	}
 }
 
-int32 UT3InventoryComponent::GetCurrentItemCount() const
+int32 UT3InventoryComponent::GetCurrentBuffItemCount() const
 {
 	if (EquippedItemIDs.Num() <= 0)
 	{
-		UE_LOG(LogTemp, Error, TEXT("장착한 아이템이 없음"));
 		return 0;
 	}
 	
@@ -464,11 +459,10 @@ int32 UT3InventoryComponent::GetCurrentItemCount() const
 	return 0;
 }
 
-int32 UT3InventoryComponent::GetNextItemCount() const
+int32 UT3InventoryComponent::GetNextBuffItemCount() const
 {
 	if (EquippedItemIDs.Num() <= 1)
 	{
-		UE_LOG(LogTemp, Error, TEXT("장착한 아이템이 없음"));
 		return 0;
 	}
 	
@@ -488,6 +482,28 @@ int32 UT3InventoryComponent::GetNextItemCount() const
 	}
 	
 	return 0;
+}
+
+FName UT3InventoryComponent::GetCurrentBuffItemName() const
+{
+	if (EquippedItemIDs.Num() <= 0)
+	{
+		UE_LOG(LogTemp, Error, TEXT("장착된 버프 아이템이 없습니다"))
+		return NAME_None;
+	}
+	
+	return EquippedItemIDs[0];
+}
+
+FName UT3InventoryComponent::GetNextBuffItemName() const
+{
+	if (EquippedItemIDs.Num() <= 1)
+	{
+		UE_LOG(LogTemp, Error, TEXT("장착된 버프 아이템이 1개 입니다"))
+		return NAME_None;
+	}
+	
+	return EquippedItemIDs[1];
 }
 
 void UT3InventoryComponent::InitializePotionIDs()
@@ -565,7 +581,7 @@ void UT3InventoryComponent::UseCurrentPotion()
 
 void UT3InventoryComponent::SwapHPMPSlot()
 {
-	if (CurrentPotionID == NAME_None)
+	if (CurrentPotionID == NAME_None || OwnerCharacter->bIsUsingItem)
 	{
 		return;
 	}
@@ -614,6 +630,25 @@ int32 UT3InventoryComponent::GetHPPotionCount() const
 int32 UT3InventoryComponent::GetMPPotionCount() const
 {
 	return MPPotionCount;
+}
+
+int32 UT3InventoryComponent::GetCurrentPotionCount() const
+{
+	if (CurrentPotionID == NAME_None)
+	{
+		return 0;
+	}
+	
+	if (CurrentPotionID == HPPotionID)
+	{
+		return HPPotionCount;
+	}
+	else if (CurrentPotionID == MPPotionID)
+	{
+		return MPPotionCount;
+	}
+	
+	return 0;
 }
 
 void UT3InventoryComponent::UseHPPotion()

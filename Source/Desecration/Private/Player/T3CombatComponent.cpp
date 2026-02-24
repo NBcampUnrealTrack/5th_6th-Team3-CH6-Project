@@ -19,6 +19,7 @@
 #include "Player/T3SkillComponentBase.h"
 #include "Player/T3LockOnTarget.h"
 #include "Components/WidgetComponent.h"
+#include "Monster/T3MonsterBase.h"
 
 
 UT3CombatComponent::UT3CombatComponent()
@@ -101,14 +102,14 @@ void UT3CombatComponent::StartBlock()
 	// 스태미너 50이상만 막기 가능
 	if (!OwnerChar || OwnerChar->GetCurrentStamina() < 50.f)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("You Need Stamina."));
+		// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("You Need Stamina."));
 		return;
 	}
 
 	if (OwnerChar->PlayerInputState.bIsBlocking || CurrentState != ECharacterCombatState::Idle || !bCanBlock) return;
 
 	// 2. 초기 상태 설정: 패링(Parrying) 모드 진입
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Blue, TEXT("BlockingModeOn"));
+	// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Blue, TEXT("BlockingModeOn"));
 	CurrentState = ECharacterCombatState::Parrying;
 	OwnerChar->PlayerInputState.bIsBlocking = true;
 	bCanBlock = false;
@@ -148,7 +149,7 @@ void UT3CombatComponent::EndBlock()
 void UT3CombatComponent::ResetBlockCooldown()
 {
 	bCanBlock = true;
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Block Ready Again"));
+	// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Block Ready Again"));
 }
 
 void UT3CombatComponent::Attack()
@@ -228,7 +229,7 @@ void UT3CombatComponent::ToggleLockOn()
 		// 위젯 켜기 (인터페이스 함수 호출)
 		LockOnInterface->SetLockOnWidgetVisible(true);
 
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("LockOn"));
+		// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("LockOn"));
 	}
 
 }
@@ -244,14 +245,14 @@ void UT3CombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	}
 
 	// 몬스터 사망 시 록온 해제 
-	//if (AT3MonsterBase* TargetMonster = Cast<AT3MonsterBase>(CurrentTarget))
-	//{
-	//	if (TargetMonster->bIsDead) // 또는 IsDead() 함수 호출
-	//	{
-	//		ResetLockOn();
-	//		return;
-	//	}
-	//}
+	if (AT3MonsterBase* TargetMonster = Cast<AT3MonsterBase>(CurrentTarget))
+	{
+		if (TargetMonster->bIsDead) // 또는 IsDead() 함수 호출
+		{
+			ResetLockOn();
+			return;
+		}
+	}
 
 	// 거리 초과 시 록온 해제 
 	float DistanceToTarget = FVector::Dist(OwnerChar->GetActorLocation(), CurrentTarget->GetActorLocation());
@@ -276,21 +277,25 @@ void UT3CombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	float HeightDifference = TargetLocation.Z - OwnerChar->GetActorLocation().Z;
 
 
-	// 록온 대상의 높이가 높아질수록 광각으로 카메라가 멀어짐
-	float RawAlpha = FMath::GetMappedRangeValueClamped(FVector2D(100.f, 1000.f), FVector2D(0.f, 1.f), HeightDifference);
-	float ExponentialAlpha = FMath::Clamp(RawAlpha * 1.5f, 0.f, 1.f);
+	//// 록온 대상의 높이가 높아질수록 광각으로 카메라가 멀어짐
+	//float RawAlpha = FMath::GetMappedRangeValueClamped(FVector2D(100.f, 1000.f), FVector2D(0.f, 1.f), HeightDifference);
+	//float ExponentialAlpha = FMath::Clamp(RawAlpha * 1.5f, 0.f, 1.f);
 
-	// 스프링암 길이
-	float DynamicMaxExtra = 2500.f;
-	float TargetArmLength = DefaultArmLength + (ExponentialAlpha * DynamicMaxExtra);
+	//// 스프링암 길이
+	//float DynamicMaxExtra = 2500.f;
+	//float TargetArmLength = DefaultArmLength + (ExponentialAlpha * DynamicMaxExtra);
 
-	float TargetDistance = FMath::Lerp(DefaultArmLength, 2500.f, ExponentialAlpha);
+	//float TargetDistance = FMath::Lerp(DefaultArmLength, 2500.f, ExponentialAlpha);
 
-	// 광각 범위
-	float TargetFOV = FMath::Lerp(90.f, 120.f, ExponentialAlpha);
+	//// 광각 범위
+	//float TargetFOV = FMath::Lerp(90.f, 120.f, ExponentialAlpha);
 
-	// SocketOffset: 카메라를 더 위로 올려서 아래를 내려다보게 함 (High Angle)
-	float TargetSocketZ = FMath::Lerp(50.f, 500.f, ExponentialAlpha);
+	//// SocketOffset: 카메라를 더 위로 올려서 아래를 내려다보게 함 (High Angle)
+	//float TargetSocketZ = FMath::Lerp(50.f, 500.f, ExponentialAlpha);
+
+	float TargetDistance = DefaultArmLength; // 기본 길이에 고정
+	float TargetFOV = 90.f;                // 기본 시야각에 고정 (원하는 기본값으로 설정하세요)
+	float TargetSocketZ = 50.f;
 
 	// 부드러운 카메라 전환
 	SpringArm->TargetArmLength = FMath::FInterpTo(SpringArm->TargetArmLength, TargetDistance, DeltaTime, 5.0f);
@@ -446,7 +451,16 @@ bool UT3CombatComponent::IsTargetVisible(AActor* Target) const
 
 void UT3CombatComponent::ResetLockOn()
 {
-	UpdateTargetUI(CurrentTarget, false);
+	// 1. 인터페이스를 통한 UI 끄기
+	if (CurrentTarget)
+	{
+		if (IT3LockOnTarget* TargetInterface = Cast<IT3LockOnTarget>(CurrentTarget))
+		{
+			TargetInterface->SetLockOnWidgetVisible(false);
+		}
+	}
+
+	// 상태 변수 초기화
 	bIsLockOn = false;
 	OwnerChar->PlayerInputState.bIsLockOn = false;
 	CurrentTarget = nullptr;
@@ -454,7 +468,7 @@ void UT3CombatComponent::ResetLockOn()
 	if (OwnerPC)
 	{
 		OwnerPC->ResetIgnoreLookInput(); // 마우스 입력 다시 허용
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("LockOff"));
+		// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("LockOff"));
 
 		OwnerChar->GetCharacterMovement()->bOrientRotationToMovement = true;
 		OwnerChar->GetCharacterMovement()->bUseControllerDesiredRotation = false;
@@ -462,22 +476,12 @@ void UT3CombatComponent::ResetLockOn()
 		SpringArm->bEnableCameraRotationLag = false;
 		SpringArm->bEnableCameraLag = false;
 		SpringArm->TargetArmLength = DefaultArmLength;
+		SpringArm->SocketOffset.Z = 50.f;
 		OwnerPC->PlayerCameraManager->SetFOV(90.f);
 	}
 
 	SetComponentTickEnabled(false); // 틱 중지하여 자원 절약
 }
-
-// 록온 타겟 위에 록온 위젯 생성
-void UT3CombatComponent::UpdateTargetUI(AActor* Target, bool bIsVisible)
-{
-	AT3DamageTestActor* Enemy = Cast<AT3DamageTestActor>(Target);
-	if (Enemy)
-	{
-		Enemy->SetLockOnWidgetVisible(bIsVisible);
-	}
-}
-
 
 // ========== 전투 로직 ===============
 
@@ -490,9 +494,9 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 	
 	// 1. [디버그] 공격자 정보 및 데미지 타입 확인
 	FString TypeName = DamageType ? DamageType->GetClass()->GetName() : TEXT("Normal");
-	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::White,
-		FString::Printf(TEXT("Hit by: %s | Original Damage: %.1f | Type: %s | multi: %.1f"),
-			*DamageCauser->GetName(), Damage, *TypeName, ReceievedDamageMultiplier));
+	// GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::White,
+		// FString::Printf(TEXT("Hit by: %s | Original Damage: %.1f | Type: %s | multi: %.1f"),
+			// *DamageCauser->GetName(), Damage, *TypeName, ReceievedDamageMultiplier));
 
 	// 최종 데미지 계산
 	float FinalDamage = CalculateFinalDamage(Damage, DamageType, ReceievedDamageMultiplier);
@@ -501,22 +505,47 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 	if (FinalDamage <= 0.f)
 	{
 		if (CurrentState == ECharacterCombatState::Dodge)
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Result: [EVADE] - Invincible Frame!"));
+		{ }
+			// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Result: [EVADE] - Invincible Frame!"));
 
 		else if (CurrentState == ECharacterCombatState::Parrying)
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("Result: [PARRY] - Success!"));
-		// 패링 성공 시 보스에게 스턴치 10 부여
+		{ }
+		// 패링 성공 시 
+		
+		// 보스에게 스턴치 10 부여
 		AT3BossMonster* HitBoss = Cast<AT3BossMonster>(DamageCauser);
 		if (HitBoss) { HitBoss->Damage(0, 10.f); }
+
+		// 팔라딘의 경우 신성게이지 20 증가
+		if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
+		{
+			AddHolyGauge(20.0f);
+		}
+
+		UE_LOG(LogTemp, Display, TEXT("Parrying!"));
+			// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("Result: [PARRY] - Success!"));
 		return;
 	}
 	else if (CurrentState == ECharacterCombatState::Blocking)
 	{
-		// 1. 스태미나 50 차감
+		// 막기 성공 시
+		
+		// 스태미나 50 차감 후 스태미너 0 이하로 떨어지면 막기 해제
 		ConsumeStamina(50.f);
 
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow,
-			FString::Printf(TEXT("Result: [BLOCK] - Reduced Damage: %.1f"), FinalDamage));
+		if (OwnerChar->GetCurrentStamina() <= 0.f)
+		{
+			EndBlock();
+		}
+
+		// 팔라딘이라면 신성 게이지 10 상승
+		if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
+		{
+			AddHolyGauge(10.0f);
+		}
+
+		/*GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow,
+			FString::Printf(TEXT("Result: [BLOCK] - Reduced Damage: %.1f"), FinalDamage));*/
 	}
 
 
@@ -525,12 +554,20 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 	float NewHP = FMath::Max(0.f, OwnerChar->GetCurrentHP() - FinalDamage);
 	OwnerChar->SetCurrentHP(NewHP);
 
-	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red,
-		FString::Printf(TEXT("HP Status: %.1f / %.1f"), NewHP, OwnerChar->GetMaxHP()));
+	//GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red,
+	//	FString::Printf(TEXT("HP Status: %.1f / %.1f"), NewHP, OwnerChar->GetMaxHP()));
 	   UE_LOG(LogTemp, Warning, TEXT("HP Status: %.1f / %.1f"), NewHP, OwnerChar->GetMaxHP());
 	   UE_LOG(LogTemp, Display, TEXT("final : %.1f"), FinalDamage);
 
-
+	   // 팔라딘의 경우 신의 심판 시전 중 피격 당하면 스킬 캔슬
+	   if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
+	   {
+		   if (IsValid(SkillComp))
+		   {
+			   GetSkillComponent()->CancelCurrentSkill();
+			   OwnerChar->StopAnimMontage();
+		   }
+	   }
 
 	// 사망 판정
 	if (NewHP <= 0.f)
@@ -554,8 +591,8 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 	EHitDirection HitDir = CalculateHitDirection(DamageCauser->GetActorLocation());
 	HitDirection = HitDir;
 	FString DirName = StaticEnum<EHitDirection>()->GetNameStringByValue((int64)HitDir);
-	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Orange, FString::Printf(TEXT("Hit Direction: [%s]"), *DirName));
-	UE_LOG(LogTemp, Warning, TEXT("Hit Direction: [%s]"), *DirName);
+	//GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Orange, FString::Printf(TEXT("Hit Direction: [%s]"), *DirName));
+	//UE_LOG(LogTemp, Warning, TEXT("Hit Direction: [%s]"), *DirName);
 }
 
 // 피격 데미지 계산
@@ -641,7 +678,7 @@ EHitDirection UT3CombatComponent::CalculateHitDirection(const FVector& HitLocati
 
 // 공격 로직
 
-void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAmount, EHitIntensity Intensity, float DamageMultiflier, TSubclassOf<UT3DamageType_Base> DamageTypeClass)
+void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAmount, EHitIntensity Intensity, float DamageMultiflier, TSubclassOf<UT3DamageType_Base> DamageTypeClass, float InStunAmount)
 {
 	if (!TargetActor) { UE_LOG(LogTemp, Warning, TEXT("Target Missing!")); return; }
 	if (!OwnerChar && !AIChar) { UE_LOG(LogTemp, Warning, TEXT("Owner Missing!")); return; }
@@ -652,12 +689,13 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 	FT3DamageEvent T3DamageEvent(DamageTypeClass);
 	T3DamageEvent.HitIntensity = Intensity; // 공격 강도를 구조체에 직접 삽입
 	T3DamageEvent.HitDamageMultiplier = DamageMultiflier;
+	T3DamageEvent.StunAmount = InStunAmount;
 
 	AT3BossMonster* HitBoss = Cast<AT3BossMonster>(TargetActor);
 
 	if (HitBoss)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Hit Boss!"));
+		// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Hit Boss!"));
 		HitBoss->Damage(DamageAmount, 20.f);  // 테스트용 스턴 20
 		// HitBoss->Damage(CurrentAttackDamage, StunAmount);
 	}
@@ -678,21 +716,21 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 
 	if (GEngine)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
-		FString::Printf(TEXT("Attack Sent -> Target: %s, Damage: %.1f"), *TargetActor->GetName(), DamageAmount));
+		//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
+		//FString::Printf(TEXT("Attack Sent -> Target: %s, Damage: %.1f"), *TargetActor->GetName(), DamageAmount));
 	}
 }
 
 // 스태미나 소모 함수
 void UT3CombatComponent::ConsumeStamina(float Amount)
 {
-	if (OwnerChar && OwnerChar->GetCurrentStamina() >= Amount)
+	if (OwnerChar)
 	{
 		float NewStamina = OwnerChar->GetCurrentStamina() - Amount;
 		OwnerChar->SetCurrentStamina(NewStamina);
 
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
-			FString::Printf(TEXT("Remaining Stamina: %.1f"), OwnerChar->GetCurrentStamina()));
+		/*GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
+			FString::Printf(TEXT("Remaining Stamina: %.1f"), OwnerChar->GetCurrentStamina()));*/
 	}
 }
 
@@ -700,43 +738,21 @@ void UT3CombatComponent::ConsumeStamina(float Amount)
 // 스킬&아이템 슬롯 함수
 void UT3CombatComponent::ChangeActiveSlot(ESlotType Type)
 {
-	switch (Type)
+	if (Type == ESlotType::Skill && SkillComp)
 	{
-	case ESlotType::Skill:
-	{
-		if (Type != ESlotType::Skill) return;
+		if (SkillComp->GetSkillIDBySlotIndex(2) == 0) return;
 
-		if (SkillComp)
-		{
-			// 넥스트 슬롯이 0인지 확인
-			if (SkillComp->GetSkillIDBySlotIndex(2) == 0)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("넥스트 슬롯이 비어있어 교체할 수 없습니다."));
-				return;
-			}
+		// 1. 실제 데이터 스왑
+		SkillComp->SwapSkills();
 
-			// 실제 스왑 실행
-			SkillComp->SwapSkills();
-		}
-		break;
+		// 2. 스왑 후의 데이터를 가져와서 정확하게 보고
+		int32 S1_ID = SkillComp->GetSkillIDBySlotIndex(1);
+		int32 S2_ID = SkillComp->GetSkillIDBySlotIndex(2);
 
+		// GetSkillDataByID가 Const 포인터나 레퍼런스를 반환하는지 확인 필수
+		SkillComp->OnSkillSlotUpdated.Broadcast(1, S1_ID, *SkillComp->GetSkillDataByID(S1_ID));
+		SkillComp->OnSkillSlotUpdated.Broadcast(2, S2_ID, *SkillComp->GetSkillDataByID(S2_ID));
 	}
-	case ESlotType::Consumable:
-		CurrentConsumableSlot = (CurrentConsumableSlot % MaxConsumableSlots) + 1;
-		UE_LOG(LogTemp, Log, TEXT("Consumable Slot Switched: %d"), CurrentConsumableSlot);
-		break;
-
-
-	case ESlotType::Potion:
-		CurrentPotionSlot = (CurrentPotionSlot % MaxPotionSlots) + 1;
-		UE_LOG(LogTemp, Log, TEXT("Potion Slot Switched: %d"), CurrentPotionSlot);
-		break;
-	}
-
-	// 현재 슬롯(1번) 정보 갱신
-	SkillComp->OnSkillSlotUpdated.Broadcast(1, SkillComp->CurrentSkillSlot, *SkillComp->GetSkillDataByID(SkillComp->CurrentSkillSlot));
-	// 다음 슬롯(2번) 정보 갱신
-	SkillComp->OnSkillSlotUpdated.Broadcast(2, SkillComp->NextSkillSlot, *SkillComp->GetSkillDataByID(SkillComp->NextSkillSlot));
 }
 
 void UT3CombatComponent::ExecuteCurrentSlotAction(ESlotType Type)
@@ -767,3 +783,45 @@ void UT3CombatComponent::RequestUpdateSkill(int32 SkillID, bool bIsEquip)
 	}
 }
 
+
+
+// 팔라딘 전용 신성 게이지 로직
+
+void UT3CombatComponent::AddHolyGauge(float Amount)
+{
+	if (bIsHolyMode) return; // 이미 강화 상태면 무시
+
+	HolyGauge = FMath::Clamp(HolyGauge + Amount, 0.f, MaxHolyGauge);
+
+	// UI 업데이트 델리게이트 호출
+	OnHolyGaugeChanged.Broadcast(HolyGauge, MaxHolyGauge);
+
+	if (HolyGauge >= MaxHolyGauge)
+	{
+		ActivateHolyMode();
+	}
+}
+
+void UT3CombatComponent::ActivateHolyMode()
+{
+	bIsHolyMode = true;
+	
+	// 1. 공격 속도/딜레이 감소 적용
+	AttackSpeedMultiplier += 0.2f;
+
+	// 2. 20초 뒤 복구 예약
+	GetWorld()->GetTimerManager().SetTimer(HolyModeTimerHandle, this, &UT3CombatComponent::DeactivateHolyMode, 20.f, false);
+
+	UE_LOG(LogTemp, Warning, TEXT("Holy Mode Activated!"));
+}
+
+void UT3CombatComponent::DeactivateHolyMode()
+{
+	bIsHolyMode = false;
+	HolyGauge = 0.f; // 게이지 소모
+
+	// 1. 공격 속도/딜레이 리셋
+	AttackSpeedMultiplier = 1.0f;
+	OnHolyGaugeChanged.Broadcast(HolyGauge, MaxHolyGauge);
+	UE_LOG(LogTemp, Warning, TEXT("Holy Mode Deactivated!"));
+}

@@ -55,7 +55,7 @@ void UT3TitleLevelWidget::OnClickLoadButton()
 		return;
 	}
 	
-	ConfirmPanel->ShowConfirmPanel(TEXT("TODO : 저장된 게임 불러오기 문구 추가"));
+	ConfirmPanel->ShowConfirmPanel(TEXT("저장된 게임을 불러옵니다."));
 	ConfirmPanel->OnClickConfirmButtonAction.AddDynamic(TitlePlayerController, &AT3TitlePlayerController::MoveToLastSavedLevel);
 }
 

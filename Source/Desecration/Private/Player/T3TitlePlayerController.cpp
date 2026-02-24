@@ -57,7 +57,7 @@ void AT3TitlePlayerController::MoveToSelectClassLevel()
 }
 
 void AT3TitlePlayerController::MoveToLastSavedLevel()
-{
+{	
 	TitleGameMode->MoveToLastSavedLevel();
 }
 

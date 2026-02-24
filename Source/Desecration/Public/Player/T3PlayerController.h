@@ -7,10 +7,12 @@
 #include "InputActionValue.h"
 #include "T3PlayerController.generated.h"
 
+class UT3ShopComponent;
 class UT3PopUpMenu;
 class UInputMappingContext;
 class UInputAction;
 class UUserWidget;
+class UT3ShopWidget;
 
 UCLASS()
 class DESECRATION_API AT3PlayerController : public APlayerController
@@ -20,6 +22,8 @@ class DESECRATION_API AT3PlayerController : public APlayerController
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
+
+
 
 	// 에디터에서 할당할 위젯 클래스
 	UPROPERTY(EditAnywhere, Category = "UI")
@@ -83,12 +87,28 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "UI")
 	TObjectPtr<UT3PopUpMenu> PopUpMenu;
 	
-	UPROPERTY(EditDefaultsOnly, Category="UI")
-	TSubclassOf<UUserWidget> HUDSlotWidgetClass;
-	
-	UPROPERTY(BlueprintReadOnly, Category="UI")
-	TObjectPtr<UUserWidget> HUDSlotWidget;
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<class UT3HolyGaugeWidget> HolyGaugeWidgetClass;
 
+	UPROPERTY(BlueprintReadOnly, Category = "UI")
+	TObjectPtr<class UT3HolyGaugeWidget> HolyGaugeWidget;
+
+	UPROPERTY(EditDefaultsOnly, Category="UI")
+	TSubclassOf<class UT3HUDSlotWidget> HUDSlotWidgetClass;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UT3ShopWidget> ShopWidgetClass;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "UI")
+	TObjectPtr<UT3ShopWidget> ShopWidget;
+	
+public:
+	UPROPERTY(BlueprintReadOnly, Category="UI")
+	TObjectPtr<class UT3HUDSlotWidget> HUDSlotWidget;
+
+	void ShowShopUI(UT3ShopComponent* ShopComp);
+	
+protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> ChangeSkillSlotAction;
 	UPROPERTY(EditAnywhere, Category = "Input")
@@ -104,9 +124,6 @@ protected:
 
 	TObjectPtr<class AT3CharacterBase> OwnerChar;
 	TObjectPtr<class UT3CombatComponent> Combat;
-
-
-
 
 private:
 	bool bIsInventoryOpen = false;
