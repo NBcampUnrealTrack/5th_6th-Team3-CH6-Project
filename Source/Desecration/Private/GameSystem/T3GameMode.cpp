@@ -151,7 +151,11 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 
 	// 2. 위치 설정 (타이머를 사용하여 지연 실행)
 	// 랜드스케이프가 렌더링/물리 데이터를 준비할 시간을 0.2초 정도 벌어줍니다.
+#ifdef IF_WITH_EDITOR
+	if (!T3GameInstance->bDoNotMoveCharacterBySavedData && SaveGame->bSetLocation)
+#else
 	if (SaveGame->bSetLocation)
+#endif
 	{
 		SaveGame->bSetLocation = false; // 플래그 초기화
 

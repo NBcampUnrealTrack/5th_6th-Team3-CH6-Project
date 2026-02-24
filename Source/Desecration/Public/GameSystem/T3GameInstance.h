@@ -68,6 +68,10 @@ public:
 	
 	//캐릭터 데이터
 	FORCEINLINE TObjectPtr<UT3CharacterDataAsset> GetCharacterData() { return CharacterData; }
+	
+	//에디터용 : 캐릭터의 위치를 저장 데이터의 영향을 받지 않게 하려면 이 값을 true로 설정
+    UPROPERTY(EditDefaultsOnly, Category = "Only For Test")
+    bool bDoNotMoveCharacterBySavedData = false;
 
 private:
 	//현재 설정
@@ -92,11 +96,11 @@ private:
 	//캐릭터 데이터
 	UPROPERTY(EditDefaultsOnly, Category = "Character Data", meta = (AllowPrivateAccess = true))
 	TObjectPtr<UT3CharacterDataAsset> CharacterData;
-	
-	//저장, 불러오기에 사용할 슬롯 이름
-	const FString SAVE_GAME_NAME = TEXT("SaveSlot1");
-	
+
 	// T3GameInstance.h
 	UPROPERTY(EditAnywhere, Category = "Level Settings")
 	TMap<ELevelName, TSoftObjectPtr<UWorld>> LevelMap;
+
+	//저장, 불러오기에 사용할 슬롯 이름
+	const FString SAVE_GAME_NAME = TEXT("SaveSlot1");
 };
