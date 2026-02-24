@@ -20,6 +20,12 @@ bIsPowerPotionActive(false),
 bIsDefensePotionActive(false),
 bIsSpeedPotionActive(false),
 bIsBerserkPotionActive(false),
+bIsHPPotionCooldown(false),
+bIsMPPotionCooldown(false),
+bIsPowerPotionCooldown(false),
+bIsDefensePotionCooldown(false),
+bIsSpeedPotionCooldown(false),
+bIsBerserkPotionCooldown(false),
 RecoverHPInterval(0.05f),
 RecoverHPTickCount(0.f),
 RecoverHPPerTick(0.f),
@@ -88,6 +94,8 @@ void UT3ItemUseComponent::EndSpeedPotionEffect()
 
 void UT3ItemUseComponent::EndBerserkPotionEffect()
 {
+	bIsBerserkPotionActive = false;
+	
 	if (bIsPowerPotionActive)
 	{
 		OwnerCharacter->SetAttackPower(OriginalPowerValue * PendingPowerValue);
@@ -106,8 +114,6 @@ void UT3ItemUseComponent::EndBerserkPotionEffect()
 		OwnerCharacter->SetDefense(OriginalDefenseValue);
 	}
 	
-	bIsBerserkPotionActive = false;
-	
 	UE_LOG(LogTemp, Error, TEXT("광전사 포션 종료. 현재 공격력: %f, 방어력: %f"), OwnerCharacter->GetAttackPower(), OwnerCharacter->GetDefense());
 }
 
@@ -121,7 +127,7 @@ void UT3ItemUseComponent::EndHPPotionCoolTime()
 
 void UT3ItemUseComponent::ClearHPPotionCoolTime()
 {
-	bIsHPPotionActive = false;
+	bIsHPPotionCooldown = false;
 	UE_LOG(LogTemp, Error, TEXT("체력 포션을 사용할 수 있습니다."));
 }
 
@@ -134,7 +140,7 @@ void UT3ItemUseComponent::EndMPPotionCoolTime()
 
 void UT3ItemUseComponent::ClearMPPotionCoolTime()
 {
-	bIsMPPotionActive = false;
+	bIsMPPotionCooldown = false;
 	UE_LOG(LogTemp, Error, TEXT("마나 포션을 사용할 수 있습니다."));
 }
 
@@ -147,7 +153,7 @@ void UT3ItemUseComponent::EndPowerPotionCoolTime()
 
 void UT3ItemUseComponent::ClearPowerPotionCoolTime()
 {
-	bIsPowerPotionActive = false;
+	bIsPowerPotionCooldown = false;
 	UE_LOG(LogTemp, Error, TEXT("공격력 포션을 사용할 수 있습니다."));
 }
 
@@ -160,7 +166,7 @@ void UT3ItemUseComponent::EndDefensePotionCoolTime()
 
 void UT3ItemUseComponent::ClearDefensePotionCoolTime()
 {
-	bIsDefensePotionActive = false;
+	bIsDefensePotionCooldown = false;
 	UE_LOG(LogTemp, Error, TEXT("방어력 포션을 사용할 수 있습니다."));
 }
 
@@ -173,7 +179,7 @@ void UT3ItemUseComponent::EndSpeedPotionCoolTime()
 
 void UT3ItemUseComponent::ClearSpeedPotionCoolTime()
 {
-	bIsSpeedPotionActive = false;
+	bIsSpeedPotionCooldown = false;
 	UE_LOG(LogTemp, Error, TEXT("신속 포션을 사용할 수 있습니다."));
 }
 
@@ -186,11 +192,11 @@ void UT3ItemUseComponent::EndBerserkPotionCoolTime()
 
 void UT3ItemUseComponent::ClearBerserkPotionCoolTime()
 {
-	bIsBerserkPotionActive = false;
+	bIsBerserkPotionCooldown = false;
 	UE_LOG(LogTemp, Error, TEXT("광전사 포션을 사용할 수 있습니다."));
 }
 
-void UT3ItemUseComponent::PlayItemUseEffect(FT3ConsumableItemData ItemData)
+void UT3ItemUseComponent::PlayItemUseEffect(const FT3ConsumableItemData& ItemData)
 {
 	if (IsValid(ItemData.UseEffect) && IsValid(OwnerCharacter))
 	{
@@ -259,7 +265,7 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 	{
 	case EEffectType::HP:
 		{
-			if (bIsHPPotionActive)
+			if (bIsHPPotionCooldown)
 			{
 				UE_LOG(LogTemp, Error, TEXT("[%s]은 쿨타임 입니다."), *ItemData.ItemData.Name.ToString()); // 쿨타임 계산 로직 필요하면 나중에 추가예정
 	
@@ -267,7 +273,7 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 			}
 			else
 			{
-				bIsHPPotionActive = true;
+				bIsHPPotionCooldown = true;
 				
 				RecoverHPAmount = ItemData.BuffValue; // + 포션 수치 강화된 값
 			
@@ -299,7 +305,7 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 		}
 	case EEffectType::MP:
 		{
-			if (bIsMPPotionActive)
+			if (bIsMPPotionCooldown)
 			{
 				UE_LOG(LogTemp, Error, TEXT("[%s]은 쿨타임 입니다."), *ItemData.ItemData.Name.ToString()); // 쿨타임 계산 로직 필요하면 나중에 추가예정
 
@@ -307,7 +313,7 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 			}
 			else
 			{
-				bIsMPPotionActive = true;
+				bIsMPPotionCooldown = true;
 				
 				RecoverMPAmount = ItemData.BuffValue; // + 포션 수치 강화된 값
 			
@@ -339,7 +345,7 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 		}
 	case EEffectType::Power:
 		{
-			if (bIsPowerPotionActive)
+			if (bIsPowerPotionCooldown)
 			{
 				UE_LOG(LogTemp, Error, TEXT("[%s]은 쿨타임 입니다."), *ItemData.ItemData.Name.ToString()); // 쿨타임 계산 로직 필요하면 나중에 추가예정
 				
@@ -347,7 +353,7 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 			}
 			else
 			{
-				bIsPowerPotionActive = true;
+				bIsPowerPotionCooldown = true;
 				
 				PendingPowerValue = ItemData.BuffValue;
 				
@@ -389,7 +395,7 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 		}
 	case EEffectType::Defense:
 		{
-			if (bIsDefensePotionActive)
+			if (bIsDefensePotionCooldown)
 			{
 				UE_LOG(LogTemp, Error, TEXT("[%s]은 쿨타임 입니다."), *ItemData.ItemData.Name.ToString());
 				
@@ -397,7 +403,7 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 			}
 			else
 			{
-				bIsDefensePotionActive = true;
+				bIsDefensePotionCooldown = true;
 				
 				PendingDefenseValue = ItemData.BuffValue;
 				
@@ -437,7 +443,7 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 		}
 	case EEffectType::Speed:
 		{
-			if (bIsSpeedPotionActive)
+			if (bIsSpeedPotionCooldown)
 			{
 				UE_LOG(LogTemp, Error, TEXT("[%s]은 쿨타임 입니다."), *ItemData.ItemData.Name.ToString());
 				
@@ -445,7 +451,7 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 			}
 			else
 			{
-				bIsSpeedPotionActive = true;
+				bIsSpeedPotionCooldown = true;
 				
 				PendingSpeedValue = ItemData.BuffValue;
 				
@@ -477,7 +483,7 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 		}
 	case EEffectType::Berserk:
 		{
-			if (bIsBerserkPotionActive)
+			if (bIsBerserkPotionCooldown)
 			{
 				UE_LOG(LogTemp, Error, TEXT("[%s]은 쿨타임 입니다."), *ItemData.ItemData.Name.ToString());
 				
@@ -485,7 +491,7 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 			}
 			else
 			{
-				bIsBerserkPotionActive = true;
+				bIsBerserkPotionCooldown = true;
 				
 				PendingBerserkPowerValue = ItemData.BuffValue;
 				PendingBerserkDefenseValue = ItemData.DebuffValue;

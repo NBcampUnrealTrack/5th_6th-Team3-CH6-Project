@@ -6,6 +6,7 @@
 #include "T3ConsumableItemData.generated.h"
 
 class UNiagaraSystem;
+class UStaticMesh;
 
 UENUM(BlueprintType)
 enum class EEffectType : uint8
@@ -43,5 +44,8 @@ struct FT3ConsumableItemData : public FTableRowBase
 	float CoolTime = 0.f; // 쿨타임
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VFX")
-	UNiagaraSystem* UseEffect = nullptr; // 재생할 이펙트
+	TObjectPtr<UNiagaraSystem> UseEffect = nullptr; // 재생할 이펙트
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mesh")
+	TObjectPtr<UStaticMesh> StaticMesh = nullptr; // 포션 사용 애니메이션 재생 시 메시
 };

@@ -72,8 +72,8 @@ protected:
 	UFUNCTION(BlueprintCallable, Category="UI")
 	void SetInventoryOpen(bool bIsOpen);
 	
-	UFUNCTION(BlueprintPure, Category="UI")
-	bool IsInventoryOpen() const { return bIsInventoryOpen; }
+	UFUNCTION(BlueprintCallable, Category="UI")
+	void SetShopUIOpen(bool bIsOpen);
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUserWidget> CombatWidgetClass;
@@ -128,6 +128,7 @@ protected:
 
 private:
 	bool bIsInventoryOpen = false;
+	bool bIsShopUIOpen = false;
 	void Input_Move(const FInputActionValue& Value);
 	void Input_Look(const FInputActionValue& Value);
 
