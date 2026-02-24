@@ -322,6 +322,7 @@ void AT3PlayerController::Input_ActivePotionSlot(const FInputActionValue& Value)
 	
 	if (IsValid(OwnerChar))
 	{
+		OwnerChar->InventoryComponent->	ConsumableItemType = EConsumableItemType::Recover;
 		OwnerChar->OnActivatePotion();
 	}
 }
@@ -332,7 +333,8 @@ void AT3PlayerController::Input_ActiveConsumableSlot(const FInputActionValue& Va
 	
 	if (IsValid(OwnerChar))
 	{
-		OwnerChar->InventoryComponent->UseEquippedItem();
+		OwnerChar->InventoryComponent->	ConsumableItemType = EConsumableItemType::Buff;
+		OwnerChar->OnActivatePotion();
 	}
 }
 

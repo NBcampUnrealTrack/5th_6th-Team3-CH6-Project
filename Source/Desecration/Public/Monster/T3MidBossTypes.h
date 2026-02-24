@@ -19,7 +19,8 @@ enum class EMidBossPatternCategory : uint8
 	Melee		UMETA(DisplayName = "Melee"),
 	Ranged		UMETA(DisplayName = "Ranged"),
 	Skill		UMETA(DisplayName = "Skill"),
-	Evasion		UMETA(DisplayName = "Evasion")
+	Evasion		UMETA(DisplayName = "Evasion"),
+	GapCloser	UMETA(DisplayName = "GapCloser")
 };
 
 // ============================================================

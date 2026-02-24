@@ -436,6 +436,14 @@ void AT3CharacterBase::Roll(const FInputActionValue& Value)
 		PlayerInputState.RollDirection = GetRollDirection(CurrentAngle);
 
 		OnRollTriggered();
+
+
+
+		// 팔라딘의 경우 신의 심판 시전 중 구르면 스킬 캔슬
+		if (GetCurrentClass() == ECharacterClass::Paladin)
+		{
+				Combat->GetSkillComponent()->CancelCurrentSkill();
+		}
 	}
 }
 
