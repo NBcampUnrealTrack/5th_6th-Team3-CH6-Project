@@ -292,7 +292,7 @@ void AT3PlayerController::Input_ChangeSkillSlot(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_ChangePotionSlot(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || bIsShopUIOpen || !OwnerChar->CanExecuteAction()) { return; }
+	if (bIsInventoryOpen || bIsShopUIOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsUsingItem) { return; }
 	
 	if (IsValid(OwnerChar))
 	{
@@ -302,7 +302,7 @@ void AT3PlayerController::Input_ChangePotionSlot(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_ChangeConsumableSlot(const FInputActionValue& Value)
 {
-	if (!OwnerChar->CanExecuteAction()) { return; }
+	if (!OwnerChar->CanExecuteAction() || OwnerChar->bIsUsingItem) { return; }
 	
 	if (IsValid(OwnerChar))
 	{

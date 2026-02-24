@@ -557,7 +557,7 @@ void UT3InventoryComponent::UseCurrentPotion()
 
 void UT3InventoryComponent::SwapHPMPSlot()
 {
-	if (CurrentPotionID == NAME_None || OwnerCharacter->bIsUsingItem)
+	if (CurrentPotionID == NAME_None)
 	{
 		return;
 	}
