@@ -225,6 +225,7 @@ int32 UT3InventoryComponent::SetMoney(int32 NewMoney)
 {
 	Money = NewMoney;
 	
+	OnMoneyUpdated.Broadcast(Money);
 	return Money;
 }
 

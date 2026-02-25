@@ -14,6 +14,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSwapRecoverSlot);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRecoverItemUsed);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCooldownUpdated, FName, ItemID, float, RemainingTime);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCooldownProgressUpdated, FName, ItemID, float, Progress);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMoneyUpdated, int32, NewMoney);
 
 UENUM(BlueprintType)
 enum class EConsumableItemType : uint8
@@ -83,6 +84,9 @@ public:
 	
 	UPROPERTY(BlueprintAssignable, Category = "Cooldown")
 	FOnCooldownProgressUpdated OnCooldownProgressUpdated;
+	
+	UPROPERTY(BlueprintAssignable, Category = "Money")
+	FOnMoneyUpdated OnMoneyUpdated;
 	
 	UPROPERTY(BlueprintReadOnly)
 	EConsumableItemType ConsumableItemType = EConsumableItemType::None;
