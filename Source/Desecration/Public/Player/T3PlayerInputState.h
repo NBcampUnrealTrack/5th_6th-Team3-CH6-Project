@@ -1,4 +1,4 @@
-// T3PlayerInputState.h
+﻿// T3PlayerInputState.h
 
 #pragma once
 
@@ -23,6 +23,7 @@ UENUM(BlueprintType)
 enum class ECharacterClass : uint8
 {
 	Paladin,
+	Taoist
 };
 
 UENUM(BlueprintType)
