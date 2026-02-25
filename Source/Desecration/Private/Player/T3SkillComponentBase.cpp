@@ -16,7 +16,6 @@ void UT3SkillComponentBase::ExecuteSkill(int32 SkillSlot)
 {
 }
 
-
 void UT3SkillComponentBase::SetSkillSlot(int32 NewSkillID, bool bIsEquip)
 {
     if (bIsEquip)

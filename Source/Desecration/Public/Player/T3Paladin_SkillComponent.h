@@ -11,6 +11,7 @@
 class AT3SwordWaveProjectile;
 class UAnimMontage;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHolyModeChanged, bool, bIsActive);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class DESECRATION_API UT3Paladin_SkillComponent : public UT3SkillComponentBase
@@ -50,6 +51,38 @@ private:
     void OnSkillMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 		
 
+
+    // 패시브_신성 게이지
+public:
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Paladin|Stats")
+    float HolyGauge = 0.f; // 신성 게이지
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Paladin|Stats")
+    float MaxHolyGauge = 100.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Paladin|Stats")
+    bool bIsHolyMode = false; // 100 달성 시 강화 상태 여부
+
+
+
+    FTimerHandle HolyModeTimerHandle;
+
+    UPROPERTY(BlueprintAssignable, Category = "HolyMode")
+    FOnHolyModeChanged OnHolyModeChanged;
+
+
+
+    // 게이지 추가 함수 (패링/막기 시 호출)
+    UFUNCTION(BlueprintCallable, Category = "Paladin|Logic")
+    void AddHolyGauge(float Amount);
+
+    // 강화 모드 시작
+    void ActivateHolyMode();
+
+    // 강화 모드 종료
+    void DeactivateHolyMode();
+
+    virtual void AddResource(float Amount) override;
 
 
 
