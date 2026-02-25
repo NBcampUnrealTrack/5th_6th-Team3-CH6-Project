@@ -35,54 +35,8 @@ void UT3SettingsPanel::NativeConstruct()
 		return;
 	}
 	
-	//슬라이더 바인딩
-	BGMSlider->OnValueChanged.AddDynamic(this, &ThisClass::WhileMovingBGMSlider);
-	SESlider->OnValueChanged.AddDynamic(this, &ThisClass::WhileMovingSESlider);
-	MouseSensitivitySlider->OnValueChanged.AddDynamic(this, &ThisClass::WhileMovingMouseSensitivitySlider);
-	
-	//콤보박스 바인딩
-	ResolutionComboBox->OnSelectionChanged.AddDynamic(this, &ThisClass::OnSelectResolutionComboBox);
-	ScreenModeComboBox->OnSelectionChanged.AddDynamic(this, &ThisClass::OnSelectScreenModeComboBox);
-	GraphicQualityComboBox->OnSelectionChanged.AddDynamic(this, &ThisClass::OnSelectGraphicQualityComboBox);
-	
 	//버튼 바인딩
-	ResetButton->OnClicked.AddDynamic(this, &ThisClass::OnClickResetButton);
 	ConfirmButton->OnClicked.AddDynamic(this, &ThisClass::OnClickConfirmButton);
-}
-
-void UT3SettingsPanel::WhileMovingBGMSlider(float value)
-{
-	
-}
-
-void UT3SettingsPanel::WhileMovingSESlider(float value)
-{
-	
-}
-
-void UT3SettingsPanel::WhileMovingMouseSensitivitySlider(float value)
-{
-	
-}
-
-void UT3SettingsPanel::OnSelectResolutionComboBox(FString SelectedItem, ESelectInfo::Type SelectionType)
-{
-	
-}
-
-void UT3SettingsPanel::OnSelectScreenModeComboBox(FString SelectedItem, ESelectInfo::Type SelectionType)
-{
-	
-}
-
-void UT3SettingsPanel::OnSelectGraphicQualityComboBox(FString SelectedItem, ESelectInfo::Type SelectionType)
-{
-	
-}
-
-void UT3SettingsPanel::OnClickResetButton()
-{
-	
 }
 
 void UT3SettingsPanel::OnClickConfirmButton()

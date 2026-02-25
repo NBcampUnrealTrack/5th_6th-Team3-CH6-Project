@@ -2,6 +2,15 @@
 
 #include "CoreMinimal.h"
 
+//게임 언어
+UENUM(BlueprintType)
+enum class ELanguage : uint8
+{
+	English UMETA(DisplayName = "English"),
+	Korean UMETA(DisplayName = "한국어"),
+};
+ENUM_RANGE_BY_FIRST_AND_LAST(ELanguage, ELanguage::English, ELanguage::Korean);
+
 //해상도 목록
 UENUM()
 enum class ET3Resolution
