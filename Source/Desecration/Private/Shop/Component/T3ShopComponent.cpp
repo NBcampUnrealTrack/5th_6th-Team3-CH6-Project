@@ -116,9 +116,3 @@ void UT3ShopComponent::OpenShop(AT3PlayerController* T3PC)
 	
 	T3PC->ShowShopUI(this);
 }
-
-void UT3ShopComponent::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
