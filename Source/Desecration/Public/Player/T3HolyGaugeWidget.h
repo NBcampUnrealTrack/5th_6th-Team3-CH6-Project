@@ -15,12 +15,15 @@ class DESECRATION_API UT3HolyGaugeWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	void InitializeWidget(class UT3SkillComponentBase* InSkillComp);
+
 	UPROPERTY(meta = (BindWidget))
 	UProgressBar* HolyGaugeBar;
 
 	// 게이지 업데이트 함수
 	UFUNCTION()
-	void UpdateGauge(float CurrentGauge, float MaxGauge);
+	void UpdateGauge(float CurrentGauge);
 
 	virtual void NativeConstruct() override;
 	
