@@ -106,5 +106,5 @@ private:
 	TObjectPtr<USoundCue> HealSound;
 	
 public:
-	bool ApplyConsumableItem(const FT3ConsumableItemData& ItemData);
+	bool ApplyConsumableItem(const FT3ConsumableItemData& ItemData, int32 RecoveryBonus = 0);
 };

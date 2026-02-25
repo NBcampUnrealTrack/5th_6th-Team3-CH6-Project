@@ -8,9 +8,18 @@ UT3InventoryComponent::UT3InventoryComponent()
 	:
 InventorySize(20),
 Money(0),
+HPPotionCount(0),
+MPPotionCount(0),
 NormalStoneCount(0),
 EpicStoneCount(0),
-LegendaryStoneCount(0)
+LegendaryStoneCount(0),
+HPPotionID(NAME_None),
+MPPotionID(NAME_None),
+CurrentPotionID(NAME_None),
+PotionAmountUpgradeLevel(0),
+PotionRecoveryUpgradeLevel(0),
+InitialHPPotionAmount(3),
+InitialMPPotionAmount(3)
 {
 	PrimaryComponentTick.bCanEverTick = false;
 	
@@ -23,9 +32,14 @@ void UT3InventoryComponent::BeginPlay()
 	
 	OwnerCharacter = Cast<AT3CharacterBase>(GetOwner());
 	
+	if (!IsValid(OwnerCharacter))
+	{
+		return;
+	}
+	
 	InitializePotionIDs();
-	SetHPPotionCount(3);
-	SetMPPotionCount(3);
+	SetHPPotionCount(GetMaxHPPotionCount());
+	SetMPPotionCount(GetMaxMPPotionCount());
 	
 	OnInventoryInitialized.Broadcast();
 }
@@ -526,12 +540,12 @@ void UT3InventoryComponent::InitializePotionIDs()
 
 void UT3InventoryComponent::SetHPPotionCount(int32 Count)
 {
-	HPPotionCount = Count;
+	HPPotionCount = FMath::Clamp(Count, 0, GetMaxHPPotionCount());
 }
 
 void UT3InventoryComponent::SetMPPotionCount(int32 Count)
 {
-	MPPotionCount = Count;
+	MPPotionCount = FMath::Clamp(Count, 0, GetMaxMPPotionCount());
 }
 
 void UT3InventoryComponent::UseCurrentPotion()
@@ -650,7 +664,7 @@ void UT3InventoryComponent::UseHPPotion()
 		return;
 	}
 	
-	if (!OwnerCharacter->ItemUseComponent->ApplyConsumableItem(*ItemRow))
+	if (!OwnerCharacter->ItemUseComponent->ApplyConsumableItem(*ItemRow, GetPotionRecoveryBonus()))
 	{
 		return;
 	}
@@ -695,7 +709,7 @@ void UT3InventoryComponent::UseMPPotion()
 		return;
 	}
 	
-	if (!OwnerCharacter->ItemUseComponent->ApplyConsumableItem(*ItemRow))
+	if (!OwnerCharacter->ItemUseComponent->ApplyConsumableItem(*ItemRow, GetPotionRecoveryBonus()))
 	{
 		return;
 	}
@@ -716,4 +730,75 @@ void UT3InventoryComponent::UseMPPotion()
 	MPPotionCount--;
 	
 	OnRecoverItemUsed.Broadcast();
+}
+
+void UT3InventoryComponent::UpgradePotionAmount()
+{
+	PotionAmountUpgradeLevel++;
+	
+	OnPotionUpgraded.Broadcast();
+}
+
+void UT3InventoryComponent::UpgradePotionRecovery()
+{
+	PotionRecoveryUpgradeLevel++;
+	
+	OnPotionUpgraded.Broadcast();
+}
+
+int32 UT3InventoryComponent::GetMaxHPPotionCount() const
+{
+	return InitialHPPotionAmount + PotionAmountUpgradeLevel;
+}
+
+int32 UT3InventoryComponent::GetMaxMPPotionCount() const
+{
+	return InitialMPPotionAmount + PotionAmountUpgradeLevel;
+}
+
+int32 UT3InventoryComponent::GetPotionRecoveryBonus() const
+{
+	return PotionRecoveryUpgradeLevel * 10;
+}
+
+int32 UT3InventoryComponent::GetCurrentHPPotionRecovery() const
+{
+	if (!IsValid(OwnerCharacter) || !IsValid(OwnerCharacter->ItemDataTable))
+	{
+		return -1;
+	}
+	
+	FT3ConsumableItemData* ItemRow =
+		OwnerCharacter->ItemDataTable->FindRow<FT3ConsumableItemData>(HPPotionID, TEXT("GetCurrentHPPotionRecovery"));
+	
+	return ItemRow->BuffValue + GetPotionRecoveryBonus();
+}
+
+int32 UT3InventoryComponent::GetCurrentMPPotionRecovery() const
+{
+	if (!IsValid(OwnerCharacter) || !IsValid(OwnerCharacter->ItemDataTable))
+	{
+		return -1;
+	}
+	
+	FT3ConsumableItemData* ItemRow =
+		OwnerCharacter->ItemDataTable->FindRow<FT3ConsumableItemData>(MPPotionID, TEXT("GetCurrentMPPotionRecovery"));
+	
+	return ItemRow->BuffValue + GetPotionRecoveryBonus();
+}
+
+int32 UT3InventoryComponent::GetPotionAmountUpgradeLevel() const
+{
+	return PotionAmountUpgradeLevel;
+}
+
+int32 UT3InventoryComponent::GetPotionRecoveryUpgradeLevel() const
+{
+	return PotionRecoveryUpgradeLevel;
+}
+
+void UT3InventoryComponent::LoadPotionUpgradeLevel(int32 AmountLevel, int32 RecoveryLevel)
+{
+	PotionAmountUpgradeLevel = AmountLevel;
+	PotionRecoveryUpgradeLevel = RecoveryLevel;
 }
