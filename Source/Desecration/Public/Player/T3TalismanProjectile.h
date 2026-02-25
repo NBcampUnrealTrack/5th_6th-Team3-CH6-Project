@@ -14,8 +14,11 @@ class DESECRATION_API AT3TalismanProjectile : public AActor
 public:	
 
 	AT3TalismanProjectile();
+    virtual void Tick(float DeltaTime) override;
 
 protected:
+    virtual void BeginPlay() override;
+
     // 부적의 외형
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     class UStaticMeshComponent* TalismanMesh;
@@ -27,5 +30,15 @@ protected:
     // 충돌 처리
     UPROPERTY(VisibleAnywhere, Category = "Collision")
     class UBoxComponent* CollisionBox;
+
+    // --- 부적 흔들림 설정 ---
+    UPROPERTY(EditAnywhere, Category = "Movement|SinWave")
+    float Amplitude = 50.f;  // 흔들림 폭
+
+    UPROPERTY(EditAnywhere, Category = "Movement|SinWave")
+    float Frequency = 10.f;  // 흔들림 속도
+
+    float RunningTime = 0.f;
+    FVector InitialRelativeLocation;
 
 };
