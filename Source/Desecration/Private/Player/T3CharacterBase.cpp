@@ -18,7 +18,7 @@
 #include "GameSystem/T3GameMode.h"
 #include "Player/T3PlayerController.h"
 #include "UI/T3HUDSlotWidget.h"
-#include "Player/T3HolyGaugeWidget.h"
+#include "Player/Paladin/T3HolyGaugeWidget.h"
 
 
 AT3CharacterBase::AT3CharacterBase()
@@ -60,44 +60,87 @@ AT3CharacterBase::AT3CharacterBase()
 	LoadTimeAfterDeath = 3.0f;
 }
 
+void AT3CharacterBase::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	// 데이터 에셋이 있다면 엔진이 액터를 완전히 구성한 직후 바로 적용
+	if (CharacterData)
+	{
+		ApplyCharacterData(CharacterData);
+	}
+}
+
+void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)
+{
+	if (!Data) return;
+	
+	// 0. 클래스 저장
+	PlayerInputState.CharacterClass = Data->CharacterClass;
+	CurrentClass = Data->CharacterClass;
+	
+	FString ClassName = UEnum::GetDisplayValueAsText(CurrentClass).ToString();
+	UE_LOG(LogTemp, Log, TEXT("Your Class is: %s"), *ClassName);
+
+	// 1. 외형 변경
+	if (GetMesh() && Data->CharacterMesh)
+	{
+		GetMesh()->SetSkeletalMesh(Data->CharacterMesh);
+	}
+
+	// 2. 무기 장착 (CombatComponent에게 위임)
+	if (CombatComponent)
+	{
+		CombatComponent->InitializeWeapons(Data->WeaponMap);
+	}
+
+	// 3. 스탯 설정
+	MaxHP = Data->MaxHealth;
+	CurrentHP = MaxHP;
+
+	// 4. 스킬 컴포넌트 부착
+	if (Data->SkillComponent)
+	{
+		UActorComponent* ExistingComp = GetComponentByClass(Data->SkillComponent);
+		if (!ExistingComp)
+		{
+			UT3SkillComponentBase* NewSkillComp = NewObject<UT3SkillComponentBase>(this, Data->SkillComponent);
+			if (NewSkillComp)
+			{
+				NewSkillComp->RegisterComponent();
+				
+				if (CombatComponent)
+				{
+					CombatComponent->SetSkillComponent(NewSkillComp);
+				}
+
+				FTimerHandle WidgetInitTimerHandle;
+				GetWorldTimerManager().SetTimer(WidgetInitTimerHandle, [this, NewSkillComp]()
+					{
+						if (AT3PlayerController* PC = GetController<AT3PlayerController>())
+						{
+							if (PC->HUDSlotWidget)
+							{
+								PC->HUDSlotWidget->InitializeWidget(NewSkillComp);
+								
+								
+								if (CurrentClass == ECharacterClass::Paladin)
+								{
+								PC->HolyGaugeWidget->InitializeWidget(NewSkillComp);
+								}
+								UE_LOG(LogTemp, Log, TEXT("Delayed Widget Initialization Success!"));
+							}
+						}
+					}, 1.0f, false);
+			}
+		}
+	}
+}
+
 void AT3CharacterBase::RequestSellItem(const FInventorySlot& SlotData)
 {
 	OnSellItemRequested.Broadcast(SlotData);
 }
-
-//void AT3CharacterBase::BeginPlay()
-//{
-//	Super::BeginPlay();
-//
-//	if (CharacterData)
-//	{
-//		ApplyCharacterData(CharacterData);
-//	}
-//	
-//	//캐릭터 정보 세팅
-//	if (const TObjectPtr<AT3GameMode> T3GameMode = Cast<AT3GameMode>(GetWorld()->GetAuthGameMode()))
-//	{
-//		T3GameMode->SetCharacterBySavedData(this);
-//	}
-//
-//	// 스태미너 자동 회복
-//		GetWorldTimerManager().SetTimer(
-//		StaminaRegenTimerHandle,
-//		this,
-//		&AT3CharacterBase::RegenerateStamina,
-//		StaminaRegenInterval,
-//		true
-//	);
-//
-//		// 시작 시 전투모드 활성화
-//		PlayerInputState.bIsCombatState = true;
-//
-//		
-//		EquipComp->OnEquipmentStatsChanged.AddDynamic(this, &AT3CharacterBase::OnEquipmentStatsUpdated);
-//
-//
-//}
-
 
 void AT3CharacterBase::BeginPlay()
 {
@@ -105,11 +148,6 @@ void AT3CharacterBase::BeginPlay()
 
 	UWorld* World = GetWorld();
 	if (!World) return; // 월드 유효성 검사 추가
-
-	if (CharacterData)
-	{
-		ApplyCharacterData(CharacterData);
-	}
 
 	// GameMode 참조 안전하게 수정
 	if (AT3GameMode* T3GameMode = Cast<AT3GameMode>(World->GetAuthGameMode()))
@@ -318,70 +356,6 @@ void AT3CharacterBase::OnMovementModeChanged(EMovementMode PrevMovementMode, uin
 }
 
 
-void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)
-{
-	if (!Data) return;
-	
-	// 0. 클래스 저장
-	CurrentClass = Data->CharacterClass;
-	
-	FString ClassName = UEnum::GetDisplayValueAsText(CurrentClass).ToString();
-	UE_LOG(LogTemp, Log, TEXT("Your Class is: %s"), *ClassName);
-
-	// 1. 외형 변경
-	if (GetMesh() && Data->CharacterMesh)
-	{
-		GetMesh()->SetSkeletalMesh(Data->CharacterMesh);
-	}
-
-	// 2. 무기 장착 (CombatComponent에게 위임)
-	if (CombatComponent)
-	{
-		CombatComponent->InitializeWeapons(Data->WeaponMap);
-	}
-
-	// 3. 스탯 설정
-	MaxHP = Data->MaxHealth;
-	CurrentHP = MaxHP;
-
-	// 4. 스킬 컴포넌트 부착
-	if (Data->SkillComponent)
-	{
-		UActorComponent* ExistingComp = GetComponentByClass(Data->SkillComponent);
-		if (!ExistingComp)
-		{
-			UT3SkillComponentBase* NewSkillComp = NewObject<UT3SkillComponentBase>(this, Data->SkillComponent);
-			if (NewSkillComp)
-			{
-				NewSkillComp->RegisterComponent();
-				
-				if (CombatComponent)
-				{
-					CombatComponent->SetSkillComponent(NewSkillComp);
-				}
-
-				FTimerHandle WidgetInitTimerHandle;
-				GetWorldTimerManager().SetTimer(WidgetInitTimerHandle, [this, NewSkillComp]()
-					{
-						if (AT3PlayerController* PC = GetController<AT3PlayerController>())
-						{
-							if (PC->HUDSlotWidget)
-							{
-								PC->HUDSlotWidget->InitializeWidget(NewSkillComp);
-								
-								
-								if (CurrentClass == ECharacterClass::Paladin)
-								{
-								PC->HolyGaugeWidget->InitializeWidget(NewSkillComp);
-								}
-								UE_LOG(LogTemp, Log, TEXT("Delayed Widget Initialization Success!"));
-							}
-						}
-					}, 1.0f, false);
-			}
-		}
-	}
-}
 
 void AT3CharacterBase::Move(const FVector2D& Value)
 {
