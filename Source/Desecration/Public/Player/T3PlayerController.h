@@ -90,8 +90,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<class UT3HolyGaugeWidget> HolyGaugeWidgetClass;
 
-	UPROPERTY(BlueprintReadOnly, Category = "UI")
-	TObjectPtr<class UT3HolyGaugeWidget> HolyGaugeWidget;
 
 	UPROPERTY(EditDefaultsOnly, Category="UI")
 	TSubclassOf<class UT3HUDSlotWidget> HUDSlotWidgetClass;
@@ -103,6 +101,9 @@ protected:
 	TObjectPtr<UT3ShopWidget> ShopWidget;
 	
 public:
+	UPROPERTY(BlueprintReadOnly, Category = "UI")
+	TObjectPtr<class UT3HolyGaugeWidget> HolyGaugeWidget;
+
 	UPROPERTY(BlueprintReadOnly, Category="UI")
 	TObjectPtr<class UT3HUDSlotWidget> HUDSlotWidget;
 
