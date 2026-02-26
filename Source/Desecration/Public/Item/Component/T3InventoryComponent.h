@@ -68,6 +68,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	int32 SetMoney(int32 NewMoney);
 	
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory")
+	int32 GetItemCountByItemID(const FName& ItemName);
+	
+	UFUNCTION(BlueprintCallable)
+	void AddItemByCount(const FName& ItemName, int32 Count);
+
+	UFUNCTION(BlueprintCallable)
+	bool RemoveItemByCount(const FName& ItemName, int32 Count);
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TArray<FInventorySlot> Items;
 	

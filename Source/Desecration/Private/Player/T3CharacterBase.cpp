@@ -60,9 +60,9 @@ AT3CharacterBase::AT3CharacterBase()
 	LoadTimeAfterDeath = 3.0f;
 }
 
-void AT3CharacterBase::RequestSellItem(const FInventorySlot& SlotData)
+void AT3CharacterBase::RequestSellItem(const FInventorySlot& SlotData, const int32& Count)
 {
-	OnSellItemRequested.Broadcast(SlotData);
+	OnSellItemRequested.Broadcast(SlotData, Count);
 }
 
 //void AT3CharacterBase::BeginPlay()

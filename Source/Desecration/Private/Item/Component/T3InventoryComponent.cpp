@@ -82,6 +82,11 @@ void UT3InventoryComponent::AddItem(const FName& ItemName)
 			
 			UE_LOG(LogTemp, Log, TEXT("[%s] 1개 추가, 현재 개수: %d"), *ItemName.ToString(), Items[i].ItemStack)
 			
+			if (EquippedItemIDs.Contains(ItemName))
+			{
+				OnEquippedItemChanged.Broadcast();
+			}
+			
 			OnInventoryUpdated.Broadcast();
 			return;
 		}
@@ -241,6 +246,83 @@ int32 UT3InventoryComponent::SetMoney(int32 NewMoney)
 	
 	OnMoneyUpdated.Broadcast(Money);
 	return Money;
+}
+
+int32 UT3InventoryComponent::GetItemCountByItemID(const FName& ItemName)
+{
+	for (FInventorySlot& Item : Items)
+	{
+		if (Item.ItemID == ItemName)
+		{
+			return Item.ItemStack;
+		}
+	}
+	return 0;
+}
+
+void UT3InventoryComponent::AddItemByCount(const FName& ItemName, int32 Count)
+{
+	for (FInventorySlot& Item : Items)
+	{
+		if (Item.ItemID == ItemName)
+		{
+			Item.ItemStack += Count;
+			
+			UE_LOG(LogTemp, Log, TEXT("[%s] %d개 추가됨"), *Item.ItemID.ToString(), Count);
+			
+			if (EquippedItemIDs.Contains(ItemName))
+			{
+				OnEquippedItemChanged.Broadcast();
+			}
+			
+			OnInventoryUpdated.Broadcast();
+			return;
+		}
+	}
+	
+	for (FInventorySlot& Item : Items)
+	{
+		if (Item.ItemID == NAME_None)
+		{
+			Item.ItemID = ItemName;
+			Item.ItemStack = Count;
+			
+			OnInventoryUpdated.Broadcast();
+			return;
+		}
+	}
+}
+
+bool UT3InventoryComponent::RemoveItemByCount(const FName& ItemName, int32 Count)
+{
+	for (FInventorySlot& Item : Items)
+	{
+		if (Item.ItemID == ItemName)
+		{
+			if (Item.ItemStack < Count)
+			{
+				UE_LOG(LogTemp, Error, TEXT("보유한 아이템 개수보다 파는 아이템이 많음"));
+				return false;
+			}
+			
+			Item.ItemStack -= Count;
+			
+			if (Item.ItemStack <= 0)
+			{
+				Item.ItemID = NAME_None;
+				Item.ItemStack = 0;
+				
+				if (EquippedItemIDs.Remove(ItemName) != 0)
+				{
+					OnEquippedItemChanged.Broadcast();
+				}	
+			}
+			OnInventoryUpdated.Broadcast();
+			return true;
+		}
+	}
+	
+	return false;
 }
 
 int32 UT3InventoryComponent::GetNormalStoneCount() const
