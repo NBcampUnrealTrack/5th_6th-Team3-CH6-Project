@@ -1,6 +1,6 @@
 ﻿// T3SwordWaveProjectile.cpp
 
-#include "Player/T3SwordWaveProjectile.h"
+#include "Player/Paladin/T3SwordWaveProjectile.h"
 #include "Components/BoxComponent.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"

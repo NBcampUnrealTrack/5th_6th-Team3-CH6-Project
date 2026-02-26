@@ -41,4 +41,17 @@ protected:
     float RunningTime = 0.f;
     FVector InitialRelativeLocation;
 
+
+    // 충돌 이벤트 함수
+    UFUNCTION()
+    void OnTalismanOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+    UPROPERTY(EditAnywhere, Category = "Combat")
+    float Damage = 20.f;
+
+    UPROPERTY(EditAnywhere, Category = "Effects")
+    class UNiagaraSystem* ExplosionEffect;
+
+    // 중복 히트 방지 리스트
+    TArray<AActor*> HitActors;
 };

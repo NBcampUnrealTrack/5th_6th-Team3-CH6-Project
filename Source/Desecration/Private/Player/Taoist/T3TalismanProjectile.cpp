@@ -1,12 +1,13 @@
 ﻿// T3TalismanProjectile.cpp
 
-#include "Player/T3TalismanProjectile.h"
+#include "Player/Taoist/T3TalismanProjectile.h"
 #include "Components/BoxComponent.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Player/T3CombatComponent.h"
 #include "Player/T3CharacterBase.h"
+#include "Player/Taoist/T3Taoist_SkillComponent.h"
 
 AT3TalismanProjectile::AT3TalismanProjectile()
 {
@@ -25,11 +26,21 @@ AT3TalismanProjectile::AT3TalismanProjectile()
     ProjectileMovement->InitialSpeed = 1500.f;
     ProjectileMovement->MaxSpeed = 1500.f;
     ProjectileMovement->ProjectileGravityScale = 0.0f;
+
+    // n초 후 자동 소멸
+    InitialLifeSpan = 0.8f;
 }
 
 void AT3TalismanProjectile::BeginPlay()
 {
     Super::BeginPlay();
+
+
+    if (CollisionBox)
+    {
+        CollisionBox->OnComponentBeginOverlap.AddDynamic(this, &AT3TalismanProjectile::OnTalismanOverlap);
+    }
+
     // 초기 상대 위치 저장
     if (TalismanMesh)
     {
@@ -60,4 +71,33 @@ void AT3TalismanProjectile::Tick(float DeltaTime)
         NewRotation.Roll = SideOffset * 0.5f;
         TalismanMesh->SetRelativeRotation(NewRotation);
     }
+}
+
+void AT3TalismanProjectile::OnTalismanOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+    // 1. 유효성 검사 (본인 및 소유자 제외, 중복 히트 방지)
+    if (!OtherActor || OtherActor == GetOwner() || HitActors.Contains(OtherActor) || OtherActor == this) return;
+
+    AT3CharacterBase* OwnerChar = Cast<AT3CharacterBase>(GetOwner());
+    if (!OwnerChar) return;
+
+    UT3CombatComponent* Combat = OwnerChar->GetCombatComponent();
+    if (!Combat) return;
+
+    // 2. 히트 리스트 추가
+    HitActors.Add(OtherActor);
+
+    // 3. 데미지 전달 
+    Combat->RequestAttackDamage(OtherActor, Damage);
+    UE_LOG(LogTemp, Log, TEXT("[Talisman] Hit: %s, Damage: %f"), *OtherActor->GetName(), Damage);
+
+    // 4. 폭발 연출 (Niagara)
+    if (ExplosionEffect)
+    {
+        FVector EffectScale(1.f, 1.f, 1.f);
+        UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ExplosionEffect, GetActorLocation(), GetActorRotation(), EffectScale, true );
+    }
+
+    // 5. 소멸 처리 
+    Destroy();
 }

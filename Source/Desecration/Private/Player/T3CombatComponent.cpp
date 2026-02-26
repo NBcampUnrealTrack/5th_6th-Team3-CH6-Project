@@ -26,13 +26,12 @@ UT3CombatComponent::UT3CombatComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = false;
+	bWantsInitializeComponent = true;
 }
 
 void UT3CombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	OwnerChar = Cast<AT3CharacterBase>(GetOwner());
-	SpringArm = OwnerChar->FindComponentByClass<USpringArmComponent>();
 
 	if (OwnerChar)
 	{
@@ -47,6 +46,18 @@ void UT3CombatComponent::BeginPlay()
 		AIPC = OwnerChar->GetController<AController>();
 	}
 
+}
+
+void UT3CombatComponent::InitializeComponent()
+{
+	Super::InitializeComponent();
+
+	// BeginPlay보다 먼저 Owner를 캐싱하여 안전성 확보
+	OwnerChar = Cast<AT3CharacterBase>(GetOwner());
+	if (OwnerChar)
+	{
+		SpringArm = OwnerChar->FindComponentByClass<USpringArmComponent>();
+	}
 }
 
 void UT3CombatComponent::InitializeWeapons(const TMap<EEquipSlot, FWeaponEquipInfo>& WeaponMap)
@@ -491,7 +502,7 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 {
 	if (Damage <= 0.f || !OwnerChar || CurrentState == ECharacterCombatState::Dead) return;
 	if (!DamageCauser || !DamageType) return;
-	
+
 	// 1. [디버그] 공격자 정보 및 데미지 타입 확인
 	FString TypeName = DamageType ? DamageType->GetClass()->GetName() : TEXT("Normal");
 	// GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::White,
@@ -505,95 +516,98 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 	if (FinalDamage <= 0.f)
 	{
 		if (CurrentState == ECharacterCombatState::Dodge)
-		{ }
-			// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Result: [EVADE] - Invincible Frame!"));
+		{
+		}
+		// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Result: [EVADE] - Invincible Frame!"));
 
 		else if (CurrentState == ECharacterCombatState::Parrying)
-		{ }
-		// 패링 성공 시 
-		
-		// 보스에게 스턴치 10 부여
-		AT3BossMonster* HitBoss = Cast<AT3BossMonster>(DamageCauser);
-		if (HitBoss) { HitBoss->Damage(0, 10.f); }
-
-		// 팔라딘의 경우 신성게이지 20 증가
-		if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
 		{
-			SkillComp->AddResource(20.f);
-		}
+			// 패링 성공 시 
 
-		UE_LOG(LogTemp, Display, TEXT("Parrying!"));
+			// 보스에게 스턴치 10 부여
+			AT3BossMonster* HitBoss = Cast<AT3BossMonster>(DamageCauser);
+			if (HitBoss) { HitBoss->Damage(0, 10.f); }
+
+			// 팔라딘의 경우 신성게이지 20 증가
+			if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
+			{
+				SkillComp->AddResource(20.f);
+			}
+			UE_LOG(LogTemp, Display, TEXT("Parrying!"));
 			// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("Result: [PARRY] - Success!"));
-		return;
+			return;
+		}
 	}
-	else if (CurrentState == ECharacterCombatState::Blocking)
-	{
-		// 막기 성공 시
-		
-		// 스태미나 50 차감 후 스태미너 0 이하로 떨어지면 막기 해제
-		ConsumeStamina(50.f);
 
-		if (OwnerChar->GetCurrentStamina() <= 0.f)
+	else if (CurrentState == ECharacterCombatState::Blocking)
 		{
-			EndBlock();
+			// 막기 성공 시
+
+			// 스태미나 50 차감 후 스태미너 0 이하로 떨어지면 막기 해제
+			ConsumeStamina(50.f);
+
+			if (OwnerChar->GetCurrentStamina() <= 0.f)
+			{
+				EndBlock();
+			}
+
+			// 팔라딘이라면 신성 게이지 10 상승
+			if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
+			{
+				SkillComp->AddResource(10.f);
+			}
+
+			/*GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow,
+				FString::Printf(TEXT("Result: [BLOCK] - Reduced Damage: %.1f"), FinalDamage));*/
 		}
 
-		// 팔라딘이라면 신성 게이지 10 상승
+
+
+		// 4. 실제 체력 차감 및 상태 보고
+		float NewHP = FMath::Max(0.f, OwnerChar->GetCurrentHP() - FinalDamage);
+		OwnerChar->SetCurrentHP(NewHP);
+
+		//GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red,
+		//	FString::Printf(TEXT("HP Status: %.1f / %.1f"), NewHP, OwnerChar->GetMaxHP()));
+		UE_LOG(LogTemp, Warning, TEXT("HP Status: %.1f / %.1f"), NewHP, OwnerChar->GetMaxHP());
+		UE_LOG(LogTemp, Display, TEXT("final : %.1f"), FinalDamage);
+
+		// 팔라딘의 경우 신의 심판 시전 중 피격 당하면 스킬 캔슬
 		if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
 		{
-			SkillComp->AddResource(10.f);
+			if (IsValid(SkillComp))
+			{
+				GetSkillComponent()->CancelCurrentSkill();
+				OwnerChar->StopAnimMontage();
+			}
 		}
 
-		/*GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow,
-			FString::Printf(TEXT("Result: [BLOCK] - Reduced Damage: %.1f"), FinalDamage));*/
+		// 사망 판정
+		if (NewHP <= 0.f)
+		{
+			CurrentState = ECharacterCombatState::Dead;
+			// 사망 로직 실행
+			OwnerChar->OnDeath();
+			return;
+		}
+
+
+		// 공격 강도
+		EHitIntensity ReceivedIntensity = Intensity;
+		HitIntensity = ReceivedIntensity;
+
+		// 공격 강도 로그 출력
+		FString IntensityStr = StaticEnum<EHitIntensity>()->GetNameStringByValue((int64)ReceivedIntensity);
+		UE_LOG(LogTemp, Warning, TEXT("피격 강도: %s"), *IntensityStr);
+
+		// 5. 피격 방향 계산 및 출력
+		EHitDirection HitDir = CalculateHitDirection(DamageCauser->GetActorLocation());
+		HitDirection = HitDir;
+		FString DirName = StaticEnum<EHitDirection>()->GetNameStringByValue((int64)HitDir);
+		//GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Orange, FString::Printf(TEXT("Hit Direction: [%s]"), *DirName));
+		//UE_LOG(LogTemp, Warning, TEXT("Hit Direction: [%s]"), *DirName);
 	}
 
-
-
-	// 4. 실제 체력 차감 및 상태 보고
-	float NewHP = FMath::Max(0.f, OwnerChar->GetCurrentHP() - FinalDamage);
-	OwnerChar->SetCurrentHP(NewHP);
-
-	//GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red,
-	//	FString::Printf(TEXT("HP Status: %.1f / %.1f"), NewHP, OwnerChar->GetMaxHP()));
-	   UE_LOG(LogTemp, Warning, TEXT("HP Status: %.1f / %.1f"), NewHP, OwnerChar->GetMaxHP());
-	   UE_LOG(LogTemp, Display, TEXT("final : %.1f"), FinalDamage);
-
-	   // 팔라딘의 경우 신의 심판 시전 중 피격 당하면 스킬 캔슬
-	   if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
-	   {
-		   if (IsValid(SkillComp))
-		   {
-			   GetSkillComponent()->CancelCurrentSkill();
-			   OwnerChar->StopAnimMontage();
-		   }
-	   }
-
-	// 사망 판정
-	if (NewHP <= 0.f)
-	{
-		CurrentState = ECharacterCombatState::Dead;
-		// 사망 로직 실행
-		OwnerChar->OnDeath();
-		return;
-	}
-
-
-	// 공격 강도
-	EHitIntensity ReceivedIntensity = Intensity;
-	HitIntensity = ReceivedIntensity;
-
-	// 공격 강도 로그 출력
-	FString IntensityStr = StaticEnum<EHitIntensity>()->GetNameStringByValue((int64)ReceivedIntensity);
-	UE_LOG(LogTemp, Warning, TEXT("피격 강도: %s"), *IntensityStr);
-
-	// 5. 피격 방향 계산 및 출력
-	EHitDirection HitDir = CalculateHitDirection(DamageCauser->GetActorLocation());
-	HitDirection = HitDir;
-	FString DirName = StaticEnum<EHitDirection>()->GetNameStringByValue((int64)HitDir);
-	//GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Orange, FString::Printf(TEXT("Hit Direction: [%s]"), *DirName));
-	//UE_LOG(LogTemp, Warning, TEXT("Hit Direction: [%s]"), *DirName);
-}
 
 // 피격 데미지 계산
 float UT3CombatComponent::CalculateFinalDamage(float IncomingDamage, const class UDamageType* DamageType, float ReceievedDamageMultiplier)

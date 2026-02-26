@@ -1,7 +1,7 @@
 ﻿// T3HolyGaugeWidget.cpp
 
 
-#include "Player/T3HolyGaugeWidget.h"
+#include "Player/Paladin/T3HolyGaugeWidget.h"
 #include "Components/ProgressBar.h"
 #include "Player/T3CombatComponent.h"
 #include "Player/T3CharacterBase.h"

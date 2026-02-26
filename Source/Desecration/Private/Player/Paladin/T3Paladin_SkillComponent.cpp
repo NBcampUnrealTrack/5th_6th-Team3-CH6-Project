@@ -1,10 +1,10 @@
 ﻿// T3Paladin_SkillComponent.cpp
 
 
-#include "Player/T3Paladin_SkillComponent.h"
+#include "Player/Paladin/T3Paladin_SkillComponent.h"
 #include "GameFramework/Character.h"
 #include "Engine/World.h" 
-#include "Player/T3SwordWaveProjectile.h"
+#include "Player/Paladin/T3SwordWaveProjectile.h"
 #include "Player/T3CharacterBase.h"
 #include "Player/T3CombatComponent.h"
 #include "Kismet/GameplayStatics.h"
