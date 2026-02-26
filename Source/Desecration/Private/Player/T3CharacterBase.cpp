@@ -18,6 +18,7 @@
 #include "GameSystem/T3GameMode.h"
 #include "Player/T3PlayerController.h"
 #include "UI/T3HUDSlotWidget.h"
+#include "Player/T3HolyGaugeWidget.h"
 
 
 AT3CharacterBase::AT3CharacterBase()
@@ -367,6 +368,12 @@ void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)
 							if (PC->HUDSlotWidget)
 							{
 								PC->HUDSlotWidget->InitializeWidget(NewSkillComp);
+								
+								
+								if (CurrentClass == ECharacterClass::Paladin)
+								{
+								PC->HolyGaugeWidget->InitializeWidget(NewSkillComp);
+								}
 								UE_LOG(LogTemp, Log, TEXT("Delayed Widget Initialization Success!"));
 							}
 						}
