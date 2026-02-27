@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Player/T3DamageTypes.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "T3WeaponBase.generated.h"
 
 UCLASS()
@@ -32,6 +33,15 @@ protected:
     // 무기 외형
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Visual")
     TObjectPtr<class UStaticMeshComponent> WeaponMesh;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Visual")
+    TObjectPtr<USkeletalMeshComponent> WeaponSkeletalMesh;
+
+    UFUNCTION(BlueprintCallable, Category = "Visual")
+    USkeletalMeshComponent* GetWeaponSkeletalMesh() const { return WeaponSkeletalMesh; }
+
+    UFUNCTION(BlueprintCallable, Category = "Visual")
+    UStaticMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
 
     float CurrentAttackDamage;
     float StunAmount;

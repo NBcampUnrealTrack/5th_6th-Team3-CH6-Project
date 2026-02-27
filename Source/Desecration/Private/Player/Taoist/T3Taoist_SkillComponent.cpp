@@ -12,6 +12,7 @@
 #include "Engine/OverlapResult.h"
 #include "DrawDebugHelpers.h"
 #include "Components/CapsuleComponent.h"
+#include "Player/Taoist/T3StrongWind.h"
 
 UT3Taoist_SkillComponent::UT3Taoist_SkillComponent()
 { }
@@ -20,7 +21,7 @@ FSkillData* UT3Taoist_SkillComponent::GetSkillDataByID(int32 SkillID)
 {
     switch (SkillID)
     {
-    case 1: return 0;
+    case 1: return &StrongWindData;
     default: return nullptr;
     }
 }
@@ -45,8 +46,9 @@ void UT3Taoist_SkillComponent::ExecuteSkill(int32 SlotNumber)
     {
     case 0: // 빈슬롯
         UE_LOG(LogTemp, Warning, TEXT("There is no skill."));    break;
-    case 1: // 검격
-        //ExecuteSwordWave();    break;
+    case 1: // 장풍
+        ExecuteStrongWind();    
+        break;
 
     default:
         UE_LOG(LogTemp, Warning, TEXT("Unknown Skill ID: %d"), SkillID);   break;
@@ -66,8 +68,12 @@ void UT3Taoist_SkillComponent::ExecuteSkillNotify(int32 Index)
     // 공통 노티파이에서 보낸 Index에 따라 분기
     switch (Index)
     {
+
+    case 1: // 장풍
+        SpawnStrongWind();
+        break;
+
     case 5: // 기본 공격 (부적 날리기)
-        
         SpawnTalisman();
         break;
     }
@@ -114,6 +120,78 @@ void UT3Taoist_SkillComponent::SpawnTalisman()
         if (Talisman)
         {
 
+        }
+    }
+}
+
+void UT3Taoist_SkillComponent::ExecuteStrongWind()
+{
+    // 1. 유효성 검사
+    if (!OwnerChar || !StrongWindData.SkillMontage)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ExecuteStrongWind: OwnerChar or Montage is null!"));
+        return;
+    }
+
+    UAnimInstance* AnimInstance = OwnerChar->GetMesh()->GetAnimInstance();
+    if (AnimInstance)
+    {
+        // 2. 스킬 사용 중 상태 설정
+        bUsingSkill = true;
+
+        // 3. 몽타주 재생
+        float Duration = OwnerChar->PlayAnimMontage(StrongWindData.SkillMontage);
+
+        if (Duration > 0.f)
+        {
+            // 4. 몽타주 종료 델리게이트 바인딩
+            FOnMontageEnded MontageEndedDelegate;
+            MontageEndedDelegate.BindUObject(this, &UT3Taoist_SkillComponent::OnSkillMontageEnded);
+            AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, StrongWindData.SkillMontage);
+
+        }
+        else
+        {
+            bUsingSkill = false;
+        }
+    }
+}
+
+void UT3Taoist_SkillComponent::SpawnStrongWind()
+{
+    if (!StrongWindData.ProjectileClass) // ProjectileClass 변수를 이펙트 액터용으로 재활용
+    {
+        UE_LOG(LogTemp, Warning, TEXT("SpawnStrongWind: 이펙트 액터 클래스가 설정되지 않았습니다!"));
+        return;
+    }
+
+    UWorld* World = GetWorld();
+    if (World && OwnerChar)
+    {
+        // 1. 스폰 위치: 캐릭터 발밑에서 전방으로 약간 띄움
+        FVector SpawnLocation = OwnerChar->GetActorLocation() + (OwnerChar->GetActorForwardVector() * StrongWindSpawnDistance);
+
+        // 2. 스폰 회전: 캐릭터가 보는 방향
+        FRotator SpawnRotation = OwnerChar->GetActorRotation();
+
+        //  디퍼드 스폰 시작 (액터 인스턴스만 생성)
+        AT3StrongWind* StrongWindActor = World->SpawnActorDeferred<AT3StrongWind>(
+            StrongWindData.ProjectileClass,
+            FTransform(SpawnRotation, SpawnLocation),
+            OwnerChar,
+            OwnerChar,
+            ESpawnActorCollisionHandlingMethod::AlwaysSpawn
+        );
+
+        if (StrongWindActor)
+        {
+            // BeginPlay가 호출되기 전에 미리 데미지 전달
+            float FinalDamage = StrongWindData.DamageMultiflier * OwnerChar->GetAttackPower();
+
+            StrongWindActor->SetDamage(FinalDamage);
+
+            // 스폰 완료
+            StrongWindActor->FinishSpawning(FTransform(SpawnRotation, SpawnLocation));
         }
     }
 }
