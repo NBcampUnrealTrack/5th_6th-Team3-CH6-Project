@@ -137,31 +137,31 @@ void UT3UpgradeUIWidget::RefreshUI()
 
 	// 강화 레벨 표시
 	// MAX: "+7 (MAX)" / 그 외: "+3 → +4"
-	if (Txt_Level)
+	if (Txt_CurrentLevel)
 	{
 		if (UIData.bIsMaxLevel)
 		{
-			Txt_Level->SetText(FText::FromString(FString::Printf(TEXT("+%d (MAX)"), UIData.CurrentLevel)));
+			Txt_CurrentLevel->SetText(FText::FromString(FString::Printf(TEXT("+%d (MAX)"), UIData.CurrentLevel)));
 		}
 		else
 		{
-			Txt_Level->SetText(FText::FromString(FString::Printf(TEXT("+%d → +%d"), UIData.CurrentLevel, UIData.CurrentLevel + 1)));
+			Txt_CurrentLevel->SetText(FText::FromString(FString::Printf(TEXT("+%d → +%d"), UIData.CurrentLevel, UIData.CurrentLevel + 1)));
 		}
 	}
 
 	// 스탯 표시
 	// MAX: "공격력: 180" / 그 외: "공격력: 150 → 180"
-	if (Txt_Stat)
+	if (Txt_CurrentStat)
 	{
 		FString StatLabel = (CurrentTab == ET3EquipmentType::Weapon) ? TEXT("공격력") : TEXT("방어력");
 
 		if (UIData.bIsMaxLevel)
 		{
-			Txt_Stat->SetText(FText::FromString(FString::Printf(TEXT("%s: %.0f"), *StatLabel, UIData.CurrentStat)));
+			Txt_CurrentStat->SetText(FText::FromString(FString::Printf(TEXT("%s: %.0f"), *StatLabel, UIData.CurrentStat)));
 		}
 		else
 		{
-			Txt_Stat->SetText(FText::FromString(FString::Printf(TEXT("%s: %.0f → %.0f"), *StatLabel, UIData.CurrentStat, UIData.NextLevelStat)));
+			Txt_CurrentStat->SetText(FText::FromString(FString::Printf(TEXT("%s: %.0f → %.0f"), *StatLabel, UIData.CurrentStat, UIData.NextLevelStat)));
 		}
 	}
 
@@ -195,20 +195,20 @@ void UT3UpgradeUIWidget::RefreshUI()
 	ET3UpgradeStoneGrade NextGrade;
 	bool bHasNextStone = UpgradeStation->GetNextStoneGrade(UIData.CurrentLevel, NextGrade);
 
-	if (Border_NormalStone)
+	if (Border_NormalStoneFocus)
 	{
 		bool bIsSelected = bHasNextStone && NextGrade == ET3UpgradeStoneGrade::Normal;
-		Border_NormalStone->SetBrushColor(bIsSelected ? SelectedBorderColor : DefaultBorderColor);
+		Border_NormalStoneFocus->SetBrushColor(bIsSelected ? SelectedBorderColor : DefaultBorderColor);
 	}
-	if (Border_EpicStone)
+	if (Border_EpicStoneFocus)
 	{
 		bool bIsSelected = bHasNextStone && NextGrade == ET3UpgradeStoneGrade::Epic;
-		Border_EpicStone->SetBrushColor(bIsSelected ? SelectedBorderColor : DefaultBorderColor);
+		Border_EpicStoneFocus->SetBrushColor(bIsSelected ? SelectedBorderColor : DefaultBorderColor);
 	}
-	if (Border_LegendaryStone)
+	if (Border_LegendaryStoneFocus)
 	{
 		bool bIsSelected = bHasNextStone && NextGrade == ET3UpgradeStoneGrade::Legendary;
-		Border_LegendaryStone->SetBrushColor(bIsSelected ? SelectedBorderColor : DefaultBorderColor);
+		Border_LegendaryStoneFocus->SetBrushColor(bIsSelected ? SelectedBorderColor : DefaultBorderColor);
 	}
 
 	// 강화석 보유량 표시
