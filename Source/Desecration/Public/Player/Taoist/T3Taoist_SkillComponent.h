@@ -29,6 +29,9 @@ public:
     UPROPERTY(EditAnywhere, Category = "Skill Data")
     FSkillData EmptySkillData;
 
+    UPROPERTY(EditAnywhere, Category = "Skill Data")
+    FSkillData StrongWindData;
+
 protected:
 
     void OnSkillMontageEnded(UAnimMontage* Montage, bool bInterrupted);
@@ -42,4 +45,12 @@ protected:
 
     // 부적 스폰 로직
     void SpawnTalisman();
+
+
+    // ===== 1스킬 장풍
+
+    void ExecuteStrongWind();
+    void SpawnStrongWind();
+    UPROPERTY(EditAnywhere, Category = "Combat|Skill")
+    float StrongWindSpawnDistance;
 };
