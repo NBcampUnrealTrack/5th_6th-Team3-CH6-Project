@@ -380,7 +380,7 @@ void AT3PlayerController::ShowShopUI(UT3ShopComponent* ShopComp)
     SetInputMode(InputModeGameAndUI);
 
 	ShopWidget->Init(T3Character->InventoryComponent, ShopComp, T3Character);
-	ShopWidget->AddToViewport();
+	ShopWidget->AddToViewport(99);
 	
 	SetShowMouseCursor(true);
 	SetShopUIOpen(true);
