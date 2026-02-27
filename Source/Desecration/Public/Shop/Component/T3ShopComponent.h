@@ -56,6 +56,9 @@ struct FT3ShopItemUIData
 	
 	UPROPERTY(BlueprintReadOnly)
 	uint8 bCanSell : 1 = false;
+	
+	UPROPERTY(BlueprintReadOnly)
+	FText ItemInfo = FText::GetEmpty();
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
