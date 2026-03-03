@@ -4,6 +4,7 @@
 #include "Blueprint/UserWidget.h"
 #include "T3TitleLevelWidget.generated.h"
 
+class UT3SettingsPanel;
 class UT3ConfirmPanel;
 class AT3TitlePlayerController;
 class UTextBlock;
@@ -34,6 +35,13 @@ private:
 	UFUNCTION()
 	void OnClickQuitButton();
 	
+	//설정 패널을 닫을 때 버튼 복구
+	void RestoreTitleButtons();
+	
+	//타이틀 버튼이 있는 세로 박스
+	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
+	TObjectPtr<UWidget> TitleButtonsBox;
+	
 	//새로하기 버튼
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
 	TObjectPtr<UButton> NewGameButton;
@@ -49,6 +57,10 @@ private:
 	//나가기 버튼
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
 	TObjectPtr<UButton> QuitButton;
+	
+	//설정 패널 위젯
+	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
+	TObjectPtr<UT3SettingsPanel> SettingsPanel;
 	
 	//확인 패널
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))

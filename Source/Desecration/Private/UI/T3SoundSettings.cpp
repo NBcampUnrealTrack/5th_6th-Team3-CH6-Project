@@ -3,13 +3,14 @@
 #include "Components/Slider.h"
 #include "Sound/SoundClass.h"
 
-void UT3SoundSettings::NativeConstruct()
+void UT3SoundSettings::CustomNativeConstruct()
 {
-	Super::NativeConstruct();
-	
-	if (!BGMSoundClass || !SESoundClass)
+	//사운드 클래스 가져오기
+	SoundClassBGM = T3GameInstance->GetSoundClassBGM();
+	SoundClassSE = T3GameInstance->GetSoundClassSE();
+	if (!SoundClassBGM || !SoundClassSE)
 	{
-		UE_LOG(LogTemp, Error, TEXT("%s : BGMSoundClass이나 SESoundClass가 null"), *GetNameSafe(this));
+		UE_LOG(LogTemp, Error, TEXT("%s : SoundClassBGM 또는 SoundClassSE를 확인할 수 없음"), *GetNameSafe(this));
 		return;
 	}
 	
@@ -18,18 +19,24 @@ void UT3SoundSettings::NativeConstruct()
 	SESlider->OnValueChanged.AddDynamic(this, &ThisClass::OnValueChangedSESlider);
 }
 
-void UT3SoundSettings::OnValueChangedBGMSlider(float value)
+void UT3SoundSettings::InitializeSettingsPanel()
 {
-	if (BGMSoundClass)
+	BGMSlider->SetValue(SoundClassBGM->Properties.Volume);
+	SESlider->SetValue(SoundClassSE->Properties.Volume);
+}
+
+void UT3SoundSettings::OnValueChangedBGMSlider(const float Value)
+{
+	if (SoundClassBGM)
 	{
-		BGMSoundClass->Properties.Volume = value;
+		SoundClassBGM->Properties.Volume = Value;
 	}
 }
 
-void UT3SoundSettings::OnValueChangedSESlider(float value)
+void UT3SoundSettings::OnValueChangedSESlider(const float Value)
 {
-	if (SESoundClass)
+	if (SoundClassSE)
 	{
-		SESoundClass->Properties.Volume = value;
+		SoundClassSE->Properties.Volume = Value;
 	}
 }

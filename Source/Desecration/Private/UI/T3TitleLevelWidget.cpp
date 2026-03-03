@@ -2,10 +2,9 @@
 
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
-#include "GameSystem/T3GameInstance.h"
-#include "GameSystem/T3TitleGameMode.h"
 #include "Player/T3TitlePlayerController.h"
 #include "UI/T3ConfirmPanel.h"
+#include "UI/T3SettingsPanel.h"
 
 void UT3TitleLevelWidget::NativeConstruct()
 {
@@ -32,6 +31,9 @@ void UT3TitleLevelWidget::NativeConstruct()
 	{
 		LoadButton->SetIsEnabled(false);
 	}
+	
+	//설정 패널을 닫으면 타이틀 버튼을 복구
+	SettingsPanel->OnClosePanel.BindUObject(this, &ThisClass::RestoreTitleButtons);
 }
 
 void UT3TitleLevelWidget::OnClickNewGameButton()
@@ -61,11 +63,17 @@ void UT3TitleLevelWidget::OnClickLoadButton()
 
 void UT3TitleLevelWidget::OnClickSettingsButton()
 {
-	TitlePlayerController->SetActiveSettingsPanel(true);
+	SettingsPanel->OpenSettingsPanel();
+	TitleButtonsBox->SetVisibility(ESlateVisibility::Hidden);
 }
 
 void UT3TitleLevelWidget::OnClickQuitButton()
 {
 	ConfirmPanel->ShowConfirmPanel(QuitGameMessage);
 	ConfirmPanel->OnClickConfirmButtonAction.AddDynamic(TitlePlayerController, &AT3TitlePlayerController::QuitGame);
+}
+
+void UT3TitleLevelWidget::RestoreTitleButtons()
+{
+	TitleButtonsBox->SetVisibility(ESlateVisibility::Visible);
 }

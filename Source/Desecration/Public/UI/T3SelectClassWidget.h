@@ -5,6 +5,7 @@
 #include "GameSystem/GlobalEnums.h"
 #include "T3SelectClassWidget.generated.h"
 
+class UT3GameInstance;
 class UT3InputNamePanel;
 class UHorizontalBox;
 class AT3SelectClassPlayerController;
@@ -44,6 +45,10 @@ private:
 	//이름 입력 패널
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
 	TObjectPtr<UT3InputNamePanel> InputNamePanel;
+	
+	//게임 인스턴스
+	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	TObjectPtr<UT3GameInstance> T3GameInstance;
 	
 	//플레이어 컨트롤러
 	UPROPERTY()
