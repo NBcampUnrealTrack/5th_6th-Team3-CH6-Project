@@ -15,6 +15,9 @@ class DESECRATION_API AT3WeaponBase : public AActor
 	
 public:
     AT3WeaponBase();
+    
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    bool bIsTwoHand = false;
 
     // 무기 콜리젼 활성화/비활성화 함수
     void SetWeaponCollisionEnabled(bool bEnabled, float InDamageMultiplier = 1.f, TSubclassOf<class UT3DamageType_Base> InType = nullptr, EHitIntensity InIntensity = EHitIntensity::Light, float InStunAmount = 0.f, float StaminaAmount = 10.0f);
