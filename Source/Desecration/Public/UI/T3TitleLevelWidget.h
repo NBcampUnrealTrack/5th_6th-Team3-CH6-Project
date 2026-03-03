@@ -74,7 +74,14 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Message", meta = (AllowPrivateAccess = true))
 	FString CheckNewGame;
 	
-	//게임 종료시의 메세지
+	//게임 불러오기시 메세지
+	UPROPERTY(EditDefaultsOnly, Category = "Message", meta = (AllowPrivateAccess = true))
+	FString LoadGameMessage;
+	
+	//게임 종료시 메세지
 	UPROPERTY(EditDefaultsOnly, Category = "Message", meta = (AllowPrivateAccess = true))
 	FString QuitGameMessage;
+	
+	//번역 기능에 사용할 네임스페이스 이름
+	const FString NAMESPACE_NAME = TEXT("ST_BeforeGamePlay");
 };
