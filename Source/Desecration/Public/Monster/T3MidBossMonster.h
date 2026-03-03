@@ -201,6 +201,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "MidBoss|Pattern")
 	bool IsPatternOffCooldown(FName PatternName) const;
 
+	// 패턴 데이터 조회 (ST Condition에서도 사용)
+	const FMidBossAttackPattern* FindPatternData(FName PatternName) const;
+
 #pragma endregion Pattern
 
 	// ============================================================
@@ -265,15 +268,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Parry")
 	float ParryWindowDuration = 1.5f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Parry")
-	TObjectPtr<UAnimMontage> ParryCounterMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Parry")
-	float ParryCounterDamage = 50.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Parry")
-	EHitIntensity ParryCounterIntensity = EHitIntensity::Heavy;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Parry")
 	TObjectPtr<USoundBase> ParrySound;
@@ -485,11 +479,11 @@ private:
 
 	FName CurrentPatternName = NAME_None;
 	int32 CurrentChainIndex = 0;
+	int32 CurrentSubHitIndex = 0;
 
 	UPROPERTY()
 	TMap<FName, double> PatternCooldownExpireMap;
 
-	const FMidBossAttackPattern* FindPatternData(FName PatternName) const;
 	void PlayCurrentChainMontage();
 
 	UFUNCTION()
@@ -501,12 +495,18 @@ private:
 
 	bool ShouldTriggerNotify(FName NotifyName) const;
 
+	// 현재 서브히트 데미지/강도/타입 조회 (SubHits 있으면 인덱스 참조, 없으면 기본값)
+	void GetCurrentHitData(float& OutDamage, EHitIntensity& OutIntensity, TSubclassOf<UT3DamageType_Base>& OutDamageType) const;
+
 #pragma endregion Private_Pattern
 
 #pragma region Private_Combat
 
 	FTimerHandle StunTimerHandle;
 	FTimerHandle ParryWindowTimerHandle;
+
+	// 패링 성공 플래그 — SpawnProjectile 노티파이에서 검기 스킵 판정
+	bool bParrySucceeded = false;
 
 	UAnimMontage* GetDirectionalHitReactMontage(AActor* DamageCauser) const;
 

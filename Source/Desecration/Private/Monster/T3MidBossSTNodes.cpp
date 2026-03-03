@@ -575,6 +575,47 @@ bool FT3STC_PatternOffCooldown::TestCondition(FStateTreeExecutionContext& Contex
 }
 
 // ============================================================
+// Condition: FT3STC_PatternAvailableAtStage
+// 패턴의 RequiredStage ≤ BossStage이면 true
+// ============================================================
+
+bool FT3STC_PatternAvailableAtStage::TestCondition(FStateTreeExecutionContext& Context) const
+{
+	const FT3STC_PatternAvailableAtStageInstanceData& Data = Context.GetInstanceData(*this);
+
+	if (!Data.Boss)
+	{
+		UE_LOG(LogDesecration, Warning, TEXT("T3_ST: PatternAvailableAtStage — Boss가 바인딩되지 않음"));
+		return false;
+	}
+
+	if (Data.PatternName.IsNone())
+	{
+		// 패턴 이름 미설정 시 항상 사용 가능으로 간주
+		return true;
+	}
+
+	const FMidBossAttackPattern* PatternData = Data.Boss->FindPatternData(Data.PatternName);
+	if (!PatternData)
+	{
+		UE_LOG(LogDesecration, Warning, TEXT("T3_ST: PatternAvailableAtStage — 패턴 '%s' 데이터 없음"),
+			*Data.PatternName.ToString());
+		return false;
+	}
+
+	const bool bAvailable = Data.Boss->BossStage >= PatternData->RequiredStage;
+
+	UE_LOG(LogDesecration, Verbose,
+		TEXT("T3_ST: PatternAvailableAtStage('%s') — BossStage:%d >= Required:%d = %s"),
+		*Data.PatternName.ToString(),
+		Data.Boss->BossStage,
+		PatternData->RequiredStage,
+		bAvailable ? TEXT("true") : TEXT("false"));
+
+	return bAvailable;
+}
+
+// ============================================================
 // Condition: FT3STC_DistanceToTarget
 // 타겟과의 거리 비교 — 평가 시점에만 계산 (폴링 없음)
 // ============================================================

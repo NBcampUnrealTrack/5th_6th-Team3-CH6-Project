@@ -59,11 +59,6 @@ bool AT3MidBossMonster::ExecutePattern(FName PatternName)
 	CurrentChainIndex = 0;
 	AddStateTag(TAG_Boss_State_ExecutingPattern);
 
-	if (PatternData->Cooldown > 0.f)
-	{
-		RegisterCooldown(PatternName, PatternData->Cooldown);
-	}
-
 	// 보정기에 패턴 사용 횟수 기록
 	if (NotifyModifier)
 	{
@@ -244,35 +239,61 @@ void AT3MidBossMonster::HandlePatternNotify(FName NotifyName)
 	// --- 판정 ON/OFF (항상 실행) ---
 	else if (Name.Equals(TEXT("AttackStart")))
 	{
-		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: AttackStart 노티파이 수신 (WeaponComponent: %s)"),
-			WeaponComponent ? TEXT("유효") : TEXT("nullptr"));
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: AttackStart 노티파이 수신 (SubHit:%d, WeaponComponent: %s)"),
+			CurrentSubHitIndex, WeaponComponent ? TEXT("유효") : TEXT("nullptr"));
 		if (WeaponComponent) { WeaponComponent->SetAttackCollisionEnabled(true); }
 	}
 	else if (Name.Equals(TEXT("AttackEnd")))
 	{
-		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: AttackEnd 노티파이 수신"));
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: AttackEnd 노티파이 수신 (SubHit:%d)"), CurrentSubHitIndex);
 		if (WeaponComponent) { WeaponComponent->SetAttackCollisionEnabled(false); }
+		// AttackEnd마다 서브히트 인덱스 증가 (다음 AttackStart에서 다음 데미지 사용)
+		CurrentSubHitIndex++;
 	}
-	// --- 투사체 스폰 (검기) ---
+	// --- 투사체 스폰 (검기) — 카운터 패턴이면 스킵 ---
 	else if (Name.Equals(TEXT("SpawnProjectile")))
 	{
-		SpawnBossProjectile();
+		const FMidBossAttackPattern* PatternData = FindPatternData(CurrentPatternName);
+		const bool bIsCounterPattern = PatternData && PatternData->bHasParryWindow;
+
+		if (bIsCounterPattern)
+		{
+			if (bParrySucceeded)
+			{
+				// 플레이어가 때림 → 반격 휘두르기 (검기 안 나감, 근접 판정으로 대체)
+				UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 카운터 발동 — 검기 스킵, 근접 반격"));
+			}
+			else
+			{
+				// 안 때림 → 기 모으다 그냥 종료 (공격 안 함)
+				UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 카운터 패턴 — 반격 미발동, 검기 스킵"));
+			}
+		}
+		else
+		{
+			// 일반 검기 패턴 — 투사체 발사
+			SpawnBossProjectile();
+		}
 	}
 	// --- AoE 장판기 발동 ---
 	else if (Name.Equals(TEXT("GroundSlam")))
 	{
-		const FMidBossAttackPattern* PatternData = FindPatternData(CurrentPatternName);
-		if (PatternData && PatternData->MontageChain.IsValidIndex(CurrentChainIndex))
-		{
-			const FPatternMontageData& MontageData = PatternData->MontageChain[CurrentChainIndex];
-			ExecuteAoEDamage(AoERadius, MontageData.Damage, MontageData.HitIntensity);
-		}
-		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: GroundSlam 노티파이 — AoE 발동 (반경:%.0f)"), AoERadius);
+		float AoEDamage = 20.f;
+		EHitIntensity AoEIntensity = EHitIntensity::Heavy;
+		TSubclassOf<UT3DamageType_Base> AoEDmgType = nullptr;
+		GetCurrentHitData(AoEDamage, AoEIntensity, AoEDmgType);
+		ExecuteAoEDamage(AoERadius, AoEDamage, AoEIntensity);
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: GroundSlam 노티파이 — AoE 발동 (반경:%.0f, 데미지:%.0f, SubHit:%d)"),
+			AoERadius, AoEDamage, CurrentSubHitIndex);
 	}
-	// --- 패링 윈도우 ON/OFF ---
+	// --- 패링 윈도우 ON/OFF — bHasParryWindow 체크 ---
 	else if (Name.Equals(TEXT("ParryWindowStart")))
 	{
-		OpenParryWindow();
+		const FMidBossAttackPattern* PatternData = FindPatternData(CurrentPatternName);
+		if (PatternData && PatternData->bHasParryWindow)
+		{
+			OpenParryWindow();
+		}
 	}
 	else if (Name.Equals(TEXT("ParryWindowEnd")))
 	{
@@ -393,6 +414,37 @@ void AT3MidBossMonster::RegisterCooldown(FName PatternName, float CooldownSecond
 // 내부 함수 (패턴 체인)
 // ============================================================
 
+void AT3MidBossMonster::GetCurrentHitData(float& OutDamage, EHitIntensity& OutIntensity, TSubclassOf<UT3DamageType_Base>& OutDamageType) const
+{
+	const FMidBossAttackPattern* PatternData = FindPatternData(CurrentPatternName);
+	if (!PatternData || !PatternData->MontageChain.IsValidIndex(CurrentChainIndex))
+	{
+		OutDamage = 20.f;
+		OutIntensity = EHitIntensity::Light;
+		OutDamageType = nullptr;
+		return;
+	}
+
+	const FPatternMontageData& MontageData = PatternData->MontageChain[CurrentChainIndex];
+
+	// SubHits 배열에 현재 인덱스가 있으면 서브히트 데이터 사용
+	if (MontageData.SubHits.IsValidIndex(CurrentSubHitIndex))
+	{
+		const FSubHitData& SubHit = MontageData.SubHits[CurrentSubHitIndex];
+		OutDamage = SubHit.Damage;
+		OutIntensity = SubHit.HitIntensity;
+		// 서브히트 DamageType이 nullptr이면 몽타주 기본값 폴백
+		OutDamageType = SubHit.DamageTypeClass ? SubHit.DamageTypeClass : MontageData.DamageTypeClass;
+	}
+	else
+	{
+		// SubHits 비어있거나 인덱스 초과 → 기본값 사용
+		OutDamage = MontageData.Damage;
+		OutIntensity = MontageData.HitIntensity;
+		OutDamageType = MontageData.DamageTypeClass;
+	}
+}
+
 const FMidBossAttackPattern* AT3MidBossMonster::FindPatternData(FName PatternName) const
 {
 	for (const FMidBossAttackPattern& Pattern : AttackPatterns)
@@ -476,6 +528,7 @@ void AT3MidBossMonster::AdvanceChainOrComplete()
 	const FMidBossAttackPattern* PatternData = FindPatternData(CurrentPatternName);
 
 	CurrentChainIndex++;
+	CurrentSubHitIndex = 0;
 
 	if (PatternData && PatternData->MontageChain.IsValidIndex(CurrentChainIndex))
 	{
@@ -495,8 +548,20 @@ void AT3MidBossMonster::AdvanceChainOrComplete()
 
 void AT3MidBossMonster::ResetPatternState()
 {
+	// 쿨다운을 패턴 종료/중단 시점부터 등록 (몽타주 재생 시간이 쿨다운에 포함되지 않도록)
+	if (!CurrentPatternName.IsNone())
+	{
+		const FMidBossAttackPattern* PatternData = FindPatternData(CurrentPatternName);
+		if (PatternData && PatternData->Cooldown > 0.f)
+		{
+			RegisterCooldown(CurrentPatternName, PatternData->Cooldown);
+		}
+	}
+
 	CurrentPatternName = NAME_None;
 	CurrentChainIndex = 0;
+	CurrentSubHitIndex = 0;
+	bParrySucceeded = false;
 	RemoveStateTag(TAG_Boss_State_ExecutingPattern);
 	if (MotionWarpingComponent) { MotionWarpingComponent->RemoveWarpTarget(MotionWarpTargetName); MotionWarpingComponent->RemoveWarpTarget(MotionWarpTargetRotationName); }
 }

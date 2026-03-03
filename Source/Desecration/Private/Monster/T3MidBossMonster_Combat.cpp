@@ -8,6 +8,8 @@
 #include "Monster/T3BossProjectile.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "NiagaraFunctionLibrary.h"
+#include "Components/CapsuleComponent.h"
+#include "DrawDebugHelpers.h"
 
 // ============================================================
 // 데미지 처리
@@ -24,8 +26,9 @@ float AT3MidBossMonster::TakeDamage(float DamageAmount, FDamageEvent const& Dama
 	// 패링 윈도우 활성 시 — 데미지 무효화 + 반격
 	if (IsParryWindowActive())
 	{
-		CloseParryWindow();
+		// ExecuteParryCounter가 먼저 — bParrySucceeded 설정 후 CloseParryWindow
 		ExecuteParryCounter(DamageCauser);
+		CloseParryWindow();
 
 		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 패링 성공! (공격자: %s)"),
 			DamageCauser ? *DamageCauser->GetName() : TEXT("nullptr"));
@@ -265,19 +268,11 @@ void AT3MidBossMonster::SpawnBossProjectile()
 		return;
 	}
 
-	// 현재 패턴의 데미지/강도/타입 사용
+	// 현재 서브히트 데미지 데이터 조회
 	float ProjectileDamage = 30.f;
 	EHitIntensity Intensity = EHitIntensity::Light;
 	TSubclassOf<UT3DamageType_Base> DmgType = nullptr;
-
-	const FMidBossAttackPattern* PatternData = FindPatternData(CurrentPatternName);
-	if (PatternData && PatternData->MontageChain.IsValidIndex(CurrentChainIndex))
-	{
-		const FPatternMontageData& MontageData = PatternData->MontageChain[CurrentChainIndex];
-		ProjectileDamage = MontageData.Damage;
-		Intensity = MontageData.HitIntensity;
-		DmgType = MontageData.DamageTypeClass;
-	}
+	GetCurrentHitData(ProjectileDamage, Intensity, DmgType);
 
 	Projectile->InitializeProjectile(ProjectileDamage, ProjectileSpeed, Intensity, DmgType);
 
@@ -291,13 +286,16 @@ void AT3MidBossMonster::SpawnBossProjectile()
 
 void AT3MidBossMonster::ExecuteAoEDamage(float Radius, float DamageAmount, EHitIntensity Intensity)
 {
+	// AoE 중심 = 보스 발밑 (캡슐 하단)
+	const FVector AoECenter = GetActorLocation() - FVector(0.0, 0.0, static_cast<double>(GetCapsuleComponent()->GetScaledCapsuleHalfHeight()));
+
 	// 범위 내 Pawn 오버랩 (SphereOverlapActors — Pawn 오브젝트 타입)
 	TArray<AActor*> OverlappedActors;
 	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
 	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_Pawn));
 
 	UKismetSystemLibrary::SphereOverlapActors(
-		this, GetActorLocation(), Radius, ObjectTypes, nullptr, TArray<AActor*>{this}, OverlappedActors);
+		this, AoECenter, Radius, ObjectTypes, nullptr, TArray<AActor*>{this}, OverlappedActors);
 
 	// 현재 패턴의 DamageType 조회
 	TSubclassOf<UDamageType> DamageTypeClass = UT3DamageType_Base::StaticClass();
@@ -327,25 +325,31 @@ void AT3MidBossMonster::ExecuteAoEDamage(float Radius, float DamageAmount, EHitI
 			*HitActor->GetName(), DamageAmount, Radius);
 	}
 
-	// Niagara 이펙트 스폰
+	// Niagara 이펙트 스폰 (미설정 시 임시 디버그 구체 표시)
 	if (AoEEffect)
 	{
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-			this, AoEEffect, GetActorLocation(), GetActorRotation());
+			this, AoEEffect, AoECenter, GetActorRotation());
+	}
+	else
+	{
+		// Niagara 없을 때 임시 범위 표시 (투사체 디버그 큐브와 동일 패턴)
+		DrawDebugSphere(GetWorld(), AoECenter, Radius, 24,
+			FColor::Red, false, 1.5f, 0, 3.f);
 	}
 
 	// AoE 사운드
 	if (AoESound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(
-			this, AoESound, GetActorLocation(), SoundVolume * AoEVolumeMultiplier);
+			this, AoESound, AoECenter, SoundVolume * AoEVolumeMultiplier);
 	}
 
 	// 카메라 쉐이크
 	if (AoECameraShakeClass)
 	{
 		UGameplayStatics::PlayWorldCameraShake(
-			this, AoECameraShakeClass, GetActorLocation(), 0.f, AoEShakeOuterRadius);
+			this, AoECameraShakeClass, AoECenter, 0.f, AoEShakeOuterRadius);
 	}
 }
 
@@ -360,40 +364,32 @@ void AT3MidBossMonster::OnWeaponHit(AActor* HitActor)
 		return;
 	}
 
-	// 현재 패턴의 데미지 데이터 조회
-	const FMidBossAttackPattern* PatternData = FindPatternData(CurrentPatternName);
-	if (!PatternData || !PatternData->MontageChain.IsValidIndex(CurrentChainIndex))
-	{
-		return;
-	}
+	// 현재 서브히트 데미지 데이터 조회
+	float HitDamage = 20.f;
+	EHitIntensity Intensity = EHitIntensity::Light;
+	TSubclassOf<UT3DamageType_Base> DmgType = nullptr;
+	GetCurrentHitData(HitDamage, Intensity, DmgType);
 
-	const FPatternMontageData& MontageData = PatternData->MontageChain[CurrentChainIndex];
+	TSubclassOf<UDamageType> FinalDamageType = DmgType ? DmgType.Get() : UT3DamageType_Base::StaticClass();
 
-	// FT3DamageEvent 생성 — HitIntensity + DamageType 전달
-	TSubclassOf<UDamageType> DamageTypeClass = MontageData.DamageTypeClass;
-	if (!DamageTypeClass)
-	{
-		DamageTypeClass = UT3DamageType_Base::StaticClass();
-	}
-
-	FT3DamageEvent DamageEvent(DamageTypeClass);
-	DamageEvent.HitIntensity = MontageData.HitIntensity;
+	FT3DamageEvent DamageEvent(FinalDamageType);
+	DamageEvent.HitIntensity = Intensity;
 	DamageEvent.HitDamageMultiplier = 1.0f;
 
 	// 플레이어의 TakeDamage 직접 호출
 	// → AT3CharacterBase::TakeDamage → CombatComponent::ExecuteHitLogic
 	// → 블록/패링/회피 판정 → HP 차감
 	HitActor->TakeDamage(
-		MontageData.Damage,
+		HitDamage,
 		DamageEvent,
 		GetController(),    // 보스의 AIController
 		this                // DamageCauser = 보스
 	);
 
-	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s에게 TakeDamage (데미지:%.0f, 강도:%s, 패턴:'%s'[%d])"),
-		*HitActor->GetName(), MontageData.Damage,
-		*UEnum::GetValueAsString(MontageData.HitIntensity),
-		*CurrentPatternName.ToString(), CurrentChainIndex);
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s에게 TakeDamage (데미지:%.0f, 강도:%s, 패턴:'%s'[%d] SubHit:%d)"),
+		*HitActor->GetName(), HitDamage,
+		*UEnum::GetValueAsString(Intensity),
+		*CurrentPatternName.ToString(), CurrentChainIndex, CurrentSubHitIndex);
 }
 
 // ============================================================
@@ -423,13 +419,33 @@ void AT3MidBossMonster::CloseParryWindow()
 	GetWorldTimerManager().ClearTimer(ParryWindowTimerHandle);
 	RemoveStateTag(TAG_Boss_State_ParryWindow);
 
-	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 패링 윈도우 닫힘"));
+	// 반격 미발동 (타임아웃) → 기 모으다 끝, 패턴 종료
+	if (!bParrySucceeded)
+	{
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 카운터 타임아웃 — 패턴 캔슬 (공격 안 함)"));
+		CancelCurrentPattern();
+		return;
+	}
+
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 패링 윈도우 닫힘 (반격 발동됨)"));
 }
 
 void AT3MidBossMonster::ExecuteParryCounter(AActor* ParriedAttacker)
 {
-	// 현재 패턴 중단 (패링 성공 = 패턴 캔슬 → 반격으로 전환)
-	CancelCurrentPattern();
+	// 패링 성공 플래그 — SpawnProjectile에서 검기 스킵
+	bParrySucceeded = true;
+
+	// Slow 상태 해제 → 정상 속도로 몽타주 이어서 재생 (검 휘두르기로 이어짐)
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance)
+	{
+		const FMidBossAttackPattern* PatternData = FindPatternData(CurrentPatternName);
+		if (PatternData && PatternData->MontageChain.IsValidIndex(CurrentChainIndex))
+		{
+			AnimInstance->Montage_SetPlayRate(
+				PatternData->MontageChain[CurrentChainIndex].Montage, 1.0f);
+		}
+	}
 
 	// 패링 사운드
 	if (ParrySound)
@@ -438,22 +454,5 @@ void AT3MidBossMonster::ExecuteParryCounter(AActor* ParriedAttacker)
 			this, ParrySound, GetActorLocation(), SoundVolume * ParryVolumeMultiplier);
 	}
 
-	// 반격 몽타주 재생
-	if (ParryCounterMontage)
-	{
-		PlayAnimMontage(ParryCounterMontage);
-	}
-
-	// 반격 데미지 — 공격한 플레이어에게 즉시 TakeDamage
-	if (ParriedAttacker && ParryCounterDamage > 0.f)
-	{
-		FT3DamageEvent DamageEvent(UT3DamageType_Base::StaticClass());
-		DamageEvent.HitIntensity = ParryCounterIntensity;
-		DamageEvent.HitDamageMultiplier = 1.0f;
-
-		ParriedAttacker->TakeDamage(ParryCounterDamage, DamageEvent, GetController(), this);
-
-		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 패링 반격 — %s에게 %.0f 데미지"),
-			*ParriedAttacker->GetName(), ParryCounterDamage);
-	}
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 패링 반격 — Slow 해제, 몽타주 이어서 재생"));
 }

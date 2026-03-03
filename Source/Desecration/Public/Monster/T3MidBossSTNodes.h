@@ -358,6 +358,41 @@ struct DESECRATION_API FT3STC_PatternOffCooldown : public FStateTreeConditionCom
 };
 
 // ============================================================
+// Condition: FT3STC_PatternAvailableAtStage
+// 패턴의 RequiredStage ≤ Boss의 BossStage인지 체크
+// 맵별 스테이지에 따라 패턴 사용 가능 여부 필터링
+// ============================================================
+
+USTRUCT()
+struct FT3STC_PatternAvailableAtStageInstanceData
+{
+	GENERATED_BODY()
+
+	// 파라미터 — 에디터에서 패턴 이름 설정
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	FName PatternName = NAME_None;
+
+	// 입력 — 컨텍스트에서 바인딩
+	UPROPERTY(EditAnywhere, Category = "Context")
+	TObjectPtr<AT3MidBossMonster> Boss = nullptr;
+};
+
+USTRUCT(meta = (DisplayName = "Pattern Available At Stage"))
+struct DESECRATION_API FT3STC_PatternAvailableAtStage : public FStateTreeConditionCommonBase
+{
+	GENERATED_BODY()
+
+	using FInstanceDataType = FT3STC_PatternAvailableAtStageInstanceData;
+
+	virtual const UStruct* GetInstanceDataType() const override
+	{
+		return FT3STC_PatternAvailableAtStageInstanceData::StaticStruct();
+	}
+
+	virtual bool TestCondition(FStateTreeExecutionContext& Context) const override;
+};
+
+// ============================================================
 // Condition: FT3STC_DistanceToTarget
 // 타겟과의 거리 비교 — EnterCondition 평가 시점에만 계산
 // ============================================================
