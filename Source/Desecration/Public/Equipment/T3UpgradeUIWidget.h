@@ -66,6 +66,8 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> Txt_NextStat;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> Text_StatName;
 	
 	// 강화석 Border (소모 예정 강조용)
 	UPROPERTY(meta = (BindWidget))
