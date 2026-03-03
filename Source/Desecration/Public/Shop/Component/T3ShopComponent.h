@@ -16,6 +16,7 @@ enum class EShopBuyResult : uint8
 	ItemNotFound, // 데이터테이블에 없음
 	CannotBuy, // 구매 불가 아이템
 	NotEnoughMoney, // 돈 부족
+	ZeroCount, // 0개 구매했을 때
 	Succeeded // 구매 성공
 };
 
@@ -26,6 +27,7 @@ enum class EShopSellResult : uint8
 	InvalidData, // ShopData or Inventory 없음
 	ItemNotFound, // 인벤토리에 없음
 	CannotSell, // 판매 불가 아이템
+	ZeroCount, // 0개 판매했을 때
 	Succeeded // 판매 성공
 };
 
@@ -54,6 +56,9 @@ struct FT3ShopItemUIData
 	
 	UPROPERTY(BlueprintReadOnly)
 	uint8 bCanSell : 1 = false;
+	
+	UPROPERTY(BlueprintReadOnly)
+	FText ItemInfo = FText::GetEmpty();
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -65,10 +70,10 @@ public:
 	UT3ShopComponent();
 
 	UFUNCTION(BlueprintCallable, Category = "Shop")
-	EShopBuyResult BuyItem(const FName& ItemName, UT3InventoryComponent* Inventory);
+	EShopBuyResult BuyItem(const FName& ItemName, UT3InventoryComponent* Inventory, int32 Count = 1);
 	
 	UFUNCTION(BlueprintCallable, Category = "Shop")
-	EShopSellResult SellItem(const FName& ItemName, UT3InventoryComponent* Inventory);
+	EShopSellResult SellItem(const FName& ItemName, UT3InventoryComponent* Inventory, int32 Count = 1);
 	
 	UFUNCTION(BlueprintCallable, Category = "Shop")
 	void GetShopItemUIData(TArray<FT3ShopItemUIData>& OutItems) const;

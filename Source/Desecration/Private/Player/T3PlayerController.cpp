@@ -126,7 +126,7 @@ void AT3PlayerController::SetupInputComponent()
 
 void AT3PlayerController::Input_Move(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || bIsShopUIOpen || !OwnerChar->CanExecuteAction())
+	if (bIsInventoryOpen || bIsShopUIOpen || bIsUpgradeUIOpen || !OwnerChar->CanExecuteAction())
 	{
 		return;
 	}
@@ -141,7 +141,7 @@ void AT3PlayerController::Input_Move(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_Look(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || bIsShopUIOpen || !OwnerChar->CanExecuteAction())
+	if (bIsInventoryOpen || bIsShopUIOpen || bIsUpgradeUIOpen || !OwnerChar->CanExecuteAction())
 	{
 		return;
 	}
@@ -157,7 +157,7 @@ void AT3PlayerController::Input_Look(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_LockOn(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || bIsShopUIOpen || !OwnerChar->CanExecuteAction())
+	if (bIsInventoryOpen || bIsShopUIOpen || bIsUpgradeUIOpen || !OwnerChar->CanExecuteAction())
 	{
 		return;
 	}
@@ -170,7 +170,7 @@ void AT3PlayerController::Input_LockOn(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_BlockStart(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || bIsShopUIOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse)
+	if (bIsInventoryOpen || bIsShopUIOpen || bIsUpgradeUIOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse)
 	{
 		return;
 	}
@@ -183,7 +183,7 @@ void AT3PlayerController::Input_BlockStart(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_BlockEnd(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || bIsShopUIOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse)
+	if (bIsInventoryOpen || bIsShopUIOpen || bIsUpgradeUIOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse)
 	{
 		return;
 	}
@@ -198,7 +198,7 @@ void AT3PlayerController::Input_BlockEnd(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_Roll(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || bIsShopUIOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse)
+	if (bIsInventoryOpen || bIsShopUIOpen || bIsUpgradeUIOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse)
 	{
 		return;
 	}
@@ -211,7 +211,7 @@ void AT3PlayerController::Input_Roll(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_Interact(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || bIsShopUIOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse)
+	if (bIsInventoryOpen || bIsShopUIOpen || bIsUpgradeUIOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse)
 	{
 		return;
 	}
@@ -224,7 +224,7 @@ void AT3PlayerController::Input_Interact(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_Test(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || bIsShopUIOpen || !OwnerChar->CanExecuteAction())
+	if (bIsInventoryOpen || bIsShopUIOpen || bIsUpgradeUIOpen || !OwnerChar->CanExecuteAction())
 	{
 		return;
 	}
@@ -245,7 +245,7 @@ void AT3PlayerController::Input_Test(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_Attack(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || bIsShopUIOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse)
+	if (bIsInventoryOpen || bIsShopUIOpen || bIsUpgradeUIOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse)
 	{
 		return;
 	}
@@ -270,7 +270,7 @@ void AT3PlayerController::ToggleInventoryInput()
 			SetShowMouseCursor(false);
 			SetInventoryOpen(false);
 		}
-		else if (!MainInventoryWidget->IsVisible() && !bIsShopUIOpen)
+		else if (!MainInventoryWidget->IsVisible() && !bIsShopUIOpen && !bIsUpgradeUIOpen)
 		{
 			MainInventoryWidget->SetVisibility(ESlateVisibility::Visible);
 			
@@ -286,13 +286,13 @@ void AT3PlayerController::ToggleInventoryInput()
 
 void AT3PlayerController::Input_ChangeSkillSlot(const FInputActionValue& Value)
 {	
-	if (bIsInventoryOpen || bIsShopUIOpen || !OwnerChar->CanExecuteAction())	{return;}
+	if (bIsInventoryOpen || bIsShopUIOpen || bIsUpgradeUIOpen || !OwnerChar->CanExecuteAction())	{return;}
 	if (Combat)	{Combat->ChangeActiveSlot(ESlotType::Skill);}
 }
 
 void AT3PlayerController::Input_ChangePotionSlot(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || bIsShopUIOpen || !OwnerChar->CanExecuteAction()) { return; }
+	if (bIsInventoryOpen || bIsShopUIOpen || bIsUpgradeUIOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsUsingItem) { return; }
 	
 	if (IsValid(OwnerChar))
 	{
@@ -302,7 +302,7 @@ void AT3PlayerController::Input_ChangePotionSlot(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_ChangeConsumableSlot(const FInputActionValue& Value)
 {
-	if (!OwnerChar->CanExecuteAction()) { return; }
+	if (!OwnerChar->CanExecuteAction() || bIsUpgradeUIOpen || OwnerChar->bIsUsingItem) { return; }
 	
 	if (IsValid(OwnerChar))
 	{
@@ -312,13 +312,13 @@ void AT3PlayerController::Input_ChangeConsumableSlot(const FInputActionValue& Va
 
 void AT3PlayerController::Input_ActiveSkillSlot(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || bIsShopUIOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse) { return; }
+	if (bIsInventoryOpen || bIsShopUIOpen || bIsUpgradeUIOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse) { return; }
 	if (Combat) { Combat->ExecuteCurrentSlotAction(ESlotType::Skill); } 
 }
 
 void AT3PlayerController::Input_ActivePotionSlot(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || bIsShopUIOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse) { return; }
+	if (bIsInventoryOpen || bIsShopUIOpen || bIsUpgradeUIOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse) { return; }
 	
 	if (IsValid(OwnerChar))
 	{
@@ -329,7 +329,7 @@ void AT3PlayerController::Input_ActivePotionSlot(const FInputActionValue& Value)
 
 void AT3PlayerController::Input_ActiveConsumableSlot(const FInputActionValue& Value)
 {
-	if (bIsInventoryOpen || bIsShopUIOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse) { return; }
+	if (bIsInventoryOpen || bIsShopUIOpen || bIsUpgradeUIOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse) { return; }
 	
 	if (IsValid(OwnerChar))
 	{
@@ -380,8 +380,18 @@ void AT3PlayerController::ShowShopUI(UT3ShopComponent* ShopComp)
     SetInputMode(InputModeGameAndUI);
 
 	ShopWidget->Init(T3Character->InventoryComponent, ShopComp, T3Character);
-	ShopWidget->AddToViewport();
+	ShopWidget->AddToViewport(99);
 	
 	SetShowMouseCursor(true);
 	SetShopUIOpen(true);
+}
+
+bool AT3PlayerController::GetIsUpgradeUIOpen() const
+{
+	return bIsUpgradeUIOpen;
+}
+
+void AT3PlayerController::SetIsUpgradeUIOpen(bool bIsOpen)
+{
+	bIsUpgradeUIOpen = bIsOpen;
 }

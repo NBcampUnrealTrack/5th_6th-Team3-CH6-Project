@@ -37,7 +37,7 @@ protected:
 	UImage* ItemIcon;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UBorder* SelectionBorder;
+	UBorder* Border_EquippedOrder;
 	
 	// 마우스 버튼이 눌렸을 때 호출
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
