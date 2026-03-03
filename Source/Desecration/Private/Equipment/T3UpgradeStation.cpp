@@ -2,16 +2,14 @@
 
 #include "Equipment/T3UpgradeStation.h"
 #include "Desecration.h"
-#include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
-#include "Components/InputComponent.h"
 #include "GameFramework/PlayerController.h"
-#include "InputCoreTypes.h"
 #include "Blueprint/UserWidget.h"
 #include "Player/T3CharacterBase.h"
 #include "Equipment/T3PlayerEquipmentComponent.h"
 #include "Equipment/T3TestItemInstance.h"
 #include "Item/Component/T3InventoryComponent.h"
+#include "Player/T3PlayerController.h"
 
 // ============================================================================
 // 생성자 및 초기화
@@ -33,162 +31,72 @@ AT3UpgradeStation::AT3UpgradeStation()
 		MeshComponent->SetWorldScale3D(FVector(0.5f, 0.5f, 1.0f));
 	}
 
-	// 상호작용 스피어 생성
-	InteractionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("InteractionSphere"));
-	InteractionSphere->SetupAttachment(RootComponent);
-	InteractionSphere->SetSphereRadius(InteractionRadius);
-	InteractionSphere->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
-	InteractionSphere->SetGenerateOverlapEvents(true);
-
-	// 초기화
-	PlayerInRange = nullptr;
 }
 
 void AT3UpgradeStation::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// 스피어 반경 업데이트
-	InteractionSphere->SetSphereRadius(InteractionRadius);
-
-	// 오버랩 이벤트 바인딩
-	InteractionSphere->OnComponentBeginOverlap.AddDynamic(this, &AT3UpgradeStation::OnSphereBeginOverlap);
-	InteractionSphere->OnComponentEndOverlap.AddDynamic(this, &AT3UpgradeStation::OnSphereEndOverlap);
-
 	UE_LOG(LogDesecration, Log, TEXT("[UpgradeStation] 초기화 완료 (MaxLevel: %d)"), MaxUpgradeLevel);
-}
-
-// ============================================================================
-// 오버랩 이벤트 (Core)
-// ============================================================================
-
-void AT3UpgradeStation::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	if (AT3CharacterBase* Character = Cast<AT3CharacterBase>(OtherActor))
-	{
-		PlayerInRange = Character;
-		UE_LOG(LogDesecration, Log, TEXT("[UpgradeStation] 플레이어 감지"));
-
-		// [TEST] F키 입력 바인딩
-		if (APlayerController* PC = Cast<APlayerController>(Character->GetController()))
-		{
-			BindInputToPlayer(PC);
-		}
-	}
-}
-
-void AT3UpgradeStation::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	if (AT3CharacterBase* Character = Cast<AT3CharacterBase>(OtherActor))
-	{
-		if (PlayerInRange == Character)
-		{
-			// [TEST] F키 입력 해제
-			if (APlayerController* PC = Cast<APlayerController>(Character->GetController()))
-			{
-				UnbindInputFromPlayer(PC);
-			}
-
-			PlayerInRange = nullptr;
-			UE_LOG(LogDesecration, Log, TEXT("[UpgradeStation] 플레이어가 범위를 벗어남"));
-
-			// UI 자동 닫기
-			if (bIsUpgradeUIOpen)
-			{
-				CloseUpgradeUI();
-			}
-		}
-	}
-}
-
-// ============================================================================
-// IT3Interactable 인터페이스 구현 (Core)
-// ============================================================================
-
-void AT3UpgradeStation::Interact_Implementation(AT3CharacterBase* Interactor)
-{
-	if (!Interactor) return;
-
-	// UI 토글
-	if (bIsUpgradeUIOpen)
-	{
-		CloseUpgradeUI();
-	}
-	else
-	{
-		OpenUpgradeUI();
-	}
-}
-
-bool AT3UpgradeStation::CanInteract_Implementation(AT3CharacterBase* Interactor) const
-{
-	return PlayerInRange != nullptr && PlayerInRange == Interactor;
-}
-
-FText AT3UpgradeStation::GetInteractionPrompt_Implementation() const
-{
-	return FText::FromString(TEXT("F - 장비 강화"));
 }
 
 // ============================================================================
 // UI 제어 함수 (Core)
 // ============================================================================
 
-void AT3UpgradeStation::OpenUpgradeUI()
+void AT3UpgradeStation::OpenUpgradeUI(AT3PlayerController* T3PC)
 {
-	if (bIsUpgradeUIOpen) return;
-
-	bIsUpgradeUIOpen = true;
-
+	if (!IsValid(T3PC) || T3PC->GetIsUpgradeUIOpen())
+	{
+		return;
+	}
+	
 	// 위젯 생성 + Viewport 추가
 	if (UpgradeWidgetClass)
 	{
-		UWorld* World = GetWorld();
-		APlayerController* PC = World ? World->GetFirstPlayerController() : nullptr;
-		if (PC)
+		UpgradeWidgetInstance = CreateWidget<UUserWidget>(T3PC, UpgradeWidgetClass);
+		
+		if (UpgradeWidgetInstance)
 		{
-			UpgradeWidgetInstance = CreateWidget<UUserWidget>(PC, UpgradeWidgetClass);
-			if (UpgradeWidgetInstance)
-			{
-				UpgradeWidgetInstance->AddToViewport(99);
+			UpgradeWidgetInstance->AddToViewport(99);
 
-				// 마우스 커서 표시 + UI 입력 모드
-				PC->SetShowMouseCursor(true);
-				FInputModeGameAndUI InputMode;
-				InputMode.SetWidgetToFocus(UpgradeWidgetInstance->TakeWidget());
-				PC->SetInputMode(InputMode);
-			}
+			// 마우스 커서 표시 + UI 입력 모드
+			T3PC->SetShowMouseCursor(true);
+			
+			FInputModeGameAndUI InputMode;
+			InputMode.SetWidgetToFocus(UpgradeWidgetInstance->TakeWidget());
+			T3PC->SetInputMode(InputMode);
+			
+			T3PC->SetIsUpgradeUIOpen(true);
 		}
 	}
-
+	
 	OnUpgradeUIOpened.Broadcast();
 
 	UE_LOG(LogDesecration, Log, TEXT("[UpgradeStation] UI 열림"));
 }
 
-void AT3UpgradeStation::CloseUpgradeUI()
+void AT3UpgradeStation::CloseUpgradeUI(AT3PlayerController* T3PC)
 {
-	if (!bIsUpgradeUIOpen) return;
-
-	bIsUpgradeUIOpen = false;
-
+	if (!IsValid(T3PC) || !T3PC->GetIsUpgradeUIOpen())
+	{
+		return;
+	}
+	
 	// 위젯 제거
 	if (UpgradeWidgetInstance)
 	{
 		UpgradeWidgetInstance->RemoveFromParent();
 		UpgradeWidgetInstance = nullptr;
 	}
-
-	// 게임 입력 모드 복원
-	UWorld* World = GetWorld();
-	if (APlayerController* PC = World ? World->GetFirstPlayerController() : nullptr)
-	{
-		PC->SetShowMouseCursor(false);
-		PC->SetInputMode(FInputModeGameOnly());
-	}
-
+	
+	T3PC->SetShowMouseCursor(false);
+	
+	FInputModeGameOnly InputMode;
+	T3PC->SetInputMode(InputMode);
+	
+	T3PC->SetIsUpgradeUIOpen(false);
+	
 	OnUpgradeUIClosed.Broadcast();
 
 	UE_LOG(LogDesecration, Log, TEXT("[UpgradeStation] UI 닫힘"));
@@ -200,14 +108,18 @@ void AT3UpgradeStation::CloseUpgradeUI()
 
 UT3PlayerEquipmentComponent* AT3UpgradeStation::GetPlayerEquipmentComponent() const
 {
-	if (!PlayerInRange) return nullptr;
-	return PlayerInRange->FindComponentByClass<UT3PlayerEquipmentComponent>();
+	APlayerController* PC = GetWorld() ? GetWorld()->GetFirstPlayerController() : nullptr;
+	AT3CharacterBase* Character = PC ? Cast<AT3CharacterBase>(PC->GetPawn()) : nullptr;
+	if (!Character) return nullptr;
+	return Character->FindComponentByClass<UT3PlayerEquipmentComponent>();
 }
 
 UT3InventoryComponent* AT3UpgradeStation::GetPlayerInventoryComponent() const
 {
-	if (!PlayerInRange) return nullptr;
-	return PlayerInRange->FindComponentByClass<UT3InventoryComponent>();
+	APlayerController* PC = GetWorld() ? GetWorld()->GetFirstPlayerController() : nullptr;
+	AT3CharacterBase* Character = PC ? Cast<AT3CharacterBase>(PC->GetPawn()) : nullptr;
+	if (!Character) return nullptr;
+	return Character->FindComponentByClass<UT3InventoryComponent>();
 }
 
 FT3UpgradeUIData AT3UpgradeStation::GetWeaponUIData() const
@@ -497,73 +409,3 @@ void AT3UpgradeStation::ConsumeStone(ET3UpgradeStoneGrade Grade)
 	}
 }
 
-// ============================================================================
-// [TEST] 테스트용 코드 - 정식 Interaction 시스템 연동 후 제거 예정
-// ============================================================================
-#pragma region TEST_CODE
-
-void AT3UpgradeStation::HandleInteractInput()
-{
-	if (PlayerInRange)
-	{
-		UE_LOG(LogDesecration, Log, TEXT("[TEST] F키 입력 감지"));
-		Interact_Implementation(PlayerInRange);
-	}
-}
-
-void AT3UpgradeStation::BindInputToPlayer(APlayerController* PC)
-{
-	if (!PC) return;
-
-	EnableInput(PC);
-
-	if (!InputComponent)
-	{
-		InputComponent = NewObject<UInputComponent>(this, TEXT("StationInputComponent"));
-		InputComponent->RegisterComponent();
-	}
-
-	// F키 직접 바인딩 (레거시 방식)
-	InputComponent->BindKey(EKeys::F, IE_Pressed, this, &AT3UpgradeStation::HandleInteractInput);
-
-	UE_LOG(LogDesecration, Log, TEXT("[TEST] F키 바인딩 완료"));
-}
-
-void AT3UpgradeStation::UnbindInputFromPlayer(APlayerController* PC)
-{
-	if (!PC) return;
-
-	DisableInput(PC);
-
-	if (InputComponent)
-	{
-		InputComponent->ClearActionBindings();
-	}
-
-	UE_LOG(LogDesecration, Log, TEXT("[TEST] F키 바인딩 해제"));
-}
-
-// [TEST] 레거시 강화 함수 (Deprecated)
-bool AT3UpgradeStation::TryUpgradeWeapon(int32 MaxLevel)
-{
-	int32 OriginalMax = MaxUpgradeLevel;
-	MaxUpgradeLevel = MaxLevel;
-
-	bool bResult = UpgradeWeapon();
-
-	MaxUpgradeLevel = OriginalMax;
-	return bResult;
-}
-
-bool AT3UpgradeStation::TryUpgradeArmor(int32 MaxLevel)
-{
-	int32 OriginalMax = MaxUpgradeLevel;
-	MaxUpgradeLevel = MaxLevel;
-
-	bool bResult = UpgradeArmor();
-
-	MaxUpgradeLevel = OriginalMax;
-	return bResult;
-}
-
-#pragma endregion TEST_CODE
