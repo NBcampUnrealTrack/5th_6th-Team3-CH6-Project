@@ -311,12 +311,15 @@ void UT3InventoryComponent::ToggleEquipItem(const FName& ItemName)
 	if (EquippedItemIDs.Contains(ItemName))
 	{
 		UnequipItem(ItemName);
+		
+		OnToggleItemEquipped.Broadcast();
+		OnInventoryUpdated.Broadcast();
 		return;
 	}
 	
 	EquippedItemIDs.Emplace(ItemName);
 	
-	OnToggleItemEquipped.Broadcast(ItemName);
+	OnToggleItemEquipped.Broadcast();
 	OnInventoryUpdated.Broadcast();
 }
 
@@ -337,9 +340,6 @@ void UT3InventoryComponent::UnequipItem(const FName& ItemName)
 	if (Index != INDEX_NONE)
 	{
 		EquippedItemIDs.RemoveAt(Index);
-		
-		OnToggleItemEquipped.Broadcast(ItemName);
-		OnInventoryUpdated.Broadcast();
 	}
 }
 
@@ -365,7 +365,7 @@ void UT3InventoryComponent::SwapEquippedItem()
 	EquippedItemIDs.RemoveAt(0);
 	EquippedItemIDs.Emplace(TempName);
 
-	OnToggleItemEquipped.Broadcast(TempName);
+	OnChangedBuffItemSlot.Broadcast();
 	OnInventoryUpdated.Broadcast();
 }
 
@@ -424,19 +424,16 @@ void UT3InventoryComponent::UseEquippedItem()
 				UE_LOG(LogTemp, Log, TEXT("[%s]를 모두 사용했습니다."), *Item.ItemID.ToString())
 		
 				Item.ItemID = NAME_None;
+				EquippedItemIDs.RemoveAt(0);
+				
 				Item.ItemStack = 0;
 			}
-			
-			OnInventoryUpdated.Broadcast();
-			
 			break;
 		}
 	}
 	
-	ConsumableItemType = EConsumableItemType::Buff;
-	
-	FString ConsumableTypeString = StaticEnum<EConsumableItemType>()->GetNameStringByValue(static_cast<int64>(ConsumableItemType));
-	UE_LOG(LogTemp, Log, TEXT("ConsumableItemType 설정: %s"), *ConsumableTypeString);
+	OnBuffItemUsed.Broadcast();
+	OnInventoryUpdated.Broadcast();
 }
 
 int32 UT3InventoryComponent::GetCurrentBuffItemCount() const
@@ -493,7 +490,6 @@ FName UT3InventoryComponent::GetCurrentBuffItemName() const
 {
 	if (EquippedItemIDs.Num() <= 0)
 	{
-		UE_LOG(LogTemp, Error, TEXT("장착된 버프 아이템이 없습니다"))
 		return NAME_None;
 	}
 	
@@ -504,7 +500,6 @@ FName UT3InventoryComponent::GetNextBuffItemName() const
 {
 	if (EquippedItemIDs.Num() <= 1)
 	{
-		UE_LOG(LogTemp, Error, TEXT("장착된 버프 아이템이 1개 입니다"))
 		return NAME_None;
 	}
 	
@@ -582,11 +577,6 @@ void UT3InventoryComponent::UseCurrentPotion()
 		UE_LOG(LogTemp, Error, TEXT("회복 포션 사용 실패"));
 		return;
 	}
-	
-	ConsumableItemType = EConsumableItemType::Recover;
-	
-	FString ConsumableTypeString = StaticEnum<EConsumableItemType>()->GetNameStringByValue(static_cast<int64>(ConsumableItemType));
-	UE_LOG(LogTemp, Log, TEXT("ConsumableItemType 설정: %s"), *ConsumableTypeString);
 }
 
 void UT3InventoryComponent::SwapHPMPSlot()
@@ -702,8 +692,8 @@ void UT3InventoryComponent::UseHPPotion()
 	}
 	
 	HPPotionCount--;
-	
-	OnInventoryUpdated.Broadcast();
+
+	OnRecoverItemUsed.Broadcast();
 }
 
 void UT3InventoryComponent::UseMPPotion()
@@ -748,5 +738,5 @@ void UT3InventoryComponent::UseMPPotion()
 	
 	MPPotionCount--;
 	
-	OnInventoryUpdated.Broadcast();
+	OnRecoverItemUsed.Broadcast();
 }

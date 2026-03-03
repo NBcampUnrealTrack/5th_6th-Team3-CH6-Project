@@ -109,10 +109,6 @@ void UT3Paladin_SkillComponent::ExecuteSkillNotify(int32 Index)
     case 0: // 검격 (Sword Wave)
         SpawnSwordWaveProjectile();
         break;
-    case 1: // 방패찍기
-        // UseShieldBash(); // 다음 단계에서 구현
-        break;
-        // ... 나머지 스킬들
     }
 }
 
@@ -178,7 +174,8 @@ void UT3Paladin_SkillComponent::SpawnJudgmentArea()
 
     // 1. 위치 결정 (록온 대상 여부에 따른 분기)  -> 록온 시 록온 대상 주변
     AActor* Target = Combat->GetCurrentTarget();
-    if (Target)
+    float DistanceToTarget = Target ? OwnerChar->GetDistanceTo(Target) : 0.f;
+    if (Target && DistanceToTarget <= 1000.f)
     {
         JudgmentTargetLocation = Target->GetActorLocation();
     }
@@ -312,7 +309,67 @@ void UT3Paladin_SkillComponent::FinishJudgmentSkill()
     {
         CurrentJudgmentLaserActor->Destroy();
         CurrentJudgmentLaserActor = nullptr;
+        OwnerChar->StopAnimMontage(JudgmentData.SkillMontage);
     }
 
     UE_LOG(LogTemp, Log, TEXT("신의 심판 스킬이 정상 종료되어 액터를 제거했습니다."));
 }
+
+
+
+
+// 팔라딘 전용 신성 게이지 로직
+
+void UT3Paladin_SkillComponent::AddResource(float Amount)
+{
+    AddHolyGauge(Amount);
+}
+
+void UT3Paladin_SkillComponent::AddHolyGauge(float Amount)
+{
+    if (bIsHolyMode) return; // 이미 강화 상태면 무시
+
+    HolyGauge = FMath::Clamp(HolyGauge + Amount, 0.f, MaxHolyGauge);
+
+    // UI 업데이트 델리게이트 호출
+    OnResourceChanged.Broadcast(HolyGauge);
+
+    UE_LOG(LogTemp, Display, TEXT("Add HolyGauge : %f"),Amount);
+    if (HolyGauge >= MaxHolyGauge)
+    {
+        ActivateHolyMode();
+    }
+}
+
+void UT3Paladin_SkillComponent::ActivateHolyMode()
+{
+    bIsHolyMode = true;
+
+    // 1. 공격 속도/딜레이 감소 적용
+    AttackSpeedMultiplier += 0.2f;
+
+    // 2. 20초 뒤 복구 예약
+    GetWorld()->GetTimerManager().SetTimer(HolyModeTimerHandle, this, &UT3Paladin_SkillComponent::DeactivateHolyMode, 20.f, false);
+
+    // 홀리모드 활성화 전달
+    OnHolyModeChanged.Broadcast(true);
+
+    UE_LOG(LogTemp, Warning, TEXT("Holy Mode Activated!"));
+}
+
+void UT3Paladin_SkillComponent::DeactivateHolyMode()
+{
+    bIsHolyMode = false;
+    HolyGauge = 0.f; // 게이지 소모
+
+    // 1. 공격 속도/딜레이 리셋
+    AttackSpeedMultiplier = 1.0f;
+    OnResourceChanged.Broadcast(HolyGauge);
+
+    // 홀리모드 비활성화 전달
+    OnHolyModeChanged.Broadcast(false);
+
+    UE_LOG(LogTemp, Warning, TEXT("Holy Mode Deactivated!"));
+}
+
+

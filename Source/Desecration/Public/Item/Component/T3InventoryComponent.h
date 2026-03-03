@@ -5,12 +5,15 @@
 #include "Engine/DataTable.h"
 #include "T3InventoryComponent.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCooldownUpdated, FName, ItemID, float, RemainingTime);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnToggleItemEquipped, FName, ItemID);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSwapRecoverSlot);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCooldownProgressUpdated, FName, ItemID, float, Progress);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryInitialized);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnToggleItemEquipped);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnChangedBuffItemSlot);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBuffItemUsed);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSwapRecoverSlot);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRecoverItemUsed);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCooldownUpdated, FName, ItemID, float, RemainingTime);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCooldownProgressUpdated, FName, ItemID, float, Progress);
 
 UENUM(BlueprintType)
 enum class EConsumableItemType : uint8
@@ -72,23 +75,24 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Inventory")
 	FOnInventoryUpdated OnInventoryUpdated;
 	
+	UPROPERTY(BlueprintAssignable, Category = "Inventory")
+	FOnInventoryInitialized OnInventoryInitialized;
+	
 	UPROPERTY(BlueprintAssignable, Category = "Cooldown")
 	FOnCooldownUpdated OnCooldownUpdated;
 	
 	UPROPERTY(BlueprintAssignable, Category = "Cooldown")
 	FOnCooldownProgressUpdated OnCooldownProgressUpdated;
-
-	UPROPERTY(BlueprintAssignable, Category = "Inventory")
-	FOnInventoryInitialized OnInventoryInitialized;
+	
+	UPROPERTY(BlueprintReadOnly)
+	EConsumableItemType ConsumableItemType = EConsumableItemType::None;
 	
 protected:
 	virtual void BeginPlay() override;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Money")
 	int32 Money;
-	
-	UPROPERTY(BlueprintReadOnly)
-	EConsumableItemType ConsumableItemType = EConsumableItemType::None;
+
 	
 #pragma region Stone // 강화석
 	int32 NormalStoneCount;
@@ -130,7 +134,7 @@ private:
 	
 	void UpdateCooldowns();
 	
-#pragma region Equipment
+#pragma region Buff Potion
 public:
 	UPROPERTY(BlueprintReadOnly, Category = "Equipment")
 	TArray<FName> EquippedItemIDs;
@@ -167,6 +171,12 @@ public:
 	
 	UPROPERTY(BlueprintAssignable, Category = "Equipment")
 	FOnToggleItemEquipped OnToggleItemEquipped;
+	
+	UPROPERTY(BlueprintAssignable, Category = "Equipment")
+	FOnChangedBuffItemSlot OnChangedBuffItemSlot;
+	
+	UPROPERTY(BlueprintAssignable, Category = "Equipment")
+	FOnBuffItemUsed OnBuffItemUsed;
 #pragma endregion
 	
 #pragma region Recover Potion
@@ -219,6 +229,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Recover")
 	FOnSwapRecoverSlot OnSwapRecoverSlot;
+	
+	UPROPERTY(BlueprintAssignable, Category = "Recover")
+	FOnRecoverItemUsed OnRecoverItemUsed;
 private:
 	void UseHPPotion();
 	

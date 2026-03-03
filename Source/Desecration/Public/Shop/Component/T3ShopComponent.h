@@ -79,6 +79,4 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Data")
 	TObjectPtr<UDataTable> ShopData;
 	
-protected:
-	virtual void BeginPlay() override;
 };

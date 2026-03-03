@@ -519,7 +519,7 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 		// 팔라딘의 경우 신성게이지 20 증가
 		if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
 		{
-			AddHolyGauge(20.0f);
+			SkillComp->AddResource(20.f);
 		}
 
 		UE_LOG(LogTemp, Display, TEXT("Parrying!"));
@@ -541,7 +541,7 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 		// 팔라딘이라면 신성 게이지 10 상승
 		if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
 		{
-			AddHolyGauge(10.0f);
+			SkillComp->AddResource(10.f);
 		}
 
 		/*GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow,
@@ -783,45 +783,3 @@ void UT3CombatComponent::RequestUpdateSkill(int32 SkillID, bool bIsEquip)
 	}
 }
 
-
-
-// 팔라딘 전용 신성 게이지 로직
-
-void UT3CombatComponent::AddHolyGauge(float Amount)
-{
-	if (bIsHolyMode) return; // 이미 강화 상태면 무시
-
-	HolyGauge = FMath::Clamp(HolyGauge + Amount, 0.f, MaxHolyGauge);
-
-	// UI 업데이트 델리게이트 호출
-	OnHolyGaugeChanged.Broadcast(HolyGauge, MaxHolyGauge);
-
-	if (HolyGauge >= MaxHolyGauge)
-	{
-		ActivateHolyMode();
-	}
-}
-
-void UT3CombatComponent::ActivateHolyMode()
-{
-	bIsHolyMode = true;
-	
-	// 1. 공격 속도/딜레이 감소 적용
-	AttackSpeedMultiplier += 0.2f;
-
-	// 2. 20초 뒤 복구 예약
-	GetWorld()->GetTimerManager().SetTimer(HolyModeTimerHandle, this, &UT3CombatComponent::DeactivateHolyMode, 5.f, false);
-
-	UE_LOG(LogTemp, Warning, TEXT("Holy Mode Activated!"));
-}
-
-void UT3CombatComponent::DeactivateHolyMode()
-{
-	bIsHolyMode = false;
-	HolyGauge = 0.f; // 게이지 소모
-
-	// 1. 공격 속도/딜레이 리셋
-	AttackSpeedMultiplier = 1.0f;
-	OnHolyGaugeChanged.Broadcast(HolyGauge, MaxHolyGauge);
-	UE_LOG(LogTemp, Warning, TEXT("Holy Mode Deactivated!"));
-}
