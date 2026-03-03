@@ -152,7 +152,7 @@ void AT3UpgradeStation::OpenUpgradeUI()
 			UpgradeWidgetInstance = CreateWidget<UUserWidget>(PC, UpgradeWidgetClass);
 			if (UpgradeWidgetInstance)
 			{
-				UpgradeWidgetInstance->AddToViewport();
+				UpgradeWidgetInstance->AddToViewport(99);
 
 				// 마우스 커서 표시 + UI 입력 모드
 				PC->SetShowMouseCursor(true);

@@ -7,7 +7,7 @@
 
 void UItemSlotWidget::SetSelected(bool bSelected)
 {
-	SelectionBorder->SetVisibility(bSelected ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	Border_EquippedOrder->SetVisibility(bSelected ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 }
 
 bool UItemSlotWidget::GetSlotData_Implementation(FInventorySlot& OutSlotData) const

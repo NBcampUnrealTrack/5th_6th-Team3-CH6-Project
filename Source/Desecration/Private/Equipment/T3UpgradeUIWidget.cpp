@@ -145,26 +145,47 @@ void UT3UpgradeUIWidget::RefreshUI()
 		}
 		else
 		{
-			Txt_CurrentLevel->SetText(FText::FromString(FString::Printf(TEXT("+%d → +%d"), UIData.CurrentLevel, UIData.CurrentLevel + 1)));
+			Txt_CurrentLevel->SetText(FText::FromString(FString::Printf(TEXT("+%d"), UIData.CurrentLevel)));
+		}
+	}
+	
+	if (Txt_NextLevel)
+	{
+		if (UIData.bIsMaxLevel)
+		{
+			Txt_NextLevel->SetText(FText::FromString(FString::Printf(TEXT("+%d (MAX)"), UIData.CurrentLevel)));
+		}
+		else
+		{
+			Txt_NextLevel->SetText(FText::FromString(FString::Printf(TEXT("+%d"), UIData.CurrentLevel + 1)));
 		}
 	}
 
 	// 스탯 표시
 	// MAX: "공격력: 180" / 그 외: "공격력: 150 → 180"
-	if (Txt_CurrentStat)
+	
+	if (Text_StatName)
 	{
-		FString StatLabel = (CurrentTab == ET3EquipmentType::Weapon) ? TEXT("공격력") : TEXT("방어력");
-
-		if (UIData.bIsMaxLevel)
+		if (CurrentTab == ET3EquipmentType::Weapon)
 		{
-			Txt_CurrentStat->SetText(FText::FromString(FString::Printf(TEXT("%s: %.0f"), *StatLabel, UIData.CurrentStat)));
+			Text_StatName->SetText(FText::FromString(FString::Printf(TEXT("공격력"))));
 		}
 		else
 		{
-			Txt_CurrentStat->SetText(FText::FromString(FString::Printf(TEXT("%s: %.0f → %.0f"), *StatLabel, UIData.CurrentStat, UIData.NextLevelStat)));
+			Text_StatName->SetText(FText::FromString(FString::Printf(TEXT("방어력"))));
 		}
 	}
+	
+	if (Txt_CurrentStat)
+	{
+		Txt_CurrentStat->SetText(FText::FromString(FString::Printf(TEXT("%.0f"), UIData.CurrentStat)));
+	}
 
+	if (Txt_NextStat)
+	{
+		Txt_NextStat->SetText(FText::FromString(FString::Printf(TEXT("%.0f"), UIData.NextLevelStat)));
+	}
+	
 	// 강화석 아이콘 색상 처리 (사용 가능: 원래 색상 / 사용 불가: 어둡게)
 	const FLinearColor ActiveColor = FLinearColor::White;
 	const FLinearColor InactiveColor = FLinearColor(0.3f, 0.3f, 0.3f, 0.5f);
@@ -214,15 +235,15 @@ void UT3UpgradeUIWidget::RefreshUI()
 	// 강화석 보유량 표시
 	if (Txt_NormalStoneCount)
 	{
-		Txt_NormalStoneCount->SetText(FText::AsNumber(UpgradeStation->GetStoneCount(ET3UpgradeStoneGrade::Normal)));
+		Txt_NormalStoneCount->SetText(FText::Format(FText::FromString(TEXT("보유량 : {0}")), FText::AsNumber(UpgradeStation->GetStoneCount(ET3UpgradeStoneGrade::Normal))));
 	}
 	if (Txt_EpicStoneCount)
 	{
-		Txt_EpicStoneCount->SetText(FText::AsNumber(UpgradeStation->GetStoneCount(ET3UpgradeStoneGrade::Epic)));
+		Txt_EpicStoneCount->SetText(FText::Format(FText::FromString(TEXT("보유량 : {0}")), FText::AsNumber(UpgradeStation->GetStoneCount(ET3UpgradeStoneGrade::Epic))));
 	}
 	if (Txt_LegendaryStoneCount)
 	{
-		Txt_LegendaryStoneCount->SetText(FText::AsNumber(UpgradeStation->GetStoneCount(ET3UpgradeStoneGrade::Legendary)));
+		Txt_LegendaryStoneCount->SetText(FText::Format(FText::FromString(TEXT("보유량 : {0}")), FText::AsNumber(UpgradeStation->GetStoneCount(ET3UpgradeStoneGrade::Legendary))));
 	}
 
 	// 강화 버튼 활성화/비활성화
