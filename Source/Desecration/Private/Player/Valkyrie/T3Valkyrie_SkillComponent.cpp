@@ -14,6 +14,34 @@ FSkillData* UT3Valkyrie_SkillComponent::GetSkillDataByID(int32 SkillID)
     }
 }
 
+void UT3Valkyrie_SkillComponent::StartCharge()
+{
+    if (bIsCharging) return;
+    
+    bIsCharging = true;
+    ChargingLevel = 0;
+    
+    GetWorld()->GetTimerManager().SetTimer(ChargingTimerHandle, this, &UT3Valkyrie_SkillComponent::ChargingTick, 1.0f, true);
+}
+
+void UT3Valkyrie_SkillComponent::ChargingTick()
+{
+    if (ChargingLevel>=MaxChargingLevel)
+    {
+        ChargingLevel = MaxChargingLevel;
+        GetWorld()->GetTimerManager().ClearTimer(ChargingTimerHandle);
+    }
+    ChargingLevel++;
+}
+
+void UT3Valkyrie_SkillComponent::EndCharging()
+{
+    if (!bIsCharging) return;
+    GetWorld()->GetTimerManager().ClearTimer(ChargingTimerHandle);
+    bIsCharging = false;
+    ChargingLevel = 0;
+}
+
 void UT3Valkyrie_SkillComponent::ExecuteSkill(int32 SlotNumber)
 {
     // 1. 슬롯 번호(1 or 2)에 따른 ID 추출
@@ -34,7 +62,9 @@ void UT3Valkyrie_SkillComponent::ExecuteSkill(int32 SlotNumber)
     {
     case 0: // 빈슬롯
         UE_LOG(LogTemp, Warning, TEXT("There is no skill."));    break;
-    case 1: // 첫번째 스킬
+    case 1:
+        PowerStrike();
+        break;// 첫번째 스킬
         //ExecuteSwordWave();    break;
 
     default:
