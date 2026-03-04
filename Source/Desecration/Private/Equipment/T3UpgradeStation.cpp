@@ -19,18 +19,13 @@ AT3UpgradeStation::AT3UpgradeStation()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
+	SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+	SetRootComponent(SceneComponent);
+	
 	// 루트 컴포넌트로 메쉬 생성
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
-	RootComponent = MeshComponent;
-
-	// 기본 큐브 메쉬 설정
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeMesh(TEXT("/Engine/BasicShapes/Cube.Cube"));
-	if (CubeMesh.Succeeded())
-	{
-		MeshComponent->SetStaticMesh(CubeMesh.Object);
-		MeshComponent->SetWorldScale3D(FVector(0.5f, 0.5f, 1.0f));
-	}
-
+	
+	MeshComponent->SetupAttachment(SceneComponent);
 }
 
 void AT3UpgradeStation::BeginPlay()
