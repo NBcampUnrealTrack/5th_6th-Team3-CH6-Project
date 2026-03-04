@@ -121,7 +121,7 @@ void AT3PlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(ChangePotionSlotAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_ChangePotionSlot);
 		EnhancedInputComponent->BindAction(ChangeConsumableSlotAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_ChangeConsumableSlot);
 		EnhancedInputComponent->BindAction(ActiveSkillSlotAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_ActiveSkillSlot);
-		//EnhancedInputComponent->BindAction(ActiveSkillSlotAction, ETriggerEvent::Completed, this, &AT3PlayerController::Input_ActiveSkillSlot);
+		EnhancedInputComponent->BindAction(ActiveSkillSlotAction, ETriggerEvent::Completed, this, &AT3PlayerController::Input_ActiveSkillSlot_Completed);
 		EnhancedInputComponent->BindAction(ActivePotionSlotAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_ActivePotionSlot);
 		EnhancedInputComponent->BindAction(ActiveConsumableSlotAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_ActiveConsumableSlot);
 
@@ -318,6 +318,13 @@ void AT3PlayerController::Input_ActiveSkillSlot(const FInputActionValue& Value)
 {
 	if (bIsInventoryOpen || bIsShopUIOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse) { return; }
 	if (Combat) { Combat->ExecuteCurrentSlotAction(ESlotType::Skill); } 
+}
+
+void AT3PlayerController::Input_ActiveSkillSlot_Completed(const FInputActionValue& Value)
+{
+	if (bIsInventoryOpen || bIsShopUIOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse) { return; }
+	
+	if (Combat) { Combat->ExecuteCurrentSlotAction_Completed(ESlotType::Skill); }
 }
 
 void AT3PlayerController::Input_ActivePotionSlot(const FInputActionValue& Value)

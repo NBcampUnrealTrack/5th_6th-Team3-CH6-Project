@@ -160,6 +160,8 @@ public:
 	// 현재 슬롯 실행 (실제 키 입력 시 호출)
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	void ExecuteCurrentSlotAction(ESlotType Type);
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	void ExecuteCurrentSlotAction_Completed(ESlotType Type);
 
 	void SetSkillComponent(UT3SkillComponentBase* InSkillComp) { SkillComp = InSkillComp; }
 	UFUNCTION(BlueprintCallable, Category = "Skill")

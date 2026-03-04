@@ -9,7 +9,7 @@ FSkillData* UT3Valkyrie_SkillComponent::GetSkillDataByID(int32 SkillID)
 {
     switch (SkillID)
     {
-    case 1: return 0;
+    case 1: return &PowerStrikeSkillData;
     default: return nullptr;
     }
 }
@@ -19,6 +19,7 @@ void UT3Valkyrie_SkillComponent::StartCharge()
     if (bIsCharging) return;
     
     bIsCharging = true;
+    bHasRelease = false;
     ChargingLevel = 0;
     
     GetWorld()->GetTimerManager().SetTimer(ChargingTimerHandle, this, &UT3Valkyrie_SkillComponent::ChargingTick, 1.0f, true);
@@ -26,20 +27,32 @@ void UT3Valkyrie_SkillComponent::StartCharge()
 
 void UT3Valkyrie_SkillComponent::ChargingTick()
 {
+    ChargingLevel++;
     if (ChargingLevel>=MaxChargingLevel)
     {
         ChargingLevel = MaxChargingLevel;
         GetWorld()->GetTimerManager().ClearTimer(ChargingTimerHandle);
+        
+        GetWorld()->GetTimerManager().SetTimer(MaxChargingTimerHandle, this,&UT3Valkyrie_SkillComponent::MaxCharging, 1.0f, true);;
     }
-    ChargingLevel++;
 }
 
 void UT3Valkyrie_SkillComponent::EndCharging()
 {
-    if (!bIsCharging) return;
+    if (!bIsCharging || bHasRelease) return;
     GetWorld()->GetTimerManager().ClearTimer(ChargingTimerHandle);
-    bIsCharging = false;
-    ChargingLevel = 0;
+    
+    bHasRelease = true;
+    OnEndCharging();
+}
+
+void UT3Valkyrie_SkillComponent::MaxCharging()
+{
+    if (!bIsCharging || bHasRelease) return;
+    GetWorld()->GetTimerManager().ClearTimer(MaxChargingTimerHandle);
+    
+    bHasRelease = true;
+    OnEndCharging();
 }
 
 void UT3Valkyrie_SkillComponent::ExecuteSkill(int32 SlotNumber)
@@ -72,6 +85,20 @@ void UT3Valkyrie_SkillComponent::ExecuteSkill(int32 SlotNumber)
     }
 }
 
+void UT3Valkyrie_SkillComponent::ExecuteSkill_Completed(int32 SlotNumber)
+{    
+    int32 SkillID = (SlotNumber == 1) ? CurrentSkillSlot : NextSkillSlot;
+    
+    switch (SkillID)
+    {
+    case 1:
+        EndCharging();
+        break;
+        
+    default:
+        break;
+    }
+}
 
 
 void UT3Valkyrie_SkillComponent::ExecuteSkillNotify(int32 Index)
