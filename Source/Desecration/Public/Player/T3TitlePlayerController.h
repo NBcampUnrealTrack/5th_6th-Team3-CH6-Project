@@ -30,9 +30,6 @@ public:
 	//저장된 게임 데이터 존재 여부
 	bool DoesSavedDataExist();
 	
-	//세팅 패널 띄움 여부, 타이틀 화면 위젯과 동시에 반대로 적용됨
-	void SetActiveSettingsPanel(bool bActive);
-	
 	//게임 종료
 	UFUNCTION()
 	void QuitGame();
@@ -45,14 +42,6 @@ private:
 	//타이틀 화면의 위젯
 	UPROPERTY()
 	TObjectPtr<UT3TitleLevelWidget> TitleLevelWidgetInstance;
-	
-	//설정 패널 위젯
-	UPROPERTY(EditDefaultsOnly, Category = "Widget", meta = (AllowPrivateAccess = true))
-	TSubclassOf<UT3SettingsPanel> SettingsPanelClass;
-	
-	//설정 패널 위젯 클래스
-	UPROPERTY()
-	TObjectPtr<UT3SettingsPanel> SettingsPanelInstance;
 	
 	//게임 모드
 	UPROPERTY()

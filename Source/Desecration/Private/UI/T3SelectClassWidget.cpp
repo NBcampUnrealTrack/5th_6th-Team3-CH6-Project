@@ -2,6 +2,7 @@
 
 #include "Components/Button.h"
 #include "Components/HorizontalBox.h"
+#include "GameSystem/T3GameInstance.h"
 #include "Player/T3SelectClassPlayerController.h"
 #include "UI/T3InputNamePanel.h"
 
@@ -9,11 +10,19 @@ void UT3SelectClassWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 	
+	//게임 인스턴스
+	T3GameInstance = Cast<UT3GameInstance>(GetGameInstance());
+	if (!T3GameInstance)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : T3GameInstance가 NULL"), *GetNameSafe(this));
+		return;
+	}
+	
 	//플레이어 컨트롤러
 	SelectClassPlayerController = Cast<AT3SelectClassPlayerController>(GetOwningPlayer());
 	if (!SelectClassPlayerController)
 	{
-		UE_LOG(LogTemp, Error, TEXT("%s : SelectClassPlayerController is NULL"), *GetNameSafe(this));
+		UE_LOG(LogTemp, Error, TEXT("%s : SelectClassPlayerController가 NULL"), *GetNameSafe(this));
 		return;
 	}
 	
