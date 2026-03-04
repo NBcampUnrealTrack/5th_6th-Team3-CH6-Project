@@ -68,6 +68,9 @@ public:
     // 몽타주 종료 콜백 함수
     UFUNCTION()
     void OnSkillMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+    
+    UFUNCTION(BlueprintCallable, Category = "Skill")
+    virtual void BasicAttackCount();
 
     //  == UI팀 전용
     UPROPERTY(BlueprintAssignable, Category = "Events")

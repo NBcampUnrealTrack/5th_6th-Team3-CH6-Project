@@ -222,4 +222,8 @@ void UT3SkillComponentBase::OnSkillMontageEnded(UAnimMontage* Montage, bool bInt
 
 }
 
+void UT3SkillComponentBase::BasicAttackCount()
+{
+}
+
 

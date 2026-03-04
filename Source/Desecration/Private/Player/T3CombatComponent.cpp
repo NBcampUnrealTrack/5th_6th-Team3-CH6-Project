@@ -724,6 +724,13 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 		TargetActor->TakeDamage(DamageAmount, T3DamageEvent, AIPC, AIChar);
 	}
 	
+	if (SkillComp && DamageTypeClass)
+	{
+		if (DamageTypeClass->GetName().Contains(TEXT("BP_T3DamageType_ValkyriePassive")))
+		{
+			SkillComp->BasicAttackCount(); // 발키리면 스택 1 증가!
+		}
+	}
 	// 디버그 출력
 	// const UEnum* EnumPtr = StaticEnum<EHitIntensity>();
 	// FString IntensityString = EnumPtr ? EnumPtr->GetNameStringByValue((int64)Intensity) : TEXT("Unknown");
