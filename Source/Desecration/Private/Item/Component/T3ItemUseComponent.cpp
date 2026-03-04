@@ -43,9 +43,14 @@ AccumulatedRecoverMP(0.f)
 void UT3ItemUseComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	OwnerCharacter = Cast<AT3CharacterBase>(GetOwner());
-	
+
+	if (!IsValid(OwnerCharacter))
+	{
+		return;
+	}
+
 	OriginalPowerValue = OwnerCharacter->GetAttackPower();
 	OriginalDefenseValue = OwnerCharacter->GetDefense();
 	OriginalSpeedValue = OwnerCharacter->GetMoveSpeed();
@@ -259,7 +264,7 @@ void UT3ItemUseComponent::RecoverMPTick()
 	}
 }
 
-bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemData)
+bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemData, int32 RecoveryBonus)
 {
 	switch (ItemData.EffectType)
 	{
@@ -275,7 +280,7 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 			{
 				bIsHPPotionCooldown = true;
 				
-				RecoverHPAmount = ItemData.BuffValue; // + 포션 수치 강화된 값
+				RecoverHPAmount = ItemData.BuffValue + RecoveryBonus;
 			
 				RecoverHPTickCount = ItemData.ActiveTime / RecoverHPInterval;
 				RecoverHPPerTick = RecoverHPAmount / RecoverHPTickCount;
@@ -315,7 +320,7 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 			{
 				bIsMPPotionCooldown = true;
 				
-				RecoverMPAmount = ItemData.BuffValue; // + 포션 수치 강화된 값
+				RecoverMPAmount = ItemData.BuffValue + RecoveryBonus;
 			
 				RecoverMPTickCount = ItemData.ActiveTime / RecoverMPInterval;
 				RecoverMPPerTick = RecoverMPAmount / RecoverMPTickCount;
