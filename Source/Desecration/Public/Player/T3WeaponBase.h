@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Player/T3DamageTypes.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "T3WeaponBase.generated.h"
 
 UCLASS()
@@ -14,6 +15,9 @@ class DESECRATION_API AT3WeaponBase : public AActor
 	
 public:
     AT3WeaponBase();
+    
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    bool bIsTwoHand = false;
 
     // 무기 콜리젼 활성화/비활성화 함수
     void SetWeaponCollisionEnabled(bool bEnabled, float InDamageMultiplier = 1.f, TSubclassOf<class UT3DamageType_Base> InType = nullptr, EHitIntensity InIntensity = EHitIntensity::Light, float InStunAmount = 0.f, float StaminaAmount = 10.0f);
@@ -32,6 +36,15 @@ protected:
     // 무기 외형
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Visual")
     TObjectPtr<class UStaticMeshComponent> WeaponMesh;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Visual")
+    TObjectPtr<USkeletalMeshComponent> WeaponSkeletalMesh;
+
+    UFUNCTION(BlueprintCallable, Category = "Visual")
+    USkeletalMeshComponent* GetWeaponSkeletalMesh() const { return WeaponSkeletalMesh; }
+
+    UFUNCTION(BlueprintCallable, Category = "Visual")
+    UStaticMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
 
     float CurrentAttackDamage;
     float StunAmount;
