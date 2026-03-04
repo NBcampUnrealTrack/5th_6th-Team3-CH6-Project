@@ -43,6 +43,12 @@ void UT3GeneralSettings::OnSelectionChangedLanguageComboBox(FString SelectedItem
 	
 	//언어 변경
 	UKismetInternationalizationLibrary::SetCurrentCulture(IETF);
+	
+	//세팅 패널을 포함한 전체에 적용
+	if (SettingsPanel.IsValid())
+	{
+		SettingsPanel->ApplyChangeLanguage();
+	}
 }
 
 FString UT3GeneralSettings::ELanguageToTranslatedString(const ELanguage Language)

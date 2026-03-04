@@ -40,6 +40,7 @@ void UT3SettingsPanel::NativeConstruct()
 		
 		//각 범주별 초기화 진행
 		CategoryWidget->T3GameInstance = T3GameInstance;
+		CategoryWidget->SettingsPanel = this;
 		CategoryWidget->CustomNativeConstruct();
 	}
 	
@@ -147,4 +148,22 @@ void UT3SettingsPanel::OpenSettingsPanel()
 	
 	//패널 활성화
 	SetVisibility(ESlateVisibility::Visible);
+}
+
+void UT3SettingsPanel::ApplyChangeLanguage()
+{
+	//각 범주별 언어 변경
+	for (const TObjectPtr CategoryWidget : CategoryWidgets)
+	{
+		if (!CategoryWidget)
+		{
+			UE_LOG(LogTemp, Error, TEXT("%s : CategoryWidgets에 NULL인 항목이 있음"), *GetNameSafe(this));
+			return;
+		}
+		
+		CategoryWidget->ReinitializeByChangeLanguage();
+	}
+	
+	//언어 변경시 실행할 내용
+	OnChangeLanguage.Broadcast();
 }

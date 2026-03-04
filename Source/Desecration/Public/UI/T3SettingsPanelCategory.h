@@ -19,6 +19,9 @@ protected:
 	
 	//설정 화면을 열 때마다 실행하는 초기화
 	virtual void InitializeSettingsPanel() PURE_VIRTUAL(UT3SettingsPanelCategory::InitializeSettingsPanel, );
+	
+	//언어 변경에 의한 초기화
+	virtual void ReinitializeByChangeLanguage() { }
 
 	//설정 저장하기
 	virtual void SaveSettings() { }

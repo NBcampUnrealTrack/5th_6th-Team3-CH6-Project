@@ -34,8 +34,9 @@ class DESECRATION_API UT3DisplaySettings : public UT3SettingsPanelCategory
 protected:
 	virtual void CustomNativeConstruct() override;
 	virtual void InitializeSettingsPanel() override;
+	virtual void ReinitializeByChangeLanguage() override;
 	
-private:
+private:	
 	UFUNCTION()
 	void OnSelectionChangedResolutionComboBox(FString SelectedItem, ESelectInfo::Type SelectionType);
 	

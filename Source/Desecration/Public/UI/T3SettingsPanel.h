@@ -5,8 +5,6 @@
 #include "T3SettingsPanel.generated.h"
 
 class UCanvasPanel;
-DECLARE_DELEGATE(FOnClosePanel);
-
 class UHorizontalBox;
 class UT3SettingsPanelCategory;
 class AT3TitlePlayerController;
@@ -15,6 +13,9 @@ class AT3TitleGameMode;
 class UButton;
 class UComboBoxString;
 class USlider;
+
+DECLARE_DELEGATE(FOnClosePanel);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnChangeLanguage);
 
 UCLASS()
 class DESECRATION_API UT3SettingsPanel : public UUserWidget
@@ -38,8 +39,15 @@ public:
 	//설정 패널 열기
 	void OpenSettingsPanel();
 	
+	//언어 변경후 적용하기
+	void ApplyChangeLanguage();
+	
 	//설정 패널 닫을 때 실행할 내용
 	FOnClosePanel OnClosePanel;
+	
+	//언어 변경시 실행할 내용
+	UPROPERTY(BlueprintAssignable)
+	FOnChangeLanguage OnChangeLanguage;
 	
 private:
 	//상단 탭 버튼이 있는 가로 박스
