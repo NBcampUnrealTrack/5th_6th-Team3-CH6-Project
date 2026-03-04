@@ -38,17 +38,6 @@ void AT3TitlePlayerController::BeginPlay()
 		return;
 	}
 	TitleLevelWidgetInstance->AddToViewport();
-	
-	SettingsPanelInstance = CreateWidget<UT3SettingsPanel>(this, SettingsPanelClass);
-	if (!SettingsPanelInstance)
-	{
-		UE_LOG(LogTemp, Error, TEXT("%s : Failed to create SettingsPanel"), *GetNameSafe(this));
-		return;
-	}
-	SettingsPanelInstance->AddToViewport();
-	
-	//설정 패널은 숨김 상태로 시작
-	SettingsPanelInstance->SetVisibility(ESlateVisibility::Collapsed);
 }
 
 void AT3TitlePlayerController::MoveToSelectClassLevel()
@@ -64,16 +53,6 @@ void AT3TitlePlayerController::MoveToLastSavedLevel()
 bool AT3TitlePlayerController::DoesSavedDataExist()
 {
 	return T3GameInstance->GetSavedGameData() != nullptr;
-}
-
-void AT3TitlePlayerController::SetActiveSettingsPanel(bool bActive)
-{
-	//타이틀 레벨 위젯과 설정 패널 위젯은 서로 반대로 적용
-	TitleLevelWidgetInstance->SetVisibility(bActive ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
-	SettingsPanelInstance->SetVisibility(bActive ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
-	
-	//설정 패널 활성화시 패널 내용 초기화
-	//TODO : 패널 내용 초기화
 }
 
 void AT3TitlePlayerController::QuitGame()

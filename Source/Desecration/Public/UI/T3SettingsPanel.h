@@ -4,6 +4,11 @@
 #include "Blueprint/UserWidget.h"
 #include "T3SettingsPanel.generated.h"
 
+class UCanvasPanel;
+DECLARE_DELEGATE(FOnClosePanel);
+
+class UHorizontalBox;
+class UT3SettingsPanelCategory;
 class AT3TitlePlayerController;
 class UT3GameInstance;
 class AT3TitleGameMode;
@@ -16,73 +21,46 @@ class DESECRATION_API UT3SettingsPanel : public UUserWidget
 {
 	GENERATED_BODY()
 	
+	friend UT3SettingsPanelCategory;
+	
 public:
 	virtual void NativeConstruct() override;
 	
 private:
-	//배경음 슬라이더
-	UFUNCTION()
-	void WhileMovingBGMSlider(float value);
-	
-	//효과음 슬라이더
-	UFUNCTION()
-	void WhileMovingSESlider(float value);
-	
-	//마우스 감도 슬라이더
-	UFUNCTION()
-	void WhileMovingMouseSensitivitySlider(float value);
-	
-	//해상도 콤보박스
-	UFUNCTION()
-	void OnSelectResolutionComboBox(FString SelectedItem, ESelectInfo::Type SelectionType);
-	
-	//화면 모드 콤보박스
-	UFUNCTION()
-	void OnSelectScreenModeComboBox(FString SelectedItem, ESelectInfo::Type SelectionType);
-	
-	//그래픽 퀄리티 콤보박스
-	UFUNCTION()
-	void OnSelectGraphicQualityComboBox(FString SelectedItem, ESelectInfo::Type SelectionType);
-	
-	//초기화 버튼
-	UFUNCTION()
-	void OnClickResetButton();
+	//상단 탭 버튼에 대한 동작
+	void OnClickTabButton(int32 PanelNum);
 	
 	//확인 버튼
 	UFUNCTION()
 	void OnClickConfirmButton();
 	
-	//배경음 슬라이더
-	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
-	TObjectPtr<USlider> BGMSlider;
+public:
+	//설정 패널 열기
+	void OpenSettingsPanel();
 	
-	//효과음 슬라이더
-	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
-	TObjectPtr<USlider> SESlider;
+	//설정 패널 닫을 때 실행할 내용
+	FOnClosePanel OnClosePanel;
 	
-	//마우스 감도 슬라이더
+private:
+	//상단 탭 버튼이 있는 가로 박스
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
-	TObjectPtr<USlider> MouseSensitivitySlider;
+	TObjectPtr<UHorizontalBox> TabButtonsBox;
 	
-	//해상도 콤보박스
+	//닫기 버튼
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
-	TObjectPtr<UComboBoxString> ResolutionComboBox;
-	
-	//화면 모드 콤보박스
-	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
-	TObjectPtr<UComboBoxString> ScreenModeComboBox;
-	
-	//그래픽 퀄리티 콤보박스
-	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
-	TObjectPtr<UComboBoxString> GraphicQualityComboBox;
-	
-	//초기화 버튼
-	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
-	TObjectPtr<UButton> ResetButton;
+	TObjectPtr<UButton> CloseButton;
 	
 	//확인 버튼
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
 	TObjectPtr<UButton> ConfirmButton;
+	
+	//범주별로 나눈 설정 위젯들
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UT3SettingsPanelCategory>> CategoryWidgets;
+	
+	//설정 위젯의 부모
+	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
+	TObjectPtr<UCanvasPanel> SettingCategoriesParent;
 	
 	//게임 모드
 	UPROPERTY()
@@ -92,7 +70,6 @@ private:
 	UPROPERTY()
 	TObjectPtr<UT3GameInstance> T3GameInstance;
 	
-	//풀레이어 컨트롤러
-	UPROPERTY()
-	TObjectPtr<AT3TitlePlayerController> TitlePlayerController;
+	//현재 열린 카테고리 패널 번호
+	int32 CurrentPanelNum;
 };
