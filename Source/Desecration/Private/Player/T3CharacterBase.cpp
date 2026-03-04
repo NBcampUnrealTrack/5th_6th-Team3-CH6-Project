@@ -60,6 +60,11 @@ AT3CharacterBase::AT3CharacterBase()
 	LoadTimeAfterDeath = 3.0f;
 }
 
+void AT3CharacterBase::RequestSellItem(const FInventorySlot& SlotData, const int32& Count)
+{
+	OnSellItemRequested.Broadcast(SlotData, Count);
+}
+
 void AT3CharacterBase::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
@@ -137,10 +142,6 @@ void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)
 	}
 }
 
-void AT3CharacterBase::RequestSellItem(const FInventorySlot& SlotData)
-{
-	OnSellItemRequested.Broadcast(SlotData);
-}
 
 void AT3CharacterBase::BeginPlay()
 {

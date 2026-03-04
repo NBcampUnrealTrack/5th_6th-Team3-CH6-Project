@@ -26,4 +26,7 @@ struct FT3ShopData : public FTableRowBase
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sell Data")
 	uint8 bCanSell : 1 = false; // 플레이어가 팔 수 있는지
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data", meta = (MultiLine = true))
+	FText ItemInfo = FText::GetEmpty();
 };
