@@ -34,7 +34,7 @@ enum class ET3StatType : uint8
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnStatChangedDelegate, ET3StatType, StatType, float, CurrentValue, float, MaxValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnForcedMoveEndSignature);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSellItemRequested, const FInventorySlot&, SlotData);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSellItemRequested, const FInventorySlot&, SlotData, const int32&, Count);
 
 UCLASS()
 class DESECRATION_API AT3CharacterBase : public ACharacter
@@ -54,7 +54,7 @@ FOnForcedMoveEndSignature OnForcedMoveEnd;
 
 // 아이템 관련 델리게이트 바인딩 함수
 UFUNCTION(BlueprintCallable)
-void RequestSellItem(const FInventorySlot& SlotData);
+void RequestSellItem(const FInventorySlot& SlotData, const int32& Count = 1);
 UPROPERTY(BlueprintAssignable)
 FOnSellItemRequested OnSellItemRequested;
 
@@ -63,7 +63,7 @@ TObjectPtr <UDataTable> ItemDataTable;
 
 protected:
 	virtual void BeginPlay() override;
-	// virtual void PostInitializeComponents();
+	virtual void PostInitializeComponents() override; // BeginPlay보다 앞선 초기화 지점
 	virtual void Tick( float DeltaTime ) override;
 	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
 	

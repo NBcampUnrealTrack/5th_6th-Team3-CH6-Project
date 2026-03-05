@@ -109,6 +109,9 @@ public:
 
 	void ShowShopUI(UT3ShopComponent* ShopComp);
 	
+	bool GetIsUpgradeUIOpen() const;
+	void SetIsUpgradeUIOpen(bool bIsOpen);
+	
 protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> ChangeSkillSlotAction;
@@ -148,8 +151,9 @@ private:
 	void Input_ChangePotionSlot(const FInputActionValue& Value);
 	void Input_ChangeConsumableSlot(const FInputActionValue& Value);
 	void Input_ActiveSkillSlot(const FInputActionValue& Value);
+	void Input_ActiveSkillSlot_Completed(const FInputActionValue& Value);
 	void Input_ActivePotionSlot(const FInputActionValue& Value);
 	void Input_ActiveConsumableSlot(const FInputActionValue& Value);
 
-
+	uint8 bIsUpgradeUIOpen : 1 = false;
 };

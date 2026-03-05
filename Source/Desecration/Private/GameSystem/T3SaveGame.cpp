@@ -44,7 +44,13 @@ void UT3SaveGame::ResetGameData()
 		Items.Add(FInventorySlot());
 	}
 	Money = 0;
-	//TODO : 포션 강화 완성시 초기화 연동
+	
+	//포션
+	HPPotionCount = 3;
+	MPPotionCount = 3;
+	PotionAmountUpgradeLevel = 0;
+	PotionRecoveryUpgradeLevel = 0;
+	
 	//강화석
 	NormalStoneCount = 0;
 	EpicStoneCount = 0;

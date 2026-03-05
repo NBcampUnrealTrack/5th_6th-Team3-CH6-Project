@@ -3,9 +3,9 @@
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "GameSystem/T3GameInstance.h"
-#include "GameSystem/T3TitleGameMode.h"
 #include "Player/T3TitlePlayerController.h"
 #include "UI/T3ConfirmPanel.h"
+#include "UI/T3SettingsPanel.h"
 
 void UT3TitleLevelWidget::NativeConstruct()
 {
@@ -32,6 +32,9 @@ void UT3TitleLevelWidget::NativeConstruct()
 	{
 		LoadButton->SetIsEnabled(false);
 	}
+	
+	//설정 패널을 닫으면 타이틀 버튼을 복구
+	SettingsPanel->OnClosePanel.BindUObject(this, &ThisClass::RestoreTitleButtons);
 }
 
 void UT3TitleLevelWidget::OnClickNewGameButton()
@@ -39,7 +42,7 @@ void UT3TitleLevelWidget::OnClickNewGameButton()
 	//저장된 게임이 있는 경우 패널을 통해 물어보기
 	if (TitlePlayerController->DoesSavedDataExist())
 	{
-		ConfirmPanel->ShowConfirmPanel(CheckNewGame);
+		ConfirmPanel->ShowConfirmPanel(UT3GameInstance::GetStringFromTable(NAMESPACE_NAME, CheckNewGame));
 		ConfirmPanel->OnClickConfirmButtonAction.AddDynamic(TitlePlayerController, &AT3TitlePlayerController::MoveToSelectClassLevel);
 		return;
 	}
@@ -55,17 +58,23 @@ void UT3TitleLevelWidget::OnClickLoadButton()
 		return;
 	}
 	
-	ConfirmPanel->ShowConfirmPanel(TEXT("저장된 게임을 불러옵니다."));
+	ConfirmPanel->ShowConfirmPanel(UT3GameInstance::GetStringFromTable(NAMESPACE_NAME, LoadGameMessage));
 	ConfirmPanel->OnClickConfirmButtonAction.AddDynamic(TitlePlayerController, &AT3TitlePlayerController::MoveToLastSavedLevel);
 }
 
 void UT3TitleLevelWidget::OnClickSettingsButton()
 {
-	TitlePlayerController->SetActiveSettingsPanel(true);
+	SettingsPanel->OpenSettingsPanel();
+	TitleButtonsBox->SetVisibility(ESlateVisibility::Hidden);
 }
 
 void UT3TitleLevelWidget::OnClickQuitButton()
 {
-	ConfirmPanel->ShowConfirmPanel(QuitGameMessage);
+	ConfirmPanel->ShowConfirmPanel(UT3GameInstance::GetStringFromTable(NAMESPACE_NAME, QuitGameMessage));
 	ConfirmPanel->OnClickConfirmButtonAction.AddDynamic(TitlePlayerController, &AT3TitlePlayerController::QuitGame);
+}
+
+void UT3TitleLevelWidget::RestoreTitleButtons()
+{
+	TitleButtonsBox->SetVisibility(ESlateVisibility::Visible);
 }

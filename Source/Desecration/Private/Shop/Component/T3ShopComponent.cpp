@@ -10,11 +10,17 @@ UT3ShopComponent::UT3ShopComponent()
 
 }
 
-EShopBuyResult UT3ShopComponent::BuyItem(const FName& ItemName, UT3InventoryComponent* Inventory)
+EShopBuyResult UT3ShopComponent::BuyItem(const FName& ItemName, UT3InventoryComponent* Inventory, int32 Count)
 {
 	if (!IsValid(ShopData) || !IsValid(Inventory))
 	{
 		return EShopBuyResult::InvalidData;
+	}
+	
+	if (Count <= 0)
+	{
+		UE_LOG(LogTemp, Error, TEXT("사는 개수가 0개임"));
+		return EShopBuyResult::ZeroCount;
 	}
 	
 	FT3ShopData* ItemRow = ShopData->FindRow<FT3ShopData>(ItemName, TEXT("BuyItem"));
@@ -30,24 +36,30 @@ EShopBuyResult UT3ShopComponent::BuyItem(const FName& ItemName, UT3InventoryComp
 		return EShopBuyResult::CannotBuy;
 	}
 	
-	if (Inventory->GetMoney() < ItemRow->BuyPrice)
+	if (Inventory->GetMoney() < ItemRow->BuyPrice * Count)
 	{
 		UE_LOG(LogTemp, Error, TEXT("아이템을 구매할 돈이 없습니다."));
 		return EShopBuyResult::NotEnoughMoney;
 	}
 	
-	Inventory->AddItem(ItemName);
-	Inventory->SetMoney(Inventory->GetMoney() - ItemRow->BuyPrice);
+	Inventory->AddItemByCount(ItemName, Count);
+	Inventory->SetMoney(Inventory->GetMoney() - (ItemRow->BuyPrice * Count));
 	
 	return EShopBuyResult::Succeeded;
 }
 
-EShopSellResult UT3ShopComponent::SellItem(const FName& ItemName, UT3InventoryComponent* Inventory)
+EShopSellResult UT3ShopComponent::SellItem(const FName& ItemName, UT3InventoryComponent* Inventory, int32 Count)
 {
 	if (!IsValid(ShopData) || !IsValid(Inventory))
 	{
 		UE_LOG(LogTemp, Error, TEXT("데이터 또는 인벤토리가 유효하지않음"));
 		return EShopSellResult::InvalidData;
+	}
+	
+	if (Count <= 0)
+	{
+		UE_LOG(LogTemp, Error, TEXT("파는 개수가 0개임"));
+		return EShopSellResult::ZeroCount;
 	}
 	
 	FT3ShopData* ItemRow = ShopData->FindRow<FT3ShopData>(ItemName, TEXT("BuyItem"));
@@ -64,13 +76,13 @@ EShopSellResult UT3ShopComponent::SellItem(const FName& ItemName, UT3InventoryCo
 		return EShopSellResult::CannotSell;
 	}
 	
-	if (!Inventory->RemoveItem(ItemName))
+	if (!Inventory->RemoveItemByCount(ItemName, Count))
 	{
-		UE_LOG(LogTemp, Error, TEXT("인벤토리에 [%s]이 없음"), *ItemName.ToString());
-		return EShopSellResult::ItemNotFound;
+		UE_LOG(LogTemp, Error, TEXT("인벤토리에 [%s]이 충분하지 않음"), *ItemName.ToString());
+		return EShopSellResult::NotEnoughCount;
 	}
 	
-	Inventory->SetMoney(Inventory->GetMoney() + ItemRow->SellPrice);
+	Inventory->SetMoney(Inventory->GetMoney() + (ItemRow->SellPrice * Count));
 	
 	return EShopSellResult::Succeeded;
 }
@@ -102,6 +114,7 @@ void UT3ShopComponent::GetShopItemUIData(TArray<FT3ShopItemUIData>& OutItems) co
 		UIData.SellPrice = Row->SellPrice;
 		UIData.bCanBuy = Row->bCanBuy;
 		UIData.bCanSell = Row->bCanSell;
+		UIData.ItemInfo = Row->ItemInfo;
 		
 		OutItems.Add(UIData);
 	}
