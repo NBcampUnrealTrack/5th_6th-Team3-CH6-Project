@@ -7,7 +7,8 @@
 
 UT3BossWeaponComponent::UT3BossWeaponComponent()
 {
-	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bStartWithTickEnabled = false;
 
 	// 무기 메시 (AttachToSocket에서 소켓 부착)
 	WeaponMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
@@ -82,6 +83,31 @@ void UT3BossWeaponComponent::BeginPlay()
 	}
 }
 
+void UT3BossWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (bIsBlendingSocket && WeaponMeshComponent)
+	{
+		SocketBlendElapsed += DeltaTime;
+		float Alpha = FMath::Clamp(SocketBlendElapsed / SocketBlendDuration, 0.f, 1.f);
+
+		// EaseOut — 시작에 빠르게 이동, 끝에서 미세 안착
+		Alpha = FMath::InterpEaseOut(0.f, 1.f, Alpha, SocketBlendExponent);
+
+		FTransform BlendedTransform;
+		BlendedTransform.Blend(SocketBlendStartRelative, FTransform::Identity, Alpha);
+		WeaponMeshComponent->SetRelativeTransform(BlendedTransform);
+
+		if (Alpha >= 1.f)
+		{
+			WeaponMeshComponent->SetRelativeTransform(FTransform::Identity);
+			bIsBlendingSocket = false;
+			SetComponentTickEnabled(false);
+		}
+	}
+}
+
 void UT3BossWeaponComponent::AttachToSocket(USkeletalMeshComponent* TargetMesh)
 {
 	if (!WeaponMeshComponent || !TargetMesh)
@@ -93,10 +119,10 @@ void UT3BossWeaponComponent::AttachToSocket(USkeletalMeshComponent* TargetMesh)
 	}
 
 	// 소켓 존재 확인
-	if (!TargetMesh->DoesSocketExist(WeaponSocketName))
+	if (!TargetMesh->DoesSocketExist(DefaultSocketName))
 	{
 		UE_LOG(LogDesecration, Error, TEXT("T3_BossWeapon: 소켓 '%s'이 스켈레탈 메시에 없음! 사용 가능한 소켓:"),
-			*WeaponSocketName.ToString());
+			*DefaultSocketName.ToString());
 
 		TArray<FName> AllSockets = TargetMesh->GetAllSocketNames();
 		for (const FName& SocketName : AllSockets)
@@ -107,7 +133,7 @@ void UT3BossWeaponComponent::AttachToSocket(USkeletalMeshComponent* TargetMesh)
 	}
 
 	WeaponMeshComponent->AttachToComponent(
-		TargetMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocketName);
+		TargetMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, DefaultSocketName);
 
 	// HitBox를 WeaponMesh에 명시적 재부착
 	// (생성자의 SetupAttachment가 UActorComponent 내부 생성 시 런타임에 유지 안 됨)
@@ -123,10 +149,79 @@ void UT3BossWeaponComponent::AttachToSocket(USkeletalMeshComponent* TargetMesh)
 			WeaponMeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 	}
 
+	// 소켓 스위칭용 캐싱
+	CachedTargetMesh = TargetMesh;
+
 	UE_LOG(LogDesecration, Log, TEXT("T3_BossWeapon: 소켓 '%s'에 부착 성공 (Mesh위치:%s, HitBox위치:%s)"),
-		*WeaponSocketName.ToString(),
+		*DefaultSocketName.ToString(),
 		*WeaponMeshComponent->GetComponentLocation().ToString(),
 		WeaponHitBox ? *WeaponHitBox->GetComponentLocation().ToString() : TEXT("nullptr"));
+}
+
+FName UT3BossWeaponComponent::GetSocketNameByType(EWeaponSocketType SocketType) const
+{
+	switch (SocketType)
+	{
+	case EWeaponSocketType::Alternative:
+		return AlternativeSocketName;
+	default:
+		return DefaultSocketName;
+	}
+}
+
+void UT3BossWeaponComponent::SwitchToSocket(EWeaponSocketType SocketType)
+{
+	if (!CachedTargetMesh || !WeaponMeshComponent || bIsWeaponDropped)
+	{
+		return;
+	}
+
+	const FName TargetSocketName = GetSocketNameByType(SocketType);
+
+	if (!CachedTargetMesh->DoesSocketExist(TargetSocketName))
+	{
+		UE_LOG(LogDesecration, Warning, TEXT("T3_BossWeapon: 소켓 스위칭 실패 — '%s' 소켓 없음"),
+			*TargetSocketName.ToString());
+		return;
+	}
+
+	// 블렌드용: 전환 전 월드 트랜스폼 저장
+	const FTransform OldWorldTransform = WeaponMeshComponent->GetComponentTransform();
+
+	// 새 소켓에 스냅 (상대 트랜스폼 = Identity)
+	WeaponMeshComponent->AttachToComponent(
+		CachedTargetMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TargetSocketName);
+
+	// 히트박스 재부착
+	if (WeaponHitBox)
+	{
+		WeaponHitBox->AttachToComponent(
+			WeaponMeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	}
+	if (WeaponHitBoxWide)
+	{
+		WeaponHitBoxWide->AttachToComponent(
+			WeaponMeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	}
+
+	// 블렌드 시작 — 옛 위치에서 새 소켓으로 부드럽게 전환
+	if (SocketBlendDuration > 0.f)
+	{
+		const FTransform NewSocketWorldTransform = WeaponMeshComponent->GetComponentTransform();
+		SocketBlendStartRelative = OldWorldTransform.GetRelativeTransform(NewSocketWorldTransform);
+		WeaponMeshComponent->SetRelativeTransform(SocketBlendStartRelative);
+		SocketBlendElapsed = 0.f;
+		bIsBlendingSocket = true;
+		SetComponentTickEnabled(true);
+	}
+
+	UE_LOG(LogDesecration, Log, TEXT("T3_BossWeapon: 소켓 스위칭 → '%s' (블렌드:%.2f초)"),
+		*TargetSocketName.ToString(), SocketBlendDuration);
+}
+
+void UT3BossWeaponComponent::ResetToDefaultSocket()
+{
+	SwitchToSocket(EWeaponSocketType::Default);
 }
 
 void UT3BossWeaponComponent::SetAttackCollisionEnabled(bool bEnable)

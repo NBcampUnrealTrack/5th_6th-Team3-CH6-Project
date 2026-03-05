@@ -56,6 +56,10 @@ struct FPatternMontageData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<UAnimMontage> Montage = nullptr;
 
+	// 섹션 콤보 모드에서 재생할 섹션 이름 (bUseSectionCombo=true일 때만 사용)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName SectionName = NAME_None;
+
 	// 시작 배속
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float PlayRate = 1.0f;
@@ -115,6 +119,12 @@ struct FMidBossAttackPattern
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FPatternMontageData> MontageChain;
 
+	// 섹션 콤보 모드 — MontageChain[0]의 몽타주를 섹션으로 진행
+	// true: 같은 몽타주 내 섹션 자동 연결 (idle 복귀 없음)
+	// 마지막 엔트리에 다른 몽타주 지정 시 체인으로 연결 (자연스러운 idle 복귀용)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bUseSectionCombo = false;
+
 	// 해금 스테이지 (1 = 항상 사용 가능)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 RequiredStage = 1;
@@ -122,6 +132,16 @@ struct FMidBossAttackPattern
 	// 쿨다운 초 (0이면 쿨다운 없음)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Cooldown = 0.f;
+
+	// 공용 쿨다운 그룹 (같은 그룹 패턴은 쿨다운 공유 — 예: "DK_Combo2" 그룹이면 Short/Mid/Full 동시 쿨다운)
+	// NAME_None이면 개별 쿨다운만 사용
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName CooldownGroup = NAME_None;
+
+	// 그룹 쿨다운 초 (이 패턴 사용 시 그룹 전체에 걸리는 쿨다운)
+	// Cooldown = 개별, GroupCooldown = 그룹 — 둘 다 적용됨
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (EditCondition = "CooldownGroup != NAME_None"))
+	float GroupCooldown = 0.f;
 
 	// ActionCount 소모량 (0 = 소모 안 함, 예: Evasion)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
