@@ -37,4 +37,7 @@ protected:
 	
 	UFUNCTION()
 	void ApplyDamage();
+	
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnDoTAttack();
 };

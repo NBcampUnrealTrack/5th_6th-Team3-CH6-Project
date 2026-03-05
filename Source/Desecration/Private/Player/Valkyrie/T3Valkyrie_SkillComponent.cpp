@@ -2,7 +2,7 @@
 
 
 #include "Player/Valkyrie/T3Valkyrie_SkillComponent.h"
-
+#include "Player/Valkyrie/T3LunarSlash.h"
 #include "Player/T3CharacterBase.h"
 
 

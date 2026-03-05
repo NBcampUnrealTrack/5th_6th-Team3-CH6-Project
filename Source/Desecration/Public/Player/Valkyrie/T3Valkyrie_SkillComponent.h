@@ -56,6 +56,12 @@ public:
 	
 	virtual void BasicAttackCount() override;
 #pragma endregion
+	
+#pragma region LunarSlash
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "LunarSlash")
+	TSubclassOf<class AT3LunarSlash> AT3LunarSlash;
+#pragma endregion
+	
     UPROPERTY(EditAnywhere, Category = "Skill Data")
     FSkillData EmptySkillData;
 	UPROPERTY(EditAnywhere, Category = "Skill Data")
