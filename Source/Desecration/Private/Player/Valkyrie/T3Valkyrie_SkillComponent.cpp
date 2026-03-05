@@ -62,12 +62,12 @@ void UT3Valkyrie_SkillComponent::BasicAttackCount()
     
     if (CurrentBasicAttackCount >= 4)
     {
-        AT3CharacterBase* OwnerChar = Cast<AT3CharacterBase>(GetOwner());
         if (OwnerChar)
         {
             float HealAmount = OwnerChar->GetMaxHP() * 0.1f;
             float NewHP = FMath::Clamp(OwnerChar->GetCurrentHP() + HealAmount, 0.0f, OwnerChar->GetMaxHP());
             OwnerChar->SetCurrentHP(NewHP);
+            CurrentBasicAttackCount = 0;
         }
     }
 }

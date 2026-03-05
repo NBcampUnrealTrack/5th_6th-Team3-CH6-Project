@@ -54,7 +54,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Passive")
 	int32 CurrentBasicAttackCount = 0;
 	
-	UFUNCTION(BlueprintCallable)
 	virtual void BasicAttackCount() override;
 #pragma endregion
     UPROPERTY(EditAnywhere, Category = "Skill Data")
