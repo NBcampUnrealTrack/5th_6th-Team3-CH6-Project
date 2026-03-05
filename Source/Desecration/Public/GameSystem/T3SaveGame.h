@@ -87,30 +87,21 @@ public:
 	UPROPERTY()
 	int32 Money;
 	
-	//TODO : 포션 강화 완성시 변수 타입 및 이름 변경하기
-	//현재 HP포션 개수
+	//HP포션 개수
 	UPROPERTY()
-	int32 CurrentHPPotionCount;
+	int32 HPPotionCount;
 	
-	//현재 MP포션 개수
+	//MP포션 개수
 	UPROPERTY()
-	int32 CurrentMPPotionCount;
+	int32 MPPotionCount;
 	
-	//현재 HP포션 개수 강화 단계
+	//포션 개수 강화 단계
 	UPROPERTY()
-	int32 CurrentHPPotionAmountLevel;
+	int32 PotionAmountUpgradeLevel;
 	
-	//현재 HP포션 회복량 강화 단계
+	//포션 회복량 강화 단계
 	UPROPERTY()
-	int32 CurrentHPIncreaseAmountLevel;
-	
-	//현재 MP포션 개수 강화 단계
-	UPROPERTY()
-	int32 CurrentMPPotionAmountLevel;
-	
-	//현재 MP포션 회복량 강화 단계
-	UPROPERTY()
-	int32 CurrentMPIncreaseAmountLevel;
+	int32 PotionRecoveryUpgradeLevel;
 #pragma endregion
 	
 #pragma region 장비

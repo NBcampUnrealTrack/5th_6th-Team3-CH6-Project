@@ -14,6 +14,7 @@ class DESECRATION_API UT3ControllerSettings : public UT3SettingsPanelCategory
 protected:
 	virtual void CustomNativeConstruct() override;
 	virtual void InitializeSettingsPanel() override;
+	virtual void ReinitializeByChangeLanguage() override;
 	virtual void SaveSettings() override;
 	
 private:
