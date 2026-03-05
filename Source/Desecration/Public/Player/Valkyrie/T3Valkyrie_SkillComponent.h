@@ -60,12 +60,17 @@ public:
 #pragma region LunarSlash
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "LunarSlash")
 	TSubclassOf<class AT3LunarSlash> AT3LunarSlash;
+	
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnLunarSlash();
 #pragma endregion
 	
     UPROPERTY(EditAnywhere, Category = "Skill Data")
     FSkillData EmptySkillData;
 	UPROPERTY(EditAnywhere, Category = "Skill Data")
 	FSkillData PowerStrikeSkillData;
+	UPROPERTY(EditAnywhere, Category = "Skill Data")
+	FSkillData LunarSlashSkillData;
 
     // 아래에 추가될 스킬의 데이터 추가
     // 
