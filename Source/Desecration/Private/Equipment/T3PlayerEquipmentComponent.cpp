@@ -8,23 +8,17 @@
 #include "Engine/StaticMeshActor.h" 
 
 UT3PlayerEquipmentComponent::UT3PlayerEquipmentComponent()
+    : WeaponTable(nullptr)
+    , ArmorTable(nullptr)
+    , WeaponInstance(nullptr)
+    , ArmorInstance(nullptr)
+    , SpawnedWeaponActor(nullptr)
+    , DefaultWeaponID("BaseWeapon")
+    , DefaultArmorID("BaseArmor")
+    , CurrentAttackPower(0.0f)
+    , CurrentDefensePower(0.0f)
 {
     PrimaryComponentTick.bCanEverTick = false;
-
-    // 포인터 변수는 반드시 nullptr로 초기화해야 안전합니다.
-    WeaponTable = nullptr;
-    ArmorTable = nullptr;
-
-    WeaponInstance = nullptr;
-    ArmorInstance = nullptr;
-    SpawnedWeaponActor = nullptr;
-
-    // FName은 기본값이 NAME_None이지만 명시적으로 해주는 게 좋습니다.
-    DefaultWeaponID = NAME_None;
-    DefaultArmorID = NAME_None;
-
-    CurrentAttackPower = 0.0f;
-    CurrentDefensePower = 0.0f;
 }
 
 void UT3PlayerEquipmentComponent::BeginPlay()
