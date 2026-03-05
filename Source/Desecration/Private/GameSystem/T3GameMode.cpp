@@ -49,6 +49,11 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	SaveGame->MoveSpeed = Character->GetMoveSpeed();
 	//인벤토리
 	TObjectPtr<UT3InventoryComponent> InventoryComponent = Character->InventoryComponent;
+	if (!InventoryComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : InventoryComponent가 null"), *GetNameSafe(this));
+		return false;
+	}
 	SaveGame->Items.Empty();
 	for (FInventorySlot& Slot : InventoryComponent->Items)
 	{
@@ -58,6 +63,12 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	SaveGame->NormalStoneCount = InventoryComponent->GetNormalStoneCount();
 	SaveGame->EpicStoneCount = InventoryComponent->GetEpicStoneCount();
 	SaveGame->LegendaryStoneCount = InventoryComponent->GetLegendaryStoneCount();
+	//포션
+	SaveGame->HPPotionCount = InventoryComponent->GetHPPotionCount();
+	SaveGame->MPPotionCount = InventoryComponent->GetMPPotionCount();
+	SaveGame->PotionAmountUpgradeLevel = InventoryComponent->GetPotionAmountUpgradeLevel();
+	SaveGame->PotionRecoveryUpgradeLevel = InventoryComponent->GetPotionRecoveryUpgradeLevel();
+	
 	//장비
 	if (UT3PlayerEquipmentComponent* EquipComp = Character->FindComponentByClass<UT3PlayerEquipmentComponent>())
 	{
@@ -159,7 +170,11 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 		InventoryComponent->SetNormalStoneCount(SaveGame->NormalStoneCount);
 		InventoryComponent->SetEpicStoneCount(SaveGame->EpicStoneCount);
 		InventoryComponent->SetLegendaryStoneCount(SaveGame->LegendaryStoneCount);
-
+		
+		//포션
+		InventoryComponent->SetHPPotionCount(SaveGame->HPPotionCount);
+		InventoryComponent->SetMPPotionCount(SaveGame->MPPotionCount);
+		InventoryComponent->LoadPotionUpgradeLevel(SaveGame->PotionAmountUpgradeLevel, SaveGame->PotionRecoveryUpgradeLevel);
 	}
 	else
 	{
