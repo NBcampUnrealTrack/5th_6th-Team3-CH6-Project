@@ -43,7 +43,7 @@ void UT3Valkyrie_SkillComponent::EndCharging()
 {
     if (!bIsCharging || bHasRelease) return;
     GetWorld()->GetTimerManager().ClearTimer(ChargingTimerHandle);
-    
+    GetWorld()->GetTimerManager().ClearTimer(MaxChargingTimerHandle);
     bHasRelease = true;
     OnEndCharging();
 }
@@ -51,6 +51,7 @@ void UT3Valkyrie_SkillComponent::EndCharging()
 void UT3Valkyrie_SkillComponent::MaxCharging()
 {
     if (!bIsCharging || bHasRelease) return;
+    GetWorld()->GetTimerManager().ClearTimer(ChargingTimerHandle);
     GetWorld()->GetTimerManager().ClearTimer(MaxChargingTimerHandle);
     
     bHasRelease = true;
