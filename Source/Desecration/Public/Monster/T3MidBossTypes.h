@@ -27,26 +27,7 @@ enum class EMidBossPatternCategory : uint8
 // Struct: 공격 패턴 데이터
 // ============================================================
 
-// 서브 히트 데이터 (한 몽타주 내 개별 공격별 데미지/강도)
-USTRUCT(BlueprintType)
-struct FSubHitData
-{
-	GENERATED_BODY()
-
-	// 이 히트의 데미지
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float Damage = 20.f;
-
-	// 경직 강도
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EHitIntensity HitIntensity = EHitIntensity::Light;
-
-	// 데미지 타입 (nullptr이면 몽타주 기본값 사용)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<UT3DamageType_Base> DamageTypeClass;
-};
-
-// 체인 내 개별 몽타주 데이터
+// 체인 내 개별 몽타주 데이터 (한 섹션 = 한 공격)
 USTRUCT(BlueprintType)
 struct FPatternMontageData
 {
@@ -64,22 +45,21 @@ struct FPatternMontageData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float PlayRate = 1.0f;
 
-	// 기본 데미지 (SubHits 비어있을 때 사용)
+	// 데미지
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Damage = 20.f;
 
-	// 기본 경직 강도 (SubHits 비어있을 때 사용)
+	// 경직 강도
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EHitIntensity HitIntensity = EHitIntensity::Light;
 
-	// 기본 데미지 타입 (SubHits 비어있을 때 사용)
+	// 데미지 타입
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<UT3DamageType_Base> DamageTypeClass;
 
-	// 서브 히트별 데미지 (비어있으면 위 Damage/HitIntensity 단일값 사용)
-	// AttackStart 노티파이마다 인덱스 증가 — [0]=첫 타, [1]=둘째 타, ...
+	// 모션 워프 최대 거리 오버라이드 (0 이하 = 보스 기본값 사용)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<FSubHitData> SubHits;
+	float MaxWarpDistanceOverride = 0.f;
 };
 
 // 노티파이별 기본 발동 확률
@@ -116,7 +96,7 @@ struct FMidBossAttackPattern
 	EMidBossPatternCategory Category = EMidBossPatternCategory::Melee;
 
 	// 체인 몽타주 배열 (순서대로 재생, 1개면 단타, 2개면 2타 체인)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (TitleProperty = "[{SectionName}] Dmg:{Damage} Rate:{PlayRate} Warp:{MaxWarpDistanceOverride}"))
 	TArray<FPatternMontageData> MontageChain;
 
 	// 섹션 콤보 모드 — MontageChain[0]의 몽타주를 섹션으로 진행

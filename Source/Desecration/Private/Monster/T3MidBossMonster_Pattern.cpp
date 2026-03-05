@@ -255,16 +255,14 @@ void AT3MidBossMonster::HandlePatternNotify(FName NotifyName)
 	// --- 판정 ON/OFF (항상 실행) ---
 	else if (Name.Equals(TEXT("AttackStart")))
 	{
-		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: AttackStart 노티파이 수신 (SubHit:%d, WeaponComponent: %s)"),
-			CurrentSubHitIndex, WeaponComponent ? TEXT("유효") : TEXT("nullptr"));
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: AttackStart 노티파이 수신 (WeaponComponent: %s)"),
+			WeaponComponent ? TEXT("유효") : TEXT("nullptr"));
 		if (WeaponComponent) { WeaponComponent->SetAttackCollisionEnabled(true); }
 	}
 	else if (Name.Equals(TEXT("AttackEnd")))
 	{
-		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: AttackEnd 노티파이 수신 (SubHit:%d)"), CurrentSubHitIndex);
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: AttackEnd 노티파이 수신"));
 		if (WeaponComponent) { WeaponComponent->SetAttackCollisionEnabled(false); }
-		// AttackEnd마다 서브히트 인덱스 증가 (다음 AttackStart에서 다음 데미지 사용)
-		CurrentSubHitIndex++;
 	}
 	// --- 투사체 스폰 (검기) — 카운터 패턴이면 스킵 ---
 	else if (Name.Equals(TEXT("SpawnProjectile")))
@@ -299,8 +297,8 @@ void AT3MidBossMonster::HandlePatternNotify(FName NotifyName)
 		TSubclassOf<UT3DamageType_Base> AoEDmgType = nullptr;
 		GetCurrentHitData(AoEDamage, AoEIntensity, AoEDmgType);
 		ExecuteAoEDamage(AoERadius, AoEDamage, AoEIntensity);
-		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: GroundSlam 노티파이 — AoE 발동 (반경:%.0f, 데미지:%.0f, SubHit:%d)"),
-			AoERadius, AoEDamage, CurrentSubHitIndex);
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: GroundSlam 노티파이 — AoE 발동 (반경:%.0f, 데미지:%.0f)"),
+			AoERadius, AoEDamage);
 	}
 	// --- 패링 윈도우 ON/OFF — bHasParryWindow 체크 ---
 	else if (Name.Equals(TEXT("ParryWindowStart")))
@@ -328,10 +326,18 @@ void AT3MidBossMonster::HandlePatternNotify(FName NotifyName)
 		if (PatternData && PatternData->bUseSectionCombo)
 		{
 			CurrentChainIndex++;
-			CurrentSubHitIndex = 0;
+
+			// 새 섹션의 PlayRate 적용 — SetNextSection은 배속을 변경하지 않으므로 명시적 갱신
+			if (PatternData->MontageChain.IsValidIndex(CurrentChainIndex))
+			{
+				const float NewPlayRate = PatternData->MontageChain[CurrentChainIndex].PlayRate;
+				AnimInstance->Montage_SetPlayRate(CurrentMontage, NewPlayRate);
+			}
+
 			UE_LOG(LogDesecration, Log,
-				TEXT("T3_MidBoss: NextCombo — 섹션 진행 체인[%d] (패턴:'%s')"),
-				CurrentChainIndex, *CurrentPatternName.ToString());
+				TEXT("T3_MidBoss: NextCombo — 섹션 진행 체인[%d] (패턴:'%s', 배속:%.1f)"),
+				CurrentChainIndex, *CurrentPatternName.ToString(),
+				PatternData->MontageChain.IsValidIndex(CurrentChainIndex) ? PatternData->MontageChain[CurrentChainIndex].PlayRate : -1.f);
 		}
 	}
 	// --- 넓은 판정 ON/OFF (대쉬 내려찍기 등) ---
@@ -480,23 +486,9 @@ void AT3MidBossMonster::GetCurrentHitData(float& OutDamage, EHitIntensity& OutIn
 	}
 
 	const FPatternMontageData& MontageData = PatternData->MontageChain[CurrentChainIndex];
-
-	// SubHits 배열에 현재 인덱스가 있으면 서브히트 데이터 사용
-	if (MontageData.SubHits.IsValidIndex(CurrentSubHitIndex))
-	{
-		const FSubHitData& SubHit = MontageData.SubHits[CurrentSubHitIndex];
-		OutDamage = SubHit.Damage;
-		OutIntensity = SubHit.HitIntensity;
-		// 서브히트 DamageType이 nullptr이면 몽타주 기본값 폴백
-		OutDamageType = SubHit.DamageTypeClass ? SubHit.DamageTypeClass : MontageData.DamageTypeClass;
-	}
-	else
-	{
-		// SubHits 비어있거나 인덱스 초과 → 기본값 사용
-		OutDamage = MontageData.Damage;
-		OutIntensity = MontageData.HitIntensity;
-		OutDamageType = MontageData.DamageTypeClass;
-	}
+	OutDamage = MontageData.Damage;
+	OutIntensity = MontageData.HitIntensity;
+	OutDamageType = MontageData.DamageTypeClass;
 }
 
 const FMidBossAttackPattern* AT3MidBossMonster::FindPatternData(FName PatternName) const
@@ -643,7 +635,6 @@ void AT3MidBossMonster::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 				{
 					// 후속 체인 몽타주 발견 → 전환
 					CurrentChainIndex = i;
-					CurrentSubHitIndex = 0;
 					UE_LOG(LogDesecration, Log,
 						TEXT("T3_MidBoss: 섹션 콤보 → 체인 전환 — 패턴:'%s' 체인[%d]"),
 						*CurrentPatternName.ToString(), CurrentChainIndex);
@@ -663,7 +654,6 @@ void AT3MidBossMonster::AdvanceChainOrComplete()
 	const FMidBossAttackPattern* PatternData = FindPatternData(CurrentPatternName);
 
 	CurrentChainIndex++;
-	CurrentSubHitIndex = 0;
 
 	if (PatternData && PatternData->MontageChain.IsValidIndex(CurrentChainIndex))
 	{
@@ -695,7 +685,6 @@ void AT3MidBossMonster::ResetPatternState()
 
 	CurrentPatternName = NAME_None;
 	CurrentChainIndex = 0;
-	CurrentSubHitIndex = 0;
 	bParrySucceeded = false;
 	RemoveStateTag(TAG_Boss_State_ExecutingPattern);
 	if (MotionWarpingComponent) { MotionWarpingComponent->RemoveWarpTarget(MotionWarpTargetName); MotionWarpingComponent->RemoveWarpTarget(MotionWarpTargetRotationName); }

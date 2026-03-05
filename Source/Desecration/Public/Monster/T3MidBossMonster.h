@@ -167,7 +167,7 @@ public:
 	// ============================================================
 #pragma region Pattern
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Patterns")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Patterns", meta = (TitleProperty = "PatternName"))
 	TArray<FMidBossAttackPattern> AttackPatterns;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Modifier")
@@ -479,7 +479,6 @@ private:
 
 	FName CurrentPatternName = NAME_None;
 	int32 CurrentChainIndex = 0;
-	int32 CurrentSubHitIndex = 0;
 
 	UPROPERTY()
 	TMap<FName, double> PatternCooldownExpireMap;
@@ -495,7 +494,7 @@ private:
 
 	bool ShouldTriggerNotify(FName NotifyName) const;
 
-	// 현재 서브히트 데미지/강도/타입 조회 (SubHits 있으면 인덱스 참조, 없으면 기본값)
+	// 현재 체인 엔트리의 데미지/강도/타입 조회
 	void GetCurrentHitData(float& OutDamage, EHitIntensity& OutIntensity, TSubclassOf<UT3DamageType_Base>& OutDamageType) const;
 
 #pragma endregion Private_Pattern

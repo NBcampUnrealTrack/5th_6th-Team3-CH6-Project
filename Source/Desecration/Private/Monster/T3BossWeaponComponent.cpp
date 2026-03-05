@@ -310,6 +310,10 @@ void UT3BossWeaponComponent::DropWeapon()
 
 	bIsWeaponDropped = true;
 
+	// 소켓 블렌드 중단 — Detach 후 Tick이 상대 트랜스폼을 덮어쓰는 것 방지
+	bIsBlendingSocket = false;
+	SetComponentTickEnabled(false);
+
 	// 판정 비활성화
 	SetAttackCollisionEnabled(false);
 

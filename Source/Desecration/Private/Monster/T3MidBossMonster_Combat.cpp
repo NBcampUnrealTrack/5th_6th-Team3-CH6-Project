@@ -386,10 +386,10 @@ void AT3MidBossMonster::OnWeaponHit(AActor* HitActor)
 		this                // DamageCauser = 보스
 	);
 
-	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s에게 TakeDamage (데미지:%.0f, 강도:%s, 패턴:'%s'[%d] SubHit:%d)"),
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s에게 TakeDamage (데미지:%.0f, 강도:%s, 패턴:'%s'[%d])"),
 		*HitActor->GetName(), HitDamage,
 		*UEnum::GetValueAsString(Intensity),
-		*CurrentPatternName.ToString(), CurrentChainIndex, CurrentSubHitIndex);
+		*CurrentPatternName.ToString(), CurrentChainIndex);
 }
 
 // ============================================================

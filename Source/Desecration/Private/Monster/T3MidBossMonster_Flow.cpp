@@ -208,8 +208,20 @@ void AT3MidBossMonster::UpdateMotionWarpTarget()
 	const FVector TargetLoc = CombatTarget->GetActorLocation();
 	const float Distance = FVector::Dist(BossLoc, TargetLoc);
 
+	// 체인 엔트리별 오버라이드 확인 (0 이하면 보스 기본값)
+	float EffectiveMaxWarp = MaxWarpDistance;
+	const FMidBossAttackPattern* PatternData = FindPatternData(CurrentPatternName);
+	if (PatternData && PatternData->MontageChain.IsValidIndex(CurrentChainIndex))
+	{
+		const float Override = PatternData->MontageChain[CurrentChainIndex].MaxWarpDistanceOverride;
+		if (Override > 0.f)
+		{
+			EffectiveMaxWarp = Override;
+		}
+	}
+
 	// MaxWarpDistance 초과 시 — 최대 사거리 지점으로 클램핑
-	const float WarpDistance = FMath::Min(Distance, MaxWarpDistance);
+	const float WarpDistance = FMath::Min(Distance, EffectiveMaxWarp);
 
 	// 타겟 방향으로 워프할 최종 위치 계산 (오프셋 적용)
 	const FVector Direction = (TargetLoc - BossLoc).GetSafeNormal();
@@ -221,9 +233,10 @@ void AT3MidBossMonster::UpdateMotionWarpTarget()
 		FinalLocation
 	);
 
-	UE_LOG(LogDesecration, Verbose,
-		TEXT("T3_MidBoss: 워프 스냅샷 — Distance:%.0f, WarpDist:%.0f, Offset:%.0f"),
-		Distance, WarpDistance, ClampedOffset);
+	UE_LOG(LogDesecration, Log,
+		TEXT("T3_MidBoss: 워프 스냅샷 — Distance:%.0f, EffectiveMaxWarp:%.0f, WarpDist:%.0f, Offset:%.0f, 패턴:'%s' 체인[%d]"),
+		Distance, EffectiveMaxWarp, WarpDistance, ClampedOffset,
+		*CurrentPatternName.ToString(), CurrentChainIndex);
 }
 
 // ============================================================
