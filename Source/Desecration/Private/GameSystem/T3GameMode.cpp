@@ -84,72 +84,31 @@ void AT3GameMode::LoadGame()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("%s : Can't load the save game"), *GetNameSafe(this));
+		UE_LOG(LogTemp, Warning, TEXT("%s : 저장된 게임을 불러올 수 없음"), *GetNameSafe(this));
 	}
 }
 
-/*
 void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 {
-	//저장된 게임 데이터에서 캐릭터 정보를 가져온다. 
-	const TObjectPtr<UT3SaveGame> SaveGame = T3GameInstance->GetSavedGameData();
-	if (!SaveGame)
+	if (!Character)
 	{
 		return;
 	}
-	//캐릭터 상태
-	//이동은 데이터 로드 후 1회만 적용
-	if (SaveGame->bSetLocation)
-	{
-		SaveGame->bSetLocation = false;
-		Character->SetActorLocation(SaveGame->PlayerLocation);
-	}
-	//스탯
-	Character->SetCurrentHP(SaveGame->CurrentHP);
-	Character->SetCurrentMana(SaveGame->CurrentMana);
-	Character->SetCurrentStamina(SaveGame->CurrentStamina);
-	Character->SetAttackPower(SaveGame->AttackPower);
-	Character->SetCriticalChance(SaveGame->CriticalChance);
-	Character->SetCriticalDamage(SaveGame->CriticalDamage);
-	Character->SetMoveSpeed(SaveGame->MoveSpeed);
-	//인벤토리
-	TObjectPtr<UT3InventoryComponent> InventoryComponent = Character->InventoryComponent;
-	const int32 SlotNums = SaveGame->Items.Num();
-	for (int32 iNum = 0; iNum < SlotNums; ++iNum)
-	{
-		if (InventoryComponent->Items.IsValidIndex(iNum))
-		{
-			InventoryComponent->Items[iNum] = SaveGame->Items[iNum];
-		}
-	}
-	InventoryComponent->SetMoney(SaveGame->Money);
-	InventoryComponent->SetNormalStoneCount(SaveGame->NormalStoneCount);
-	InventoryComponent->SetEpicStoneCount(SaveGame->EpicStoneCount);
-	InventoryComponent->SetLegendaryStoneCount(SaveGame->LegendaryStoneCount);
-	//장비
-	if (UT3PlayerEquipmentComponent* EquipComp = Character->FindComponentByClass<UT3PlayerEquipmentComponent>())
-	{
-		EquipComp->LoadEquipmentFromSave(SaveGame->WeaponSaveData, SaveGame->ArmorSaveData);
-	}
-}
-*/
 
-
-void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
-{
-	if (!Character) return;
-
-	// 1. GameInstance 유효성 검사
+	//GameInstance 유효성 검사
 	if (!T3GameInstance)
 	{
 		T3GameInstance = Cast<UT3GameInstance>(GetGameInstance());
-		if (!T3GameInstance) return;
+		if (!T3GameInstance)
+		{
+			return;
+		}
 	}
 
 	const TObjectPtr<UT3SaveGame> SaveGame = T3GameInstance->GetSavedGameData();
 	if (!SaveGame) return;
 
-	// 2. 위치 설정 (타이머를 사용하여 지연 실행)
+	// 위치 설정 (타이머를 사용하여 지연 실행)
 	// 랜드스케이프가 렌더링/물리 데이터를 준비할 시간을 0.2초 정도 벌어줍니다.
 #ifdef IF_WITH_EDITOR
 	if (!T3GameInstance->bDoNotMoveCharacterBySavedData && SaveGame->bSetLocation)
@@ -175,7 +134,7 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 			}, 2.0f, false);
 	}
 
-	// 3. 스탯 적용 (스탯은 즉시 적용해도 안전합니다)
+	//스탯 적용 (스탯은 즉시 적용해도 안전합니다)
 	Character->SetCurrentHP(SaveGame->CurrentHP);
 	Character->SetCurrentMana(SaveGame->CurrentMana);
 	Character->SetCurrentStamina(SaveGame->CurrentStamina);
@@ -184,7 +143,7 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 	Character->SetCriticalDamage(SaveGame->CriticalDamage);
 	Character->SetMoveSpeed(SaveGame->MoveSpeed);
 
-	// 4. 인벤토리 컴포넌트 유효성 검사
+	//인벤토리 컴포넌트 유효성 검사
 	TObjectPtr<UT3InventoryComponent> InventoryComponent = Character->InventoryComponent;
 	if (InventoryComponent)
 	{
@@ -200,13 +159,14 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 		InventoryComponent->SetNormalStoneCount(SaveGame->NormalStoneCount);
 		InventoryComponent->SetEpicStoneCount(SaveGame->EpicStoneCount);
 		InventoryComponent->SetLegendaryStoneCount(SaveGame->LegendaryStoneCount);
+
 	}
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("InventoryComponent is Null on %s"), *Character->GetName());
 	}
 
-	// 5. 장비 컴포넌트 유효성 검사
+	//장비 컴포넌트 유효성 검사
 	if (UT3PlayerEquipmentComponent* EquipComp = Character->FindComponentByClass<UT3PlayerEquipmentComponent>())
 	{
 		EquipComp->LoadEquipmentFromSave(SaveGame->WeaponSaveData, SaveGame->ArmorSaveData);
