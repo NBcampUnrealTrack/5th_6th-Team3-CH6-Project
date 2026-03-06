@@ -13,6 +13,7 @@
 UT3PlayerEquipmentComponent::UT3PlayerEquipmentComponent()
     : WeaponTable(nullptr)
     , ArmorTable(nullptr)
+	, MaxRuneSockets(1)
     , DefaultWeaponID("BaseWeapon")
     , DefaultArmorID("BaseArmor")
     , WeaponInstance(nullptr)
@@ -44,6 +45,8 @@ void UT3PlayerEquipmentComponent::BeginPlay()
         NewArmor->Init(DefaultArmorID, 0, ET3EquipmentType::Armor); // 0강으로 시작
         EquipArmor(NewArmor); // 방어구 장착 함수 호출!
     }
+	
+	OwnerCharacter = Cast<AT3CharacterBase>(GetOwner());
 }
 
 void UT3PlayerEquipmentComponent::EquipWeapon(UT3TestItemInstance* NewItem)
@@ -152,8 +155,8 @@ void UT3PlayerEquipmentComponent::UpdateWeaponVisuals()
 
     // 2. 액터 스폰 및 메쉬 설정
     UWorld* World = GetWorld();
-    ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
-    if (!World || !OwnerCharacter) return;
+    ACharacter* OwnerChar = Cast<ACharacter>(GetOwner());
+    if (!World || !OwnerChar) return;
 
     // 기존 무기 제거
     if (SpawnedWeaponActor)
@@ -186,7 +189,7 @@ void UT3PlayerEquipmentComponent::UpdateWeaponVisuals()
 
     // 4. 스폰
     FActorSpawnParameters SpawnParams;
-    SpawnParams.Owner = OwnerCharacter;
+    SpawnParams.Owner = OwnerChar;
 
     SpawnedWeaponActor = World->SpawnActor<AActor>(ActorClassToSpawn, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 
@@ -202,7 +205,7 @@ void UT3PlayerEquipmentComponent::UpdateWeaponVisuals()
         }
 
         // 캐릭터 손 소켓에 부착
-        SpawnedWeaponActor->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("WeaponSocket"));
+        SpawnedWeaponActor->AttachToComponent(OwnerChar->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("WeaponSocket"));
     }
 }
 
@@ -352,69 +355,108 @@ bool UT3PlayerEquipmentComponent::TryUpgrade(ET3EquipmentType TargetType, int32 
 
 bool UT3PlayerEquipmentComponent::SocketRune(FName RuneID, ET3EquipmentType TargetEquipment)
 {
-    if (!RuneTable || RuneID == NAME_None) return false;
+	if (RuneID == NAME_None)
+	{
+		UE_LOG(LogTemp, Error, TEXT("룬 이름이 유효하지 않음"))
+		return false;
+	}
 
-    UT3InventoryComponent* Inventory = GetOwner()->FindComponentByClass<UT3InventoryComponent>();
-    if (!Inventory || Inventory->GetItemCountByItemID(RuneID) <= 0) return false;
+	UT3InventoryComponent* Inventory = GetOwner()->FindComponentByClass<UT3InventoryComponent>();
 
-    TArray<FName>& SocketedIDs = (TargetEquipment == ET3EquipmentType::Weapon) ? WeaponSocketedRuneIDs : ArmorSocketedRuneIDs;
-    TArray<TObjectPtr<UT3RuneBase>>& ActiveRunes = (TargetEquipment == ET3EquipmentType::Weapon) ? WeaponActiveRunes : ArmorActiveRunes;
+	if (!Inventory || !Inventory->RuneTable || Inventory->GetRuneItemCountByRuneID(RuneID) <= 0)
+	{
+		UE_LOG(LogTemp, Error, TEXT("인벤토리가 유효하지 않거나 룬 테이블이 없거나 룬이 없음"))
+		return false;
+	}
 
-    if (SocketedIDs.Num() >= MaxRuneSockets) return false;
-    if (SocketedIDs.Contains(RuneID)) return false;
+	TArray<FName>& SocketedIDs = (TargetEquipment == ET3EquipmentType::Weapon) ? WeaponSocketedRuneIDs : ArmorSocketedRuneIDs;
+	TArray<TObjectPtr<UT3RuneBase>>& ActiveRunes = (TargetEquipment == ET3EquipmentType::Weapon) ? WeaponActiveRunes : ArmorActiveRunes;
 
-    const FT3RuneItemData* RuneRow = RuneTable->FindRow<FT3RuneItemData>(RuneID, TEXT("SocketRune"));
-    if (!RuneRow || !RuneRow->RuneLogicClass) return false;
+	if (SocketedIDs.Num() >= MaxRuneSockets)
+	{
+		UE_LOG(LogTemp, Error, TEXT("룬이 이미 최대 개수 장착됨"))
+		return false;
+	}
 
-    Inventory->RemoveItem(RuneID);
+	if (SocketedIDs.Contains(RuneID))
+	{
+		UE_LOG(LogTemp, Error, TEXT("같은 룬이 중복 장착 됨."))
+		return false;
+	}
 
-    UT3RuneBase* NewRune = NewObject<UT3RuneBase>(this, RuneRow->RuneLogicClass);
-    SocketedIDs.Add(RuneID);
-    ActiveRunes.Add(NewRune);
+	const FT3RuneItemData* RuneRow = Inventory->RuneTable->FindRow<FT3RuneItemData>(RuneID, TEXT("SocketRune"));
 
-    NewRune->OnSocketed(Cast<AT3CharacterBase>(GetOwner()));
+	if (!RuneRow || !RuneRow->RuneLogicClass)
+	{
+		return false;
+	}
 
-    return true;
+	Inventory->RemoveRuneItemByCount(RuneID);
+
+	UT3RuneBase* NewRune = NewObject<UT3RuneBase>(this, RuneRow->RuneLogicClass);
+	SocketedIDs.Add(RuneID);
+	ActiveRunes.Add(NewRune);
+
+	NewRune->OnSocketed(OwnerCharacter);
+
+	return true;
 }
 
 bool UT3PlayerEquipmentComponent::UnsocketRune(FName RuneID, ET3EquipmentType TargetEquipment)
 {
-    TArray<FName>& SocketedIDs = (TargetEquipment == ET3EquipmentType::Weapon) ? WeaponSocketedRuneIDs : ArmorSocketedRuneIDs;
-    TArray<TObjectPtr<UT3RuneBase>>& ActiveRunes = (TargetEquipment == ET3EquipmentType::Weapon) ? WeaponActiveRunes : ArmorActiveRunes;
+	TArray<FName>& SocketedIDs = (TargetEquipment == ET3EquipmentType::Weapon) ? WeaponSocketedRuneIDs : ArmorSocketedRuneIDs;
+	TArray<TObjectPtr<UT3RuneBase>>& ActiveRunes = (TargetEquipment == ET3EquipmentType::Weapon) ? WeaponActiveRunes : ArmorActiveRunes;
 
-    int32 Index = SocketedIDs.Find(RuneID);
-    if (Index == INDEX_NONE) return false;
+	int32 Index = SocketedIDs.Find(RuneID);
 
-    ActiveRunes[Index]->OnUnsocketed(Cast<AT3CharacterBase>(GetOwner()));
+	if (Index == INDEX_NONE)
+	{
+		return false;
+	}
 
-    SocketedIDs.RemoveAt(Index);
-    ActiveRunes.RemoveAt(Index);
+	if (!ActiveRunes[Index]) 
+	{
+		return false;
+	}
+	
+	ActiveRunes[Index]->OnUnsocketed(OwnerCharacter);
+	
+	SocketedIDs.RemoveAt(Index);
+	ActiveRunes.RemoveAt(Index);
+		
+	UT3InventoryComponent* Inventory = GetOwner()->FindComponentByClass<UT3InventoryComponent>();
 
-    UT3InventoryComponent* Inventory = GetOwner()->FindComponentByClass<UT3InventoryComponent>();
-    if (Inventory) Inventory->AddItem(RuneID);
+	if (Inventory)
+	{
+		Inventory->AddRuneItemByCount(RuneID, 1);
+	}
 
-    return true;
+	return true;
 }
 
 void UT3PlayerEquipmentComponent::RestoreRunes(const TArray<FName>& RuneIDs, TArray<TObjectPtr<UT3RuneBase>>& OutActiveRunes)
 {
-    OutActiveRunes.Empty();
+	OutActiveRunes.Empty();
 
-    if (!RuneTable) return;
+	UT3InventoryComponent* Inventory = GetOwner()->FindComponentByClass<UT3InventoryComponent>();
 
-    AT3CharacterBase* OwnerChar = Cast<AT3CharacterBase>(GetOwner());
+	if (!Inventory || !Inventory->RuneTable)
+	{
+		return;
+	}
 
-    for (const FName& RuneID : RuneIDs)
-    {
-        const FT3RuneItemData* RuneRow = RuneTable->FindRow<FT3RuneItemData>(RuneID, TEXT("RestoreRunes"));
-        if (!RuneRow || !RuneRow->RuneLogicClass)
-        {
-            OutActiveRunes.Add(nullptr);
-            continue;
-        }
+	for (const FName& RuneID : RuneIDs)
+	{
+		const FT3RuneItemData* RuneRow = Inventory->RuneTable->FindRow<FT3RuneItemData>(RuneID, TEXT("RestoreRunes"));
 
-        UT3RuneBase* NewRune = NewObject<UT3RuneBase>(this, RuneRow->RuneLogicClass);
-        OutActiveRunes.Add(NewRune);
-        NewRune->OnSocketed(OwnerChar);
-    }
+		if (!RuneRow || !RuneRow->RuneLogicClass)
+		{
+			OutActiveRunes.Add(nullptr);
+			continue;
+		}
+
+		UT3RuneBase* NewRune = NewObject<UT3RuneBase>(this, RuneRow->RuneLogicClass);
+		OutActiveRunes.Add(NewRune);
+		NewRune->OnSocketed(OwnerCharacter);
+	}
 }

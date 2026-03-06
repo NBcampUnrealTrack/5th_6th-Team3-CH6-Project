@@ -9,6 +9,7 @@
 #include "Item/Rune/T3RuneBase.h"
 #include "T3PlayerEquipmentComponent.generated.h"
 
+class AT3CharacterBase;
 
 // 장비 스탯 변경 시 발송되는 델리게이트
 // 캐릭터팀에서 바인딩하여 공격력/방어력을 동기화
@@ -30,6 +31,9 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	UPROPERTY()
+	TObjectPtr<AT3CharacterBase> OwnerCharacter = nullptr;
+
 public:
 	// ==========================================================
 	// 설정 (에디터에서 할당)
@@ -41,10 +45,7 @@ public:
 	TObjectPtr<UDataTable> ArmorTable;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Data|Rune")
-	TObjectPtr<UDataTable> RuneTable;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Data|Rune")
-	int32 MaxRuneSockets = 3;
+	int32 MaxRuneSockets;
 
 	// 초기 장비 ID
 	UPROPERTY(EditDefaultsOnly, Category = "Setup")
