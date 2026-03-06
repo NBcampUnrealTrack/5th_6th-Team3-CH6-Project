@@ -15,7 +15,7 @@ AT3LunarSlash::AT3LunarSlash()
 	PrimaryActorTick.bCanEverTick = false;
 	
 	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
-	SphereComponent->InitSphereRadius(400.0f);
+	SphereComponent->InitSphereRadius(150.0f);
 	SphereComponent->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
 	RootComponent = SphereComponent;
 	
@@ -25,8 +25,8 @@ AT3LunarSlash::AT3LunarSlash()
 	
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
 	ProjectileMovement->UpdatedComponent = SphereComponent;
-	ProjectileMovement->InitialSpeed = 300.0f;
-	ProjectileMovement->MaxSpeed = 300.0f;
+	ProjectileMovement->InitialSpeed = 100.0f;
+	ProjectileMovement->MaxSpeed = 100.0f;
 	ProjectileMovement->ProjectileGravityScale = 0.0f;
 	
 	Tags.Add(TEXT("MoonSlash"));
@@ -55,7 +55,10 @@ void AT3LunarSlash::ApplyDamage()
 		
 		for (AActor* Actor : OverlappedActors)
 		{
-			Combat->RequestAttackDamage(Actor, DamageRate);
+			if (Actor && Actor != OwnerChar)
+			{
+				Combat->RequestAttackDamage(Actor, DamageRate);
+			}
 		}
 	}
 }
