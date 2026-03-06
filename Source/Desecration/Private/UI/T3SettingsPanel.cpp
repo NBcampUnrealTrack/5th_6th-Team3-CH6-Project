@@ -5,18 +5,11 @@
 #include "Components/ComboBoxString.h"
 #include "Components/HorizontalBox.h"
 #include "GameSystem/T3GameInstance.h"
-#include "GameSystem/T3TitleGameMode.h"
 #include "UI/T3SettingsPanelCategory.h"
 
 void UT3SettingsPanel::NativeConstruct()
 {
-	//게임 모드
-	TitleGameMode = Cast<AT3TitleGameMode>(GetWorld()->GetAuthGameMode());
-	if (!TitleGameMode)
-	{
-		UE_LOG(LogTemp, Error, TEXT("%s : TitleGameMode가 NULL"), *GetNameSafe(this));
-		return;
-	}
+	Super::NativeConstruct();
 	
 	//게임 인스턴스
 	T3GameInstance = Cast<UT3GameInstance>(GetGameInstance());

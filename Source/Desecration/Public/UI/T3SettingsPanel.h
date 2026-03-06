@@ -70,10 +70,6 @@ private:
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
 	TObjectPtr<UCanvasPanel> SettingCategoriesParent;
 	
-	//게임 모드
-	UPROPERTY()
-	TObjectPtr<AT3TitleGameMode> TitleGameMode;
-	
 	//게임 인스턴스
 	UPROPERTY()
 	TObjectPtr<UT3GameInstance> T3GameInstance;
