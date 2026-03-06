@@ -2,6 +2,7 @@
 #include "Desecration.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/SphereComponent.h"
 #include "Components/TimelineComponent.h"
 #include "Curves/CurveFloat.h"
 
@@ -45,6 +46,20 @@ UT3BossWeaponComponent::UT3BossWeaponComponent()
 	WeaponHitBoxWide->bDrawOnlyIfSelected = false;
 	WeaponHitBoxWide->ShapeColor = FColor::Orange;
 	WeaponHitBoxWide->SetHiddenInGame(true);
+
+	// 팔 공격 판정 구체 — AttachToSocket에서 캐릭터 메시 본에 부착
+	BodyHitSphere = CreateDefaultSubobject<USphereComponent>(TEXT("BodyHitSphere"));
+	BodyHitSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BodyHitSphere->SetCollisionObjectType(ECC_WorldDynamic);
+	BodyHitSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
+	BodyHitSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	BodyHitSphere->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
+	BodyHitSphere->SetGenerateOverlapEvents(true);
+	BodyHitSphere->SetSphereRadius(BodyAttackRadius);
+
+	BodyHitSphere->bDrawOnlyIfSelected = false;
+	BodyHitSphere->ShapeColor = FColor::Cyan;
+	BodyHitSphere->SetHiddenInGame(true);
 }
 
 void UT3BossWeaponComponent::BeginPlay()
@@ -71,6 +86,13 @@ void UT3BossWeaponComponent::BeginPlay()
 	if (WeaponHitBoxWide)
 	{
 		WeaponHitBoxWide->OnComponentBeginOverlap.AddDynamic(
+			this, &UT3BossWeaponComponent::OnWeaponOverlapBegin);
+	}
+
+	// 팔 공격 판정 오버랩 바인딩 (같은 콜백 공유)
+	if (BodyHitSphere)
+	{
+		BodyHitSphere->OnComponentBeginOverlap.AddDynamic(
 			this, &UT3BossWeaponComponent::OnWeaponOverlapBegin);
 	}
 
@@ -151,6 +173,24 @@ void UT3BossWeaponComponent::AttachToSocket(USkeletalMeshComponent* TargetMesh)
 
 	// 소켓 스위칭용 캐싱
 	CachedTargetMesh = TargetMesh;
+
+	// 팔 공격 판정 구체를 캐릭터 메시 본에 부착
+	if (BodyHitSphere && TargetMesh->DoesSocketExist(BodyAttackBoneName))
+	{
+		BodyHitSphere->AttachToComponent(
+			TargetMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, BodyAttackBoneName);
+
+		// 런타임에 반경 반영
+		BodyHitSphere->SetSphereRadius(BodyAttackRadius);
+
+		UE_LOG(LogDesecration, Log, TEXT("T3_BossWeapon: BodyHitSphere → 본 '%s'에 부착 (반경:%.0f)"),
+			*BodyAttackBoneName.ToString(), BodyAttackRadius);
+	}
+	else if (BodyHitSphere)
+	{
+		UE_LOG(LogDesecration, Warning, TEXT("T3_BossWeapon: 본 '%s'이 스켈레탈 메시에 없음 — BodyHitSphere 미부착"),
+			*BodyAttackBoneName.ToString());
+	}
 
 	UE_LOG(LogDesecration, Log, TEXT("T3_BossWeapon: 소켓 '%s'에 부착 성공 (Mesh위치:%s, HitBox위치:%s)"),
 		*DefaultSocketName.ToString(),
@@ -268,13 +308,39 @@ void UT3BossWeaponComponent::SetWideCollisionEnabled(bool bEnable)
 	}
 }
 
+void UT3BossWeaponComponent::SetBodyAttackCollisionEnabled(bool bEnable)
+{
+	if (BodyHitSphere)
+	{
+		if (bEnable)
+		{
+			HitActorsThisSwing.Reset();
+		}
+
+		BodyHitSphere->SetCollisionEnabled(
+			bEnable ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
+
+		UE_LOG(LogDesecration, Log,
+			TEXT("T3_BossWeapon: 팔 공격 콜리전 %s (본:%s, 반경:%.0f, 위치:%s)"),
+			bEnable ? TEXT("ON") : TEXT("OFF"),
+			*BodyAttackBoneName.ToString(),
+			BodyHitSphere->GetUnscaledSphereRadius(),
+			*BodyHitSphere->GetComponentLocation().ToString());
+	}
+	else
+	{
+		UE_LOG(LogDesecration, Warning, TEXT("T3_BossWeapon: BodyHitSphere가 nullptr!"));
+	}
+}
+
 void UT3BossWeaponComponent::OnWeaponOverlapBegin(UPrimitiveComponent* OverlappedComp,
 	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
 	bool bFromSweep, const FHitResult& SweepResult)
 {
 	// 어떤 히트박스에서 오버랩 발생했는지 구분
+	const bool bIsBodyAttack = (OverlappedComp == BodyHitSphere);
 	const bool bIsWideHitBox = (OverlappedComp == WeaponHitBoxWide);
-	const FString HitBoxName = bIsWideHitBox ? TEXT("Wide") : TEXT("Normal");
+	const FString HitBoxName = bIsBodyAttack ? TEXT("Body") : (bIsWideHitBox ? TEXT("Wide") : TEXT("Normal"));
 
 	UE_LOG(LogDesecration, Log, TEXT("T3_BossWeapon: [오버랩] HitBox:%s, Other:%s, Comp:%s"),
 		*HitBoxName,

@@ -9,6 +9,7 @@
 
 class UStaticMeshComponent;
 class UBoxComponent;
+class USphereComponent;
 class USkeletalMeshComponent;
 class UTimelineComponent;
 class UCurveFloat;
@@ -47,6 +48,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TObjectPtr<UBoxComponent> WeaponHitBoxWide;
 
+	// 팔 공격 판정 구체 — 캐릭터 메시 본에 부착 (무기와 독립)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|BodyAttack")
+	TObjectPtr<USphereComponent> BodyHitSphere;
+
 	// 기본 소켓 이름 (팩 1 기준)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Socket")
 	FName DefaultSocketName = FName(TEXT("weapon_r"));
@@ -63,6 +68,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Socket", meta = (ClampMin = "1.0", ClampMax = "6.0"))
 	float SocketBlendExponent = 3.5f;
 
+	// 팔 공격 판정이 부착될 본 이름
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|BodyAttack")
+	FName BodyAttackBoneName = FName(TEXT("hand_r"));
+
+	// 팔 공격 판정 구체 반경
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|BodyAttack", meta = (ClampMin = "5.0", ClampMax = "100.0"))
+	float BodyAttackRadius = 30.f;
 
 	// 무기 히트 델리게이트 — Monster에서 바인딩하여 데미지 적용
 	UPROPERTY(BlueprintAssignable, Category = "Weapon|Events")
@@ -90,6 +102,10 @@ public:
 	// 넓은 판정 ON/OFF — 대쉬 내려찍기 등 (ON 시 히트 목록 초기화, 기본 히트박스와 공유)
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void SetWideCollisionEnabled(bool bEnable);
+
+	// 팔 공격 판정 ON/OFF (ON 시 히트 목록 초기화)
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void SetBodyAttackCollisionEnabled(bool bEnable);
 
 	// 무기 드롭 (사망 연출용)
 	UFUNCTION(BlueprintCallable, Category = "Weapon")

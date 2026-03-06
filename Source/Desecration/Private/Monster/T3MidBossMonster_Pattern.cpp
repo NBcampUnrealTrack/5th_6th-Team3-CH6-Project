@@ -261,8 +261,13 @@ void AT3MidBossMonster::HandlePatternNotify(FName NotifyName)
 	}
 	else if (Name.Equals(TEXT("AttackEnd")))
 	{
-		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: AttackEnd 노티파이 수신"));
-		if (WeaponComponent) { WeaponComponent->SetAttackCollisionEnabled(false); }
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: AttackEnd 노티파이 수신 — 전체 판정 OFF"));
+		if (WeaponComponent)
+		{
+			WeaponComponent->SetAttackCollisionEnabled(false);
+			WeaponComponent->SetWideCollisionEnabled(false);
+			WeaponComponent->SetBodyAttackCollisionEnabled(false);
+		}
 	}
 	// --- 투사체 스폰 (검기) — 카운터 패턴이면 스킵 ---
 	else if (Name.Equals(TEXT("SpawnProjectile")))
@@ -350,6 +355,17 @@ void AT3MidBossMonster::HandlePatternNotify(FName NotifyName)
 	{
 		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: WideAttackEnd 노티파이 수신"));
 		if (WeaponComponent) { WeaponComponent->SetWideCollisionEnabled(false); }
+	}
+	// --- 팔 공격 판정 ON/OFF (맨손 타격 등) ---
+	else if (Name.Equals(TEXT("BodyAttackStart")))
+	{
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: BodyAttackStart 노티파이 수신"));
+		if (WeaponComponent) { WeaponComponent->SetBodyAttackCollisionEnabled(true); }
+	}
+	else if (Name.Equals(TEXT("BodyAttackEnd")))
+	{
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: BodyAttackEnd 노티파이 수신"));
+		if (WeaponComponent) { WeaponComponent->SetBodyAttackCollisionEnabled(false); }
 	}
 }
 
