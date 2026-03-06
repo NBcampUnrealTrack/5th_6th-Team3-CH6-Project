@@ -20,7 +20,7 @@ void UT3SettingsPanel::NativeConstruct()
 	
 	//게임 인스턴스
 	T3GameInstance = Cast<UT3GameInstance>(GetGameInstance());
-	if (!TitleGameMode)
+	if (!T3GameInstance)
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s : T3GameInstance가 NULL"), *GetNameSafe(this));
 		return;
