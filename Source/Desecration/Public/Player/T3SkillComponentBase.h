@@ -104,6 +104,8 @@ public:
     virtual void ExecuteSkillNotify(int32 Index);
     UFUNCTION(BlueprintCallable, Category = "Skill")
     virtual void ExecuteSkill(int32 SkillSlot);
+    UFUNCTION(BlueprintCallable, Category = "Skill")
+    virtual void ExecuteSkill_Completed(int32 SkillSlot);
 
     // 스킬 스왑 함수 (CombatComponent에서 호출)
     void SwapSkills();

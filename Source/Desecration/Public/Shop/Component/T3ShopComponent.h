@@ -25,9 +25,9 @@ enum class EShopSellResult : uint8
 {
 	None,
 	InvalidData, // ShopData or Inventory 없음
-	ItemNotFound, // 인벤토리에 없음
-	CannotSell, // 판매 불가 아이템
-	ZeroCount, // 0개 판매했을 때
+	CannotSell,
+	ZeroCount,// 판매 불가 아이템
+	NotEnoughCount, // 보유 개수보다 더 판매했을 때
 	Succeeded // 판매 성공
 };
 

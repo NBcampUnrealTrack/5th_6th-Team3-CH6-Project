@@ -13,7 +13,7 @@
 #include "Item/Component/T3InventoryComponent.h"
 #include "UI/T3PopUpMenu.h"
 #include "UI/T3HUDSlotWidget.h"
-#include "Player/T3HolyGaugeWidget.h"
+#include "Player/Paladin/T3HolyGaugeWidget.h"
 #include "UI/T3ShopWidget.h"
 
 void AT3PlayerController::BeginPlay()
@@ -87,6 +87,9 @@ void AT3PlayerController::BeginPlay()
 			if (HolyGaugeWidget)
 			{
 				HolyGaugeWidget->AddToViewport();
+				UE_LOG(LogTemp, Display, TEXT("신성게이지 위젯 생성 완료"));
+				FString ClassName = UEnum::GetDisplayValueAsText(OwnerChar->GetCurrentClass()).ToString();
+				UE_LOG(LogTemp, Log, TEXT("Your Past Class is: %s"), *ClassName);
 			}
 		}
 	}
@@ -118,6 +121,7 @@ void AT3PlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(ChangePotionSlotAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_ChangePotionSlot);
 		EnhancedInputComponent->BindAction(ChangeConsumableSlotAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_ChangeConsumableSlot);
 		EnhancedInputComponent->BindAction(ActiveSkillSlotAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_ActiveSkillSlot);
+		EnhancedInputComponent->BindAction(ActiveSkillSlotAction, ETriggerEvent::Completed, this, &AT3PlayerController::Input_ActiveSkillSlot_Completed);
 		EnhancedInputComponent->BindAction(ActivePotionSlotAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_ActivePotionSlot);
 		EnhancedInputComponent->BindAction(ActiveConsumableSlotAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_ActiveConsumableSlot);
 
@@ -314,6 +318,13 @@ void AT3PlayerController::Input_ActiveSkillSlot(const FInputActionValue& Value)
 {
 	if (bIsInventoryOpen || bIsShopUIOpen || bIsUpgradeUIOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse) { return; }
 	if (Combat) { Combat->ExecuteCurrentSlotAction(ESlotType::Skill); } 
+}
+
+void AT3PlayerController::Input_ActiveSkillSlot_Completed(const FInputActionValue& Value)
+{
+	if (bIsInventoryOpen || bIsShopUIOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse) { return; }
+	
+	if (Combat) { Combat->ExecuteCurrentSlotAction_Completed(ESlotType::Skill); }
 }
 
 void AT3PlayerController::Input_ActivePotionSlot(const FInputActionValue& Value)

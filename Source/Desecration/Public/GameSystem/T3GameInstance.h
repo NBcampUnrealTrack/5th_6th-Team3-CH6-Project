@@ -5,19 +5,9 @@
 #include "GlobalEnums.h"
 #include "T3GameInstance.generated.h"
 
+class UT3SaveUserSettings;
 class UT3CharacterDataAsset;
 class UT3SaveGame;
-
-//설정값을 저장하는 구조체
-struct FSettings
-{
-	ET3Resolution Resolution;//해상도
-	ET3ScreenMode ScreenMode;//화면모드
-	EGraphicQuality GraphicQuality;//그래픽 퀄리티
-	float SoundEffectsVolume;//효과음
-	float BackgroundVolume;//배경음
-	float MouseSensitivity;//마우스 감도
-};
 
 UCLASS()
 class DESECRATION_API UT3GameInstance : public UGameInstance
@@ -25,6 +15,24 @@ class DESECRATION_API UT3GameInstance : public UGameInstance
 	GENERATED_BODY()
 	
 public:
+	/** 
+	 * 지정한 키를 번역하기
+	 * @param Namespace 텍스트를 찾을 테이블의 네임스페이스
+	 * @param Key 지정할 테이블에서 찾을 키 값
+	 * @return 지정한 키 값의 번역 결과 (FText)
+	 */
+	UFUNCTION(Blueprintpure)
+	static FText GetTextFromTable(const FString& Namespace, const FString& Key);
+	
+	/** 
+	 * 지정한 키를 번역하기
+	 * @param Namespace 텍스트를 찾을 테이블의 네임스페이스
+	 * @param Key 지정할 테이블에서 찾을 키 값
+	 * @return 지정한 키 값의 번역 결과 (FString)
+	 */
+	UFUNCTION(Blueprintpure)
+	static FString GetStringFromTable(const FString& Namespace, const FString& Key);
+	
 	virtual void Init() override;
 	
 private:
@@ -35,52 +43,55 @@ public:
 	//첫 게임 데이터 생성
 	TObjectPtr<UT3SaveGame> MakeFirstGameData();
 	
-	//게임 저장하기 (true : 저장 성공)
+	/**
+	 * 게임 저장하기
+	 * @return true : 저장 성공
+	 */
 	bool SaveGame();
 	
-	//저장된 게임 불러오기 (true : 불러오기 성공)
+	/**
+	 * 저장된 게임 불러오기
+	 * @return true : 불러오기 성공
+	 */
 	bool LoadGame();
 	
-	//해상도 설정하기
-	void SetResolution(ET3Resolution Resolution);
+	//유저 세팅 저장하기
+	bool SaveUserSettings();
 	
-	//화면 모드 설정하기
-	void SetScreenMode(ET3ScreenMode ScreenMode);
-	
-	//효과음 설정하기
-	void SetSoundEffectsVolume(float Volume);
-	
-	//배경음 설정하기
-	void SetBackgroundVolume(float Volume);
-	
-	//그래픽 설정하기
-	void SetGraphicQuality(const EGraphicQuality GraphicQuality);
-	
-	//레벨(맵) 이동하기
+	//저장된 유저 세팅 불러오기
+	bool LoadUSerSettings();
+
+	/**
+	 * 레벨(맵) 이동하기
+	 * @param LevelName 이동할 레벨 (주의 : TitleLevel이나 SelectClassLevel로 지정하면 게임에서 벗어납니다.)
+	 */
 	UFUNCTION(BlueprintCallable)
 	void OpenLevel(UPARAM() ELevelName LevelName) const;
-	
+
 	//저장된 게임
 	FORCEINLINE TObjectPtr<UT3SaveGame> GetSavedGameData() { return SavedGameData; }
 	
 	//현재 설정
-	FORCEINLINE TSharedPtr<FSettings> GetCurrentSettings() { return CurrentSettings; }
+	FORCEINLINE TObjectPtr<UT3SaveUserSettings> GetCurrentSettings() { return CurrentSettings; }
 	
 	//캐릭터 데이터
 	FORCEINLINE TObjectPtr<UT3CharacterDataAsset> GetCharacterData() { return CharacterData; }
 	
-	//에디터용 : 캐릭터의 위치를 저장 데이터의 영향을 받지 않게 하려면 이 값을 true로 설정
+	//배경음 사운드 클래스
+	FORCEINLINE TObjectPtr<USoundClass> GetSoundClassBGM() { return SoundClassBGM; }
+	
+	//효과음 사운드 클래스
+	FORCEINLINE TObjectPtr<USoundClass> GetSoundClassSE() { return SoundClassSE; }
+	
+	//에디터용 : 캐릭터의 위치가 저장 데이터의 영향을 받지 않게 하려면 이 값을 true로 설정
     UPROPERTY(EditDefaultsOnly, Category = "Only For Test")
     bool bDoNotMoveCharacterBySavedData = false;
 
 private:
 	//현재 설정
-	TSharedPtr<FSettings> CurrentSettings;
-	
-	//엔진의 게임 설정
 	UPROPERTY()
-	TObjectPtr<UGameUserSettings> UserSettings;
-	
+	TObjectPtr<UT3SaveUserSettings> CurrentSettings;
+
 	//저장된 게임 데이터
 	UPROPERTY()
 	TObjectPtr<UT3SaveGame> SavedGameData;
@@ -103,4 +114,5 @@ private:
 
 	//저장, 불러오기에 사용할 슬롯 이름
 	const FString SAVE_GAME_NAME = TEXT("SaveSlot1");
+	const FString SAVE_USER_SETTINGS_NAME = TEXT("UserSettings");
 };

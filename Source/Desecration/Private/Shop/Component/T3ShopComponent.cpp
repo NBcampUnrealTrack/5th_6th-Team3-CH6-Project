@@ -78,8 +78,8 @@ EShopSellResult UT3ShopComponent::SellItem(const FName& ItemName, UT3InventoryCo
 	
 	if (!Inventory->RemoveItemByCount(ItemName, Count))
 	{
-		UE_LOG(LogTemp, Error, TEXT("인벤토리에 [%s]이 없음"), *ItemName.ToString());
-		return EShopSellResult::ItemNotFound;
+		UE_LOG(LogTemp, Error, TEXT("인벤토리에 [%s]이 충분하지 않음"), *ItemName.ToString());
+		return EShopSellResult::NotEnoughCount;
 	}
 	
 	Inventory->SetMoney(Inventory->GetMoney() + (ItemRow->SellPrice * Count));
