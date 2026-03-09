@@ -113,7 +113,7 @@ bool UT3GameInstance::LoadUSerSettings()
 // T3GameInstance.cpp
 
 
-void UT3GameInstance::OpenLevel(const ELevelName LevelName) const // const 유지
+void UT3GameInstance::OpenLevel(const ELevelName LevelName)
 {	
     // 1. LevelMap에 해당 키가 있는지 확인
     if (!LevelMap.Contains(LevelName))
@@ -141,6 +141,7 @@ void UT3GameInstance::OpenLevel(const ELevelName LevelName) const // const 유�
     }
 
     UE_LOG(LogTemp, Warning, TEXT("Attempting to Open Level: %s"), *LevelPath);
+	CurrentLevel = LevelName;
     
     // 최종 호출
     UGameplayStatics::OpenLevel(CurrentWorld, FName(*LevelPath));

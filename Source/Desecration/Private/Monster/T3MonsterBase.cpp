@@ -83,7 +83,7 @@ float AT3MonsterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 
 void AT3MonsterBase::OnCapsuleBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-    if (OtherActor && OtherActor != this)
+    if (OtherActor && OtherActor != this && OtherActor->GetOwner() != this)
     {
         // TargetActor
         AActor* TargetActor = OtherActor;

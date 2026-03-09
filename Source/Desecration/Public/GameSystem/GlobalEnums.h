@@ -19,6 +19,6 @@ enum class EPlayerClass
 {
 	None,
 	Warrior,
-	Class1,//TODO : 모든 클래스의 영어명 정하기
-	Class2
+	Taoist,
+	Valkyrie
 };

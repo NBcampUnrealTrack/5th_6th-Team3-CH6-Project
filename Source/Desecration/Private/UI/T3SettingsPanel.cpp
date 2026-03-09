@@ -5,22 +5,15 @@
 #include "Components/ComboBoxString.h"
 #include "Components/HorizontalBox.h"
 #include "GameSystem/T3GameInstance.h"
-#include "GameSystem/T3TitleGameMode.h"
 #include "UI/T3SettingsPanelCategory.h"
 
 void UT3SettingsPanel::NativeConstruct()
 {
-	//게임 모드
-	TitleGameMode = Cast<AT3TitleGameMode>(GetWorld()->GetAuthGameMode());
-	if (!TitleGameMode)
-	{
-		UE_LOG(LogTemp, Error, TEXT("%s : TitleGameMode가 NULL"), *GetNameSafe(this));
-		return;
-	}
+	Super::NativeConstruct();
 	
 	//게임 인스턴스
 	T3GameInstance = Cast<UT3GameInstance>(GetGameInstance());
-	if (!TitleGameMode)
+	if (!T3GameInstance)
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s : T3GameInstance가 NULL"), *GetNameSafe(this));
 		return;
@@ -40,6 +33,7 @@ void UT3SettingsPanel::NativeConstruct()
 		
 		//각 범주별 초기화 진행
 		CategoryWidget->T3GameInstance = T3GameInstance;
+		CategoryWidget->SettingsPanel = this;
 		CategoryWidget->CustomNativeConstruct();
 	}
 	
@@ -147,4 +141,22 @@ void UT3SettingsPanel::OpenSettingsPanel()
 	
 	//패널 활성화
 	SetVisibility(ESlateVisibility::Visible);
+}
+
+void UT3SettingsPanel::ApplyChangeLanguage()
+{
+	//각 범주별 언어 변경
+	for (const TObjectPtr CategoryWidget : CategoryWidgets)
+	{
+		if (!CategoryWidget)
+		{
+			UE_LOG(LogTemp, Error, TEXT("%s : CategoryWidgets에 NULL인 항목이 있음"), *GetNameSafe(this));
+			return;
+		}
+		
+		CategoryWidget->ReinitializeByChangeLanguage();
+	}
+	
+	//언어 변경시 실행할 내용
+	OnChangeLanguage.Broadcast();
 }

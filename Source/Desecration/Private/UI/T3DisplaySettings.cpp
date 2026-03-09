@@ -63,6 +63,29 @@ void UT3DisplaySettings::InitializeSettingsPanel()
 	}
 }
 
+void UT3DisplaySettings::ReinitializeByChangeLanguage()
+{
+	//콤보 박스의 선택 기억 (해상도 콤보박스 제외)
+	const int32 TempIndex1 = ScreenModeComboBox->GetSelectedIndex();
+	const int32 TempIndex2 = GraphicQualityComboBox->GetSelectedIndex();
+	//콤보 박스를 비우고 다시 채우기
+	ScreenModeComboBox->ClearOptions();
+	GraphicQualityComboBox->ClearOptions();
+	for (const FString& Key : SCREEN_MODE_KEY_STRINGS)
+	{
+		FString OptionString = UT3GameInstance::GetStringFromTable(NAMESPACE_NAME, Key);
+		ScreenModeComboBox->AddOption(OptionString);
+	}
+	for (const FString& Key : GRAPHIC_KEY_STRINGS)
+	{
+		FString OptionString = UT3GameInstance::GetStringFromTable(NAMESPACE_NAME, Key);
+		GraphicQualityComboBox->AddOption(OptionString);
+	}
+	//다시 채운뒤 선택 원복
+	ScreenModeComboBox->SetSelectedIndex(TempIndex1);
+	GraphicQualityComboBox->SetSelectedIndex(TempIndex2);
+}
+
 void UT3DisplaySettings::OnSelectionChangedResolutionComboBox(FString SelectedItem, ESelectInfo::Type SelectionType)
 {
 	//코드에 의한 변경은 무시
