@@ -2,6 +2,7 @@
 
 #include "Equipment/T3PlayerEquipmentComponent.h"
 #include "GameSystem/T3GameInstance.h"
+#include "GameSystem/T3GameState.h"
 #include "GameSystem/T3SaveGame.h"
 #include "Item/Component/T3InventoryComponent.h"
 #include "Player/T3CharacterBase.h"
@@ -14,7 +15,15 @@ void AT3GameMode::BeginPlay()
 	T3GameInstance = Cast<UT3GameInstance>(GetGameInstance());
 	if (!T3GameInstance)
 	{
-		UE_LOG(LogTemp, Error, TEXT("%s : T3GameInstance is NULL"), *GetNameSafe(this));
+		UE_LOG(LogTemp, Error, TEXT("%s : T3GameInstance가 NULL"), *GetNameSafe(this));
+		return;
+	}
+	
+	//게임 스테이트
+	T3GameState = Cast<AT3GameState>(GetWorld()->GetGameState());
+	if (!T3GameState)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : T3GameState가 NULL"), *GetNameSafe(this));
 		return;
 	}
 }

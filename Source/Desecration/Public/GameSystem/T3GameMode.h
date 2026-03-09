@@ -4,6 +4,7 @@
 #include "GameFramework/GameMode.h"
 #include "T3GameMode.generated.h"
 
+class AT3GameState;
 class UT3GameInstance;
 class AT3CharacterBase;
 enum class EPlayerClass;
@@ -38,4 +39,8 @@ private:
 	//게임 인스턴스
 	UPROPERTY()
 	TObjectPtr<UT3GameInstance> T3GameInstance;
+	
+	//게임 스테이트
+	UPROPERTY()
+	TObjectPtr<AT3GameState> T3GameState;
 };
