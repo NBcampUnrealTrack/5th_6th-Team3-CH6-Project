@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "NiagaraComponent.h"
 #include "T3LunarSlash.generated.h"
 
 class USphereComponent;
@@ -20,6 +21,9 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "LunarSlash")
 	float ExplosionDamage = 50.0f;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VFX")
+	class UNiagaraComponent* ColdAuraComponent;
 	
 	UFUNCTION()
 	void OnLunarOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherOverlappedComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

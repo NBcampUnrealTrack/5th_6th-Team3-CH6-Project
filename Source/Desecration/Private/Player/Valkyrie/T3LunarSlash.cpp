@@ -31,6 +31,9 @@ AT3LunarSlash::AT3LunarSlash()
 	ProjectileMovement->MaxSpeed = 100.0f;
 	ProjectileMovement->ProjectileGravityScale = 0.0f;
 	
+	ColdAuraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("ColdAura"));
+	ColdAuraComponent->SetupAttachment(RootComponent);
+	
 	Tags.Add(TEXT("MoonSlash"));
 	
 	InitialLifeSpan = 8.0f;
@@ -110,6 +113,11 @@ void AT3LunarSlash::ExplodeLunarSlash(int32 ChargeLevel)
 	if (ProjectileMovement)
 	{
 		ProjectileMovement->StopMovementImmediately();
+	}
+	
+	if (ColdAuraComponent)
+	{
+		ColdAuraComponent->Deactivate();
 	}
 	
 	SetLifeSpan(2.0f);
