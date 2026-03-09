@@ -67,17 +67,23 @@ void UT3SelectClassWidget::TutorialStart(const FString& PlayerName)
 	SelectClassPlayerController->TutorialStart(PlayerName, SelectedPlayerClass);
 }
 
-void UT3SelectClassWidget::OnClickSelectClassButton(const EPlayerClass ButtonValue)
+void UT3SelectClassWidget::OnPressEsc()
 {
-	//연속으로 같은 버튼을 누르면 이름 입력하기
-	if (SelectedPlayerClass == ButtonValue)
+	//이름 입력 패널이 열린 상태에서는 패널 닫기
+	if (InputNamePanelParent->GetVisibility() == ESlateVisibility::Visible)
 	{
-		SetActiveInputNamePanel(true);
+		SetActiveInputNamePanel(false);
 		return;
 	}
 	
-	//TODO : 누른 버튼의 변화
+	//타이틀로
+	T3GameInstance->OpenLevel(ELevelName::Title);
+}
+
+void UT3SelectClassWidget::OnClickSelectClassButton(const EPlayerClass ButtonValue)
+{
 	SelectedPlayerClass = ButtonValue;
+	SetActiveInputNamePanel(true);
 }
 
 void UT3SelectClassWidget::ReturnToTitle()

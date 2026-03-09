@@ -30,6 +30,19 @@ void UT3ControllerSettings::InitializeSettingsPanel()
 	CameraSpeedSlider->SetValue(CurrentSettings->CameraSpeed);
 }
 
+void UT3ControllerSettings::ReinitializeByChangeLanguage()
+{
+	//콤보 박스 리셋
+	const int32 TempIndex = ControllerComboBox->GetSelectedIndex();
+	ControllerComboBox->ClearOptions();
+	for (const FString Key : CONTROLLER_KEY_STRINGS)
+	{		
+		const FString OptionString = UT3GameInstance::GetStringFromTable(NAMESPACE_NAME, Key);
+		ControllerComboBox->AddOption(OptionString);
+	}
+	ControllerComboBox->SetSelectedIndex(TempIndex);
+}
+
 void UT3ControllerSettings::SaveSettings()
 {
 	T3GameInstance->SaveUserSettings();
@@ -46,8 +59,6 @@ void UT3ControllerSettings::OnSelectionChangedControllerComboBox(FString Selecte
 	//컨트롤러 변경
 	const int32 SelectedIndex = ControllerComboBox->GetSelectedIndex();
 	T3GameInstance->GetCurrentSettings()->UsingController = SelectedIndex;
-	
-	//TODO : 키보드-게임패드간 입력 교체
 }
 
 void UT3ControllerSettings::OnCheckStateChangedInvertVerticalCheckBox(bool bIsChecked)

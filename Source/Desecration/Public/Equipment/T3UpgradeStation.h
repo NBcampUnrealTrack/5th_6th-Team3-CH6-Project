@@ -8,6 +8,7 @@
 #include "T3UpgradeStation.generated.h"
 
 class UStaticMeshComponent;
+class USceneComponent;
 class AT3CharacterBase;
 class UT3PlayerEquipmentComponent;
 class UT3InventoryComponent;
@@ -89,6 +90,9 @@ protected:
 	// ========================================================================
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UStaticMeshComponent> MeshComponent;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<USceneComponent> SceneComponent;
 
 	// ========================================================================
 	// 설정
