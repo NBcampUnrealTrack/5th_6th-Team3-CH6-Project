@@ -338,28 +338,29 @@ EStateTreeRunStatus FT3STT_Disengage::EnterState(
 		return EStateTreeRunStatus::Failed;
 	}
 
-	// 횡이동 시 랜덤 좌/우 결정 + NavMesh 이동 요청
-	if (Data.bStrafe && Data.Boss->CombatTarget)
+	// 횡이동 방향 랜덤 결정
+	if (Data.bStrafe)
 	{
 		Data.StrafeDirection = FMath::RandBool() ? 1.f : -1.f;
+	}
 
-		// 타겟 기준 측면 위치 계산
-		const FVector ToTarget = (Data.Boss->CombatTarget->GetActorLocation()
-			- Data.Boss->GetActorLocation()).GetSafeNormal2D();
-		const FVector RightVec = FVector::CrossProduct(FVector::UpVector, ToTarget);
-		const FVector StrafeTarget = Data.Boss->GetActorLocation()
-			+ RightVec * Data.StrafeDirection * 400.f;
+	// 루트모션 거리 스케일 적용
+	if (Data.RootMotionScale != 1.0f)
+	{
+		Data.Boss->SetAnimRootMotionTranslationScale(Data.RootMotionScale);
+	}
 
-		AAIController* AIC = GetBossAIController(Data.Boss);
-		if (AIC)
-		{
-			AIC->MoveToLocation(StrafeTarget, 50.f);
-		}
+	// 백스텝 몽타주 재생
+	if (Data.bBackStep && Data.BackStepMontage)
+	{
+		Data.Boss->PlayAnimMontage(Data.BackStepMontage);
 	}
 
 	UE_LOG(LogDesecration, Log,
-		TEXT("T3_ST: Disengage 시작 (Duration:%.1f, Strafe:%s)"),
-		Data.Duration, Data.bStrafe ? TEXT("true") : TEXT("false"));
+		TEXT("T3_ST: Disengage 시작 (Duration:%.1f, Strafe:%s, BackStep:%s)"),
+		Data.Duration,
+		Data.bStrafe ? TEXT("true") : TEXT("false"),
+		Data.bBackStep ? TEXT("true") : TEXT("false"));
 
 	return EStateTreeRunStatus::Running;
 }
@@ -377,10 +378,29 @@ EStateTreeRunStatus FT3STT_Disengage::Tick(
 
 	Data.ElapsedTime += DeltaTime;
 
-	// 회전은 MovementComponent가 SetFocus로 처리
 	if (Data.ElapsedTime >= Data.Duration)
 	{
 		return EStateTreeRunStatus::Succeeded;
+	}
+
+	// 타겟이 있을 때만 이동 입력
+	if (Data.Boss->CombatTarget)
+	{
+		const FVector ToTarget = (Data.Boss->CombatTarget->GetActorLocation()
+			- Data.Boss->GetActorLocation()).GetSafeNormal2D();
+
+		if (Data.bStrafe)
+		{
+			// 타겟 기준 측면 방향으로 연속 이동
+			const FVector StrafeDir = FVector::CrossProduct(FVector::UpVector, ToTarget) * Data.StrafeDirection;
+			Data.Boss->AddMovementInput(StrafeDir, 1.0f);
+		}
+
+		if (Data.bBackStep)
+		{
+			// 타겟 반대 방향으로 후퇴
+			Data.Boss->AddMovementInput(-ToTarget, 1.0f);
+		}
 	}
 
 	return EStateTreeRunStatus::Running;
@@ -394,10 +414,16 @@ void FT3STT_Disengage::ExitState(
 
 	if (Data.Boss)
 	{
-		AAIController* AIC = GetBossAIController(Data.Boss);
-		if (AIC)
+		// 백스텝 몽타주 정지
+		if (Data.bBackStep && Data.BackStepMontage)
 		{
-			AIC->StopMovement();
+			Data.Boss->StopAnimMontage(Data.BackStepMontage);
+		}
+
+		// 루트모션 스케일 복원
+		if (Data.RootMotionScale != 1.0f)
+		{
+			Data.Boss->SetAnimRootMotionTranslationScale(1.0f);
 		}
 	}
 }
@@ -659,4 +685,49 @@ bool FT3STC_DistanceToTarget::TestCondition(FStateTreeExecutionContext& Context)
 		bResult ? TEXT("true") : TEXT("false"));
 
 	return bResult;
+}
+
+// ============================================================
+// Consideration: FT3Consideration_PatternOffCooldown
+// 쿨다운 중 → 0.0 (선택 제외), 사용 가능 → 1.0
+// ============================================================
+
+float FT3Consideration_PatternOffCooldown::GetScore(FStateTreeExecutionContext& Context) const
+{
+	const FT3Consideration_PatternOffCooldownInstanceData& Data = Context.GetInstanceData(*this);
+
+	if (!Data.Boss || Data.PatternName.IsNone())
+	{
+		return 0.f;
+	}
+
+	return Data.Boss->IsPatternOffCooldown(Data.PatternName) ? 1.f : 0.f;
+}
+
+// ============================================================
+// Consideration: FT3Consideration_PatternAvailableAtStage
+// 스테이지 미달 → 0.0 (선택 제외), 사용 가능 → 1.0
+// ============================================================
+
+float FT3Consideration_PatternAvailableAtStage::GetScore(FStateTreeExecutionContext& Context) const
+{
+	const FT3Consideration_PatternAvailableAtStageInstanceData& Data = Context.GetInstanceData(*this);
+
+	if (!Data.Boss)
+	{
+		return 0.f;
+	}
+
+	if (Data.PatternName.IsNone())
+	{
+		return 1.f;
+	}
+
+	const FMidBossAttackPattern* PatternData = Data.Boss->FindPatternData(Data.PatternName);
+	if (!PatternData)
+	{
+		return 0.f;
+	}
+
+	return Data.Boss->BossStage >= PatternData->RequiredStage ? 1.f : 0.f;
 }

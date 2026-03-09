@@ -324,7 +324,7 @@ void AT3MidBossMonster::HandlePatternNotify(FName NotifyName)
 		UpdateMotionWarpTarget();
 		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: WarpTarget 노티파이 — 워프 위치 스냅샷"));
 	}
-	// --- 섹션 콤보: 다음 섹션 진입 시 데미지 데이터 인덱스 갱신 ---
+	// --- 섹션 콤보: 다음 섹션 진입 시 데미지 데이터 인덱스 갱신 + 동적 섹션 전환 ---
 	else if (Name.Equals(TEXT("NextCombo")))
 	{
 		const FMidBossAttackPattern* PatternData = FindPatternData(CurrentPatternName);
@@ -332,11 +332,43 @@ void AT3MidBossMonster::HandlePatternNotify(FName NotifyName)
 		{
 			CurrentChainIndex++;
 
-			// 새 섹션의 PlayRate 적용 — SetNextSection은 배속을 변경하지 않으므로 명시적 갱신
 			if (PatternData->MontageChain.IsValidIndex(CurrentChainIndex))
 			{
-				const float NewPlayRate = PatternData->MontageChain[CurrentChainIndex].PlayRate;
-				AnimInstance->Montage_SetPlayRate(CurrentMontage, NewPlayRate);
+				// 새 섹션의 PlayRate 적용 — SetNextSection은 배속을 변경하지 않으므로 명시적 갱신
+				const FPatternMontageData& CurrentEntry = PatternData->MontageChain[CurrentChainIndex];
+				AnimInstance->Montage_SetPlayRate(CurrentMontage, CurrentEntry.PlayRate);
+
+				// 동적 섹션 전환: 현재 섹션 → 다음 섹션 설정
+				// 같은 섹션 이름이 반복되어도 매 NextCombo마다 갱신하므로 정확한 다음 섹션 지정
+				UAnimMontage* SectionMontage = PatternData->MontageChain[0].Montage;
+				const int32 NextIndex = CurrentChainIndex + 1;
+
+				if (PatternData->MontageChain.IsValidIndex(NextIndex))
+				{
+					const FPatternMontageData& NextEntry = PatternData->MontageChain[NextIndex];
+					const bool bNextIsSameMontage = (NextEntry.Montage == nullptr || NextEntry.Montage == SectionMontage);
+
+					if (bNextIsSameMontage && !CurrentEntry.SectionName.IsNone() && !NextEntry.SectionName.IsNone())
+					{
+						AnimInstance->Montage_SetNextSection(CurrentEntry.SectionName, NextEntry.SectionName, SectionMontage);
+					}
+					else
+					{
+						// 다른 몽타주 경계 — 현재 섹션에서 종료 → OnMontageEnded에서 체인 전환
+						if (!CurrentEntry.SectionName.IsNone())
+						{
+							AnimInstance->Montage_SetNextSection(CurrentEntry.SectionName, NAME_None, SectionMontage);
+						}
+					}
+				}
+				else
+				{
+					// 마지막 섹션 — 기본 연결 끊기
+					if (!CurrentEntry.SectionName.IsNone())
+					{
+						AnimInstance->Montage_SetNextSection(CurrentEntry.SectionName, NAME_None, SectionMontage);
+					}
+				}
 			}
 
 			UE_LOG(LogDesecration, Log,
@@ -552,33 +584,34 @@ void AT3MidBossMonster::PlayCurrentChainMontage()
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 		if (AnimInstance)
 		{
-			// 같은 몽타주를 공유하는 연속 엔트리 간 섹션 전환 설정
 			UAnimMontage* SectionMontage = MontageData.Montage;
-			int32 LastSectionIndex = 0;
-			for (int32 i = 0; i < PatternData->MontageChain.Num() - 1; ++i)
-			{
-				const FPatternMontageData& Current = PatternData->MontageChain[i];
-				const FPatternMontageData& Next = PatternData->MontageChain[i + 1];
 
-				// 다음 엔트리가 같은 몽타주(또는 nullptr=섹션 전용)면 섹션 연결
+			// 동적 섹션 전환: 첫 번째 전환만 설정 (나머지는 NextCombo에서 동적 설정)
+			// 같은 섹션 이름이 반복될 때 SetNextSection 덮어쓰기 문제 방지
+			if (PatternData->MontageChain.Num() > 1)
+			{
+				const FPatternMontageData& Next = PatternData->MontageChain[1];
 				const bool bNextIsSameMontage = (Next.Montage == nullptr || Next.Montage == SectionMontage);
-				if (bNextIsSameMontage && !Current.SectionName.IsNone() && !Next.SectionName.IsNone())
+				if (bNextIsSameMontage && !MontageData.SectionName.IsNone() && !Next.SectionName.IsNone())
 				{
-					AnimInstance->Montage_SetNextSection(Current.SectionName, Next.SectionName, SectionMontage);
-					LastSectionIndex = i + 1;
+					AnimInstance->Montage_SetNextSection(MontageData.SectionName, Next.SectionName, SectionMontage);
 				}
 				else
 				{
-					// 다른 몽타주 경계 — 현재 섹션에서 몽타주 종료 → OnMontageEnded에서 체인 전환
-					break;
+					// 다른 몽타주 경계 — 현재 섹션에서 종료
+					if (!MontageData.SectionName.IsNone())
+					{
+						AnimInstance->Montage_SetNextSection(MontageData.SectionName, NAME_None, SectionMontage);
+					}
 				}
 			}
-
-			// 마지막 섹션의 기본 연결 끊기 — 몽타주 에디터의 기본 순서가 계속되지 않도록
-			const FPatternMontageData& LastEntry = PatternData->MontageChain[LastSectionIndex];
-			if (!LastEntry.SectionName.IsNone())
+			else
 			{
-				AnimInstance->Montage_SetNextSection(LastEntry.SectionName, NAME_None, SectionMontage);
+				// 섹션 1개뿐 — 기본 연결 끊기
+				if (!MontageData.SectionName.IsNone())
+				{
+					AnimInstance->Montage_SetNextSection(MontageData.SectionName, NAME_None, SectionMontage);
+				}
 			}
 
 			FOnMontageEnded EndDelegate;
@@ -595,20 +628,56 @@ void AT3MidBossMonster::PlayCurrentChainMontage()
 	}
 
 	// === 기존 체인 모드 (또는 섹션 콤보 후속의 다른 몽타주) ===
-	PlayAnimMontage(MontageData.Montage, MontageData.PlayRate);
+	const FName StartSection = MontageData.SectionName.IsNone() ? NAME_None : MontageData.SectionName;
+	PlayAnimMontage(MontageData.Montage, MontageData.PlayRate, StartSection);
 
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance)
 	{
-		FOnMontageEnded EndDelegate;
-		EndDelegate.BindUObject(this, &AT3MidBossMonster::OnMontageEnded);
-		AnimInstance->Montage_SetEndDelegate(EndDelegate, MontageData.Montage);
+		// 섹션 지정 시 해당 섹션만 재생하고 종료 — 기본 섹션 순서 진행 방지
+		if (!StartSection.IsNone())
+		{
+			AnimInstance->Montage_SetNextSection(StartSection, NAME_None, MontageData.Montage);
+		}
+
+		// 체인 모드: BlendingOut 시작 시점에 다음 몽타주 겹쳐 재생 (idle 깜박임 방지)
+		FOnMontageBlendingOutStarted BlendOutDelegate;
+		BlendOutDelegate.BindUObject(this, &AT3MidBossMonster::OnChainBlendingOut);
+		AnimInstance->Montage_SetBlendingOutDelegate(BlendOutDelegate, MontageData.Montage);
 	}
 
 	UE_LOG(LogDesecration, Log,
-		TEXT("T3_MidBoss: 몽타주 재생 — 패턴:'%s' 체인[%d] (배속:%.1f, 데미지:%.0f)"),
+		TEXT("T3_MidBoss: 몽타주 재생 — 패턴:'%s' 체인[%d] (배속:%.1f, 데미지:%.0f, 섹션:'%s')"),
 		*CurrentPatternName.ToString(), CurrentChainIndex,
-		MontageData.PlayRate, MontageData.Damage);
+		MontageData.PlayRate, MontageData.Damage,
+		StartSection.IsNone() ? TEXT("None") : *StartSection.ToString());
+}
+
+void AT3MidBossMonster::OnChainBlendingOut(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (!IsExecutingPattern())
+	{
+		return;
+	}
+
+	if (WeaponComponent)
+	{
+		WeaponComponent->SetAttackCollisionEnabled(false);
+		WeaponComponent->SetWideCollisionEnabled(false);
+	}
+	bIsMovingToTarget = false;
+
+	if (bInterrupted)
+	{
+		UE_LOG(LogDesecration, Log,
+			TEXT("T3_MidBoss: 체인 블렌드아웃 인터럽트 — 패턴:'%s' 체인[%d]"),
+			*CurrentPatternName.ToString(), CurrentChainIndex);
+		ResetPatternState();
+		return;
+	}
+
+	// 블렌드아웃 시작 시점에 바로 다음 체인 진행 → Blend Out + Blend In 겹침
+	AdvanceChainOrComplete();
 }
 
 void AT3MidBossMonster::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)

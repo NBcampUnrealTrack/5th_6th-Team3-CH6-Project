@@ -488,6 +488,9 @@ private:
 	UFUNCTION()
 	void OnMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
+	// 체인 모드: 블렌드아웃 시작 시 다음 몽타주 겹쳐 재생
+	void OnChainBlendingOut(UAnimMontage* Montage, bool bInterrupted);
+
 	void AdvanceChainOrComplete();
 	void RegisterCooldown(FName PatternName, float CooldownSeconds);
 	void ResetPatternState();
