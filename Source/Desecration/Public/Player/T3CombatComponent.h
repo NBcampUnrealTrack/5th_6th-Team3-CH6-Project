@@ -31,8 +31,8 @@ enum class ECombatWindowType : uint8
 	Parry      UMETA(DisplayName = "Parry Window"),
 	Dodge UMETA(DisplayName = "Dodge Window"),
 	Attack     UMETA(DisplayName = "Attack Collision"),
-	PrevenRegen UMETA(DisplayName = "PrevenRegen")
-	
+	PrevenRegen UMETA(DisplayName = "PrevenRegen"),
+	PowerStrike UMETA(DisplayName = "Power Strike")
 };
 
 // 피격 방향 ENUM
@@ -240,6 +240,13 @@ private:
 	TObjectPtr<AActor> CurrentTarget;
 	void ResetBlockCooldown();
 
+public:
+	bool GetIsPowerStrike() const {return bIsPowerStrike;}
+	
+	void SetPowerStrike(bool bState) {bIsPowerStrike = bState;}
+	
+protected:
+	bool bIsPowerStrike = false;
 
 
 

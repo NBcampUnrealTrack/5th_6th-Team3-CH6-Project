@@ -17,6 +17,15 @@ class DESECRATION_API AT3LunarSlash : public AActor
 	
 public:	
 	AT3LunarSlash();
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "LunarSlash")
+	float ExplosionDamage = 50.0f;
+	
+	UFUNCTION()
+	void OnLunarOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherOverlappedComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	
+	UFUNCTION()
+	void ExplodeLunarSlash(int32 ChargeLevel);
 
 protected:
 	virtual void BeginPlay() override;
