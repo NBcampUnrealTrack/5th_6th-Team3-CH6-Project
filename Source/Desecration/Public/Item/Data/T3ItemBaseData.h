@@ -9,7 +9,7 @@ enum class EItemType : uint8
 {
 	None,
 	Rune,
-	Comsumable
+	Consumable
 };
 
 USTRUCT(BlueprintType)
