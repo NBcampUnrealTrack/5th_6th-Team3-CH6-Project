@@ -19,7 +19,7 @@ public:
 	 * @param ObjectID 물체 번호
 	 * @return 그 물체의 상태를 반환, 없다면 0을 반환
 	 */
-	UFUNCTION(BlueprintPure, Category = "Object State")
+	UFUNCTION(BlueprintCallable, Category = "Object State")
 	int32 GetState(int32 ObjectID) const;
 
 	/**
