@@ -143,6 +143,7 @@ void AT3LunarSlash::ApplyDamage()
 			if (Actor && Actor != OwnerChar)
 			{
 				Combat->RequestAttackDamage(Actor, DamageRate);
+				OnDoTAttack();
 			}
 		}
 	}
