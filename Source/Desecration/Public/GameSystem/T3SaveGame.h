@@ -32,14 +32,14 @@ public:
 	//저장한 맵 내의 위치
 	UPROPERTY()
 	FVector PlayerLocation;
-	
-	//현재 위치의 상태
-	UPROPERTY()
-	TMap<int32, int32> LevelObjectStates;
-	
+
 	//위치 적용 여부 (이 값은 저장 목적이 아님)
 	UPROPERTY(Transient)
 	bool bSetLocation;
+	
+	//물체 상태
+	UPROPERTY()
+	TMap<int32, int32> LevelObjectStates;
 	
 #pragma region 캐릭터 스탯
 	//최대 HP
