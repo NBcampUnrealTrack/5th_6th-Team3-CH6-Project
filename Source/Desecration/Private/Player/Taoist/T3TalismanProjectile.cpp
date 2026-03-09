@@ -8,6 +8,7 @@
 #include "Player/T3CombatComponent.h"
 #include "Player/T3CharacterBase.h"
 #include "Player/Taoist/T3Taoist_SkillComponent.h"
+#include "Player/Taoist/T3TaoistClone.h"
 
 AT3TalismanProjectile::AT3TalismanProjectile()
 {
@@ -76,7 +77,10 @@ void AT3TalismanProjectile::Tick(float DeltaTime)
 void AT3TalismanProjectile::OnTalismanOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
     // 1. 유효성 검사 (본인 및 소유자 제외, 중복 히트 방지)
-    if (!OtherActor || OtherActor == GetOwner() || HitActors.Contains(OtherActor) || OtherActor == this) return;
+    APawn* MyInstigator = GetInstigator();
+    if (OtherActor == MyInstigator) return;
+    if (OtherActor->IsA(AT3CharacterBase::StaticClass())) return;
+    if (!OtherActor || OtherActor == GetOwner() || HitActors.Contains(OtherActor) || OtherActor == this || OtherActor->IsA(AT3TaoistClone::StaticClass())) return;
 
     AT3CharacterBase* OwnerChar = Cast<AT3CharacterBase>(GetOwner());
     if (!OwnerChar) return;
@@ -84,11 +88,18 @@ void AT3TalismanProjectile::OnTalismanOverlap(UPrimitiveComponent* OverlappedCom
     UT3CombatComponent* Combat = OwnerChar->GetCombatComponent();
     if (!Combat) return;
 
+    UT3Taoist_SkillComponent* TaoistSkill = Cast< UT3Taoist_SkillComponent>(Combat->GetSkillComponent());
+    if (!TaoistSkill) return;
+
     // 2. 히트 리스트 추가
     HitActors.Add(OtherActor);
 
     // 3. 데미지 전달 
-    Combat->RequestAttackDamage(OtherActor, Damage);
+    
+    {
+        Combat->RequestAttackDamage(OtherActor, Damage*DamageMultiflier);
+    }
+
     UE_LOG(LogTemp, Log, TEXT("[Talisman] Hit: %s, Damage: %f"), *OtherActor->GetName(), Damage);
 
     // 4. 폭발 연출 (Niagara)
