@@ -2,8 +2,8 @@
 
 #include "Equipment/T3PlayerEquipmentComponent.h"
 #include "GameSystem/T3GameInstance.h"
-#include "GameSystem/T3GameState.h"
 #include "GameSystem/T3SaveGame.h"
+#include "GameSystem/T3WorldSubsystem.h"
 #include "Item/Component/T3InventoryComponent.h"
 #include "Player/T3CharacterBase.h"
 
@@ -16,14 +16,6 @@ void AT3GameMode::BeginPlay()
 	if (!T3GameInstance)
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s : T3GameInstance가 NULL"), *GetNameSafe(this));
-		return;
-	}
-	
-	//게임 스테이트
-	T3GameState = Cast<AT3GameState>(GetWorld()->GetGameState());
-	if (!T3GameState)
-	{
-		UE_LOG(LogTemp, Error, TEXT("%s : T3GameState가 NULL"), *GetNameSafe(this));
 		return;
 	}
 }
@@ -85,11 +77,6 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	}
 	
 	//저장했던 물체 상태 제거
-	if (!T3GameState)
-	{
-		UE_LOG(LogTemp, Error, TEXT("%s : T3GameState를 찾을 수 없음"), *GetNameSafe(this));
-		return false;
-	}
 	SaveGame->LevelObjectStates.Empty();
 	
 	//임시 저장이라면 세이브 데이터를 가지고만 있고 직접 저장하지 않는다.
@@ -99,7 +86,10 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	}
 	
 	//임시 저장이 아니면 물체 상태 저장
-	SaveGame->LevelObjectStates.Append(T3GameState->GetAllStates());
+	if (const TObjectPtr<UT3WorldSubsystem> WorldSubsystem = GetWorld()->GetSubsystem<UT3WorldSubsystem>())
+	{
+		SaveGame->LevelObjectStates.Append(WorldSubsystem->GetAllStates());
+	}
 	
 	//저장
 	return T3GameInstance->SaveGame();

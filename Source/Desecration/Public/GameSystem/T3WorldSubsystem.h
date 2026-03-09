@@ -1,19 +1,19 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/GameStateBase.h"
-#include "T3GameState.generated.h"
+#include "Subsystems/WorldSubsystem.h"
+#include "T3WorldSubsystem.generated.h"
 
 class UT3GameInstance;
 
 UCLASS()
-class DESECRATION_API AT3GameState : public AGameStateBase
+class DESECRATION_API UT3WorldSubsystem : public UWorldSubsystem
 {
 	GENERATED_BODY()
 	
 public:
-	virtual void PostInitializeComponents() override;
-	
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+
 	/**
 	 * 지정한 물체의 상태
 	 * @param ObjectID 물체 번호
@@ -35,12 +35,8 @@ public:
 	
 private:
 	//여러 개의 상태를 등록
-	void SetStates(const TMap<int32, int32>& NewStates);
+	void AddStates(const TMap<int32, int32>& NewStates);
 	
 	//여러 물체들의 상태를 저장
 	TMap<int32, int32> LevelObjectStates;
-	
-	//게임 스테이트
-	UPROPERTY()
-	TObjectPtr<UT3GameInstance> T3GameInstance;
 };
