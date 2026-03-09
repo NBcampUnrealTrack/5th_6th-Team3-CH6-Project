@@ -10,7 +10,7 @@ void AT3GameState::PostInitializeComponents()
 	T3GameInstance = Cast<UT3GameInstance>(GetGameInstance());
 	if (!T3GameInstance)
 	{
-		UE_LOG(LogTemp, Error, TEXT("T3GameInstance가 null"));
+		UE_LOG(LogTemp, Error, TEXT("%s : T3GameInstance가 null"), *GetNameSafe(this));
 		return;
 	}
 	
