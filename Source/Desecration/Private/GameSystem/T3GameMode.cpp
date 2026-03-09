@@ -84,11 +84,22 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 		EquipComp->GetEquipmentSaveData(SaveGame->WeaponSaveData, SaveGame->ArmorSaveData);
 	}
 	
+	//저장했던 물체 상태 제거
+	if (!T3GameState)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : T3GameState를 찾을 수 없음"), *GetNameSafe(this));
+		return false;
+	}
+	SaveGame->LevelObjectStates.Empty();
+	
 	//임시 저장이라면 세이브 데이터를 가지고만 있고 직접 저장하지 않는다.
 	if (bTemporarySave)
 	{
 		return true;
 	}
+	
+	//임시 저장이 아니면 물체 상태 저장
+	SaveGame->LevelObjectStates.Append(T3GameState->GetAllStates());
 	
 	//저장
 	return T3GameInstance->SaveGame();
