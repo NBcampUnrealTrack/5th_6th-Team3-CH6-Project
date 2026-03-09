@@ -2,6 +2,7 @@
 
 #include "Components/CheckBox.h"
 #include "Components/ComboBoxString.h"
+#include "Components/Image.h"
 #include "Components/Slider.h"
 #include "GameSystem/T3SaveUserSettings.h"
 
@@ -25,6 +26,10 @@ void UT3ControllerSettings::CustomNativeConstruct()
 void UT3ControllerSettings::InitializeSettingsPanel()
 {
 	const TObjectPtr<UT3SaveUserSettings> CurrentSettings = T3GameInstance->GetCurrentSettings();
+	if (LayoutTextures.IsValidIndex(CurrentSettings->UsingController))
+	{
+		ControlGuideImage->SetBrushFromTexture(LayoutTextures[CurrentSettings->UsingController]);
+	}
 	ControllerComboBox->SetSelectedIndex(CurrentSettings->UsingController);
 	InvertVerticalCheckBox->SetCheckedState(CurrentSettings->bInvertVertical ? ECheckBoxState::Checked : ECheckBoxState::Unchecked);
 	CameraSpeedSlider->SetValue(CurrentSettings->CameraSpeed);
