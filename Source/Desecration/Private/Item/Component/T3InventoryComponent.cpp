@@ -281,6 +281,18 @@ int32 UT3InventoryComponent::GetItemCountByItemID(const FName& ItemName)
 	return 0;
 }
 
+int32 UT3InventoryComponent::GetRuneCountByItemID(const FName& ItemName)
+{
+	for (FInventorySlot& RuneItem : RuneItems)
+	{
+		if (RuneItem.ItemID == ItemName)
+		{
+			return RuneItem.ItemStack;
+		}
+	}
+	return 0;
+}
+
 void UT3InventoryComponent::AddItemByCount(const FName& ItemName, int32 Count)
 {
 	for (FInventorySlot& Item : Items)

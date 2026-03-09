@@ -5,6 +5,8 @@
 #include "Engine/DataTable.h"
 #include "T3InventoryComponent.generated.h"
 
+class AT3CharacterBase;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryInitialized);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRuneInventoryUpdated);
@@ -25,8 +27,6 @@ enum class EConsumableItemType : uint8
 	Recover,
 	Buff
 };
-
-class AT3CharacterBase;
 
 USTRUCT(BlueprintType)
 struct FInventorySlot
@@ -74,6 +74,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory")
 	int32 GetItemCountByItemID(const FName& ItemName);
+	
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory")
+	int32 GetRuneCountByItemID(const FName& ItemName);
 	
 	UFUNCTION(BlueprintCallable)
 	void AddItemByCount(const FName& ItemName, int32 Count = 1);
