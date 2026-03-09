@@ -3,6 +3,7 @@
 #include "Equipment/T3PlayerEquipmentComponent.h"
 #include "GameSystem/T3GameInstance.h"
 #include "GameSystem/T3SaveGame.h"
+#include "GameSystem/T3WorldSubsystem.h"
 #include "Item/Component/T3InventoryComponent.h"
 #include "Player/T3CharacterBase.h"
 
@@ -14,7 +15,7 @@ void AT3GameMode::BeginPlay()
 	T3GameInstance = Cast<UT3GameInstance>(GetGameInstance());
 	if (!T3GameInstance)
 	{
-		UE_LOG(LogTemp, Error, TEXT("%s : T3GameInstance is NULL"), *GetNameSafe(this));
+		UE_LOG(LogTemp, Error, TEXT("%s : T3GameInstance가 NULL"), *GetNameSafe(this));
 		return;
 	}
 }
@@ -75,10 +76,19 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 		EquipComp->GetEquipmentSaveData(SaveGame->WeaponSaveData, SaveGame->ArmorSaveData);
 	}
 	
+	//저장했던 물체 상태 제거
+	SaveGame->LevelObjectStates.Empty();
+	
 	//임시 저장이라면 세이브 데이터를 가지고만 있고 직접 저장하지 않는다.
 	if (bTemporarySave)
 	{
 		return true;
+	}
+	
+	//임시 저장이 아니면 물체 상태 저장
+	if (const TObjectPtr<UT3WorldSubsystem> WorldSubsystem = GetWorld()->GetSubsystem<UT3WorldSubsystem>())
+	{
+		SaveGame->LevelObjectStates.Append(WorldSubsystem->GetAllStates());
 	}
 	
 	//저장

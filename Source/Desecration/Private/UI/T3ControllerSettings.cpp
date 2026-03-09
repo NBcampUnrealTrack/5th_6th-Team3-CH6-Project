@@ -59,8 +59,6 @@ void UT3ControllerSettings::OnSelectionChangedControllerComboBox(FString Selecte
 	//컨트롤러 변경
 	const int32 SelectedIndex = ControllerComboBox->GetSelectedIndex();
 	T3GameInstance->GetCurrentSettings()->UsingController = SelectedIndex;
-	
-	//TODO : 키보드-게임패드간 입력 교체
 }
 
 void UT3ControllerSettings::OnCheckStateChangedInvertVerticalCheckBox(bool bIsChecked)
