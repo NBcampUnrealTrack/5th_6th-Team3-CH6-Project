@@ -17,7 +17,7 @@ AT3LunarSlash::AT3LunarSlash()
 	PrimaryActorTick.bCanEverTick = false;
 	
 	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
-	SphereComponent->InitSphereRadius(300.0f);
+	SphereComponent->InitSphereRadius(500.0f);
 	SphereComponent->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
 	RootComponent = SphereComponent;
 	
@@ -121,6 +121,7 @@ void AT3LunarSlash::ExplodeLunarSlash(int32 ChargeLevel)
 	}
 	
 	SetLifeSpan(2.0f);
+	OnLunarExplosion();
 }
 
 void AT3LunarSlash::BeginPlay()

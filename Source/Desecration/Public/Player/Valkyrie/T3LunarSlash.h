@@ -53,4 +53,6 @@ protected:
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnDoTAttack();
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnLunarExplosion();
 };
