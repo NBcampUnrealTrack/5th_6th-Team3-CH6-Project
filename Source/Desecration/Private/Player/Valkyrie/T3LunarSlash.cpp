@@ -97,7 +97,22 @@ void AT3LunarSlash::ExplodeLunarSlash(int32 ChargeLevel)
 			}
 		}
 	}
-	Destroy();
+	if (SphereComponent)
+	{
+		SphereComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+	
+	if (MoonMesh)
+	{
+		MoonMesh->SetHiddenInGame(true);
+	}
+	
+	if (ProjectileMovement)
+	{
+		ProjectileMovement->StopMovementImmediately();
+	}
+	
+	SetLifeSpan(2.0f);
 }
 
 void AT3LunarSlash::BeginPlay()
