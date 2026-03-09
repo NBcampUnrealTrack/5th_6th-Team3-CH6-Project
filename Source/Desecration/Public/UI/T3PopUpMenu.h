@@ -23,6 +23,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetActivePopUpMenu(bool bActive);
 	
+	//팝업 메뉴의 열림 여부
+	UFUNCTION(BlueprintPure)
+	bool IsActivePopUpMenu();
+	
 private:
 	//계속하기
 	UFUNCTION()

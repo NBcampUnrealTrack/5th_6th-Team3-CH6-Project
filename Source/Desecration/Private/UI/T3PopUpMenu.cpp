@@ -60,11 +60,11 @@ void UT3PopUpMenu::NativeConstruct()
 
 void UT3PopUpMenu::SetActivePopUpMenu(const bool bActive)
 {
-	//열기 여부에 따라 UI/게임 전용으로 변경
+	//열기 여부에 따라 입력 모드를 변경
 	if (bActive)
 	{
-		const FInputModeUIOnly UIOnly;
-		T3PlayerController->SetInputMode(UIOnly);
+		const FInputModeGameAndUI GameAndUI;
+		T3PlayerController->SetInputMode(GameAndUI);
 	}
 	else
 	{
@@ -74,6 +74,11 @@ void UT3PopUpMenu::SetActivePopUpMenu(const bool bActive)
 	T3PlayerController->SetShowMouseCursor(bActive);
 	
 	SetVisibility(bActive ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+}
+
+bool UT3PopUpMenu::IsActivePopUpMenu()
+{
+	return GetVisibility() == ESlateVisibility::Visible;
 }
 
 void UT3PopUpMenu::OnClickResumeButton()
