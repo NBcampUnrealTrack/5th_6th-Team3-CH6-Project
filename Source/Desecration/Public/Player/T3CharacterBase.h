@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "T3PlayerInputState.h"
 #include "InputActionValue.h"
+#include "Item/Data/T3ItemBaseData.h"
 #include "T3CharacterBase.generated.h"
 
 
@@ -34,7 +35,7 @@ enum class ET3StatType : uint8
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnStatChangedDelegate, ET3StatType, StatType, float, CurrentValue, float, MaxValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnForcedMoveEndSignature);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSellItemRequested, const FInventorySlot&, SlotData, const int32&, Count);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSellItemRequested, const FInventorySlot&, SlotData, const int32&, Count, EItemType, ItemType);
 
 UCLASS()
 class DESECRATION_API AT3CharacterBase : public ACharacter
@@ -54,7 +55,7 @@ FOnForcedMoveEndSignature OnForcedMoveEnd;
 
 // 아이템 관련 델리게이트 바인딩 함수
 UFUNCTION(BlueprintCallable)
-void RequestSellItem(const FInventorySlot& SlotData, const int32& Count = 1);
+void RequestSellItem(const FInventorySlot& SlotData, const int32& Count = 1, EItemType ItemType = EItemType::None);
 UPROPERTY(BlueprintAssignable)
 FOnSellItemRequested OnSellItemRequested;
 
@@ -63,7 +64,7 @@ TObjectPtr <UDataTable> ItemDataTable;
 
 protected:
 	virtual void BeginPlay() override;
-	// virtual void PostInitializeComponents();
+	virtual void PostInitializeComponents() override; // BeginPlay보다 앞선 초기화 지점
 	virtual void Tick( float DeltaTime ) override;
 	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
 	

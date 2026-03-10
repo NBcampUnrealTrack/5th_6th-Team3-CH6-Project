@@ -66,7 +66,11 @@ public:
 	 * @param LevelName 이동할 레벨 (주의 : TitleLevel이나 SelectClassLevel로 지정하면 게임에서 벗어납니다.)
 	 */
 	UFUNCTION(BlueprintCallable)
-	void OpenLevel(UPARAM() ELevelName LevelName) const;
+	void OpenLevel(UPARAM() ELevelName LevelName);
+	
+	//현재 레벨
+	UFUNCTION(BlueprintPure)
+	FORCEINLINE ELevelName GetCurrentLevel() const { return CurrentLevel; }
 
 	//저장된 게임
 	FORCEINLINE TObjectPtr<UT3SaveGame> GetSavedGameData() { return SavedGameData; }
@@ -111,6 +115,9 @@ private:
 	// T3GameInstance.h
 	UPROPERTY(EditAnywhere, Category = "Level Settings")
 	TMap<ELevelName, TSoftObjectPtr<UWorld>> LevelMap;
+	
+	//현재 레벨
+	ELevelName CurrentLevel = ELevelName::Title;
 
 	//저장, 불러오기에 사용할 슬롯 이름
 	const FString SAVE_GAME_NAME = TEXT("SaveSlot1");
