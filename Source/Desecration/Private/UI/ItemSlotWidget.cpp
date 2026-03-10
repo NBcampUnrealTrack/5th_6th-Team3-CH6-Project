@@ -155,6 +155,11 @@ bool UItemSlotWidget::NativeOnDrop(const FGeometry& InGeometry, const FDragDropE
 		return false;
 	}
 	
+	if (ItemDragOp->bIsFromRuneSocket)
+	{
+		return true;
+	}
+	
 	if (SlotIndex < 0 || ItemDragOp->SourceSlotIndex < 0)
 	{
 		return false;

@@ -2,14 +2,12 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/DragDropOperation.h"
+#include "Equipment/T3EquipmentTypes.h"
 #include "ItemDragDropOperation.generated.h"
 
-// 전방 선언
 class UItemSlotWidget;
+class UT3PlayerEquipmentComponent;
 
-/**
- * 인벤토리 아이템 드래그 앤 드롭을 위한 커스텀 DragDropOperation
- */
 UCLASS()
 class DESECRATION_API UItemDragDropOperation : public UDragDropOperation
 {
@@ -26,5 +24,22 @@ public:
 	// 드래그 시작한 슬롯 위젯 참조
 	UPROPERTY(BlueprintReadWrite, Category = "Drag Drop")
 	TObjectPtr<UItemSlotWidget> SourceSlotWidget;
+	
+	UPROPERTY(BlueprintReadWrite, Category = "Drag Drop|Rune")
+	bool bIsFromRuneSocket = false;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Drag Drop|Rune")
+	TObjectPtr<UT3PlayerEquipmentComponent> SourceEquipmentComponent;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Drag Drop|Rune")
+	ET3EquipmentType SourceEquipmentType = ET3EquipmentType::Weapon;
+	
+	bool bDropHandledBySameSocket = false;
+
+protected:
+	virtual void Drop_Implementation(const FPointerEvent& PointerEvent) override;
+
+	virtual void DragCancelled_Implementation(const FPointerEvent& PointerEvent) override;
+
 };
 
