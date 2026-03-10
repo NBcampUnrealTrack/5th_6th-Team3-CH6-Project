@@ -25,6 +25,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VFX")
 	class UNiagaraComponent* ColdAuraComponent;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadwrite, Category = "LunarSlash")
+	bool bIsAlreadyExploded;
+	
 	UFUNCTION()
 	void OnLunarOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherOverlappedComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	

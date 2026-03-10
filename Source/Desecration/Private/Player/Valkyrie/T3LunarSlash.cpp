@@ -15,6 +15,7 @@
 AT3LunarSlash::AT3LunarSlash()
 {
 	PrimaryActorTick.bCanEverTick = false;
+	bIsAlreadyExploded = false;
 	
 	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
 	SphereComponent->InitSphereRadius(500.0f);
@@ -80,6 +81,7 @@ void AT3LunarSlash::ExplodeLunarSlash(int32 ChargeLevel)
 	
 	TArray<AActor*> OverlappedActors;
 	SphereComponent->GetOverlappingActors(OverlappedActors);
+	bIsAlreadyExploded = true;
 	
 	AT3CharacterBase* OwnerChar = Cast<AT3CharacterBase>(GetOwner());
 	if (OwnerChar)
