@@ -353,6 +353,34 @@ bool UT3PlayerEquipmentComponent::TryUpgrade(ET3EquipmentType TargetType, int32 
     return true;
 }
 
+bool UT3PlayerEquipmentComponent::GetSocketedRuneData(ET3EquipmentType EquipmentType, int32 SlotIndex,
+	FT3RuneItemData& OutRuneData) const
+{
+	const TArray<FName>& SocketedIDs = (EquipmentType == ET3EquipmentType::Weapon) ? WeaponSocketedRuneIDs : ArmorSocketedRuneIDs;
+
+	if (!SocketedIDs.IsValidIndex(SlotIndex))
+	{
+		return false;
+	}
+
+	UT3InventoryComponent* Inventory = GetOwner()->FindComponentByClass<UT3InventoryComponent>();
+
+	if (!Inventory || !Inventory->RuneTable)
+	{
+		return false;
+	}
+
+	const FT3RuneItemData* Row = Inventory->RuneTable->FindRow<FT3RuneItemData>(SocketedIDs[SlotIndex], TEXT("GetSocketedRuneData"));
+
+	if (!Row)
+	{
+		return false;
+	}
+
+	OutRuneData = *Row;
+	return true;
+}
+
 bool UT3PlayerEquipmentComponent::SocketRune(FName RuneID, ET3EquipmentType TargetEquipment)
 {
 	if (RuneID == NAME_None)
@@ -388,9 +416,16 @@ bool UT3PlayerEquipmentComponent::SocketRune(FName RuneID, ET3EquipmentType Targ
 
 	if (!RuneRow || !RuneRow->RuneLogicClass)
 	{
+		UE_LOG(LogTemp, Error, TEXT("데이터가 뭔가 이상함"));
 		return false;
 	}
 
+	if (RuneRow->EquipmentType != TargetEquipment)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("룬 타입이 장비 슬롯과 맞지 않음"));
+		return false;
+	}
+	
 	Inventory->RemoveRuneItemByCount(RuneID);
 
 	UT3RuneBase* NewRune = NewObject<UT3RuneBase>(this, RuneRow->RuneLogicClass);
@@ -399,6 +434,8 @@ bool UT3PlayerEquipmentComponent::SocketRune(FName RuneID, ET3EquipmentType Targ
 
 	NewRune->OnSocketed(OwnerCharacter);
 
+	OnRuneSocketChanged.Broadcast();
+	
 	return true;
 }
 
@@ -431,7 +468,29 @@ bool UT3PlayerEquipmentComponent::UnsocketRune(FName RuneID, ET3EquipmentType Ta
 		Inventory->AddRuneItemByCount(RuneID, 1);
 	}
 
+	OnRuneSocketChanged.Broadcast();
+	
 	return true;
+	
+}
+
+bool UT3PlayerEquipmentComponent::SocketRuneAuto(FName RuneID)
+{
+	UT3InventoryComponent* Inventory = GetOwner()->FindComponentByClass<UT3InventoryComponent>();
+
+	if (!Inventory || !Inventory->RuneTable)
+	{
+		return false;
+	}
+
+	const FT3RuneItemData* RuneRow = Inventory->RuneTable->FindRow<FT3RuneItemData>(RuneID, TEXT("SocketRuneAuto"));
+
+	if (!RuneRow)
+	{
+		return false;
+	}
+
+	return SocketRune(RuneID, RuneRow->EquipmentType);
 }
 
 void UT3PlayerEquipmentComponent::RestoreRunes(const TArray<FName>& RuneIDs, TArray<TObjectPtr<UT3RuneBase>>& OutActiveRunes)

@@ -16,4 +16,7 @@ struct FT3RuneItemData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rune")
 	TSubclassOf<UT3RuneBase> RuneLogicClass;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rune")
+	ET3EquipmentType EquipmentType = ET3EquipmentType::Weapon;
 };

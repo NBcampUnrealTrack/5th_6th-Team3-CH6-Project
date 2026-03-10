@@ -20,6 +20,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "Drag Drop")
 	int32 SourceSlotIndex = -1;
 	
+	UPROPERTY(BlueprintReadWrite, Category = "Drag Drop")
+	FName DraggedItemID = NAME_None;
+	
 	// 드래그 시작한 슬롯 위젯 참조
 	UPROPERTY(BlueprintReadWrite, Category = "Drag Drop")
 	TObjectPtr<UItemSlotWidget> SourceSlotWidget;
