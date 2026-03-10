@@ -16,6 +16,7 @@
 #include "Player/T3SkillComponentBase.h"
 #include "Equipment/T3PlayerEquipmentComponent.h"
 #include "GameSystem/T3GameMode.h"
+#include "Item/Data/T3ItemBaseData.h"
 #include "Player/T3PlayerController.h"
 #include "UI/T3HUDSlotWidget.h"
 #include "Player/Paladin/T3HolyGaugeWidget.h"
@@ -60,9 +61,9 @@ AT3CharacterBase::AT3CharacterBase()
 	LoadTimeAfterDeath = 3.0f;
 }
 
-void AT3CharacterBase::RequestSellItem(const FInventorySlot& SlotData, const int32& Count)
+void AT3CharacterBase::RequestSellItem(const FInventorySlot& SlotData, const int32& Count, EItemType ItemType)
 {
-	OnSellItemRequested.Broadcast(SlotData, Count);
+	OnSellItemRequested.Broadcast(SlotData, Count, ItemType);
 }
 
 void AT3CharacterBase::PostInitializeComponents()

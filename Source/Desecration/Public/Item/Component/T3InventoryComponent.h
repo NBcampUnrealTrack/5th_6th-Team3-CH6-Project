@@ -5,8 +5,11 @@
 #include "Engine/DataTable.h"
 #include "T3InventoryComponent.generated.h"
 
+class AT3CharacterBase;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryInitialized);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRuneInventoryUpdated);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEquippedItemChanged);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnChangedBuffItemSlot);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBuffItemUsed);
@@ -24,8 +27,6 @@ enum class EConsumableItemType : uint8
 	Recover,
 	Buff
 };
-
-class AT3CharacterBase;
 
 USTRUCT(BlueprintType)
 struct FInventorySlot
@@ -58,6 +59,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void SwapSlots(int32 SourceSlotIndex, int32 TargetSlotIndex);
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void SwapRuneSlots(int32 SourceSlotIndex, int32 TargetSlotIndex);
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	float GetCooldownProgressByItemID(const FName& ItemName);
@@ -71,20 +75,44 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory")
 	int32 GetItemCountByItemID(const FName& ItemName);
 	
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory")
+	int32 GetRuneCountByItemID(const FName& ItemName);
+	
 	UFUNCTION(BlueprintCallable)
-	void AddItemByCount(const FName& ItemName, int32 Count);
+	void AddItemByCount(const FName& ItemName, int32 Count = 1);
 
 	UFUNCTION(BlueprintCallable)
-	bool RemoveItemByCount(const FName& ItemName, int32 Count);
+	bool RemoveItemByCount(const FName& ItemName, int32 Count = 1);
 
+	UFUNCTION(BlueprintCallable)
+	void AddRuneItemByCount(const FName& ItemName, int32 Count = 1);
+	
+	UFUNCTION(BlueprintCallable)
+	bool RemoveRuneItemByCount(const FName& ItemName, int32 Count = 1);
+	
+	UFUNCTION(BlueprintCallable)
+	int32 GetRuneItemCountByRuneID(const FName& RuneID);
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TArray<FInventorySlot> Items;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory")
+	TArray<FInventorySlot> RuneItems;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Inventory")
 	int32 InventorySize;
 	
+	UPROPERTY(BlueprintReadOnly, Category = "Rune")
+	int32 RuneInventorySize;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Data|Rune")
+	TObjectPtr<UDataTable> RuneTable;
+	
 	UPROPERTY(BlueprintAssignable, Category = "Inventory")
 	FOnInventoryUpdated OnInventoryUpdated;
+	
+	UPROPERTY(BlueprintAssignable, Category = "Inventory")
+	FOnRuneInventoryUpdated OnRuneInventoryUpdated;
 	
 	UPROPERTY(BlueprintAssignable, Category = "Inventory")
 	FOnInventoryInitialized OnInventoryInitialized;
