@@ -24,13 +24,9 @@ FReply UItemSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, con
 		{
 			return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 		}
-		
-		if (!InventoryComponent->Items.IsValidIndex(SlotIndex))
-		{
-			return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
-		}
-		
-		if (InventoryComponent->Items[SlotIndex].ItemID == NAME_None)
+
+		FInventorySlot SlotData;
+		if (!GetSlotData(SlotData) || SlotData.ItemID == NAME_None)
 		{
 			return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 		}
@@ -64,15 +60,10 @@ void UItemSlotWidget::NativeOnDragDetected(const FGeometry& InGeometry, const FP
 {
 	UE_LOG(LogTemp, Log, TEXT("[ItemSlotWidget] NativeOnDragDetected 호출됨 - 슬롯 %d"), SlotIndex);
 	
-	if (!IsValid(InventoryComponent) || !InventoryComponent->Items.IsValidIndex(SlotIndex))
+	FInventorySlot SlotData;
+	if (!IsValid(InventoryComponent) || !GetSlotData(SlotData) || SlotData.ItemID == NAME_None)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[ItemSlotWidget] InventoryComponent 또는 SlotIndex 유효하지 않음"));
-		return;
-	}
-	
-	if (InventoryComponent->Items[SlotIndex].ItemID == NAME_None)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[ItemSlotWidget] 슬롯 %d에 아이템이 없음"), SlotIndex);
+		UE_LOG(LogTemp, Warning, TEXT("[ItemSlotWidget] InventoryComponent 또는 슬롯 %d에 유효한 아이템 없음"), SlotIndex);
 		return;
 	}
 	

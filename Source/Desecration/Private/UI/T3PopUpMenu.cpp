@@ -5,6 +5,7 @@
 #include "GameSystem/T3GameMode.h"
 #include "Player/T3PlayerController.h"
 #include "UI/T3ConfirmPanel.h"
+#include "UI/T3SettingsPanel.h"
 
 void UT3PopUpMenu::NativeConstruct()
 {
@@ -37,21 +38,33 @@ void UT3PopUpMenu::NativeConstruct()
 	//버튼 바인딩
 	ResumeButton->OnClicked.AddDynamic(this, &ThisClass::OnClickResumeButton);
 	LoadButton->OnClicked.AddDynamic(this, &ThisClass::OnClickLoadButton);
-	SettingsButton->OnClicked.AddDynamic(this, &ThisClass::OnClickSettingsButton);
 	TitleButton->OnClicked.AddDynamic(this, &ThisClass::OnClickTitleButton);
+	//설정 버튼은 마을에서만 동작
+	if (T3GameInstance->GetCurrentLevel() == ELevelName::Town)
+	{
+		SettingsButton->OnClicked.AddDynamic(this, &ThisClass::OnClickSettingsButton);
+	}
+	else
+	{
+		SettingsButton->SetIsEnabled(false);
+	}
+	
+	//설정 패널을 닫을 때 메뉴 복구하기
+	SettingsPanel->OnClosePanel.BindUObject(this, &ThisClass::OnCloseSettingsPanel);
 	
 	//위젯은 닫힌 상태로 시작
+	SettingsPanel->SetVisibility(ESlateVisibility::Collapsed);
 	ConfirmPanel->SetVisibility(ESlateVisibility::Collapsed);
 	SetVisibility(ESlateVisibility::Collapsed);
 }
 
 void UT3PopUpMenu::SetActivePopUpMenu(const bool bActive)
 {
-	//열기 여부에 따라 UI/게임 전용으로 변경
+	//열기 여부에 따라 입력 모드를 변경
 	if (bActive)
 	{
-		const FInputModeUIOnly UIOnly;
-		T3PlayerController->SetInputMode(UIOnly);
+		const FInputModeGameAndUI GameAndUI;
+		T3PlayerController->SetInputMode(GameAndUI);
 	}
 	else
 	{
@@ -61,6 +74,11 @@ void UT3PopUpMenu::SetActivePopUpMenu(const bool bActive)
 	T3PlayerController->SetShowMouseCursor(bActive);
 	
 	SetVisibility(bActive ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+}
+
+bool UT3PopUpMenu::IsActivePopUpMenu()
+{
+	return GetVisibility() == ESlateVisibility::Visible;
 }
 
 void UT3PopUpMenu::OnClickResumeButton()
@@ -75,13 +93,19 @@ void UT3PopUpMenu::OnClickLoadButton()
 
 void UT3PopUpMenu::OnClickSettingsButton()
 {
-	
+	MenuBorder->SetVisibility(ESlateVisibility::Collapsed);
+	SettingsPanel->OpenSettingsPanel();
 }
 
 void UT3PopUpMenu::OnClickTitleButton()
 {
 	ConfirmPanel->ShowConfirmPanel(CheckGotoTitle);
 	ConfirmPanel->OnClickConfirmButtonAction.AddDynamic(this, &ThisClass::GotoTitle);
+}
+
+void UT3PopUpMenu::OnCloseSettingsPanel()
+{
+	MenuBorder->SetVisibility(ESlateVisibility::Visible);
 }
 
 void UT3PopUpMenu::GotoTitle()

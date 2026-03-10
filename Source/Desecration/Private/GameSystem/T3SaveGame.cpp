@@ -23,6 +23,9 @@ void UT3SaveGame::ResetGameData()
 	PlayerLocation = FVector(-80, 185, 102);
 	bSetLocation = true;
 	
+	//물체 상태
+	LevelObjectStates.Empty();
+	
 	//스탯
 	//TODO : 하드코딩된 초기 스탯 수정하기
 	//const TObjectPtr<UT3CharacterDataAsset> CharacterData = T3GameInstance->GetCharacterData();
