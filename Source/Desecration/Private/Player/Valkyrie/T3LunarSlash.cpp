@@ -121,7 +121,7 @@ void AT3LunarSlash::ExplodeLunarSlash(int32 ChargeLevel)
 	}
 	
 	SetLifeSpan(2.0f);
-	OnLunarExplosion();
+	OnLunarExplosion(); 
 }
 
 void AT3LunarSlash::BeginPlay()

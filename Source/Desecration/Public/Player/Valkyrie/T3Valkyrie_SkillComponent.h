@@ -47,6 +47,8 @@ public:
 	void EndCharging();
 	UFUNCTION(BlueprintCallable)
 	void MaxCharging();
+	UFUNCTION(BlueprintIMplementableEvent)
+	void OnGainCharge();
 #pragma endregion
 	
 #pragma region Passive

@@ -24,12 +24,18 @@ void UT3Valkyrie_SkillComponent::StartCharge()
     bHasRelease = false;
     ChargingLevel = 0;
     
+    OnGainCharge();
     GetWorld()->GetTimerManager().SetTimer(ChargingTimerHandle, this, &UT3Valkyrie_SkillComponent::ChargingTick, 1.0f, true);
 }
 
 void UT3Valkyrie_SkillComponent::ChargingTick()
 {
     ChargingLevel++;
+    if (ChargingLevel <2)
+    {
+        OnGainCharge();
+    }
+    
     if (ChargingLevel>=MaxChargingLevel)
     {
         ChargingLevel = MaxChargingLevel;
