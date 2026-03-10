@@ -20,6 +20,8 @@
 #include "Player/T3LockOnTarget.h"
 #include "Components/WidgetComponent.h"
 #include "Monster/T3MonsterBase.h"
+#include "Player/Taoist/T3Taoist_SkillComponent.h"
+#include "Player/Taoist/T3FanWeapon.h"
 
 
 UT3CombatComponent::UT3CombatComponent()
@@ -136,6 +138,19 @@ void UT3CombatComponent::StartBlock()
 		0.2f,
 		false
 	);
+
+
+
+	// 도사인 경우 방어 시작 시 부채 펴기
+	if (OwnerChar->GetCurrentClass() == ECharacterClass::Taoist)
+	{
+		AT3FanWeapon* FanWeapon = Cast<AT3FanWeapon>(GetWeaponBySlot(EEquipSlot::RightHand));
+		if (IsValid(FanWeapon))
+		{
+			FanWeapon->OpenFan();
+		}
+	}
+
 }
 
 void UT3CombatComponent::EndBlock()
@@ -155,6 +170,17 @@ void UT3CombatComponent::EndBlock()
 		BlockCooldownTime,
 		false
 	);
+
+
+	// 도사인 경우 방어 종료 시 부채 접기
+	if (OwnerChar->GetCurrentClass() == ECharacterClass::Taoist)
+	{
+		AT3FanWeapon* FanWeapon = Cast<AT3FanWeapon>(GetWeaponBySlot(EEquipSlot::RightHand));
+		if (IsValid(FanWeapon))
+		{
+			FanWeapon->CloseFan();
+		}
+	}
 }
 
 void UT3CombatComponent::ResetBlockCooldown()
@@ -169,6 +195,7 @@ void UT3CombatComponent::Attack()
 		// 공격 시 스태미너 10 소모
 	{
 		OwnerChar->OnAttack();
+		UE_LOG(LogTemp, Warning, TEXT("attack"));
 	}
 }
 
@@ -515,8 +542,19 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 	// 3. [상태별 로그 출력]
 	if (FinalDamage <= 0.f)
 	{
+		// 회피 성공 시
 		if (CurrentState == ECharacterCombatState::Dodge)
 		{
+			
+			// 도사인 경우 회피 성공 시 패시브 스킬 효과 발동
+			if (OwnerChar->GetCurrentClass() == ECharacterClass::Taoist)
+			{
+				UT3Taoist_SkillComponent* TaoistSkill = Cast< UT3Taoist_SkillComponent>(SkillComp);
+				if (IsValid(TaoistSkill))
+				{
+					TaoistSkill->SetEmpowermentState(true);
+				}
+			}
 		}
 		// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Result: [EVADE] - Invincible Frame!"));
 
