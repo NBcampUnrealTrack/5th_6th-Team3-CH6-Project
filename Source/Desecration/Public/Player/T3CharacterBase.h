@@ -131,6 +131,8 @@ public:
 	bool bIsDead = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	bool bIsUsingItem = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SuperArmor")
+	bool bIsSuperArmor = false;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TObjectPtr<UT3InventoryComponent> InventoryComponent; 

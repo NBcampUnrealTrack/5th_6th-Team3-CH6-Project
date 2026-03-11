@@ -67,12 +67,27 @@ public:
 	void OnLunarSlash();
 #pragma endregion
 	
+#pragma region Endurance
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Endurance")
+	FTimerHandle EnduranceTimerHandle;
+	
+	UFUNCTION()
+	void Endurance();
+	UFUNCTION()
+	void EnduranceEnd();
+	
+#pragma endregion
+	
+public:
     UPROPERTY(EditAnywhere, Category = "Skill Data")
     FSkillData EmptySkillData;
 	UPROPERTY(EditAnywhere, Category = "Skill Data")
 	FSkillData PowerStrikeSkillData;
 	UPROPERTY(EditAnywhere, Category = "Skill Data")
 	FSkillData LunarSlashSkillData;
+	UPROPERTY(EditAnywhere, Category = "Skill Data")
+	FSkillData EnduranceSkillData;
 
     // 아래에 추가될 스킬의 데이터 추가
     // 

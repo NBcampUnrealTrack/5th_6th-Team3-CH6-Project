@@ -12,6 +12,7 @@ FSkillData* UT3Valkyrie_SkillComponent::GetSkillDataByID(int32 SkillID)
     {
     case 1: return &PowerStrikeSkillData;
     case 2: return &LunarSlashSkillData;
+    case 3: return &EnduranceSkillData;
     default: return nullptr;
     }
 }
@@ -80,6 +81,18 @@ void UT3Valkyrie_SkillComponent::BasicAttackCount()
     }
 }
 
+void UT3Valkyrie_SkillComponent::Endurance()
+{
+    OwnerChar->bIsSuperArmor = true;
+    GetWorld()->GetTimerManager().SetTimer(EnduranceTimerHandle, this, &UT3Valkyrie_SkillComponent::EnduranceEnd, 5.0f, true);
+}
+
+void UT3Valkyrie_SkillComponent::EnduranceEnd()
+{
+    GetWorld()->GetTimerManager().ClearTimer(EnduranceTimerHandle);
+    OwnerChar->bIsSuperArmor = false;
+}
+
 void UT3Valkyrie_SkillComponent::ExecuteSkill(int32 SlotNumber)
 {
     // 1. 슬롯 번호(1 or 2)에 따른 ID 추출
@@ -105,6 +118,9 @@ void UT3Valkyrie_SkillComponent::ExecuteSkill(int32 SlotNumber)
         break;// 첫번째 스킬
     case 2:
         OnLunarSlash();
+        break;
+    case 3:
+        Endurance();
         break;
         //ExecuteSwordWave();    break;
 
