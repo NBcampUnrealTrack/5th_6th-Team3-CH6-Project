@@ -16,6 +16,7 @@
 #include "Player/Taoist/T3FanWeapon.h"
 #include "Player/Taoist/T3TaoistClone.h"
 #include "Player/Taoist/T3TigerAttack.h"
+#include "Player/Taoist/T3CharmProjectile.h"
 
 UT3Taoist_SkillComponent::UT3Taoist_SkillComponent()
 { }
@@ -91,6 +92,7 @@ void UT3Taoist_SkillComponent::ExecuteSkill(int32 SlotNumber)
         UE_LOG(LogTemp, Warning, TEXT("There is no skill."));    break;
     case 1: // 장풍
         ExecuteStrongWind();    
+        NotifyClonesAction(EActionType::StrongWindAnim);
         UE_LOG(LogTemp, Warning, TEXT("skill1"));
         break;
     case 2: // 축지법
@@ -99,12 +101,13 @@ void UT3Taoist_SkillComponent::ExecuteSkill(int32 SlotNumber)
         break;
 
     case 3: // 분신술
-        SpawnShadowClones();
+        PlayThrowChramMontage(ShadowCloneData);
         UE_LOG(LogTemp, Warning, TEXT("skill3"));
         break;
 
     case 4: // 호랑이 소환술
-        SummonTiger();
+        PlayThrowChramMontage(SummonTigerData);
+        NotifyClonesAction(EActionType::SummonTigerAnim);
         UE_LOG(LogTemp, Warning, TEXT("skill4"));
         break;
 
@@ -112,7 +115,6 @@ void UT3Taoist_SkillComponent::ExecuteSkill(int32 SlotNumber)
         UE_LOG(LogTemp, Warning, TEXT("Unknown Skill ID: %d"), SkillID);   break;
     }
 }
-
 
 void UT3Taoist_SkillComponent::OnSkillMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
@@ -130,6 +132,15 @@ void UT3Taoist_SkillComponent::ExecuteSkillNotify(int32 Index)
 
     case 1: // 장풍
         SpawnStrongWind();
+        NotifyClonesAction(EActionType::StrongWindSpawn);
+        break;
+
+    case 3: // 분신술
+        ThrowSummonCharm(ShadowCloneData);
+        break;
+
+    case 4: // 호랑이 소환술
+        ThrowSummonCharm(SummonTigerData);
         break;
 
     case 5: // 기본 공격 (부적 날리기)
@@ -196,6 +207,19 @@ void UT3Taoist_SkillComponent::SpawnTalisman()
             }
 
             Talisman->SetDamage(InitialDamage); // 부적 클래스에 SetDamage 함수가 정의되어 있어야 합니다.
+
+            // 물리적 충돌 무시 (본체와 부딪히지 않게)
+             // 부적의 RootComponent(CollisionBox)를 가져와서 설정
+            if (UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(Talisman->GetRootComponent()))
+            {
+                RootPrim->IgnoreActorWhenMoving(OwnerChar, true);
+
+                // 분신들도 무시
+                for (AT3TaoistClone* Clone : ActiveClones)
+                {
+                    if (Clone) RootPrim->IgnoreActorWhenMoving(Clone, true);
+                }
+            }
 
             // 4. 스폰 완료 (이때 BeginPlay가 호출됨)
             Talisman->FinishSpawning(SpawnTransform);
@@ -341,58 +365,54 @@ void UT3Taoist_SkillComponent::ExecuteTaoistDodge()
     OnTaoistDodgeTriggered();
 }
 
-void UT3Taoist_SkillComponent::SpawnShadowClones()
+void UT3Taoist_SkillComponent::SpawnSingleShadowClone(FVector ExplosionLocation, AActor* Spawner)
 {
-    // 1. 역순으로 순회하여 안전하게 제거
-     // 인덱스를 뒤에서부터 앞으로 훑으면 중간에 요소가 삭제되어도 인덱스 꼬임이나 크래시가 발생하지 않습니다.
+    // 1. 기존 분신 제거는 스킬 시전 시점(ThrowSummonCharm)에서 이미 Empty() 했다고 가정해.
+    // 만약 여기서 하면 첫 번째 부적 터질 때 지우고, 두 번째 부적 터질 때 첫 번째 걸 또 지우니까 안 돼!
+
+    if (!CloneClass || !OwnerChar) return;
+
+    // 2. 부적이 터진 그 위치(ExplosionLocation)에 그대로 스폰
+    AT3TaoistClone* NewClone = GetWorld()->SpawnActorDeferred<AT3TaoistClone>(
+        CloneClass,
+        FTransform(OwnerChar->GetActorRotation(), ExplosionLocation),
+        OwnerChar, OwnerChar, ESpawnActorCollisionHandlingMethod::AlwaysSpawn
+    );
+
+    if (NewClone)
+    {
+        NewClone->InitializeClone(OwnerChar);
+        NewClone->OnCloneDestroyed.AddUObject(this, &UT3Taoist_SkillComponent::OnCloneDestroyed);
+
+        // 부적 터진 위치 확정
+        NewClone->FinishSpawning(FTransform(OwnerChar->GetActorRotation(), ExplosionLocation));
+
+        // 관리 리스트에 추가
+        ActiveClones.Add(NewClone);
+    }
+}
+
+void UT3Taoist_SkillComponent::OnCloneDestroyed(AT3TaoistClone* DestroyedClone)
+{
+    if (DestroyedClone)
+    {
+        ActiveClones.Remove(DestroyedClone);
+        UE_LOG(LogTemp, Display, TEXT("Clone removed from array. Remaining: %d"), ActiveClones.Num());
+    }
+}
+
+void UT3Taoist_SkillComponent::DestroyAllActiveClones()
+{
     for (int32 i = ActiveClones.Num() - 1; i >= 0; --i)
     {
-        if (ActiveClones.IsValidIndex(i) && IsValid(ActiveClones[i]))
+        if (IsValid(ActiveClones[i]))
         {
-            // Destroy()를 호출하면 OnCloneRemoved가 실행되어 배열에서 알아서 빠집니다.
             ActiveClones[i]->Destroy();
         }
     }
-
-    // 혹시라도 남아있을 찌꺼기 정리
     ActiveClones.Empty();
-
-    // 2. 새로운 분신 스폰
-    for (int32 i = 0; i < 2; i++)
-    {
-        FVector SpawnOffset = (i == 0) ? OwnerChar->GetActorRightVector() * 150.f : OwnerChar->GetActorRightVector() * -150.f;
-        FVector SpawnLocation = OwnerChar->GetActorLocation() + SpawnOffset;
-
-        AT3TaoistClone* NewClone = GetWorld()->SpawnActorDeferred<AT3TaoistClone>(
-            CloneClass,
-            FTransform(OwnerChar->GetActorRotation(), SpawnLocation),
-            OwnerChar,
-            OwnerChar,
-            ESpawnActorCollisionHandlingMethod::AlwaysSpawn
-        );
-
-        if (NewClone)
-        {
-            NewClone->InitializeClone(OwnerChar);
-
-            // 분신 파괴 시 배열에서 제거하는 델리게이트
-            NewClone->OnCloneDestroyed.AddUObject(this, &UT3Taoist_SkillComponent::OnCloneRemoved);
-
-            NewClone->FinishSpawning(FTransform(OwnerChar->GetActorRotation(), SpawnLocation));
-            ActiveClones.Add(NewClone);
-        }
-    }
 }
 
-void UT3Taoist_SkillComponent::OnCloneRemoved(AT3TaoistClone* ExClone)
-{
-    if (ExClone)
-    {
-        // 배열에서 해당 분신 포인터를 찾아 제거합니다.
-        ActiveClones.Remove(ExClone);
-        UE_LOG(LogTemp, Warning, TEXT("분신이 제거되었습니다. 남은 분신 수: %d"), ActiveClones.Num());
-    }
-}
 
 void UT3Taoist_SkillComponent::NotifyClonesAction(EActionType ActionType)
 {
@@ -405,26 +425,145 @@ void UT3Taoist_SkillComponent::NotifyClonesAction(EActionType ActionType)
     }
 }
 
-void UT3Taoist_SkillComponent::SummonTiger()
+void UT3Taoist_SkillComponent::SummonTigerAtLocation(FVector ExplosionLocation, AActor* Spawner)
 {
-    if (!TigerClass) return;
+    // Spawner가 없으면 기본적으로 OwnerChar(본체)를 주인으로 설정
+    AActor* ActualOwner = IsValid(Spawner) ? Spawner : OwnerChar;
 
-    AActor* Owner = GetOwner();
-    if (!IsValid(Owner)) return;
+    if (!TigerClass || !OwnerChar) return;
 
-    FVector SpawnLocation = Owner->GetActorLocation()
-        + (Owner->GetActorForwardVector() * 200.f);
-    FRotator SpawnRotation = Owner->GetActorRotation(); // 플레이어가 보는 방향과 동일하게
-    
-    FActorSpawnParameters SpawnParams;
-    SpawnParams.Owner = Owner;
-    SpawnParams.Instigator = Owner->GetInstigator();
 
-    AT3TigerAttack* SummonedTiger = GetWorld()->SpawnActor<AT3TigerAttack>(TigerClass, SpawnLocation, SpawnRotation, SpawnParams);
+    // --- 데미지 계산 로직 ---
+    float FinalDamage = 0.f;
 
-    if (SummonedTiger)
+    if (AT3TaoistClone* Clone = Cast<AT3TaoistClone>(ActualOwner))
     {
-        // 소환 직후 전방으로 날아가는 속도 설정 (예: 1200.f)
-        SummonedTiger->LaunchTiger(Owner->GetActorForwardVector(), 600.f);
+        // 1. 분신이 소환한 경우
+        FinalDamage = Clone->GetAttackPower() * SummonTigerData.DamageMultiflier;
+    }
+    else
+    {
+        // 2. 본체가 소환한 경우
+        FinalDamage = OwnerChar->GetAttackPower() * SummonTigerData.DamageMultiflier;
+    }
+
+    FVector SpawnLocation = ExplosionLocation;
+
+    // 바닥 감지 로직
+    FHitResult HitResult;
+    FVector Start = ExplosionLocation + FVector(0.f, 0.f, 100.f); // 위에서
+    FVector End = ExplosionLocation - FVector(0.f, 0.f, 1000.f);   // 아래로 쏨
+
+    FCollisionQueryParams Params;
+    Params.AddIgnoredActor(ActualOwner);
+
+    if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+    {
+        // 충돌 지점(바닥)에서 호랑이의 캡슐 절반 높이만큼 올린 위치가 정확한 스폰 지점
+        SpawnLocation = HitResult.Location + FVector(0.f, 0.f, 50.f);
+    }
+
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.Owner = ActualOwner;
+    SpawnParams.Instigator = ActualOwner->GetInstigator();
+    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+    AT3TigerAttack* SummonedTiger = GetWorld()->SpawnActorDeferred<AT3TigerAttack>(
+        TigerClass, 
+        FTransform(ActualOwner->GetActorRotation(), SpawnLocation),
+        ActualOwner,
+        ActualOwner->GetInstigator(), 
+        ESpawnActorCollisionHandlingMethod::AlwaysSpawn
+    );
+
+    if (IsValid(SummonedTiger)) 
+    {
+        SummonedTiger->SetDamage(FinalDamage);
+        SummonedTiger->FinishSpawning(FTransform(ActualOwner->GetActorRotation(), SpawnLocation));
+        SummonedTiger->LaunchTiger(ActualOwner->GetActorForwardVector(), 600.f);
+    }
+}
+
+void UT3Taoist_SkillComponent::ThrowSummonCharm(const FSkillData& SkillData)
+{
+    // 분신술일 때는 기존 분신 제거 + 분신은 이 스킬을 따라하지 않음
+    if (&SkillData == &ShadowCloneData)
+    {
+        DestroyAllActiveClones();
+        // 본체만 던짐
+        SpawnCharmInternal(OwnerChar, SkillData);
+    }
+    else
+    {
+        // 호랑이 소환 등 다른 스킬은 본체 + 분신 모두 던짐
+        SpawnCharmInternal(OwnerChar, SkillData);
+
+        for (AT3TaoistClone* Clone : ActiveClones)
+        {
+            if (IsValid(Clone))
+            {
+                SpawnCharmInternal(Clone, SkillData);
+            }
+        }
+    }
+}
+
+void UT3Taoist_SkillComponent::PlayThrowChramMontage(const FSkillData& SkillData)
+{
+    // 1. 애니메이션 재생 (부적 던지는 모션)
+    if (SkillData.SkillMontage)
+    {
+        OwnerChar->PlayAnimMontage(SkillData.SkillMontage);
+    }
+}
+
+void UT3Taoist_SkillComponent::SpawnCharmInternal(AActor* Spawner, const FSkillData& SkillData)
+{
+    if (!Spawner || !SkillData.ProjectileClass) return;
+
+    // 분신술이면 2개, 아니면 1개
+    int32 Count = (&SkillData == &ShadowCloneData) ? 2 : 1;
+
+    for (int32 i = 0; i < Count; i++)
+    {
+        float BaseRightOffset = 70.f; // 애니메이션이 왼쪽으로 치우쳐서 보정 값
+        FVector SideOffset = Spawner->GetActorRightVector() * BaseRightOffset;
+
+        if (Count > 1)
+        {
+            SideOffset += Spawner->GetActorRightVector() * (i == 0 ? -60.f : 60.f);
+        }
+
+        FVector SpawnLocation = Spawner->GetActorLocation()
+            + (Spawner->GetActorForwardVector() * SpawnForwardVector)
+            + (Spawner->GetActorUpVector() * SpawnUpVector)
+            + SideOffset;
+
+        RotationOffset = FRotator(0.f, 10.f, 0.f);
+        FRotator SpawnRotation = Spawner->GetActorRotation() + RotationOffset;
+
+        AT3CharmProjectile* Charm = GetWorld()->SpawnActorDeferred<AT3CharmProjectile>(
+            SkillData.ProjectileClass, FTransform(SpawnRotation, SpawnLocation),
+            Spawner, OwnerChar, ESpawnActorCollisionHandlingMethod::AlwaysSpawn
+        );
+
+        if (Charm)
+        {
+            if (&SkillData == &SummonTigerData)
+                Charm->OnCharmExploded.BindUObject(this, &UT3Taoist_SkillComponent::SummonTigerAtLocation);
+            else if (&SkillData == &ShadowCloneData)
+                Charm->OnCharmExploded.BindUObject(this, &UT3Taoist_SkillComponent::SpawnSingleShadowClone);
+
+            Charm->FinishSpawning(FTransform(SpawnRotation, SpawnLocation));
+
+            // [방향 조절] 분신술은 좌우로 벌어지게, 호랑이는 중앙으로
+            FVector ThrowDir = Spawner->GetActorForwardVector() + Spawner->GetActorUpVector() * 0.5f;
+            if (Count > 1)
+            {
+                ThrowDir += Spawner->GetActorRightVector() * (i == 0 ? -0.3f : 0.3f);
+            }
+
+            Charm->LaunchCharm(ThrowDir.GetSafeNormal(), ThrowSpeed);
+        }
     }
 }

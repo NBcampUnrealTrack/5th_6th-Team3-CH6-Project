@@ -11,6 +11,9 @@
 #include "NavigationSystem.h"
 #include "Player/T3CombatComponent.h"
 #include "Player/T3WeaponBase.h"
+#include "Player/Taoist/T3StrongWind.h"
+#include "Player/Taoist/T3TigerAttack.h"
+#include "NiagaraFunctionLibrary.h"
 
 AT3TaoistClone::AT3TaoistClone()
 {
@@ -54,7 +57,7 @@ void AT3TaoistClone::ApplyGlowToEverything()
             {
                 //에서 설정한 파라미터 이름과 일치해야 함
                 DynMat->SetVectorParameterValue(TEXT("GlowColor"), CloneGlowColor);
-                DynMat->SetScalarParameterValue(TEXT("GlowIntensity"), 10.0f);
+                DynMat->SetScalarParameterValue(TEXT("GlowIntensity"), 0.5f);
 
                 // 나중에 제어하기 위해 배열에 저장
                 DynamicMaterials.Add(DynMat);
@@ -65,16 +68,40 @@ void AT3TaoistClone::ApplyGlowToEverything()
 
 void AT3TaoistClone::Destroyed()
 {
+    // 1. 사라질 때 연출 (이펙트 & 사운드)
+        // - DeathEffect: 나이아가라 시스템 (UNiagaraSystem*)
+        // - DeathSound: 소리 (USoundBase*)
+
+    UWorld* World = GetWorld();
+    if (World)
+    {
+        // 펑! 하는 나이아가라 이펙트 재생
+        if (DestroyEffect)
+        {
+            UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+                World,
+                DestroyEffect,
+                GetActorLocation(),
+                GetActorRotation()
+            );
+        }
+
+        // 펑! 하는 사운드 재생
+        if (DestroySound)
+        {
+            UGameplayStatics::PlaySoundAtLocation(this, DestroySound, GetActorLocation());
+        }
+    }
+
+    // 2. 기존 로직 (델리게이트 호출 및 자식 액터 파괴)
     if (OnCloneDestroyed.IsBound())
     {
         OnCloneDestroyed.Broadcast(this);
     }
 
-    Super::Destroyed();
-    // 나에게 붙어 있는 모든 액터(부채 등)를 가져와서 파괴
+    // 나에게 붙어 있는 모든 액터(부채 등) 파괴
     TArray<AActor*> AttachedActors;
     GetAttachedActors(AttachedActors);
-
     for (AActor* AttachedActor : AttachedActors)
     {
         if (IsValid(AttachedActor))
@@ -82,6 +109,8 @@ void AT3TaoistClone::Destroyed()
             AttachedActor->Destroy();
         }
     }
+
+    Super::Destroyed();
 }
 
 void AT3TaoistClone::InitializeClone(AT3CharacterBase* InOwner)
@@ -125,6 +154,12 @@ void AT3TaoistClone::ExecuteMirrorAction(EActionType ActionType)
 
     case EActionType::SummonTigerAnim:
         PlayAnimMontage(SummonTigerMontage);
+        break;
+
+    case EActionType::StrongWindSpawn:
+        break;
+
+    case EActionType::SummonTigerSpawn:
         break;
     }
 }
@@ -305,3 +340,45 @@ void AT3TaoistClone::SpawnTalisman()
         }
     }
 }
+
+void AT3TaoistClone::SpawnStrongWind()
+{
+   
+    if (!StrongWindClass)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("SpawnStrongWind: 이펙트 액터 클래스가 설정되지 않았습니다!"));
+        return;
+    }
+
+    UWorld* World = GetWorld();
+    if (World && OwnerCharacter)
+    {
+        // 1. 스폰 위치: 캐릭터 발밑에서 전방으로 약간 띄움
+        FVector SpawnLocation = this->GetActorLocation() + (this->GetActorForwardVector() * StrongWindSpawnDistance);
+
+        // 2. 스폰 회전: 캐릭터가 보는 방향
+        FRotator SpawnRotation = this->GetActorRotation();
+
+        //  디퍼드 스폰 시작 (액터 인스턴스만 생성)
+        AT3StrongWind* StrongWindActor = World->SpawnActorDeferred<AT3StrongWind>(
+            StrongWindClass,
+            FTransform(SpawnRotation, SpawnLocation),
+            this,
+            OwnerCharacter,
+            ESpawnActorCollisionHandlingMethod::AlwaysSpawn
+        );
+
+        if (StrongWindActor)
+        {
+            // BeginPlay가 호출되기 전에 미리 데미지 전달
+            float FinalDamage = StrongWindDamageMultiflier * GetAttackPower();
+
+            StrongWindActor->SetDamage(FinalDamage);
+
+            // 스폰 완료
+            StrongWindActor->FinishSpawning(FTransform(SpawnRotation, SpawnLocation));
+        }
+    }
+}
+
+

@@ -20,8 +20,8 @@ protected:
     UPROPERTY(VisibleAnywhere, Category = "Components")
     TObjectPtr<class UBoxComponent> AttackArea; // 길다란 판정 범위
 
-    UPROPERTY(VisibleAnywhere, Category = "Components")
-    TObjectPtr<class UParticleSystemComponent> ParticleComp;
+    UPROPERTY(VisibleAnywhere, Category = "Effects")
+    TObjectPtr<class UNiagaraComponent> NiagaraComp;
 
     float Damage;
 

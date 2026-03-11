@@ -21,6 +21,8 @@ AT3TalismanProjectile::AT3TalismanProjectile()
     // 2. 메시 설정
     TalismanMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TalismanMesh"));
     TalismanMesh->SetupAttachment(RootComponent);
+    TalismanMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    TalismanMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
 
     // 3. 투사체 컴포넌트 (속도, 중력 등 설정)
     ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));

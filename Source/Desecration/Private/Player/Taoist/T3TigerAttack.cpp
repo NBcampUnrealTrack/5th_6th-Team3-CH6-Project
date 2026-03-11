@@ -4,6 +4,11 @@
 #include "Player/Taoist/T3TigerAttack.h"
 #include "Components/BoxComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Player/T3CharacterBase.h"
+#include "Player/T3CombatComponent.h"
+#include "Player/Taoist/T3TaoistClone.h"
+#include "NiagaraFunctionLibrary.h"
+#include "Kismet/GameplayStatics.h"
 
 AT3TigerAttack::AT3TigerAttack()
 {
@@ -12,7 +17,16 @@ AT3TigerAttack::AT3TigerAttack()
 
     AttackCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("AttackCollision"));
     AttackCollision->SetupAttachment(RootComponent);
-    AttackCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+    if (AttackCollision)
+    {
+        AttackCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+        AttackCollision->SetCollisionResponseToAllChannels(ECR_Overlap);
+        // 적 채널에 대해서만 Overlap 되도록 설정 (예: ECC_GameTraceChannel1)
+
+        // 델리게이트 바인딩
+        AttackCollision->OnComponentBeginOverlap.AddDynamic(this, &AT3TigerAttack::OnAttackOverlap);
+    }
 
     // --- 추가 설정 ---
     // 공중에서도 어느 정도 제어가 가능하도록 설정
@@ -20,6 +34,67 @@ AT3TigerAttack::AT3TigerAttack()
     // 발사 시 가속도를 확실히 받기 위해 마찰력 조정 (필요 시)
     GetCharacterMovement()->FallingLateralFriction = 0.1f;
 }
+
+
+void AT3TigerAttack::OnAttackOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+    // 본인이 아니며, 유효한 포인터이고, 적(Enemy) 태그 등을 확인
+    if (OtherActor && OtherActor != this)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Tiger Hit Target: %s"), *OtherActor->GetName());
+
+        // 1. 이동 중지
+        bIsLaunching = false;
+        GetCharacterMovement()->Velocity = FVector::ZeroVector;
+
+        // 2. 폭발 및 데미지 로직 실행 (Notify에서 하려던 것을 여기서 직접 호출)
+        TriggerExplosion(OtherActor);
+
+        // 3. 중복 실행 방지를 위해 콜리젼 끄기
+        AttackCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    }
+}
+
+void AT3TigerAttack::TriggerExplosion(AActor* TargetActor)
+{
+    AActor* ActualOwner = GetOwner();
+    if (!ActualOwner ||TargetActor->IsA( AT3CharacterBase::StaticClass())) return;
+
+    // 본체든 분신이든 CombatComponent를 가져오는 로직 (본체는 본인 거, 분신은 주인 거)
+    UT3CombatComponent* CombatComp = nullptr;
+
+    if (AT3CharacterBase* Char = Cast<AT3CharacterBase>(ActualOwner)) {
+        CombatComp = Char->GetCombatComponent();
+    }
+    else if (AT3TaoistClone* Clone = Cast<AT3TaoistClone>(ActualOwner)) {
+        // 분신이라면 분신의 Owner(본체)의 컴포넌트를 사용
+        if (Clone->GetOwnerCharacter()) {
+            CombatComp = Clone->GetOwnerCharacter()->GetCombatComponent();
+        }
+    }
+
+    if (IsValid(CombatComp))
+    {
+        CombatComp->RequestAttackDamage(TargetActor, Damage);
+        UE_LOG(LogTemp, Display, TEXT("Tiger Damage Applied: %.1f"), Damage);
+    }
+
+    // 1. 이펙트 재생
+    if (ExplosionEffect)
+    {
+        UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
+    }
+
+    // 2. 사운드 재생
+    if (ExplosionSound)
+    {
+        UGameplayStatics::PlaySoundAtLocation(this, ExplosionSound, GetActorLocation());
+    }
+
+    // 3. 호랑이 퇴장
+    Destroy();
+}
+
 
 void AT3TigerAttack::LaunchTiger(FVector Direction, float Speed)
 {
@@ -55,6 +130,11 @@ void AT3TigerAttack::LaunchTiger(FVector Direction, float Speed)
     {
         PlayAnimMontage(AttackMontage);
         UE_LOG(LogTemp, Warning, TEXT("Tiger Status: Attack Montage Playing"));
+    }
+
+    if (SpawnSound)
+    {
+        UGameplayStatics::PlaySoundAtLocation(this, SpawnSound, GetActorLocation());
     }
 }
 
