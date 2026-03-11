@@ -95,5 +95,5 @@ private:
 	
 	//그래픽 품질에 사용할 번역 키 값
 	const TArray<FString> GRAPHIC_KEY_STRINGS =
-		{ TEXT("Graphic_Low"), TEXT("Graphic_Middle"), TEXT("Graphic_High"), TEXT("Graphic_Epic"), TEXT("Graphic_Cinematic") };
+		{ TEXT("Graphic_Low"), TEXT("Graphic_Medium"), TEXT("Graphic_High"), TEXT("Graphic_Epic"), TEXT("Graphic_Cinematic") };
 };

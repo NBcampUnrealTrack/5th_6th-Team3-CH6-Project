@@ -1,7 +1,7 @@
 #include "UI/T3SoundSettings.h"
 
-#include "Components/Slider.h"
 #include "Sound/SoundClass.h"
+#include "UI/T3Slider.h"
 
 void UT3SoundSettings::CustomNativeConstruct()
 {
@@ -15,8 +15,8 @@ void UT3SoundSettings::CustomNativeConstruct()
 	}
 	
 	//슬라이더에 대한 바인딩
-	BGMSlider->OnValueChanged.AddDynamic(this, &ThisClass::OnValueChangedBGMSlider);
-	SESlider->OnValueChanged.AddDynamic(this, &ThisClass::OnValueChangedSESlider);
+	BGMSlider->GetOnValueChangedEvent().AddDynamic(this, &ThisClass::OnValueChangedBGMSlider);
+	SESlider->GetOnValueChangedEvent().AddDynamic(this, &ThisClass::OnValueChangedSESlider);
 }
 
 void UT3SoundSettings::InitializeSettingsPanel()

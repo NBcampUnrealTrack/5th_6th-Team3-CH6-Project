@@ -3,8 +3,8 @@
 #include "Components/CheckBox.h"
 #include "Components/ComboBoxString.h"
 #include "Components/Image.h"
-#include "Components/Slider.h"
 #include "GameSystem/T3SaveUserSettings.h"
+#include "UI/T3Slider.h"
 
 void UT3ControllerSettings::CustomNativeConstruct()
 {	
@@ -20,7 +20,7 @@ void UT3ControllerSettings::CustomNativeConstruct()
 	InvertVerticalCheckBox->OnCheckStateChanged.AddDynamic(this, &UT3ControllerSettings::OnCheckStateChangedInvertVerticalCheckBox);
 	
 	//회전 속도
-	CameraSpeedSlider->OnValueChanged.AddDynamic(this, &UT3ControllerSettings::OnValueChangedCameraSpeedSlider);
+	CameraSpeedSlider->GetOnValueChangedEvent().AddDynamic(this, &UT3ControllerSettings::OnValueChangedCameraSpeedSlider);
 }
 
 void UT3ControllerSettings::InitializeSettingsPanel()

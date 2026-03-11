@@ -4,6 +4,7 @@
 #include "T3SettingsPanelCategory.h"
 #include "T3ControllerSettings.generated.h"
 
+class UT3Slider;
 class UImage;
 class UCheckBox;
 
@@ -45,7 +46,7 @@ private:
 	
 	//회전 감도
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
-	TObjectPtr<USlider> CameraSpeedSlider;
+	TObjectPtr<UT3Slider> CameraSpeedSlider;
 	
 	//컨트롤러 레이아웃 텍스쳐 모음
 	UPROPERTY(EditDefaultsOnly, Category = "Textture", meta = (AllowPrivateAccess = true))
