@@ -72,10 +72,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Endurance")
 	FTimerHandle EnduranceTimerHandle;
 	
-	UFUNCTION()
+	UFUNCTION(BlueprintImplementableEvent)
 	void Endurance();
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void EnduranceEnd();
+	UFUNCTION(BlueprintCallable)
+	void EnduranceBegin();
 	
 #pragma endregion
 	

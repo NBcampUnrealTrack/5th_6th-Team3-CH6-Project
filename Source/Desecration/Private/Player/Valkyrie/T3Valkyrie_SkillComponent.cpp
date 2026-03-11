@@ -81,10 +81,10 @@ void UT3Valkyrie_SkillComponent::BasicAttackCount()
     }
 }
 
-void UT3Valkyrie_SkillComponent::Endurance()
+void UT3Valkyrie_SkillComponent::EnduranceBegin()
 {
     OwnerChar->bIsSuperArmor = true;
-    GetWorld()->GetTimerManager().SetTimer(EnduranceTimerHandle, this, &UT3Valkyrie_SkillComponent::EnduranceEnd, 5.0f, true);
+    GetWorld()->GetTimerManager().SetTimer(EnduranceTimerHandle, this, &UT3Valkyrie_SkillComponent::EnduranceEnd, 20.0f, true);
 }
 
 void UT3Valkyrie_SkillComponent::EnduranceEnd()
