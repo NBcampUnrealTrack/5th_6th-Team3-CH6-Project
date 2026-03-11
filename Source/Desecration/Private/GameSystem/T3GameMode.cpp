@@ -44,7 +44,6 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	SaveGame->CurrentMana = Character->GetCurrentMana();
 	SaveGame->MaxStamina = Character->GetMaxStamina();
 	SaveGame->CurrentStamina = Character->GetCurrentStamina();
-	SaveGame->AttackPower = Character->GetAttackPower();
 	SaveGame->CriticalChance = Character->GetCriticalChance();
 	SaveGame->CriticalDamage = Character->GetCriticalDamage();
 	SaveGame->MoveSpeed = Character->GetMoveSpeed();
@@ -71,8 +70,9 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	SaveGame->PotionRecoveryUpgradeLevel = InventoryComponent->GetPotionRecoveryUpgradeLevel();
 	
 	//장비
-	if (UT3PlayerEquipmentComponent* EquipComp = Character->FindComponentByClass<UT3PlayerEquipmentComponent>())
+	if (const UT3PlayerEquipmentComponent* EquipComp = Character->FindComponentByClass<UT3PlayerEquipmentComponent>())
 	{
+		SaveGame->AttackPower = EquipComp->GetCurrentAttackPower();
 		EquipComp->GetEquipmentSaveData(SaveGame->WeaponSaveData, SaveGame->ArmorSaveData);
 	}
 	
