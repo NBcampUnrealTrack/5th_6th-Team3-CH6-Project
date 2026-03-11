@@ -32,9 +32,10 @@ void UT3RageRune::OnUnsocketed_Implementation(AT3CharacterBase* OwnerChar)
 	if (IsValid(OwnerChar->EquipComp))
 	{
 		OwnerChar->EquipComp->OnEquipmentStatsChanged.RemoveDynamic(this, &UT3RageRune::OnEquipmentStatsUpdated);
-		OwnerChar->SetAttackPower(OwnerChar->EquipComp->GetCurrentAttackPower());
 	}
 
+	OwnerChar->RemoveRuneAttackBonus(this);
+	
 	CachedOwner = nullptr;
 }
 
@@ -63,7 +64,7 @@ void UT3RageRune::ApplyAttackBonus()
 
 	float MaxHP = Owner->GetMaxHP();
 	float HPPercent = (MaxHP > 0.f) ? FMath::Clamp((Owner->GetCurrentHP() / MaxHP), 0.5, 1) : 1.f;
-	float Bonus = 1 + (1.f - HPPercent) * AttackBonusMultiplier;
+	float Bonus = (FMath::RoundToFloat(Owner->EquipComp->GetCurrentAttackPower() * (1.f - HPPercent) * AttackBonusMultiplier) * 10.0f) / 10.0f;
 
-	Owner->SetAttackPower(Owner->EquipComp->GetCurrentAttackPower() * Bonus);
+	Owner->SetRuneAttackBonus(this, Bonus);
 }

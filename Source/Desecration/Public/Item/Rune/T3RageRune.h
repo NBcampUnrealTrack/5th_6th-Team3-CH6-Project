@@ -15,6 +15,7 @@ public:
 	float AttackBonusMultiplier = 0.2f;
 
 	virtual void OnSocketed_Implementation(AT3CharacterBase* OwnerChar) override;
+	
 	virtual void OnUnsocketed_Implementation(AT3CharacterBase* OwnerChar) override;
 
 private:
