@@ -6,12 +6,16 @@
 #include "Components/ActorComponent.h"
 #include "Equipment/T3EquipmentTypes.h"
 #include "Equipment/T3TestItemInstance.h"
+#include "Item/Rune/T3RuneBase.h"
 #include "T3PlayerEquipmentComponent.generated.h"
 
+struct FT3RuneItemData;
+class AT3CharacterBase;
 
 // 장비 스탯 변경 시 발송되는 델리게이트
 // 캐릭터팀에서 바인딩하여 공격력/방어력을 동기화
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEquipmentStatsChanged, float, NewAttackPower, float, NewDefensePower);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRuneSocketChanged);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class DESECRATION_API UT3PlayerEquipmentComponent : public UActorComponent
@@ -29,6 +33,9 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	UPROPERTY()
+	TObjectPtr<AT3CharacterBase> OwnerCharacter = nullptr;
+
 public:
 	// ==========================================================
 	// 설정 (에디터에서 할당)
@@ -38,6 +45,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Data")
 	TObjectPtr<UDataTable> ArmorTable;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Data|Rune")
+	int32 MaxRuneSockets;
 
 	// 초기 장비 ID
 	UPROPERTY(EditDefaultsOnly, Category = "Setup")
@@ -62,6 +72,25 @@ public:
 	TObjectPtr<AActor> SpawnedWeaponActor;
 
 	// ==========================================================
+	// 룬 상태 (EquipmentComponent가 직접 관리)
+	// ==========================================================
+	// [저장용] 소켓된 룬 ID 목록
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Rune")
+	TArray<FName> WeaponSocketedRuneIDs;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Rune")
+	TArray<FName> ArmorSocketedRuneIDs;
+
+	// [런타임용] 활성화된 룬 객체 (저장 불필요, Transient)
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UT3RuneBase>> WeaponActiveRunes;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UT3RuneBase>> ArmorActiveRunes;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnRuneSocketChanged OnRuneSocketChanged;
+	// ==========================================================
 	// 기능
 	// ==========================================================
 	// 무기를 장착하는 함수 (객체를 받아서 처리)
@@ -80,6 +109,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Equipment|Save")
 	void GetEquipmentSaveData(FT3ItemSaveData& OutWeaponData, FT3ItemSaveData& OutArmorData) const;
 
+	UFUNCTION(BlueprintCallable, Category = "Rune")
+	bool SocketRune(FName RuneID, ET3EquipmentType TargetEquipment);
+
+	UFUNCTION(BlueprintCallable, Category = "Rune")
+	bool UnsocketRune(FName RuneID, ET3EquipmentType TargetEquipment);
+
+	UFUNCTION(BlueprintCallable, Category = "Rune")
+	bool SocketRuneAuto(FName RuneID);
+	
 	// [통합] 강화 함수
 	UFUNCTION(BlueprintCallable, Category = "Upgrade")
 	bool TryUpgrade(ET3EquipmentType TargetType, int32 MaxAllowedLevel);
@@ -90,19 +128,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Stats")
 	float GetCurrentDefensePower() const { return CurrentDefensePower; }
 
-
-	// [신규] 룬 데이터 테이블
-	UPROPERTY(EditDefaultsOnly, Category = "Data|Rune")
-	TObjectPtr<UDataTable> RuneTable;
-
-	// 장비당 최대 룬 소켓 개수
-	UPROPERTY(EditDefaultsOnly, Category = "Data|Rune")
-	int32 MaxRuneSockets = 3;
-
-	// [신규] 룬 장착 기능
-	UFUNCTION(BlueprintCallable, Category = "Rune")
-	bool TrySocketRune(UT3TestItemInstance* TargetItem, FName RuneID);
-
+	UFUNCTION(BlueprintCallable)
+	bool GetSocketedRuneData(ET3EquipmentType EquipmentType, int32 SlotIndex, FT3RuneItemData& OutRuneData) const;
 protected:
 
 	// [신규] 실제로 계산된 스탯 값을 저장하는 캐시 변수
@@ -121,10 +148,9 @@ private:
 	// [신규] 내부적으로 스탯을 다시 계산하고 변수를 업데이트하는 함수
 	void RefreshStats();
 
-	// [이동] 기존의 무거운 로직은 여기로 숨깁니다.
 	float CalculateWeaponPower() const;
 	float CalculateArmorPower() const;
 
-	// 룬 보너스 합산 헬퍼
-	float CalculateRuneTotalBonus(const UT3TestItemInstance* Item, ET3RuneStatType StatType) const;
+	void RestoreRunes(const TArray<FName>& RuneIDs, TArray<TObjectPtr<UT3RuneBase>>& OutActiveRunes);
+
 };

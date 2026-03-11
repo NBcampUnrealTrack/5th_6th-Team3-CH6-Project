@@ -10,8 +10,6 @@
  * 
  */
 
-class UT3RuneLogicBase; // 전방 선언
-
 // 장비 종류를 구분하는 딱지(Tag)
 UENUM(BlueprintType)
 enum class ET3EquipmentType : uint8
@@ -28,16 +26,6 @@ enum class ET3UpgradeStoneGrade : uint8
 	Epic,       // 중급 (1~5강)
 	Legendary   // 상급 (1~7강)
 };
-
-UENUM(BlueprintType)
-enum class ET3RuneStatType : uint8
-{
-	None,       // 특수 룬용 (스탯 관여 안 함)
-	Attack,
-	Defense,
-	// 필요 시 Health, Speed 등 추가
-};
-
 
 // 무기 강화 레벨별 데이터
 USTRUCT(BlueprintType)
@@ -126,32 +114,9 @@ struct FT3ItemSaveData
 
 	UPROPERTY()
 	ET3EquipmentType Type;
+
+	// 소켓된 룬 ID 목록 (저장/로드용)
+	UPROPERTY()
+	TArray<FName> SocketedRuneIDs;
 };
 
-// 2. 룬 데이터 테이블 구조체 (DT_Runes)
-USTRUCT(BlueprintType)
-struct FT3RuneDataRow : public FTableRowBase
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FText RuneName;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UTexture2D> Icon = nullptr;
-
-	// [데이터] 어떤 스탯을 올려주는가? (Inject 대상)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	ET3RuneStatType StatType = ET3RuneStatType::None;
-
-	// [데이터] 얼마나 올려주는가? (Inject 대상)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float StatValue = 0.0f;
-
-	// [로직] 행동을 정의할 클래스 (BP)
-	// 일반 스탯 룬 -> BP_StandardRune (기본 로직)
-	// 특수 룬 -> BP_GodRune (커스텀 로직)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<UT3RuneLogicBase> RuneLogicClass;
-};
