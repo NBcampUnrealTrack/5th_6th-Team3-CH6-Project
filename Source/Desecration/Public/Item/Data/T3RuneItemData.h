@@ -4,6 +4,7 @@
 #include "Engine/DataTable.h"
 #include "T3ItemBaseData.h"
 #include "Item/Rune/T3RuneBase.h"
+#include "Equipment/T3EquipmentTypes.h"
 #include "T3RuneItemData.generated.h"
 
 USTRUCT(BlueprintType)
