@@ -208,6 +208,17 @@ void AT3MidBossMonster::UpdateMotionWarpTarget()
 	const FVector TargetLoc = CombatTarget->GetActorLocation();
 	const float Distance = FVector::Dist(BossLoc, TargetLoc);
 
+	// 근거리 시 워프 비활성화 — 제자리 공격
+	if (Distance <= WarpDisableDistance)
+	{
+		MotionWarpingComponent->AddOrUpdateWarpTargetFromLocation(
+			MotionWarpTargetName, BossLoc);
+		UE_LOG(LogDesecration, Log,
+			TEXT("T3_MidBoss: 워프 스킵 — 거리:%.0f ≤ %.0f, 제자리 공격"),
+			Distance, WarpDisableDistance);
+		return;
+	}
+
 	// 체인 엔트리별 오버라이드 확인 (0 이하면 보스 기본값)
 	float EffectiveMaxWarp = MaxWarpDistance;
 	const FMidBossAttackPattern* PatternData = FindPatternData(CurrentPatternName);

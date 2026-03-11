@@ -60,6 +60,26 @@ struct FPatternMontageData
 	// 모션 워프 최대 거리 오버라이드 (0 이하 = 보스 기본값 사용)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MaxWarpDistanceOverride = 0.f;
+
+#if WITH_EDITORONLY_DATA
+	// 에디터 표시용 (TitleProperty) — 자동 생성, 직접 수정 불필요
+	UPROPERTY(VisibleAnywhere, Transient)
+	FString DisplayTitle;
+
+	// 에디터에서 값 변경 시 DisplayTitle 갱신
+	void UpdateDisplayTitle()
+	{
+		DisplayTitle = FString::Printf(TEXT("[%s] Dmg:%.2f Rate:%.2f"),
+			*SectionName.ToString(),
+			Damage,
+			PlayRate);
+
+		if (MaxWarpDistanceOverride > 0.f)
+		{
+			DisplayTitle += FString::Printf(TEXT(" Warp:%.0f"), MaxWarpDistanceOverride);
+		}
+	}
+#endif
 };
 
 // 노티파이별 기본 발동 확률
@@ -96,7 +116,7 @@ struct FMidBossAttackPattern
 	EMidBossPatternCategory Category = EMidBossPatternCategory::Melee;
 
 	// 체인 몽타주 배열 (순서대로 재생, 1개면 단타, 2개면 2타 체인)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (TitleProperty = "[{SectionName}] Dmg:{Damage} Rate:{PlayRate} Warp:{MaxWarpDistanceOverride}"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (TitleProperty = "{DisplayTitle}"))
 	TArray<FPatternMontageData> MontageChain;
 
 	// 섹션 콤보 모드 — MontageChain[0]의 몽타주를 섹션으로 진행

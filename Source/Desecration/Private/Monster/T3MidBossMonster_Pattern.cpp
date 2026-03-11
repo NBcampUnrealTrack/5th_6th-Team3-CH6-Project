@@ -771,6 +771,14 @@ void AT3MidBossMonster::ResetPatternState()
 	CurrentPatternName = NAME_None;
 	CurrentChainIndex = 0;
 	bParrySucceeded = false;
+
+	// 패링 윈도우 타이머 정리 (패턴 종료 후 다음 패턴에 영향 방지)
+	if (IsParryWindowActive())
+	{
+		GetWorldTimerManager().ClearTimer(ParryWindowTimerHandle);
+		RemoveStateTag(TAG_Boss_State_ParryWindow);
+	}
+
 	RemoveStateTag(TAG_Boss_State_ExecutingPattern);
 	if (MotionWarpingComponent) { MotionWarpingComponent->RemoveWarpTarget(MotionWarpTargetName); MotionWarpingComponent->RemoveWarpTarget(MotionWarpTargetRotationName); }
 

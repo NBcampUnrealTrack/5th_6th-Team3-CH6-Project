@@ -70,6 +70,9 @@ struct FT3STT_ExecutePatternInstanceData
 	UPROPERTY()
 	int32 CachedActionCountCost = 1;
 
+	UPROPERTY()
+	int32 CachedRequiredStage = 1;
+
 	// 델리게이트 기반 완료 감지 (non-UPROPERTY, 런타임 전용)
 	bool bPatternCompleted = false;
 	FDelegateHandle PatternCompletedHandle;
@@ -304,6 +307,10 @@ struct FT3STT_RunToAttackRangeInstanceData
 	UPROPERTY(EditAnywhere, Category = "Parameter")
 	TObjectPtr<UAnimMontage> RunMontage = nullptr;
 
+	// 돌진 전 회전 대기 (SetFocus 후 몸 돌릴 시간)
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	float PreDashDelay = 0.3f;
+
 	// 입력 — 컨텍스트에서 바인딩
 	UPROPERTY(EditAnywhere, Category = "Context")
 	TObjectPtr<AT3MidBossMonster> Boss = nullptr;
@@ -448,6 +455,55 @@ struct DESECRATION_API FT3STC_DistanceToTarget : public FStateTreeConditionCommo
 	}
 
 	virtual bool TestCondition(FStateTreeExecutionContext& Context) const override;
+};
+
+// ============================================================
+// Consideration: FT3Consideration_DisengageUrge
+// ActionCount가 줄어들수록 점수 증가 (패턴 많이 할수록 Disengage 확률 상승)
+// 점수 = Clamp(1.0 - ActionCount / MaxActionCount, 0, 1)
+// ============================================================
+
+USTRUCT()
+struct FT3Consideration_DisengageUrgeInstanceData
+{
+	GENERATED_BODY()
+
+	// 스테이지별 기여도 (패턴 1회당)
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	int32 Stage1UrgeCost = 1;
+
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	int32 Stage2UrgeCost = 2;
+
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	int32 Stage3UrgeCost = 3;
+
+	// 이 값에 도달하면 점수 1.0
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	int32 MaxUrge = 10;
+
+	// 최소 점수 (0이어도 이 확률은 유지)
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	float MinScore = 0.05f;
+
+	UPROPERTY(EditAnywhere, Category = "Context")
+	TObjectPtr<AT3MidBossMonster> Boss = nullptr;
+};
+
+USTRUCT(meta = (DisplayName = "Disengage Urge (Consideration)"))
+struct DESECRATION_API FT3Consideration_DisengageUrge : public FStateTreeConsiderationCommonBase
+{
+	GENERATED_BODY()
+
+	using FInstanceDataType = FT3Consideration_DisengageUrgeInstanceData;
+
+	virtual const UStruct* GetInstanceDataType() const override
+	{
+		return FT3Consideration_DisengageUrgeInstanceData::StaticStruct();
+	}
+
+protected:
+	virtual float GetScore(FStateTreeExecutionContext& Context) const override;
 };
 
 // ============================================================

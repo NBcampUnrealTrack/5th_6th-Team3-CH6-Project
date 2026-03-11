@@ -8,6 +8,7 @@
 #include "Monster/T3BossProjectile.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "DrawDebugHelpers.h"
 
@@ -61,12 +62,17 @@ void AT3MidBossMonster::ApplyDamageToMidBoss(float DamageAmount, float StunAmoun
 	MidBossStats.CurrentHP -= DamageAmount;
 	OnMidBossDamaged.Broadcast();
 
-	// 피격 사운드 재생
+	// 피격 사운드 재생 (최소 간격 제한 — 연속 히트 시 씹힘 방지)
 	if (HitSound)
 	{
-		UGameplayStatics::PlaySoundAtLocation(
-			this, HitSound, GetActorLocation(),
-			SoundVolume * HitVolumeMultiplier);
+		const double CurrentTime = GetWorld()->GetTimeSeconds();
+		if (CurrentTime - LastHitSoundTime >= HitSoundMinInterval)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				this, HitSound, GetActorLocation(),
+				SoundVolume * HitVolumeMultiplier);
+			LastHitSoundTime = CurrentTime;
+		}
 	}
 
 	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 피격 (데미지: %.0f, 남은HP: %.0f, 스턴게이지: %.0f/%.0f)"),
@@ -325,15 +331,16 @@ void AT3MidBossMonster::ExecuteAoEDamage(float Radius, float DamageAmount, EHitI
 			*HitActor->GetName(), DamageAmount, Radius);
 	}
 
-	// Niagara 이펙트 스폰 (미설정 시 임시 디버그 구체 표시)
+	// Niagara 이펙트 스폰 — AoEEffectScale로 크기 조절
 	if (AoEEffect)
 	{
+		const FVector ScaleVec = FVector(AoEEffectScale);
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-			this, AoEEffect, AoECenter, GetActorRotation());
+			this, AoEEffect, AoECenter, GetActorRotation(), ScaleVec);
 	}
 	else
 	{
-		// Niagara 없을 때 임시 범위 표시 (투사체 디버그 큐브와 동일 패턴)
+		// Niagara 없을 때 임시 범위 표시
 		DrawDebugSphere(GetWorld(), AoECenter, Radius, 24,
 			FColor::Red, false, 1.5f, 0, 3.f);
 	}

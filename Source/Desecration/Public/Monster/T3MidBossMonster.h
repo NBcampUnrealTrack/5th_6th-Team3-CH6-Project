@@ -50,6 +50,10 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+
 public:
 
 	// ============================================================
@@ -74,6 +78,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|AI")
 	int32 ActionCount = 3;
+
+	// 스테이지별 패턴 실행 횟수 (Disengage Consideration용, 발동 시 리셋)
+	// [0]=Stage1, [1]=Stage2, [2]=Stage3
+	int32 StagePatternCounts[3] = {0, 0, 0};
 
 	// --- 상태 태그 ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|State")
@@ -134,7 +142,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Movement")
 	float MinWarpDistance = 50.f;
 
-	// 이 거리 초과 시 이동 워프 비활성화 (제자리 루트모션 공격)
+	// 이 거리 이하면 워프 비활성화 (제자리 공격)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Movement")
+	float WarpDisableDistance = 100.f;
+
+	// 이 거리 초과 시 이동 워프 클램핑
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Movement")
 	float MaxWarpDistance = 350.f;
 
@@ -235,6 +247,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Skill")
 	TObjectPtr<UNiagaraSystem> AoEEffect;
+
+	// AoE 이펙트 스케일 (BP에서 눈으로 보고 조절)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Skill", meta = (ClampMin = "0.1"))
+	float AoEEffectScale = 1.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Skill")
 	TObjectPtr<USoundBase> AoESound;
@@ -369,6 +385,13 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound")
 	float HitVolumeMultiplier = 3.0f;
+
+	// 피격 사운드 최소 재생 간격 (초)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound")
+	float HitSoundMinInterval = 0.1f;
+
+	// 마지막 피격 사운드 재생 시간
+	double LastHitSoundTime = 0.0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound")
 	TObjectPtr<USoundBase> StunSound;
