@@ -325,4 +325,9 @@ private:
 	
 	void UseMPPotion();
 #pragma endregion
+	
+#pragma region Rune
+	UFUNCTION(BlueprintCallable, Category = "Rune")
+	bool IsRuneEquipped(const FName& ItemName);
+#pragma endregion
 };

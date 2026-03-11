@@ -208,7 +208,8 @@ public:
 	bool bCanRegenStamina = true;
 
 	// Attack
-	FORCEINLINE float GetAttackPower() const { return AttackPower; }
+	UFUNCTION(BlueprintCallable, Category = "Stat")
+	FORCEINLINE float GetAttackPower() const { return AttackPower + CachedRuneAttackBonus; }
 	FORCEINLINE void SetAttackPower(float NewPower) { AttackPower = NewPower; BroadcastStatChange(ET3StatType::Attack);}
 
 	// Defense
@@ -301,4 +302,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ForceMove")
 	bool bIsSkillCanNotUse = false;
 
+public:
+    void SetRuneAttackBonus(UObject* RuneSource, float Bonus);
+    
+	void RemoveRuneAttackBonus(UObject* RuneSource);
+
+private:
+    TMap<TObjectPtr<UObject>, float> RuneAttackBonusMap;
+	
+    float CachedRuneAttackBonus = 0.f;
+	
+	void RecalculateRuneBonus();
 };
