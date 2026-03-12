@@ -208,7 +208,8 @@ public:
 	bool bCanRegenStamina = true;
 
 	// Attack
-	FORCEINLINE virtual float GetAttackPower() const { return AttackPower; }
+	UFUNCTION(BlueprintCallable, Category = "Stat")
+	virtual float GetAttackPower() const { return AttackPower; }
 	FORCEINLINE void SetAttackPower(float NewPower) { AttackPower = NewPower; BroadcastStatChange(ET3StatType::Attack);}
 
 	// Defense

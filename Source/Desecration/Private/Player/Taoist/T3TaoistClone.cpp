@@ -68,9 +68,7 @@ void AT3TaoistClone::ApplyGlowToEverything()
 
 void AT3TaoistClone::Destroyed()
 {
-    // 1. 사라질 때 연출 (이펙트 & 사운드)
-        // - DeathEffect: 나이아가라 시스템 (UNiagaraSystem*)
-        // - DeathSound: 소리 (USoundBase*)
+
 
     UWorld* World = GetWorld();
     if (World)

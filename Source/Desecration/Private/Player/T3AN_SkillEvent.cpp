@@ -19,7 +19,7 @@ void UT3AN_SkillEvent::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBas
         AT3TigerAttack* Tiger = Cast<AT3TigerAttack>(MeshComp->GetOwner());
         if (IsValid(Tiger))
         {
-            Tiger->Destroy();
+            Tiger->FinishAttack();
         }
     }
 

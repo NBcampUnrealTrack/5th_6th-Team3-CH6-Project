@@ -17,6 +17,8 @@ public:
 
     void SetDamage(float InDamage) { Damage = InDamage; }
 
+    void FinishAttack();
+
 protected:
     virtual void Tick(float DeltaTime) override;
 
@@ -25,7 +27,17 @@ protected:
     UFUNCTION()
     void OnAttackOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-    void TriggerExplosion(class AActor* TargetActor);
+    void TriggerExplosion(class AActor* TargetActor, float DamageMultiplier = 1.0f);
+
+
+    // 이미 오버랩 데미지를 입은 타겟들 목록
+    UPROPERTY()
+    TArray<AActor*> HitActors;
+
+    // 이미 피니시 어택을 실행했는지 여부
+    bool bHasFinished = false;
+
+
 
     // 점프 공격 애니메이션
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
@@ -39,7 +51,7 @@ protected:
     class UNiagaraSystem* ExplosionEffect;
 
     UPROPERTY(EditAnywhere, Category = "Effects")
-    class USoundBase* ExplosionSound;
+    class USoundBase* FinishAttackSound;
 
     UPROPERTY(EditAnywhere, Category = "Effects")
     class USoundBase* SpawnSound;

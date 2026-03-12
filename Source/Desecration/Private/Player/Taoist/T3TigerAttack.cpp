@@ -38,24 +38,28 @@ AT3TigerAttack::AT3TigerAttack()
 
 void AT3TigerAttack::OnAttackOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-    // 본인이 아니며, 유효한 포인터이고, 적(Enemy) 태그 등을 확인
-    if (OtherActor && OtherActor != this)
+    if (!IsValid(OtherActor) || OtherActor == this) return;
+    if (OtherActor->IsA(AT3TigerAttack::StaticClass()) || OtherActor->IsA(AT3CharacterBase::StaticClass())) return;
+
+    if (HitActors.Contains(OtherActor)) return;
+
+    if (bHasFinished)
     {
-        UE_LOG(LogTemp, Warning, TEXT("Tiger Hit Target: %s"), *OtherActor->GetName());
-
-        // 1. 이동 중지
-        bIsLaunching = false;
-        GetCharacterMovement()->Velocity = FVector::ZeroVector;
-
-        // 2. 폭발 및 데미지 로직 실행 (Notify에서 하려던 것을 여기서 직접 호출)
-        TriggerExplosion(OtherActor);
-
-        // 3. 중복 실행 방지를 위해 콜리젼 끄기
-        AttackCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        // 1. 피니시 상태일 때 (500%)
+        UE_LOG(LogTemp, Display, TEXT("Tiger Finish Hit: %s"), *OtherActor->GetName());
+        TriggerExplosion(OtherActor, 5.0f);
+        HitActors.Add(OtherActor); // 한 번 맞으면 리스트에 추가
+    }
+    else
+    {
+        // 2. 일반 발사 상태일 때 (200%)
+        UE_LOG(LogTemp, Display, TEXT("Tiger Launch Hit: %s"), *OtherActor->GetName());
+        TriggerExplosion(OtherActor, 2.0f);
+        HitActors.Add(OtherActor);
     }
 }
 
-void AT3TigerAttack::TriggerExplosion(AActor* TargetActor)
+void AT3TigerAttack::TriggerExplosion(AActor* TargetActor, float DamageMultiplier)
 {
     AActor* ActualOwner = GetOwner();
     if (!ActualOwner ||TargetActor->IsA( AT3CharacterBase::StaticClass())) return;
@@ -75,8 +79,8 @@ void AT3TigerAttack::TriggerExplosion(AActor* TargetActor)
 
     if (IsValid(CombatComp))
     {
-        CombatComp->RequestAttackDamage(TargetActor, Damage);
-        UE_LOG(LogTemp, Display, TEXT("Tiger Damage Applied: %.1f"), Damage);
+        CombatComp->RequestAttackDamage(TargetActor, Damage*DamageMultiplier);
+        UE_LOG(LogTemp, Display, TEXT("Tiger Damage Applied: %.1f,  %s"),  Damage * DamageMultiplier, *TargetActor->GetName());
     }
 
     // 1. 이펙트 재생
@@ -85,14 +89,7 @@ void AT3TigerAttack::TriggerExplosion(AActor* TargetActor)
         UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
     }
 
-    // 2. 사운드 재생
-    if (ExplosionSound)
-    {
-        UGameplayStatics::PlaySoundAtLocation(this, ExplosionSound, GetActorLocation());
-    }
 
-    // 3. 호랑이 퇴장
-    Destroy();
 }
 
 
@@ -107,6 +104,7 @@ void AT3TigerAttack::LaunchTiger(FVector Direction, float Speed)
     LaunchDirection = Direction.GetSafeNormal();
     MovementSpeed = Speed;
     bIsLaunching = true;
+    bHasFinished = false;
 
     if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
     {
@@ -152,4 +150,21 @@ void AT3TigerAttack::Tick(float DeltaTime)
 
         // 디버그 로그 (실제 위치 변화를 더 명확히 확인)
     }
+}
+
+void AT3TigerAttack::FinishAttack()
+{
+    bHasFinished = true;
+
+    // 기존 오버랩 된 적들에게 데미지를 입히고 싶을 때 
+    // HitActors.Empty();
+
+    // 2. 사운드 재생
+    if (FinishAttackSound)
+    {
+        UGameplayStatics::PlaySoundAtLocation(this, FinishAttackSound, GetActorLocation());
+    }
+
+    // 3. 0.5초 뒤 삭제
+    SetLifeSpan(1.3f);
 }

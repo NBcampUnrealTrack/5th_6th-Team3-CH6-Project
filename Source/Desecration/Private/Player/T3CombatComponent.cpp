@@ -62,6 +62,28 @@ void UT3CombatComponent::InitializeComponent()
 	}
 }
 
+void UT3CombatComponent::SetCombatState(ECharacterCombatState NewState)
+{
+	if (CurrentState == NewState) return;
+
+	// 이전 상태에서 빠져나올 때 처리
+	if (CurrentState == ECharacterCombatState::Dead) return; 
+	CurrentState = NewState;
+}
+
+void UT3CombatComponent::SetInvincible(bool bIsInvincible)
+{
+	if (bIsInvincible)
+	{
+		SetCombatState(ECharacterCombatState::Invincible);
+	}
+	else
+	{
+		// 무적 해제 시 Idle로 돌아가기
+		SetCombatState(ECharacterCombatState::Idle);
+	}
+}
+
 void UT3CombatComponent::InitializeWeapons(const TMap<EEquipSlot, FWeaponEquipInfo>& WeaponMap)
 {
 	ClearWeapons();
@@ -112,33 +134,15 @@ void UT3CombatComponent::ClearWeapons()
 // --- 막기 로직 ---
 void UT3CombatComponent::StartBlock()
 {
-	// 스태미너 50이상만 막기 가능
-	if (!OwnerChar || OwnerChar->GetCurrentStamina() < 50.f)
-	{
-		// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("You Need Stamina."));
-		return;
-	}
+	// 1. 조건 체크 (스태미너 등)
+	if (!OwnerChar || OwnerChar->GetCurrentStamina() < 50.f) return;
+	if (CurrentState != ECharacterCombatState::Idle || !bCanBlock) return;
 
-	if (OwnerChar->PlayerInputState.bIsBlocking || CurrentState != ECharacterCombatState::Idle || !bCanBlock) return;
-
-	// 2. 초기 상태 설정: 패링(Parrying) 모드 진입
-	// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Blue, TEXT("BlockingModeOn"));
-	CurrentState = ECharacterCombatState::Parrying;
+	// 2. 즉시 막기 상태로 전환
+	CurrentState = ECharacterCombatState::Blocking;
 	OwnerChar->PlayerInputState.bIsBlocking = true;
 	bCanBlock = false;
 	OwnerChar->GetCharacterMovement()->MaxWalkSpeed = 200.0f;
-
-
-	// 0.2초 후 SwitchToBlockingState 호출
-	GetWorld()->GetTimerManager().ClearTimer(ParryingToBlockingTimerHandle);
-	GetWorld()->GetTimerManager().SetTimer(
-		ParryingToBlockingTimerHandle,
-		this,
-		&UT3CombatComponent::SwitchToBlockingState,
-		0.2f,
-		false
-	);
-
 
 
 	// 도사인 경우 방어 시작 시 부채 펴기
@@ -161,8 +165,6 @@ void UT3CombatComponent::EndBlock()
 	OwnerChar->PlayerInputState.bIsBlocking = false;
 	OwnerChar->GetCharacterMovement()->MaxWalkSpeed = 500.0f;
 	
-	GetWorld()->GetTimerManager().ClearTimer(ParryingToBlockingTimerHandle);
-
 	GetWorld()->GetTimerManager().SetTimer(
 		BlockingCooldownTimerHandle,
 		this,
@@ -201,8 +203,17 @@ void UT3CombatComponent::Attack()
 
 void UT3CombatComponent::SetParryingEnabled(bool bEnabled)
 {
-	if (CurrentState == ECharacterCombatState::Idle) return;
-	CurrentState = bEnabled ? ECharacterCombatState::Parrying : ECharacterCombatState::Blocking;
+	if (bEnabled)
+	{
+		// 이전 상태 저장 후 패링으로 전환
+		PreState = CurrentState;
+		CurrentState = ECharacterCombatState::Parrying;
+	}
+	else
+	{
+		// 패링 시간이 끝나면 Idle이나 원래 하던 Blocking으로 복구
+		CurrentState = PreState;
+	}
 }
 
 void UT3CombatComponent::SetDodgingEnabled(bool bEnabled)
@@ -222,15 +233,6 @@ void UT3CombatComponent::SetDodgingEnabled(bool bEnabled)
 		}
 	}
 }
-
-void UT3CombatComponent::SwitchToBlockingState()
-{
-	if (CurrentState == ECharacterCombatState::Parrying)
-	{
-		CurrentState = ECharacterCombatState::Blocking;
-	}
-}
-
 
 // --- 록온 로직 ---
 void UT3CombatComponent::ToggleLockOn()
@@ -650,12 +652,19 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 // 피격 데미지 계산
 float UT3CombatComponent::CalculateFinalDamage(float IncomingDamage, const class UDamageType* DamageType, float ReceievedDamageMultiplier)
 {
+	// 0. 무적 상태
+	if (CurrentState == ECharacterCombatState::Invincible)
+	{
+		return 0.f;
+	}
+
+	// 데미지 계산 로직
 	float Defence = OwnerChar->GetDefense();
 	float DamageReductionScale = FMath::Max(0.5f, ReceievedDamageMultiplier - Defence);
 	IncomingDamage *= DamageReductionScale;  // 데미지 * (데미지 배율 - 방어력 배율)
 
 
-	// 어떤 상황이든 예외 없이 데미지
+	// 무적 상태가 아니면 무조건 데미지
 	if (DamageType->IsA(UT3DamageType_Undodgable::StaticClass()))
 	{
 		return IncomingDamage;
@@ -748,7 +757,7 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 	if (HitBoss)
 	{
 		// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Hit Boss!"));
-		HitBoss->Damage(DamageAmount, 20.f);  // 테스트용 스턴 20
+		HitBoss->Damage(DamageAmount, InStunAmount);  // 테스트용 스턴 20
 		// HitBoss->Damage(CurrentAttackDamage, StunAmount);
 	}
 

@@ -439,12 +439,12 @@ void UT3Taoist_SkillComponent::SummonTigerAtLocation(FVector ExplosionLocation, 
     if (AT3TaoistClone* Clone = Cast<AT3TaoistClone>(ActualOwner))
     {
         // 1. 분신이 소환한 경우
-        FinalDamage = Clone->GetAttackPower() * SummonTigerData.DamageMultiflier;
+        FinalDamage = Clone->GetAttackPower() ;
     }
     else
     {
         // 2. 본체가 소환한 경우
-        FinalDamage = OwnerChar->GetAttackPower() * SummonTigerData.DamageMultiflier;
+        FinalDamage = OwnerChar->GetAttackPower() ;
     }
 
     FVector SpawnLocation = ExplosionLocation;
