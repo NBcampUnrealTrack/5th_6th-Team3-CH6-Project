@@ -335,4 +335,6 @@ public:
 	void OnParry();
 	UFUNCTION(BlueprintImplementableEvent, Category = "Defence")
 	void OnBlockReaction();
+	UFUNCTION(BlueprintImplementableEvent, Category = "Defence")
+	void OnParryReaction();
 };
