@@ -210,7 +210,7 @@ public:
 
 	// Attack
 	UFUNCTION(BlueprintCallable, Category = "Stat")
-	FORCEINLINE virtual float GetAttackPower() const { return AttackPower + CachedRuneAttackBonus; }
+	virtual float GetAttackPower() const { return AttackPower; }
 	FORCEINLINE void SetAttackPower(float NewPower) { AttackPower = NewPower; BroadcastStatChange(ET3StatType::Attack);}
 
 	// Defense

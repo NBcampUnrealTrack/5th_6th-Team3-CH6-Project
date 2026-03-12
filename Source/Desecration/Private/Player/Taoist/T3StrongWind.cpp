@@ -7,6 +7,9 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "Player/T3CharacterBase.h"
 #include "Player/T3CombatComponent.h"
+#include "NiagaraComponent.h"
+#include "NiagaraSystem.h"
+#include "NiagaraFunctionLibrary.h"
 
 
 
@@ -20,8 +23,8 @@ AT3StrongWind::AT3StrongWind()
     AttackArea->SetBoxExtent(FVector(500.f, 50.f, 50.f));
     AttackArea->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
 
-    ParticleComp = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ParticleComp"));
-    ParticleComp->SetupAttachment(RootComponent);
+    NiagaraComp = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraComponent"));
+    NiagaraComp->SetupAttachment(RootComponent);
 
     InitialLifeSpan = SpawnTime;
 }
@@ -67,6 +70,8 @@ void AT3StrongWind::ProcessHit(AActor* TargetActor, const FString& HitType)
 
         UT3CombatComponent* Combat = OwnerChar->GetCombatComponent();
         if (!Combat) return;
+
+        if (TargetActor->IsA(AT3CharacterBase::StaticClass())) return;
 
         Combat->RequestAttackDamage(TargetActor, Damage);
 

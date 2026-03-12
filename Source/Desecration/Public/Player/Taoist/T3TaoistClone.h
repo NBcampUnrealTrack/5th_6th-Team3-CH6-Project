@@ -27,6 +27,11 @@ public:
     void SetCloneIndex(int32 InIndex) { CloneIndex = InIndex; }
     int32 GetCloneIndex() const { return CloneIndex; }
 
+    // 본체(Owner) 접근용 Getter (컨트롤러에서 사용)
+    FORCEINLINE class AT3CharacterBase* GetOwnerCharacter() const { return OwnerCharacter; }
+
+    // 공격력 보정 (본체의 30%)
+    virtual float GetAttackPower() const override;
 protected:
     virtual void BeginPlay() override;
     virtual void Destroyed() override;
@@ -42,12 +47,9 @@ protected:
     void StartIdleWander();
     void ResetIdleWanderTimer();
 
-    // 본체(Owner) 접근용 Getter (컨트롤러에서 사용)
-    FORCEINLINE class AT3CharacterBase* GetOwnerCharacter() const { return OwnerCharacter; }
 
 
-    // 공격력 보정 (본체의 30%)
-    virtual float GetAttackPower() const override;
+
 
     virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* InstigatedBy, AActor* DamageCauser) override;
 
@@ -64,7 +66,19 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Combat")
     TSubclassOf<class AT3TalismanProjectile> TalismanClass;
 
+    // 장풍 클래스
+    UPROPERTY(EditAnywhere, Category = "Combat")
+    TSubclassOf<class AT3StrongWind> StrongWindClass;
+    float StrongWindSpawnDistance;
+    float StrongWindDamageMultiflier;
+
+    // 호랑이 클래스
+    UPROPERTY(EditAnywhere, Category = "Combat")
+    TSubclassOf<class AT3TigerAttack> TigerClass;
+
     void SpawnTalisman();
+
+    void SpawnStrongWind();
 
 
     // 머터리얼
@@ -74,7 +88,14 @@ protected:
     TArray<class UMaterialInstanceDynamic*> DynamicMaterials;
 
     UPROPERTY(EditAnywhere, Category = "Appearance")
-    FLinearColor CloneGlowColor = FLinearColor(0.0f, 0.5f, 2.0f, 1.0f);
+    FLinearColor CloneGlowColor = FLinearColor(0.0f, 0.1f, 0.2f, 1.0f);
+
+
+    UPROPERTY(EditAnywhere, Category = "Effects")
+    class UNiagaraSystem* DestroyEffect;
+
+    UPROPERTY(EditAnywhere, Category = "Effects")
+    class USoundBase* DestroySound;
 
 private:
     UPROPERTY()
