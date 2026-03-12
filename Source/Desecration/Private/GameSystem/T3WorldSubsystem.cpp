@@ -53,7 +53,7 @@ int32 UT3WorldSubsystem::GetObjectState(const int32 ObjectID) const
 	return *Result;
 }
 
-void UT3WorldSubsystem::SetOrAddObjectState(const int32 ObjectID, const int32 NewState)
+void UT3WorldSubsystem::SetOrAddObjectState(const int32 ObjectID, const int32 NewState) const
 {
 	if (!T3SaveGame.IsValid())
 	{
@@ -68,6 +68,40 @@ void UT3WorldSubsystem::SetOrAddObjectState(const int32 ObjectID, const int32 Ne
 	}
 	
 	T3SaveGame->LevelObjectStates.Emplace(ObjectID, NewState);
+}
+
+int32 UT3WorldSubsystem::GetEnemyState(const int32 EnemyID) const
+{
+	if (!T3SaveGame.IsValid())
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : 저장된 게임 데이터가 없음"), *GetNameSafe(this));
+		return 0;
+	}
+	
+	const int32* Result = T3SaveGame->EnemyStates.Find(EnemyID);
+	if (Result == nullptr)
+	{
+		return 0;
+	}
+	
+	return *Result;
+}
+
+void UT3WorldSubsystem::SetOrAddEnemyState(const int32 EnemyID, const int32 NewState) const
+{
+	if (!T3SaveGame.IsValid())
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : 저장된 게임 데이터가 없음"), *GetNameSafe(this));
+		return;
+	}
+	
+	if (T3SaveGame->EnemyStates.Contains(EnemyID))
+	{
+		T3SaveGame->EnemyStates[EnemyID] = NewState;
+		return;
+	}
+	
+	T3SaveGame->EnemyStates.Emplace(EnemyID, NewState);
 }
 
 TMap<int32, FLostMoney> UT3WorldSubsystem::GetAllLostMoney()
