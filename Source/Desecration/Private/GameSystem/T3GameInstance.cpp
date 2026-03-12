@@ -176,5 +176,8 @@ void UT3GameInstance::OpenLevel(const ELevelName LevelName)
 
 void UT3GameInstance::OpenLevelBySavedData()
 {
-	OpenLevel(SavedGameData->SavedLevelName);
+	if (SavedGameData)
+	{
+		OpenLevel(SavedGameData->SavedLevelName);
+	}
 }
