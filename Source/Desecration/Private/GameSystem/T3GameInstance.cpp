@@ -2,6 +2,7 @@
 
 #include "GameFramework/GameUserSettings.h"
 #include "GameSystem/T3SaveGame.h"
+#include "GameSystem/T3SaveLostMoney.h"
 #include "GameSystem/T3SaveUserSettings.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundClass.h"
@@ -68,6 +69,15 @@ TObjectPtr<UT3SaveGame> UT3GameInstance::MakeFirstGameData()
 	return SavedGameData;
 }
 
+void UT3GameInstance::MakeFirstLostMoneyData()
+{
+	if (!LostMoneyData)
+	{
+		LostMoneyData = NewObject<UT3SaveLostMoney>();
+	}
+	LostMoneyData->ResetGameData();
+}
+
 bool UT3GameInstance::SaveGame()
 {
 	return UGameplayStatics::SaveGameToSlot(SavedGameData, SAVE_GAME_NAME, 0);
@@ -100,6 +110,23 @@ bool UT3GameInstance::LoadUSerSettings()
 	}
 	
 	CurrentSettings = T3UserSettings;
+	return true;
+}
+
+bool UT3GameInstance::SaveLostMoney()
+{
+	return UGameplayStatics::SaveGameToSlot(LostMoneyData, SAVE_LOST_MONEY_NAME, 0);
+}
+
+bool UT3GameInstance::LoadLostMoney()
+{
+	TObjectPtr<UT3SaveLostMoney> T3LostMoney = Cast<UT3SaveLostMoney>(UGameplayStatics::LoadGameFromSlot(SAVE_LOST_MONEY_NAME, 0));
+	if (!T3LostMoney)
+	{
+		return false;
+	}
+	
+	LostMoneyData = T3LostMoney;
 	return true;
 }
 

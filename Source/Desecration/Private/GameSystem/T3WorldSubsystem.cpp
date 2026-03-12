@@ -1,6 +1,7 @@
 #include "GameSystem/T3WorldSubsystem.h"
 
 #include "GameSystem/T3GameInstance.h"
+#include "GameSystem/T3SaveGame.h"
 
 void UT3WorldSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -25,7 +26,7 @@ void UT3WorldSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	LevelObjectStates.Append(SaveGame->LevelObjectStates);
 	
 	//잃어버린 재화
-	for (TTuple<int32, FLostMoney> LostMoney : SaveGame->LostMoneyList)
+	for (TTuple<int32, FLostMoney> LostMoney : T3GameInstance->GetLostMoneyData()->LostMoneyList)
 	{
 		if (T3GameInstance->GetCurrentLevel() != LostMoney.Value.LevelName)
 		{

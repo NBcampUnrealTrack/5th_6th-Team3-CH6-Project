@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
-#include "GameSystem/T3SaveGame.h"
+#include "GameSystem/T3SaveLostMoney.h"
 #include "T3WorldSubsystem.generated.h"
 
 class UT3GameInstance;
