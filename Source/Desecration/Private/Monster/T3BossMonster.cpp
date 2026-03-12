@@ -55,6 +55,23 @@ void AT3BossMonster::Damage(float DamageAmount, float StunAmount)
 		}
 
 		OnBossHit.Broadcast();
+
+		if (BossStats.CurrentHP / BossStats.MaxHP <= 0.25 )
+		{
+			OnBoss25per.Broadcast();
+			return;
+		}
+		else if (BossStats.CurrentHP / BossStats.MaxHP <= 0.5)
+		{
+			OnBoss50per.Broadcast();
+			return;
+		}
+		else if (BossStats.CurrentHP / BossStats.MaxHP <= 0.75)
+		{
+			OnBoss75per.Broadcast();
+			return;
+		}
+
 	}
 }
 
