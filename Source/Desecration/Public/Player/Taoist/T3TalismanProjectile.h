@@ -14,6 +14,7 @@ class DESECRATION_API AT3TalismanProjectile : public AActor
 public:	
 
 	AT3TalismanProjectile();
+    void SetDamage(float InDamage) { Damage = InDamage; }
     virtual void Tick(float DeltaTime) override;
 
 protected:
@@ -45,6 +46,9 @@ protected:
     // 충돌 이벤트 함수
     UFUNCTION()
     void OnTalismanOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+    UPROPERTY(EditAnywhere, Category = "Combat")
+    float DamageMultiflier = 1.0f;
 
     UPROPERTY(EditAnywhere, Category = "Combat")
     float Damage = 20.f;

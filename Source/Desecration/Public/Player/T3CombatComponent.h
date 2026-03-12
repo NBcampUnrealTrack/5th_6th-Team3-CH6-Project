@@ -19,6 +19,7 @@ enum class ECharacterCombatState : uint8
 	Parrying,
 	Dodge,
 	Attacking,
+	Invincible,
 	Dead,
 	Cooldown
 };
@@ -31,8 +32,9 @@ enum class ECombatWindowType : uint8
 	Parry      UMETA(DisplayName = "Parry Window"),
 	Dodge UMETA(DisplayName = "Dodge Window"),
 	Attack     UMETA(DisplayName = "Attack Collision"),
-	PrevenRegen UMETA(DisplayName = "PrevenRegen")
-	
+	PrevenRegen UMETA(DisplayName = "PrevenRegen"),
+	PowerStrike UMETA(DisplayName = "Power Strike"),
+	Invincible UMETA(DisplayName = "Invincible")
 };
 
 // 피격 방향 ENUM
@@ -87,14 +89,31 @@ protected:
 	virtual void InitializeComponent() override;
 
 
+
 public:	
+	// 상태 변수
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	ECharacterCombatState CurrentState;
+
+	ECharacterCombatState PreState;
+
+	// 전체적인 상태 변경 함수
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void SetCombatState(ECharacterCombatState NewState);
+
+	// 무적 상태 전용 편의 함수
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void SetInvincible(bool bIsInvincible);
+
+	// 현재 상태 확인용
+	UFUNCTION(BlueprintPure, Category = "Combat")
+	FORCEINLINE ECharacterCombatState GetCurrentState() const { return CurrentState; }
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EHitDirection HitDirection;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EHitIntensity HitIntensity;
-	// 상태 변수
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	ECharacterCombatState CurrentState;
+	
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector CurrentDamageCauserLocation;
@@ -129,9 +148,6 @@ public:
 	AActor* GetCurrentTarget() const { return CurrentTarget; }
 
 	void UpdateLockOnWidgetScale();
-
-	// 캐릭터 상태 Getter
-	FORCEINLINE ECharacterCombatState GetCurrentState() const { return CurrentState; }
 
 	// 공격 함수
 	UFUNCTION(BlueprintCallable)
@@ -197,9 +213,6 @@ private:
 	// void SetLockOnTarget(AActor* NewTarget);
 
 	// 패링
-	FTimerHandle ParryingToBlockingTimerHandle;
-	UFUNCTION()
-	void SwitchToBlockingState();
 
 	UPROPERTY()
 	TObjectPtr<class AT3CharacterBase> OwnerChar;
@@ -242,6 +255,13 @@ private:
 	TObjectPtr<AActor> CurrentTarget;
 	void ResetBlockCooldown();
 
+public:
+	bool GetIsPowerStrike() const {return bIsPowerStrike;}
+	
+	void SetPowerStrike(bool bState) {bIsPowerStrike = bState;}
+	
+protected:
+	bool bIsPowerStrike = false;
 
 
 

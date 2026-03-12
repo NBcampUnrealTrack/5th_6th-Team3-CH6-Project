@@ -64,7 +64,7 @@ void UT3RageRune::ApplyAttackBonus()
 
 	float MaxHP = Owner->GetMaxHP();
 	float HPPercent = (MaxHP > 0.f) ? FMath::Clamp((Owner->GetCurrentHP() / MaxHP), 0.5, 1) : 1.f;
-	float Bonus = (FMath::RoundToFloat(Owner->EquipComp->GetCurrentAttackPower() * (1.f - HPPercent) * AttackBonusMultiplier) * 10.0f) / 10.0f;
+	float Bonus = FMath::RoundToFloat((Owner->EquipComp->GetCurrentAttackPower() * (1.f - HPPercent) * (ValueByGrade / 10) * 10.0f)) / 10.0f;
 
 	Owner->SetRuneAttackBonus(this, Bonus);
 }
