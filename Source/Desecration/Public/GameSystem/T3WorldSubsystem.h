@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
+#include "GameSystem/T3SaveGame.h"
 #include "T3WorldSubsystem.generated.h"
 
 class UT3GameInstance;
@@ -33,10 +34,14 @@ public:
 	//현재 등록된 모든 물체의 상태를 반환
 	TMap<int32, int32> GetAllStates();
 	
-private:
-	//여러 개의 상태를 등록
-	void AddStates(const TMap<int32, int32>& NewStates);
+	//현재 레벨에서 잃어버린 재화 목록
+	UFUNCTION(BlueprintPure, Category = "Lost Money")
+	TMap<int32, FLostMoney> GetAllLostMoney();
 	
+private:
 	//여러 물체들의 상태를 저장
 	TMap<int32, int32> LevelObjectStates;
+	
+	//이 레벨에서 잃어버린 재화
+	TMap<int32, FLostMoney> LostMoneyList;
 };

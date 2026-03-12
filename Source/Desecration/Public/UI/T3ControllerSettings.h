@@ -4,6 +4,8 @@
 #include "T3SettingsPanelCategory.h"
 #include "T3ControllerSettings.generated.h"
 
+class UT3Slider;
+class UImage;
 class UCheckBox;
 
 UCLASS()
@@ -30,6 +32,10 @@ private:
 	UFUNCTION()
 	void OnValueChangedCameraSpeedSlider(float Value);
 	
+	//조작 안내 이미지
+	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
+	TObjectPtr<UImage> ControlGuideImage;
+	
 	//게임에 사용할 컨트롤러를 선택하는 콤보 박스
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
 	TObjectPtr<UComboBoxString> ControllerComboBox;
@@ -40,7 +46,11 @@ private:
 	
 	//회전 감도
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
-	TObjectPtr<USlider> CameraSpeedSlider;
+	TObjectPtr<UT3Slider> CameraSpeedSlider;
+	
+	//컨트롤러 레이아웃 텍스쳐 모음
+	UPROPERTY(EditDefaultsOnly, Category = "Textture", meta = (AllowPrivateAccess = true))
+	TArray<TObjectPtr<UTexture2D>> LayoutTextures;
 
 	//컨트롤러 선택에 사용할 번역 키 값
 	const TArray<FString> CONTROLLER_KEY_STRINGS = { TEXT("KeyboardAndMouse"), TEXT("Gamepad") };

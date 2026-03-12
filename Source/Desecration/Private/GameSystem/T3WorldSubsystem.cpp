@@ -1,7 +1,6 @@
 #include "GameSystem/T3WorldSubsystem.h"
 
 #include "GameSystem/T3GameInstance.h"
-#include "GameSystem/T3SaveGame.h"
 
 void UT3WorldSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -22,15 +21,28 @@ void UT3WorldSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	}
 	
 	//물체의 상태 확인
-	AddStates(T3GameInstance->GetSavedGameData()->LevelObjectStates);
+	const TObjectPtr<UT3SaveGame> SaveGame = T3GameInstance->GetSavedGameData();
+	LevelObjectStates.Append(SaveGame->LevelObjectStates);
+	
+	//잃어버린 재화
+	for (TTuple<int32, FLostMoney> LostMoney : SaveGame->LostMoneyList)
+	{
+		if (T3GameInstance->GetCurrentLevel() != LostMoney.Value.LevelName)
+		{
+			continue;
+		}
+		
+		LostMoneyList.Emplace(LostMoney.Key, LostMoney.Value);
+	}
 }
 
 int32 UT3WorldSubsystem::GetState(const int32 ObjectID) const
 {
 	const int32* Result = LevelObjectStates.Find(ObjectID);
-	
 	if (Result == nullptr)
+	{
 		return 0;
+	}
 	
 	return *Result;
 }
@@ -43,7 +55,7 @@ void UT3WorldSubsystem::SetOrAddState(const int32 ObjectID, const int32 NewState
 		return;
 	}
 	
-	LevelObjectStates.Add(ObjectID, NewState);
+	LevelObjectStates.Emplace(ObjectID, NewState);
 }
 
 TMap<int32, int32> UT3WorldSubsystem::GetAllStates()
@@ -51,7 +63,7 @@ TMap<int32, int32> UT3WorldSubsystem::GetAllStates()
 	return LevelObjectStates;
 }
 
-void UT3WorldSubsystem::AddStates(const TMap<int32, int32>& NewStates)
+TMap<int32, FLostMoney> UT3WorldSubsystem::GetAllLostMoney()
 {
-	LevelObjectStates.Append(NewStates);
+	return LostMoneyList;
 }

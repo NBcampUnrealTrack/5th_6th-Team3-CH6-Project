@@ -914,6 +914,11 @@ void UT3InventoryComponent::UseMPPotion()
 	OnRecoverItemUsed.Broadcast();
 }
 
+bool UT3InventoryComponent::IsRuneEquipped(const FName& ItemName)
+{
+	return false;
+}
+
 void UT3InventoryComponent::UpgradePotionAmount()
 {
 	PotionAmountUpgradeLevel++;

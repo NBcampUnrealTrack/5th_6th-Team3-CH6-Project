@@ -9,7 +9,7 @@ class UImage;
 class UBorder;
 struct FInventorySlot;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInventorySlotClicked, UItemSlotWidget*, OnSlotClicked);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInventorySlotClicked, UItemSlotWidget*, SlotWidget, bool, bIsRightClick);
 
 UCLASS()
 class DESECRATION_API UItemSlotWidget : public UUserWidget
@@ -29,6 +29,12 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Item Slot")
 	bool GetSlotData(FInventorySlot& OutSlotData) const;
 	
+	UFUNCTION(BlueprintPure)
+	bool GetIsRuneSlot() const;
+	
+	UFUNCTION(BlueprintCallable)
+	bool SetIsRuneSlot(bool IsRuneSlot);
+	
 	UPROPERTY(BlueprintAssignable)
 	FOnInventorySlotClicked OnSlotClicked;
 	
@@ -39,15 +45,14 @@ protected:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UBorder* Border_EquippedOrder;
 	
-	// 마우스 버튼이 눌렸을 때 호출
+	UPROPERTY(BlueprintReadWrite)
+	uint8 bIsRuneSlot : 1 = false;
+	
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
     
-	// 드래그가 감지되었을 때 호출 (드래그 시작)
 	virtual void NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation) override;
     
-	// 드래그 중 다른 위젯 위로 올라갔을 때 호출 (드롭 가능 여부 확인)
 	virtual bool NativeOnDragOver(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
     
-	// 드롭되었을 때 호출 (실제 드롭 처리)
 	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
 };
