@@ -13,6 +13,7 @@ FSkillData* UT3Valkyrie_SkillComponent::GetSkillDataByID(int32 SkillID)
     case 1: return &PowerStrikeSkillData;
     case 2: return &LunarSlashSkillData;
     case 3: return &EnduranceSkillData;
+    case 4: return &LunarSwordSkillData;
     default: return nullptr;
     }
 }
@@ -121,6 +122,9 @@ void UT3Valkyrie_SkillComponent::ExecuteSkill(int32 SlotNumber)
         break;
     case 3:
         Endurance();
+        break;
+    case 4:
+        LunarSword();
         break;
         //ExecuteSwordWave();    break;
 

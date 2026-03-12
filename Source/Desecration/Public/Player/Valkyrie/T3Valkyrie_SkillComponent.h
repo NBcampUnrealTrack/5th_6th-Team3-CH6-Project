@@ -81,6 +81,11 @@ protected:
 	
 #pragma endregion
 	
+#pragma region LunarSword
+public:
+	UFUNCTION(BlueprintImplementableEvent)
+	void LunarSword();
+#pragma endregion
 public:
     UPROPERTY(EditAnywhere, Category = "Skill Data")
     FSkillData EmptySkillData;
@@ -90,6 +95,8 @@ public:
 	FSkillData LunarSlashSkillData;
 	UPROPERTY(EditAnywhere, Category = "Skill Data")
 	FSkillData EnduranceSkillData;
+	UPROPERTY(EditAnywhere, Category = "Skill Data")
+	FSkillData LunarSwordSkillData;
 
     // 아래에 추가될 스킬의 데이터 추가
     // 
