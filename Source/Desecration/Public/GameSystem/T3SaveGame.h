@@ -43,7 +43,7 @@ public:
 	UPROPERTY()
 	TMap<int32, int32> LevelObjectStates;
 	
-	//몬스터 상태
+	//적들의 상태
 	UPROPERTY()
 	TMap<int32, int32> EnemyStates;
 #pragma endregion
