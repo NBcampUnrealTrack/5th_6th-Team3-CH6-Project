@@ -2,10 +2,10 @@
 
 #include "CoreMinimal.h"
 #include "Item/Rune/T3RuneBase.h"
-#include "T3BerserkRune.generated.h"
+#include "T3UndyingRune.generated.h"
 
 UCLASS()
-class DESECRATION_API UT3BerserkRune : public UT3RuneBase
+class DESECRATION_API UT3UndyingRune : public UT3RuneBase
 {
 	GENERATED_BODY()
 	
@@ -16,27 +16,24 @@ public:
 	
 private:
 	TWeakObjectPtr<AT3CharacterBase> CachedOwner;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Rune")
-	float ActiveDuration = 0.f;
+	
+	uint8 bIsSocketed : 1 = false;
+	
+	uint8 bIsCooldown : 1 = false;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Rune")
 	float Cooldown = 0.f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Rune")
-	float AttackBonus = 0.1f;
+	float NormalValue = 0.f;
 	
-	uint8 bIsCooldown : 1 = false;
-	
-	FTimerHandle ActiveTimerHandle;
 	FTimerHandle CooldownTimerHandle;
 	
 	UFUNCTION()
 	void Activate();
 	
 	UFUNCTION()
-	void Deactivate();
-	
-	UFUNCTION()
 	void OnCooldownFinished();
+	
+	void RestoreHealthFromUndying(AT3CharacterBase* OwnerChar);
 };

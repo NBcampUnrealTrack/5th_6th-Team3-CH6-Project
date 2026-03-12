@@ -635,6 +635,11 @@ void AT3CharacterBase::SetEvasionPlayRate(float NewPlayRate)
 	EvasionPlayRate = NewPlayRate;
 }
 
+void AT3CharacterBase::SetIsUndyingState(bool NewState)
+{
+	bIsUndyingState = NewState;
+}
+
 void AT3CharacterBase::RecalculateRuneBonus()
 {
 	CachedRuneAttackBonus = 0.f;

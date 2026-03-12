@@ -36,6 +36,7 @@ enum class ET3StatType : uint8
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnStatChangedDelegate, ET3StatType, StatType, float, CurrentValue, float, MaxValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnForcedMoveEndSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSellItemRequested, const FInventorySlot&, SlotData, const int32&, Count, EItemType, ItemType);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUndyingTriggered);
 
 UCLASS()
 class DESECRATION_API AT3CharacterBase : public ACharacter
@@ -302,6 +303,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ForceMove")
 	bool bIsSkillCanNotUse = false;
 
+#pragma region Rune
 public:
     void SetRuneAttackBonus(UObject* RuneSource, float Bonus);
     
@@ -311,6 +313,12 @@ public:
 	
 	void SetEvasionPlayRate(float NewPlayRate);
 
+	FORCEINLINE bool GetIsUndyingState() const { return bIsUndyingState; }
+	
+	void SetIsUndyingState(bool NewState);
+	
+	FOnUndyingTriggered OnUndyingTriggered;
+	
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rune")
 	float PotionUsePlayRate = 1.0f;
@@ -323,5 +331,9 @@ private:
 	
     float CachedRuneAttackBonus = 0.f;
 	
+	uint8 bIsUndyingState : 1 = false;
+	
 	void RecalculateRuneBonus();
+	
+#pragma endregion
 };

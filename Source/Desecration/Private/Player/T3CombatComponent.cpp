@@ -585,10 +585,17 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 	// 사망 판정
 	if (NewHP <= 0.f)
 	{
-		CurrentState = ECharacterCombatState::Dead;
-		// 사망 로직 실행
-		OwnerChar->OnDeath();
-		return;
+		if (OwnerChar->GetIsUndyingState())
+		{
+			OwnerChar->OnUndyingTriggered.Broadcast();
+		}
+		else
+		{
+			CurrentState = ECharacterCombatState::Dead;
+			// 사망 로직 실행
+			OwnerChar->OnDeath();
+			return;
+		}
 	}
 
 
