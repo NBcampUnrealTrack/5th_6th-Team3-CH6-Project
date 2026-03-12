@@ -4,6 +4,7 @@
 #include "Engine/DataTable.h"
 #include "T3ItemBaseData.h"
 #include "Item/Rune/T3RuneBase.h"
+#include "Equipment/T3EquipmentTypes.h"
 #include "T3RuneItemData.generated.h"
 
 USTRUCT(BlueprintType)
@@ -16,4 +17,7 @@ struct FT3RuneItemData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rune")
 	TSubclassOf<UT3RuneBase> RuneLogicClass;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rune")
+	ET3EquipmentType EquipmentType = ET3EquipmentType::Weapon;
 };

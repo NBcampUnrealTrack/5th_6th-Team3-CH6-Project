@@ -56,8 +56,7 @@ enum class ESlotType : uint8
 
 // 현재 선택된 슬롯이 바뀔 때 (전투 화면에서 슬롯 체인지)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSlotSelectionChanged, ESlotType, SlotType, int32, NewSlotIndex);
-
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTakeDamage);
 
 UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class DESECRATION_API UT3CombatComponent : public UActorComponent
@@ -77,6 +76,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Combat|UI")
 	FOnSlotSelectionChanged OnSlotSelectionChanged;
 
+	UPROPERTY(BlueprintAssignable, Category = "Rune")
+	FOnTakeDamage OnTakeDamage;
+	
 	UFUNCTION(BlueprintCallable)
 	void RequestUpdateSkill(int32 SkillID, bool bIsEquip);
 
