@@ -625,10 +625,17 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 	// 사망 판정
 	if (NewHP <= 0.f)
 	{
-		CurrentState = ECharacterCombatState::Dead;
-		// 사망 로직 실행
-		OwnerChar->OnDeath();
-		return;
+		if (OwnerChar->GetIsUndyingState())
+		{
+			OwnerChar->OnUndyingTriggered.Broadcast();
+		}
+		else
+		{
+			CurrentState = ECharacterCombatState::Dead;
+			// 사망 로직 실행
+			OwnerChar->OnDeath();
+			return;
+		}
 	}
 
 
@@ -762,11 +769,26 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 		HitBoss->Damage(DamageAmount, InStunAmount);  // 테스트용 스턴 20
 		// HitBoss->Damage(CurrentAttackDamage, StunAmount);
 	}
-
+	
 	// TakeDamage 호출 시 커스텀 이벤트 구조체를 전달
 	else if (OwnerChar)
 	{
-		TargetActor->TakeDamage(DamageAmount, T3DamageEvent, OwnerPC, OwnerChar);
+		if (OwnerChar-> GetSmiteThreshold() > 0 && OwnerChar->GetSmiteCounter() >= OwnerChar->GetSmiteThreshold())
+		{
+			float FinalDamage = DamageAmount * OwnerChar->GetSmiteMultiplier();
+			
+			TargetActor->TakeDamage(FinalDamage, T3DamageEvent, OwnerPC, OwnerChar);
+
+			OwnerChar->SetSmiteCounter(0);
+		}
+		else
+		{
+			OwnerChar->IncrementSmiteCounter();
+
+			TargetActor->TakeDamage(DamageAmount, T3DamageEvent, OwnerPC, OwnerChar);
+		}
+		
+		UE_LOG(LogTemp, Warning, TEXT("현재 공격 횟수 : %d"), OwnerChar->GetSmiteCounter());
 	}
 	else if (AIChar) // OwnerChar가 아닐 때만 AIChar로 실행
 	{

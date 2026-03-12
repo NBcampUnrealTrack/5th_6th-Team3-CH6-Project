@@ -7,7 +7,7 @@ void UT3PotionRune::OnSocketed_Implementation(AT3CharacterBase* OwnerChar)
 		return;
 	}
 	
-	OwnerChar->SetPotionUsePlayRate(NormalValue);
+	OwnerChar->SetPotionUsePlayRate(ValueByGrade);
 }
 
 void UT3PotionRune::OnUnsocketed_Implementation(AT3CharacterBase* OwnerChar)

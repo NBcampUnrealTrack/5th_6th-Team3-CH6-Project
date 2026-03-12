@@ -13,8 +13,6 @@ void UT3BerserkRune::OnSocketed_Implementation(AT3CharacterBase* OwnerChar)
 	CachedOwner = OwnerChar;
 	
 	OwnerChar->GetCombatComponent()->OnTakeDamage.AddDynamic(this, &UT3BerserkRune::Activate);
-	
-	bIsCooldown = false;
 }
 
 void UT3BerserkRune::OnUnsocketed_Implementation(AT3CharacterBase* OwnerChar)
@@ -31,8 +29,6 @@ void UT3BerserkRune::OnUnsocketed_Implementation(AT3CharacterBase* OwnerChar)
 	
 	OwnerChar->GetWorldTimerManager().ClearTimer(ActiveTimerHandle);
 	
-	OwnerChar->GetWorldTimerManager().ClearTimer(CooldownTimerHandle);
-	
 	OwnerChar->RemoveRuneAttackBonus(this);
 	
 	CachedOwner = nullptr;
@@ -40,6 +36,13 @@ void UT3BerserkRune::OnUnsocketed_Implementation(AT3CharacterBase* OwnerChar)
 
 void UT3BerserkRune::Activate()
 {
+	AT3CharacterBase* Owner = CachedOwner.Get();
+
+	if (!IsValid(Owner))
+	{
+		return;
+	}
+	
 	if (bIsCooldown)
 	{
 		return;
@@ -47,15 +50,8 @@ void UT3BerserkRune::Activate()
 	else
 	{
 		bIsCooldown = true;
-
-		AT3CharacterBase* Owner = CachedOwner.Get();
-
-		if (!IsValid(Owner))
-		{
-			return;
-		}
 		
-		float Bonus = FMath::RoundToFloat(Owner->EquipComp->GetCurrentAttackPower() * AttackBonus * 10.0f) / 10.0f;
+		float Bonus = FMath::RoundToFloat(Owner->EquipComp->GetCurrentAttackPower() * ValueByGrade * 10.0f) / 10.0f;
 		
 		Owner->SetRuneAttackBonus(this, Bonus);
 		
