@@ -329,4 +329,10 @@ private:
     float CachedRuneAttackBonus = 0.f;
 	
 	void RecalculateRuneBonus();
+	
+public:
+	UFUNCTION(BlueprintImplementableEvent, Category = "Defence")
+	void OnParry();
+	UFUNCTION(BlueprintImplementableEvent, Category = "Defence")
+	void OnBlockReaction();
 };
