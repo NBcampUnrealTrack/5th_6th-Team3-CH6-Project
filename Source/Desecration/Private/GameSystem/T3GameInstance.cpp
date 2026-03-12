@@ -146,3 +146,8 @@ void UT3GameInstance::OpenLevel(const ELevelName LevelName)
     // 최종 호출
     UGameplayStatics::OpenLevel(CurrentWorld, FName(*LevelPath));
 }
+
+void UT3GameInstance::OpenLevelBySavedData()
+{
+	OpenLevel(SavedGameData->SavedLevelName);
+}

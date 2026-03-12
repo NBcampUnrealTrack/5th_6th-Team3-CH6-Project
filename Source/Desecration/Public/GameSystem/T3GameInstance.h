@@ -68,6 +68,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void OpenLevel(UPARAM() ELevelName LevelName);
 	
+	//저장된 데이터를 기준으로 레벨(맵) 이동
+	void OpenLevelBySavedData();
+	
 	//현재 레벨
 	UFUNCTION(BlueprintPure)
 	FORCEINLINE ELevelName GetCurrentLevel() const { return CurrentLevel; }
