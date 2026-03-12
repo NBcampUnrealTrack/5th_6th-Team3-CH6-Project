@@ -17,7 +17,7 @@ struct FSkillData
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
     UTexture2D* SkillIcon = nullptr;
 
-    UPROPERTY(EditAnywhere, Category = "Common")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Common")
     UAnimMontage* SkillMontage = nullptr;
 
     UPROPERTY(EditAnywhere, Category = "Common")
@@ -145,6 +145,50 @@ protected:
 
     // 스킬 사용 가능여부 체크 위한 쿨타임 마나 계산
     virtual bool CanExecuteSkill(FSkillData& Data);
+
+
+
+public:
+
+    // ===== 사운드 
+
+    void PlaySkillEffectSound(USoundBase* Sound, float Volume = 1.0f);
+
+    UPROPERTY(EditAnywhere, Category = "Sound")
+    class USoundBase* AttackVoice;
+
+    UPROPERTY(EditAnywhere, Category = "Sound")
+    class USoundBase* BlockVoice;
+
+    UPROPERTY(EditAnywhere, Category = "Sound")
+    class USoundBase* Skill1Voice;
+
+    UPROPERTY(EditAnywhere, Category = "Sound")
+    class USoundBase* Skill2Voice;
+
+    UPROPERTY(EditAnywhere, Category = "Sound")
+    class USoundBase* Skill3Voice;
+
+    UPROPERTY(EditAnywhere, Category = "Sound")
+    class USoundBase* Skill4Voice;
+
+    UPROPERTY(EditAnywhere, Category = "Sound")
+    class USoundBase* AttackSound;
+
+    UPROPERTY(EditAnywhere, Category = "Sound")
+    class USoundBase* BlockSound;
+
+    UPROPERTY(EditAnywhere, Category = "Sound")
+    class USoundBase* Skill1Sound;
+
+    UPROPERTY(EditAnywhere, Category = "Sound")
+    class USoundBase* Skill2Sound;
+
+    UPROPERTY(EditAnywhere, Category = "Sound")
+    class USoundBase* Skill3Sound;
+
+    UPROPERTY(EditAnywhere, Category = "Sound")
+    class USoundBase* Skill4Sound;
 };
 
 

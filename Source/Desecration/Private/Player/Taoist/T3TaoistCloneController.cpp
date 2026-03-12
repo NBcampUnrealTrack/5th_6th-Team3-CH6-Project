@@ -11,33 +11,45 @@ void AT3TaoistCloneController::UpdateTargetTracking(AActor* Target)
     if (!ControlledPawn || !Target) return;
 
     float DistanceToTarget = ControlledPawn->GetDistanceTo(Target);
-
-    // 1. 시선 고정 (매 업데이트마다 최우선 실행)
-    // EAIFocusPriority::Gameplay를 사용하여 다른 회전 명령보다 우선권을 갖게 합니다.
     SetFocus(Target, EAIFocusPriority::Gameplay);
 
     // 2. 사거리 내 도착 시 로직
-    if (DistanceToTarget <= 500.f)
+   
+    if (Target->IsA(AT3CharacterBase::StaticClass()))
+    {
+        if (DistanceToTarget <= 500.f)
+        {
+            StopMovement();
+            return;
+        }
+    }
+    
+    else if (DistanceToTarget <= 1200.f)
     {
         StopMovement();
-        return; // SetFocus가 이미 위에서 설정됨
+        return;
     }
 
-    // 3. 이동 로직 (기존과 동일)
+    // 3. 이동 로직: 분신들이 서로 겹치지 않게 '부채꼴'로 벌어지는 로직
     FVector Direction = (ControlledPawn->GetActorLocation() - Target->GetActorLocation()).GetSafeNormal();
+
     int32 Index = 0;
     if (AT3TaoistClone* ClonePawn = Cast<AT3TaoistClone>(ControlledPawn))
     {
         Index = ClonePawn->GetCloneIndex();
     }
 
-    float OffsetAngle = (Index == 0) ? 30.f : -30.f;
+    // 
+    float OffsetAngle = (Index == 0) ? 80.f : -80.f;
     FVector SpacedDirection = Direction.RotateAngleAxis(OffsetAngle, FVector::UpVector);
-    FVector GoalLocation = Target->GetActorLocation() + (SpacedDirection * 180.f);
+
+    // Target 주변 180 유닛 거리에 배치
+    float SafeDistance = 300.f;
+    FVector GoalLocation = Target->GetActorLocation() + (SpacedDirection * SafeDistance);
 
     FAIMoveRequest MoveRequest;
     MoveRequest.SetGoalLocation(GoalLocation);
-    MoveRequest.SetAcceptanceRadius(30.f);
+    MoveRequest.SetAcceptanceRadius(50.f); 
 
     MoveTo(MoveRequest);
 }

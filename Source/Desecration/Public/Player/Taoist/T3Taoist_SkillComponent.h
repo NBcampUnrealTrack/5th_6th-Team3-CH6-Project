@@ -40,19 +40,19 @@ public:
     virtual FSkillData* GetSkillDataByID(int32 SkillID) override;
 
 
-    UPROPERTY(EditAnywhere, Category = "Skill Data")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skill Data")
     FSkillData EmptySkillData;
 
-    UPROPERTY(EditAnywhere, Category = "Skill Data")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skill Data")
     FSkillData StrongWindData;
 
-    UPROPERTY(EditAnywhere, Category = "Skill Data")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skill Data")
     FSkillData TaoistDodgeData;
 
-    UPROPERTY(EditAnywhere, Category = "Skill Data")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skill Data")
     FSkillData ShadowCloneData;
 
-    UPROPERTY(EditAnywhere, Category = "Skill Data")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skill Data")
     FSkillData SummonTigerData;
 
 protected:
@@ -138,7 +138,7 @@ protected:
 
     protected:
         UFUNCTION(BlueprintCallable)
-        void SpawnShadowClones();
+        void SpawnSingleShadowClone(FVector ExplosionLocation, AActor* Spawner);
 
         // 생성된 분신들을 담아둘 배열
         UPROPERTY()
@@ -148,17 +148,47 @@ protected:
         UPROPERTY(EditAnywhere, Category = "Skills|Clone")
         TSubclassOf<class AT3TaoistClone> CloneClass;
 
+        UFUNCTION(BlueprintCallable)
         void NotifyClonesAction(EActionType ActionType);
 
-        void OnCloneRemoved(class AT3TaoistClone* ExClone);
+        // 1. 기존 분신 전체를 파괴하고 배열을 비우는 용도 (스킬 시전 시 호출)
+        void DestroyAllActiveClones();
+
+        // 2. 분신이 수명이 다해서 죽었을 때, 배열에서만 제거하는 용도 (델리게이트 바인딩용)
+        void OnCloneDestroyed(AT3TaoistClone* DestroyedClone);
 
 
         // ========= 4스킬 : 호랑이 소환술
 
    protected:
        UFUNCTION(BlueprintCallable)
-       void SummonTiger();
+       void SummonTigerAtLocation(FVector ExplosionLocation, AActor* Spawner);
 
        UPROPERTY(EditAnywhere, Category = "Skills|Tiger")
        TSubclassOf<class AT3TigerAttack> TigerClass;
+
+       UFUNCTION(BlueprintCallable)
+       void PlayThrowChramMontage(const FSkillData& SkillData);
+
+       UFUNCTION(BlueprintCallable)
+       void ThrowSummonCharm(const FSkillData& SkillData);
+
+       UPROPERTY(EditAnywhere)
+       float SpawnForwardVector = 20.f;
+
+       UPROPERTY(EditAnywhere)
+       float SpawnUpVector = 80.f;
+
+       UPROPERTY(EditAnywhere)
+       float ThrowSpeed = 400.f;
+
+       UPROPERTY(EditAnywhere)
+       FRotator RotationOffset;
+
+       void SpawnCharmInternal(AActor* Spawner, const FSkillData& SkillData);
+
+
+
+
+      
 };
