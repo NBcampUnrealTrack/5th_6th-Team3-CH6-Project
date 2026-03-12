@@ -640,6 +640,26 @@ void AT3CharacterBase::SetIsUndyingState(bool NewState)
 	bIsUndyingState = NewState;
 }
 
+void AT3CharacterBase::SetSmiteMultiplier(float NewMultiplier)
+{
+	SmiteMultiplier = NewMultiplier;
+}
+
+void AT3CharacterBase::SetSmiteThreshold(int32 NewThreshold)
+{
+	SmiteThreshold = NewThreshold;
+}
+
+void AT3CharacterBase::IncrementSmiteCounter()
+{
+	++SmiteCounter;
+}
+
+void AT3CharacterBase::SetSmiteCounter(int32 NewCount)
+{
+	SmiteCounter = NewCount;
+}
+
 void AT3CharacterBase::RecalculateRuneBonus()
 {
 	CachedRuneAttackBonus = 0.f;

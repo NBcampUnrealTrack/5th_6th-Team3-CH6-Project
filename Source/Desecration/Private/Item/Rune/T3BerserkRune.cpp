@@ -51,7 +51,7 @@ void UT3BerserkRune::Activate()
 	{
 		bIsCooldown = true;
 		
-		float Bonus = FMath::RoundToFloat(Owner->EquipComp->GetCurrentAttackPower() * AttackBonus * 10.0f) / 10.0f;
+		float Bonus = FMath::RoundToFloat(Owner->EquipComp->GetCurrentAttackPower() * ValueByGrade * 10.0f) / 10.0f;
 		
 		Owner->SetRuneAttackBonus(this, Bonus);
 		

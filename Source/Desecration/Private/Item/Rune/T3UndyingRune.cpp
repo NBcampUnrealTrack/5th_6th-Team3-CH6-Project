@@ -91,7 +91,7 @@ void UT3UndyingRune::RestoreHealthFromUndying(AT3CharacterBase* OwnerChar)
 		return;
 	}
 	
-	OwnerChar->SetCurrentHP(OwnerChar->GetMaxHP() * (NormalValue / 100));
+	OwnerChar->SetCurrentHP(OwnerChar->GetMaxHP() * (ValueByGrade / 100));
 
 	UE_LOG(LogTemp, Log, TEXT("회복 완료"));
 }

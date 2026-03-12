@@ -305,6 +305,8 @@ public:
 
 #pragma region Rune
 public:
+	FOnUndyingTriggered OnUndyingTriggered;
+	
     void SetRuneAttackBonus(UObject* RuneSource, float Bonus);
     
 	void RemoveRuneAttackBonus(UObject* RuneSource);
@@ -316,9 +318,21 @@ public:
 	FORCEINLINE bool GetIsUndyingState() const { return bIsUndyingState; }
 	
 	void SetIsUndyingState(bool NewState);
+
+	FORCEINLINE float GetSmiteMultiplier() { return SmiteMultiplier; }
 	
-	FOnUndyingTriggered OnUndyingTriggered;
+	void SetSmiteMultiplier(float NewMultiplier);
+
+	FORCEINLINE int32 GetSmiteThreshold() const { return SmiteThreshold; }
+
+	void SetSmiteThreshold(int32 NewThreshold);
 	
+	void IncrementSmiteCounter();
+
+	FORCEINLINE int32 GetSmiteCounter() const { return SmiteCounter; }
+
+	void SetSmiteCounter(int32 NewCount);
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rune")
 	float PotionUsePlayRate = 1.0f;
@@ -333,6 +347,13 @@ private:
 	
 	uint8 bIsUndyingState : 1 = false;
 	
+	float SmiteMultiplier = 1.f;
+	
+	UPROPERTY(EditDefaultsOnly, Category ="Rune")
+	int32 SmiteThreshold = 0;
+	
+	int32 SmiteCounter = 0;
+
 	void RecalculateRuneBonus();
 	
 #pragma endregion

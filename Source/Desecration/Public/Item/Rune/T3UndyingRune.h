@@ -21,11 +21,11 @@ private:
 	
 	uint8 bIsCooldown : 1 = false;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Rune")
-	float Cooldown = 0.f;
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
+	float Cooldown = 10.f;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Rune")
-	float NormalValue = 0.f;
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
+	float ValueByGrade = 20.f;
 	
 	FTimerHandle CooldownTimerHandle;
 	

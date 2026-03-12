@@ -17,14 +17,14 @@ public:
 private:
 	TWeakObjectPtr<AT3CharacterBase> CachedOwner;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Rune")
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
 	float ActiveDuration = 0.f;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Rune")
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
 	float Cooldown = 0.f;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Rune")
-	float AttackBonus = 0.1f;
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
+	float ValueByGrade = 0.1f;
 	
 	uint8 bIsCooldown : 1 = false;
 	

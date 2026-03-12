@@ -19,11 +19,14 @@ private:
 
 	FTimerHandle RegenerationHPTimerHandle;
 	
-	UPROPERTY(EditDefaultsOnly)
-	float HealAmount = 0.0f;
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
+	float HealAmountByGrade = 1.0f;
 	
-	UPROPERTY(EditDefaultsOnly)
-	float RecoveryInterval = 0.0f;
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
+	float RecoveryInterval = 1.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
+	float RecoveryTargetHPPercentByGrade= 0.3f;
 	
 	UFUNCTION()
 	void RegenerationHP(ET3StatType StatType, float CurrentHP, float MaxHP);
