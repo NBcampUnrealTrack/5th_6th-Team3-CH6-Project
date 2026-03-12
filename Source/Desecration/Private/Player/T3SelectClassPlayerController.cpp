@@ -12,8 +12,8 @@ void AT3SelectClassPlayerController::BeginPlay()
 	
 	//마우스 사용
 	bShowMouseCursor = true;
-	const FInputModeUIOnly InputModeUIOnly;
-	SetInputMode(InputModeUIOnly);
+	const FInputModeGameAndUI InputModeGameAndUI;
+	SetInputMode(InputModeGameAndUI);
 	
 	//게임 모드
 	SelectClassGameMode = Cast<AT3SelectClassGameMode>(GetWorld()->GetAuthGameMode());

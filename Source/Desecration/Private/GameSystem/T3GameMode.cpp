@@ -3,8 +3,11 @@
 #include "Equipment/T3PlayerEquipmentComponent.h"
 #include "GameSystem/T3GameInstance.h"
 #include "GameSystem/T3SaveGame.h"
+#include "GameSystem/T3WorldSubsystem.h"
 #include "Item/Component/T3InventoryComponent.h"
 #include "Player/T3CharacterBase.h"
+#include "Player/T3CombatComponent.h"
+#include "Player/T3SkillComponentBase.h"
 
 void AT3GameMode::BeginPlay()
 {
@@ -14,7 +17,7 @@ void AT3GameMode::BeginPlay()
 	T3GameInstance = Cast<UT3GameInstance>(GetGameInstance());
 	if (!T3GameInstance)
 	{
-		UE_LOG(LogTemp, Error, TEXT("%s : T3GameInstance is NULL"), *GetNameSafe(this));
+		UE_LOG(LogTemp, Error, TEXT("%s : T3GameInstance가 NULL"), *GetNameSafe(this));
 		return;
 	}
 }
@@ -43,7 +46,6 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	SaveGame->CurrentMana = Character->GetCurrentMana();
 	SaveGame->MaxStamina = Character->GetMaxStamina();
 	SaveGame->CurrentStamina = Character->GetCurrentStamina();
-	SaveGame->AttackPower = Character->GetAttackPower();
 	SaveGame->CriticalChance = Character->GetCriticalChance();
 	SaveGame->CriticalDamage = Character->GetCriticalDamage();
 	SaveGame->MoveSpeed = Character->GetMoveSpeed();
@@ -70,10 +72,27 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	SaveGame->PotionRecoveryUpgradeLevel = InventoryComponent->GetPotionRecoveryUpgradeLevel();
 	
 	//장비
-	if (UT3PlayerEquipmentComponent* EquipComp = Character->FindComponentByClass<UT3PlayerEquipmentComponent>())
+	if (const UT3PlayerEquipmentComponent* EquipComp = Character->FindComponentByClass<UT3PlayerEquipmentComponent>())
 	{
+		SaveGame->AttackPower = EquipComp->GetCurrentAttackPower();
 		EquipComp->GetEquipmentSaveData(SaveGame->WeaponSaveData, SaveGame->ArmorSaveData);
 	}
+	
+	//스킬
+	TObjectPtr<UT3SkillComponentBase> SkillComponent;
+	if (const TObjectPtr<UT3CombatComponent> CombatComponent = Character->GetCombatComponent(); !CombatComponent || !CombatComponent->GetSkillComponent())
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : SkillComponent 접근 불가"), *GetNameSafe(this));
+		return false;
+	}
+	else
+	{
+		SkillComponent = CombatComponent->GetSkillComponent();
+	}
+	//SkillComponent->;
+	
+	//저장했던 적 상태 제거
+	SaveGame->EnemyStates.Empty();
 	
 	//임시 저장이라면 세이브 데이터를 가지고만 있고 직접 저장하지 않는다.
 	if (bTemporarySave)
@@ -186,4 +205,56 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 	{
 		EquipComp->LoadEquipmentFromSave(SaveGame->WeaponSaveData, SaveGame->ArmorSaveData);
 	}
+}
+
+void AT3GameMode::RegainLostMoney(const int32 LostMoneyID) const
+{
+	T3GameInstance->GetLostMoneyData()->RegainLostMoney(LostMoneyID);
+	if (!T3GameInstance->SaveLostMoney())
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : 잃어버린 재화 갱신 실패"), *GetNameSafe(this));
+		return;
+	}
+}
+
+bool AT3GameMode::YouHaveBeenCorrupted(const AT3CharacterBase* Character) const
+{
+	if (!Character || !Character->InventoryComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : 게임 오버 처리 실패 - 캐릭터 또는 인벤토리가 유효하지 않음"), *GetNameSafe(this));
+		return false;
+	}
+	
+	if (!T3GameInstance)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : 게임 오버 처리 실패 - T3GameInstance가 없음"), *GetNameSafe(this));
+		return false;
+	}
+	
+	//잃어버린 재화 내용을 마지막 저장 데이터에 반영
+	if (T3GameInstance->LoadGame())
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : 게임 오버 처리 실패 - 저장된 게임 데이터 없음"), *GetNameSafe(this));
+		return false;
+	}
+	T3GameInstance->GetSavedGameData()->Money = 0;
+	
+	//잃어버린 재화 정보
+	const int32 LostAmount = Character->InventoryComponent->GetMoney();
+	const FLostMoney NewLostMoney = FLostMoney(T3GameInstance->GetCurrentLevel(), Character->GetActorLocation(), LostAmount);
+	
+	//잃어버린 것을 반영하기 위한 저장
+	T3GameInstance->GetLostMoneyData()->AddLostMoney(NewLostMoney);
+	const bool SaveGameResult = T3GameInstance->SaveGame();
+	const bool SaveLostMoneyResult = T3GameInstance->SaveLostMoney();
+	if (!SaveGameResult || !SaveLostMoneyResult)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : 게임 오버 처리 실패 - 저장 실패"), *GetNameSafe(this));
+		return false;
+	}
+	
+	//마지막 저장 위치로
+	T3GameInstance->OpenLevelBySavedData();
+	
+	return true;
 }

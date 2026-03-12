@@ -7,23 +7,25 @@
 UT3InventoryComponent::UT3InventoryComponent()
 	:
 InventorySize(20),
+RuneInventorySize(20),
 Money(0),
-HPPotionCount(0),
-MPPotionCount(0),
 NormalStoneCount(0),
 EpicStoneCount(0),
 LegendaryStoneCount(0),
+InitialHPPotionAmount(3),
+InitialMPPotionAmount(3),
+HPPotionCount(0),
+MPPotionCount(0),
 HPPotionID(NAME_None),
 MPPotionID(NAME_None),
 CurrentPotionID(NAME_None),
 PotionAmountUpgradeLevel(0),
-PotionRecoveryUpgradeLevel(0),
-InitialHPPotionAmount(3),
-InitialMPPotionAmount(3)
+PotionRecoveryUpgradeLevel(0)
 {
 	PrimaryComponentTick.bCanEverTick = false;
 	
 	Items.SetNum(InventorySize);
+	RuneItems.SetNum(RuneInventorySize);
 }
 
 void UT3InventoryComponent::BeginPlay()
@@ -174,17 +176,36 @@ void UT3InventoryComponent::SwapSlots(int32 SourceSlotIndex, int32 TargetSlotInd
 	{
 		return;
 	}
-    
+
 	if (SourceSlotIndex == TargetSlotIndex)
 	{
 		return;
 	}
-	
+
 	FInventorySlot TempSlot = Items[SourceSlotIndex];
 	Items[SourceSlotIndex] = Items[TargetSlotIndex];
 	Items[TargetSlotIndex] = TempSlot;
-	
+
 	OnInventoryUpdated.Broadcast();
+}
+
+void UT3InventoryComponent::SwapRuneSlots(int32 SourceSlotIndex, int32 TargetSlotIndex)
+{
+	if (!RuneItems.IsValidIndex(SourceSlotIndex) || !RuneItems.IsValidIndex(TargetSlotIndex))
+	{
+		return;
+	}
+
+	if (SourceSlotIndex == TargetSlotIndex)
+	{
+		return;
+	}
+
+	FInventorySlot TempSlot = RuneItems[SourceSlotIndex];
+	RuneItems[SourceSlotIndex] = RuneItems[TargetSlotIndex];
+	RuneItems[TargetSlotIndex] = TempSlot;
+
+	OnRuneInventoryUpdated.Broadcast();
 }
 
 bool UT3InventoryComponent::RemoveItem(const FName& ItemName)
@@ -260,6 +281,18 @@ int32 UT3InventoryComponent::GetItemCountByItemID(const FName& ItemName)
 	return 0;
 }
 
+int32 UT3InventoryComponent::GetRuneCountByItemID(const FName& ItemName)
+{
+	for (FInventorySlot& RuneItem : RuneItems)
+	{
+		if (RuneItem.ItemID == ItemName)
+		{
+			return RuneItem.ItemStack;
+		}
+	}
+	return 0;
+}
+
 void UT3InventoryComponent::AddItemByCount(const FName& ItemName, int32 Count)
 {
 	for (FInventorySlot& Item : Items)
@@ -323,6 +356,73 @@ bool UT3InventoryComponent::RemoveItemByCount(const FName& ItemName, int32 Count
 	}
 	
 	return false;
+}
+
+void UT3InventoryComponent::AddRuneItemByCount(const FName& ItemName, int32 Count)
+{
+	for (FInventorySlot& RuneItem : RuneItems)
+	{
+		if (RuneItem.ItemID == ItemName)
+		{
+			RuneItem.ItemStack += Count;
+			
+			UE_LOG(LogTemp, Log, TEXT("[%s] %d개 추가됨"), *RuneItem.ItemID.ToString(), Count);
+			
+			OnRuneInventoryUpdated.Broadcast();
+			return;
+		}
+	}
+	
+	for (FInventorySlot& RuneItem : RuneItems)
+	{
+		if (RuneItem.ItemID == NAME_None)
+		{
+			RuneItem.ItemID = ItemName;
+			RuneItem.ItemStack = Count;
+			
+			OnRuneInventoryUpdated.Broadcast();
+			return;
+		}
+	}
+}
+
+bool UT3InventoryComponent::RemoveRuneItemByCount(const FName& ItemName, int32 Count)
+{
+	for (FInventorySlot& RuneItem : RuneItems)
+	{
+		if (RuneItem.ItemID == ItemName)
+		{
+			if (RuneItem.ItemStack < Count)
+			{
+				UE_LOG(LogTemp, Error, TEXT("보유한 아이템 개수보다 파는 아이템이 많음"));
+				return false;
+			}
+			
+			RuneItem.ItemStack -= Count;
+			
+			if (RuneItem.ItemStack <= 0)
+			{
+				RuneItem.ItemID = NAME_None;
+				RuneItem.ItemStack = 0;
+			}
+			OnRuneInventoryUpdated.Broadcast();
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+int32 UT3InventoryComponent::GetRuneItemCountByRuneID(const FName& RuneID)
+{
+	for (FInventorySlot& RuneItem : RuneItems)
+	{
+		if (RuneItem.ItemID == RuneID)
+		{
+			return RuneItem.ItemStack;
+		}
+	}
+	return 0;
 }
 
 int32 UT3InventoryComponent::GetNormalStoneCount() const
@@ -812,6 +912,11 @@ void UT3InventoryComponent::UseMPPotion()
 	MPPotionCount--;
 	
 	OnRecoverItemUsed.Broadcast();
+}
+
+bool UT3InventoryComponent::IsRuneEquipped(const FName& ItemName)
+{
+	return false;
 }
 
 void UT3InventoryComponent::UpgradePotionAmount()

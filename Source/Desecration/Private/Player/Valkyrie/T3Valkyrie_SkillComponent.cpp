@@ -2,7 +2,8 @@
 
 
 #include "Player/Valkyrie/T3Valkyrie_SkillComponent.h"
-
+#include "Player/Valkyrie/T3LunarSlash.h"
+#include "Player/T3CharacterBase.h"
 
 
 FSkillData* UT3Valkyrie_SkillComponent::GetSkillDataByID(int32 SkillID)
@@ -10,6 +11,9 @@ FSkillData* UT3Valkyrie_SkillComponent::GetSkillDataByID(int32 SkillID)
     switch (SkillID)
     {
     case 1: return &PowerStrikeSkillData;
+    case 2: return &LunarSlashSkillData;
+    case 3: return &EnduranceSkillData;
+    case 4: return &LunarSwordSkillData;
     default: return nullptr;
     }
 }
@@ -22,12 +26,18 @@ void UT3Valkyrie_SkillComponent::StartCharge()
     bHasRelease = false;
     ChargingLevel = 0;
     
+    OnGainCharge();
     GetWorld()->GetTimerManager().SetTimer(ChargingTimerHandle, this, &UT3Valkyrie_SkillComponent::ChargingTick, 1.0f, true);
 }
 
 void UT3Valkyrie_SkillComponent::ChargingTick()
 {
     ChargingLevel++;
+    if (ChargingLevel <2)
+    {
+        OnGainCharge();
+    }
+    
     if (ChargingLevel>=MaxChargingLevel)
     {
         ChargingLevel = MaxChargingLevel;
@@ -41,7 +51,7 @@ void UT3Valkyrie_SkillComponent::EndCharging()
 {
     if (!bIsCharging || bHasRelease) return;
     GetWorld()->GetTimerManager().ClearTimer(ChargingTimerHandle);
-    
+    GetWorld()->GetTimerManager().ClearTimer(MaxChargingTimerHandle);
     bHasRelease = true;
     OnEndCharging();
 }
@@ -49,10 +59,39 @@ void UT3Valkyrie_SkillComponent::EndCharging()
 void UT3Valkyrie_SkillComponent::MaxCharging()
 {
     if (!bIsCharging || bHasRelease) return;
+    GetWorld()->GetTimerManager().ClearTimer(ChargingTimerHandle);
     GetWorld()->GetTimerManager().ClearTimer(MaxChargingTimerHandle);
     
     bHasRelease = true;
     OnEndCharging();
+}
+
+void UT3Valkyrie_SkillComponent::BasicAttackCount()
+{
+    CurrentBasicAttackCount++;
+    
+    if (CurrentBasicAttackCount >= 4)
+    {
+        if (OwnerChar)
+        {
+            float HealAmount = OwnerChar->GetMaxHP() * 0.1f;
+            float NewHP = FMath::Clamp(OwnerChar->GetCurrentHP() + HealAmount, 0.0f, OwnerChar->GetMaxHP());
+            OwnerChar->SetCurrentHP(NewHP);
+            CurrentBasicAttackCount = 0;
+        }
+    }
+}
+
+void UT3Valkyrie_SkillComponent::EnduranceBegin()
+{
+    OwnerChar->bIsSuperArmor = true;
+    GetWorld()->GetTimerManager().SetTimer(EnduranceTimerHandle, this, &UT3Valkyrie_SkillComponent::EnduranceEnd, 20.0f, true);
+}
+
+void UT3Valkyrie_SkillComponent::EnduranceEnd()
+{
+    GetWorld()->GetTimerManager().ClearTimer(EnduranceTimerHandle);
+    OwnerChar->bIsSuperArmor = false;
 }
 
 void UT3Valkyrie_SkillComponent::ExecuteSkill(int32 SlotNumber)
@@ -78,6 +117,15 @@ void UT3Valkyrie_SkillComponent::ExecuteSkill(int32 SlotNumber)
     case 1:
         PowerStrike();
         break;// 첫번째 스킬
+    case 2:
+        OnLunarSlash();
+        break;
+    case 3:
+        Endurance();
+        break;
+    case 4:
+        LunarSword();
+        break;
         //ExecuteSwordWave();    break;
 
     default:

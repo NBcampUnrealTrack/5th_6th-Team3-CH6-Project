@@ -6,9 +6,6 @@
 #include "Animation/AnimNotifies/AnimNotify.h"
 #include "T3AN_SkillEvent.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class DESECRATION_API UT3AN_SkillEvent : public UAnimNotify
 {

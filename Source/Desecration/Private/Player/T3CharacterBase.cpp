@@ -16,6 +16,7 @@
 #include "Player/T3SkillComponentBase.h"
 #include "Equipment/T3PlayerEquipmentComponent.h"
 #include "GameSystem/T3GameMode.h"
+#include "Item/Data/T3ItemBaseData.h"
 #include "Player/T3PlayerController.h"
 #include "UI/T3HUDSlotWidget.h"
 #include "Player/Paladin/T3HolyGaugeWidget.h"
@@ -60,9 +61,9 @@ AT3CharacterBase::AT3CharacterBase()
 	LoadTimeAfterDeath = 3.0f;
 }
 
-void AT3CharacterBase::RequestSellItem(const FInventorySlot& SlotData, const int32& Count)
+void AT3CharacterBase::RequestSellItem(const FInventorySlot& SlotData, const int32& Count, EItemType ItemType)
 {
-	OnSellItemRequested.Broadcast(SlotData, Count);
+	OnSellItemRequested.Broadcast(SlotData, Count, ItemType);
 }
 
 void AT3CharacterBase::PostInitializeComponents()
@@ -461,7 +462,7 @@ void AT3CharacterBase::BroadcastStatChange(ET3StatType StatType)
 		OnStatChanged.Broadcast(StatType, CurrentStamina, MaxStamina);
 		break;
 	case ET3StatType::Attack:
-		OnStatChanged.Broadcast(StatType, AttackPower, -1.f); // 최대값이 없는 스탯은 -1 전달
+		OnStatChanged.Broadcast(StatType, GetAttackPower(), -1.f); // 최대값이 없는 스탯은 -1 전달
 		break;
 	case ET3StatType::Defense:
 		OnStatChanged.Broadcast(StatType, Defense, -1.f);
@@ -610,4 +611,63 @@ float AT3CharacterBase::TakeDamage(float DamageAmount, FDamageEvent const& Damag
 bool AT3CharacterBase::CanExecuteAction() const
 {
 	return !bIsForcedMoving;
+}
+
+void AT3CharacterBase::SetRuneAttackBonus(UObject* RuneSource, float Bonus)
+{
+	RuneAttackBonusMap.Add(RuneSource, Bonus);
+	RecalculateRuneBonus();
+}
+
+void AT3CharacterBase::RemoveRuneAttackBonus(UObject* RuneSource)
+{
+	RuneAttackBonusMap.Remove(RuneSource);
+	RecalculateRuneBonus();
+}
+
+void AT3CharacterBase::SetPotionUsePlayRate(float NewPlayRate)
+{
+	PotionUsePlayRate = NewPlayRate;
+}
+
+void AT3CharacterBase::SetEvasionPlayRate(float NewPlayRate)
+{
+	EvasionPlayRate = NewPlayRate;
+}
+
+void AT3CharacterBase::SetIsUndyingState(bool NewState)
+{
+	bIsUndyingState = NewState;
+}
+
+void AT3CharacterBase::SetSmiteMultiplier(float NewMultiplier)
+{
+	SmiteMultiplier = NewMultiplier;
+}
+
+void AT3CharacterBase::SetSmiteThreshold(int32 NewThreshold)
+{
+	SmiteThreshold = NewThreshold;
+}
+
+void AT3CharacterBase::IncrementSmiteCounter()
+{
+	++SmiteCounter;
+}
+
+void AT3CharacterBase::SetSmiteCounter(int32 NewCount)
+{
+	SmiteCounter = NewCount;
+}
+
+void AT3CharacterBase::RecalculateRuneBonus()
+{
+	CachedRuneAttackBonus = 0.f;
+	
+	for (auto& Pair : RuneAttackBonusMap)
+	{
+		CachedRuneAttackBonus += Pair.Value;
+	}
+	
+	BroadcastStatChange(ET3StatType::Attack);
 }

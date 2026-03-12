@@ -4,6 +4,8 @@
 #include "T3SettingsPanelCategory.h"
 #include "T3SoundSettings.generated.h"
 
+class UT3Slider;
+
 UCLASS()
 class DESECRATION_API UT3SoundSettings : public UT3SettingsPanelCategory
 {
@@ -24,11 +26,11 @@ private:
 	
 	//배경음 슬라이더
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
-	TObjectPtr<USlider> BGMSlider;
+	TObjectPtr<UT3Slider> BGMSlider;
 	
 	//효과음 슬라이더
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
-	TObjectPtr<USlider> SESlider;
+	TObjectPtr<UT3Slider> SESlider;
 
 	//배경음 사운드 클래스
 	UPROPERTY()

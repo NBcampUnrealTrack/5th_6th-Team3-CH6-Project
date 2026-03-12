@@ -34,6 +34,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
 	void SetCharacterBySavedData(AT3CharacterBase* Character);
 	
+	//잃어버린 재화를 되찾음
+	UFUNCTION(BlueprintCallable, Category = "Game Over")
+	void RegainLostMoney(const int32 LostMoneyID) const;
+	
+	//게임 오버에 대한 처리
+	UFUNCTION(BlueprintCallable, Category = "Game Over")
+	bool YouHaveBeenCorrupted(const AT3CharacterBase* Character) const;
+	
 private:
 	//게임 인스턴스
 	UPROPERTY()

@@ -47,12 +47,56 @@ public:
 	void EndCharging();
 	UFUNCTION(BlueprintCallable)
 	void MaxCharging();
+	UFUNCTION(BlueprintIMplementableEvent)
+	void OnGainCharge();
 #pragma endregion
 	
+#pragma region Passive
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Passive")
+	int32 CurrentBasicAttackCount = 0;
+	
+	virtual void BasicAttackCount() override;
+#pragma endregion
+	
+#pragma region LunarSlash
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "LunarSlash")
+	TSubclassOf<class AT3LunarSlash> AT3LunarSlash;
+	
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnLunarSlash();
+#pragma endregion
+	
+#pragma region Endurance
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Endurance")
+	FTimerHandle EnduranceTimerHandle;
+	
+	UFUNCTION(BlueprintImplementableEvent)
+	void Endurance();
+	UFUNCTION(BlueprintCallable)
+	void EnduranceEnd();
+	UFUNCTION(BlueprintCallable)
+	void EnduranceBegin();
+	
+#pragma endregion
+	
+#pragma region LunarSword
+public:
+	UFUNCTION(BlueprintImplementableEvent)
+	void LunarSword();
+#pragma endregion
+public:
     UPROPERTY(EditAnywhere, Category = "Skill Data")
     FSkillData EmptySkillData;
 	UPROPERTY(EditAnywhere, Category = "Skill Data")
 	FSkillData PowerStrikeSkillData;
+	UPROPERTY(EditAnywhere, Category = "Skill Data")
+	FSkillData LunarSlashSkillData;
+	UPROPERTY(EditAnywhere, Category = "Skill Data")
+	FSkillData EnduranceSkillData;
+	UPROPERTY(EditAnywhere, Category = "Skill Data")
+	FSkillData LunarSwordSkillData;
 
     // 아래에 추가될 스킬의 데이터 추가
     // 
