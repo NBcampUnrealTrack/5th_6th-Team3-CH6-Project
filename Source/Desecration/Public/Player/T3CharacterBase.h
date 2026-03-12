@@ -132,6 +132,8 @@ public:
 	bool bIsDead = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	bool bIsUsingItem = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SuperArmor")
+	bool bIsSuperArmor = false;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TObjectPtr<UT3InventoryComponent> InventoryComponent; 
@@ -194,6 +196,7 @@ public:
 	FORCEINLINE float GetMaxHP() const { return MaxHP; }
 	FORCEINLINE float GetCurrentHP() const { return CurrentHP; }
 	void SetCurrentHP(float NewHP) { CurrentHP = FMath::Clamp(NewHP, 0.f, MaxHP); BroadcastStatChange(ET3StatType::HP);}
+	void SetMaxHP(float NewHP) { MaxHP = NewHP; BroadcastStatChange(ET3StatType::HP); }
 
 	// Mana
 	FORCEINLINE float GetMaxMana() const { return MaxMana; }
@@ -210,7 +213,7 @@ public:
 
 	// Attack
 	UFUNCTION(BlueprintCallable, Category = "Stat")
-	FORCEINLINE float GetAttackPower() const { return AttackPower + CachedRuneAttackBonus; }
+	virtual float GetAttackPower() const { return AttackPower + CachedRuneAttackBonus; }
 	FORCEINLINE void SetAttackPower(float NewPower) { AttackPower = NewPower; BroadcastStatChange(ET3StatType::Attack);}
 
 	// Defense
@@ -254,6 +257,7 @@ protected:
 	float StaminaRegenInterval = 0.1f;
 	FTimerHandle StaminaRegenTimerHandle;
 	
+	public:
 	UFUNCTION(BlueprintPure)
 	ERollDirection GetRollDirection(float Angle) const;
 
@@ -270,7 +274,6 @@ private:
 	float OriginalMoveSpeed;
 
 
-	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* InstigatedBy, AActor* DamageCauser) override;
 
 	//사망 후 이 시간이 지나면 게임 로드 실행 (단위 : 초)
 	UPROPERTY(EditAnywhere, Category = "Death")
@@ -289,6 +292,8 @@ private:
 		float ForcedMoveSpeed = 200.f;
 		float DefaultMaxWalkSpeed = 500.f;
 		bool bIsRotatingToTarget = false;
+
+	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* InstigatedBy, AActor* DamageCauser) override;
 public:
 	// 툴에서 호출할 함수 (좌표를 인자로 받음)
 	UFUNCTION(BlueprintCallable, Category = "Tool")

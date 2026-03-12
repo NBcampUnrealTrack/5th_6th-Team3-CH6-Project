@@ -46,6 +46,10 @@ void UT3ANS_Combat::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceB
             case ECombatWindowType::PrevenRegen:
                 Char->bCanRegenStamina = false;
                 break;
+            case ECombatWindowType::PowerStrike:
+                Combat->SetPowerStrike(true);
+                break;
+                
             }
 }
 
@@ -77,6 +81,9 @@ void UT3ANS_Combat::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBas
                 break;
             case ECombatWindowType::PrevenRegen:
                 Char->bCanRegenStamina = true;
+                break;
+            case ECombatWindowType::PowerStrike:
+                Combat->SetPowerStrike(false);
                 break;
             }
 }
