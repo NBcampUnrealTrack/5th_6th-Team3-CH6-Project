@@ -307,6 +307,17 @@ public:
     
 	void RemoveRuneAttackBonus(UObject* RuneSource);
 
+	void SetPotionUsePlayRate(float NewPlayRate);
+	
+	void SetEvasionPlayRate(float NewPlayRate);
+
+protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rune")
+	float PotionUsePlayRate = 1.0f;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rune")
+	float EvasionPlayRate = 1.0f;
+	
 private:
     TMap<TObjectPtr<UObject>, float> RuneAttackBonusMap;
 	
