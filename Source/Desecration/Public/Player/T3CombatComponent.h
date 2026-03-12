@@ -33,8 +33,8 @@ enum class ECombatWindowType : uint8
 	Dodge UMETA(DisplayName = "Dodge Window"),
 	Attack     UMETA(DisplayName = "Attack Collision"),
 	PrevenRegen UMETA(DisplayName = "PrevenRegen"),
-	PowerStrike UMETA(DisplayName = "Power Strike")
-	Invincible UMETA(DisplayName = "Invincible"),
+	PowerStrike UMETA(DisplayName = "Power Strike"),
+	Invincible UMETA(DisplayName = "Invincible")
 };
 
 // 피격 방향 ENUM
