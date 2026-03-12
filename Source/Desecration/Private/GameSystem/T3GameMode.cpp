@@ -100,12 +100,6 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 		return true;
 	}
 	
-	//임시 저장이 아니면 물체 상태 저장
-	if (const TObjectPtr<UT3WorldSubsystem> WorldSubsystem = GetWorld()->GetSubsystem<UT3WorldSubsystem>())
-	{
-		SaveGame->LevelObjectStates.Append(WorldSubsystem->GetAllStates());
-	}
-	
 	//저장
 	return T3GameInstance->SaveGame();
 }

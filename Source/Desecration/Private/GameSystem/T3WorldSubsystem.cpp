@@ -21,9 +21,8 @@ void UT3WorldSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		return;
 	}
 	
-	//물체의 상태 확인
-	const TObjectPtr<UT3SaveGame> SaveGame = T3GameInstance->GetSavedGameData();
-	LevelObjectStates.Append(SaveGame->LevelObjectStates);
+	//저장된 게임
+	T3SaveGame = T3GameInstance->GetSavedGameData();
 	
 	//잃어버린 재화
 	for (TTuple<int32, FLostMoney> LostMoney : T3GameInstance->GetLostMoneyData()->LostMoneyList)
@@ -37,9 +36,15 @@ void UT3WorldSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	}
 }
 
-int32 UT3WorldSubsystem::GetState(const int32 ObjectID) const
+int32 UT3WorldSubsystem::GetObjectState(const int32 ObjectID) const
 {
-	const int32* Result = LevelObjectStates.Find(ObjectID);
+	if (!T3SaveGame.IsValid())
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : 저장된 게임 데이터가 없음"), *GetNameSafe(this));
+		return 0;
+	}
+	
+	const int32* Result = T3SaveGame->LevelObjectStates.Find(ObjectID);
 	if (Result == nullptr)
 	{
 		return 0;
@@ -48,20 +53,21 @@ int32 UT3WorldSubsystem::GetState(const int32 ObjectID) const
 	return *Result;
 }
 
-void UT3WorldSubsystem::SetOrAddState(const int32 ObjectID, const int32 NewState)
+void UT3WorldSubsystem::SetOrAddObjectState(const int32 ObjectID, const int32 NewState)
 {
-	if (LevelObjectStates.Contains(ObjectID))
+	if (!T3SaveGame.IsValid())
 	{
-		LevelObjectStates[ObjectID] = NewState;
+		UE_LOG(LogTemp, Error, TEXT("%s : 저장된 게임 데이터가 없음"), *GetNameSafe(this));
 		return;
 	}
 	
-	LevelObjectStates.Emplace(ObjectID, NewState);
-}
-
-TMap<int32, int32> UT3WorldSubsystem::GetAllStates()
-{
-	return LevelObjectStates;
+	if (T3SaveGame->LevelObjectStates.Contains(ObjectID))
+	{
+		T3SaveGame->LevelObjectStates[ObjectID] = NewState;
+		return;
+	}
+	
+	T3SaveGame->LevelObjectStates.Emplace(ObjectID, NewState);
 }
 
 TMap<int32, FLostMoney> UT3WorldSubsystem::GetAllLostMoney()
