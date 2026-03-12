@@ -114,3 +114,26 @@ void AT3MonsterBase::SetLockOnWidgetVisible(bool bVisible)
 		LockOnWidgetComponent->SetVisibility(bVisible);
 	}
 }
+
+float AT3MonsterBase::GetHPPercent() const
+{
+	return HealthComponent->CurrentHP / HealthComponent->MaxHP;
+}
+
+ET3MonsterType AT3MonsterBase::GetMonsterType() const
+{
+	return MonsterType;
+}
+
+void AT3MonsterBase::InstantKill()
+{
+	if (HealthComponent)
+	{
+		FDamageEvent DamageEvent;
+		HealthComponent->HandleTakeDamage(HealthComponent->MaxHP, DamageEvent, nullptr, nullptr);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("T3MonsterBase: HealthComponent is null when taking damage."));
+	}
+}

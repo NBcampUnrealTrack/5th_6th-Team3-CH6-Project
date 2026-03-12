@@ -788,6 +788,8 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 			TargetActor->TakeDamage(DamageAmount, T3DamageEvent, OwnerPC, OwnerChar);
 		}
 		
+		OwnerChar->OnDamageDealt.Broadcast(TargetActor);
+		
 		UE_LOG(LogTemp, Warning, TEXT("현재 공격 횟수 : %d"), OwnerChar->GetSmiteCounter());
 	}
 	else if (AIChar) // OwnerChar가 아닐 때만 AIChar로 실행
