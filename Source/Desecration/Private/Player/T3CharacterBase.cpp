@@ -625,6 +625,16 @@ void AT3CharacterBase::RemoveRuneAttackBonus(UObject* RuneSource)
 	RecalculateRuneBonus();
 }
 
+void AT3CharacterBase::SetPotionUsePlayRate(float NewPlayRate)
+{
+	PotionUsePlayRate = NewPlayRate;
+}
+
+void AT3CharacterBase::SetEvasionPlayRate(float NewPlayRate)
+{
+	EvasionPlayRate = NewPlayRate;
+}
+
 void AT3CharacterBase::RecalculateRuneBonus()
 {
 	CachedRuneAttackBonus = 0.f;
