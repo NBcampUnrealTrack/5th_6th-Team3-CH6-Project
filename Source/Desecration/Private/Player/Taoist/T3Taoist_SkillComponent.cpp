@@ -383,7 +383,9 @@ void UT3Taoist_SkillComponent::SpawnSingleShadowClone(FVector ExplosionLocation,
     {
         NewClone->InitializeClone(OwnerChar);
         NewClone->OnCloneDestroyed.AddUObject(this, &UT3Taoist_SkillComponent::OnCloneDestroyed);
-
+        
+        NewClone->CloneAttackBonus = PendingCloneAttackBonus;
+        
         // 부적 터진 위치 확정
         NewClone->FinishSpawning(FTransform(OwnerChar->GetActorRotation(), ExplosionLocation));
 
@@ -564,6 +566,19 @@ void UT3Taoist_SkillComponent::SpawnCharmInternal(AActor* Spawner, const FSkillD
             }
 
             Charm->LaunchCharm(ThrowDir.GetSafeNormal(), ThrowSpeed);
+        }
+    }
+}
+
+void UT3Taoist_SkillComponent::SetCloneAttackBonus(float NewAttackBonus)
+{
+    PendingCloneAttackBonus = NewAttackBonus;
+    
+    for (auto& Clone : ActiveClones)
+    {
+        if (IsValid(Clone))
+        {
+            Clone->CloneAttackBonus = NewAttackBonus;
         }
     }
 }
