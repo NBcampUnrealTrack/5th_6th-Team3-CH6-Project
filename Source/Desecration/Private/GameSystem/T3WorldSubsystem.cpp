@@ -3,9 +3,9 @@
 #include "GameSystem/T3GameInstance.h"
 #include "GameSystem/T3SaveGame.h"
 
-void UT3WorldSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+void UT3WorldSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 {
-	Super::Initialize(Collection);
+	Super::OnWorldBeginPlay(InWorld);
 
 	//게임 인스턴스
 	const TObjectPtr<UT3GameInstance> T3GameInstance = Cast<UT3GameInstance>(GetWorld()->GetGameInstance());

@@ -12,7 +12,7 @@ class DESECRATION_API UT3WorldSubsystem : public UWorldSubsystem
 	GENERATED_BODY()
 	
 public:
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
 
 	/**
 	 * 지정한 물체의 상태
