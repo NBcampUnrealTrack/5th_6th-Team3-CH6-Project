@@ -50,13 +50,13 @@ protected:
 public:
 	virtual void SetLockOnWidgetVisible(bool bVisible) override;
 	
-#pragma region Interface
+#pragma region ExecuteRune
 public:
 	virtual float GetHPPercent() const override;
 	
 	virtual ET3MonsterType GetMonsterType() const override;
 	
-	virtual void InstantKill() override;
+	virtual void ApplyBonusDamage(float BonusDamage) override;
 	
 private:
 	ET3MonsterType MonsterType = ET3MonsterType::Normal;

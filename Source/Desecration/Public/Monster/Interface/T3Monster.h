@@ -28,5 +28,5 @@ public:
 	
 	virtual float GetHPPercent() const = 0;
 	
-	virtual void InstantKill() = 0;
+	virtual void ApplyBonusDamage(float BonusDamage) = 0;
 };

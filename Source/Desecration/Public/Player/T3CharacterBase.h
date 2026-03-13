@@ -37,7 +37,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnStatChangedDelegate, ET3StatTy
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnForcedMoveEndSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSellItemRequested, const FInventorySlot&, SlotData, const int32&, Count, EItemType, ItemType);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUndyingTriggered);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDamageDealt, AActor*, HitTarget);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDamageDealt, AActor*, HitTarget, float, DamageDealt);
 
 UCLASS()
 class DESECRATION_API AT3CharacterBase : public ACharacter

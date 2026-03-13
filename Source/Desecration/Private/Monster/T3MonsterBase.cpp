@@ -125,12 +125,12 @@ ET3MonsterType AT3MonsterBase::GetMonsterType() const
 	return MonsterType;
 }
 
-void AT3MonsterBase::InstantKill()
+void AT3MonsterBase::ApplyBonusDamage(float BonusDamage)
 {
 	if (HealthComponent)
 	{
-		FDamageEvent DamageEvent;
-		HealthComponent->HandleTakeDamage(HealthComponent->MaxHP, DamageEvent, nullptr, nullptr);
+		FT3DamageEvent DamageEvent;
+		HealthComponent->HandleTakeDamage(BonusDamage, DamageEvent, nullptr, nullptr);
 	}
 	else
 	{

@@ -12,6 +12,7 @@
 #include "Components/TimelineComponent.h"
 #include "MotionWarpingComponent.h"
 #include "NativeGameplayTags.h"
+#include "Interface/T3Monster.h"
 #include "T3MidBossMonster.generated.h"
 
 class UT3BossWeaponComponent;
@@ -39,7 +40,7 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_Event_ActionCountDepleted);
 // ============================================================
 
 UCLASS()
-class DESECRATION_API AT3MidBossMonster : public ACharacter, public IT3LockOnTarget
+class DESECRATION_API AT3MidBossMonster : public ACharacter, public IT3LockOnTarget, public IT3Monster
 {
 	GENERATED_BODY()
 
@@ -553,4 +554,18 @@ private:
 	float MoveToTargetSpeed = 0.f;
 
 #pragma endregion Private_Movement
+	
+#pragma region ExecuteRune
+
+public:
+	virtual float GetHPPercent() const override;
+	
+	virtual ET3MonsterType GetMonsterType() const override;
+	
+	virtual void ApplyBonusDamage(float BonusDamage) override;
+	
+private:
+	ET3MonsterType MonsterType = ET3MonsterType::MiddleBoss;
+
+#pragma endregion
 };

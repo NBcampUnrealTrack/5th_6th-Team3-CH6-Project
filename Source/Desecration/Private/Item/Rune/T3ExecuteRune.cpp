@@ -1,5 +1,6 @@
 #include "Item/Rune/T3ExecuteRune.h"
 
+#include "Desecration.h"
 #include "Monster/Interface/T3Monster.h"
 
 void UT3ExecuteRune::OnSocketed_Implementation(AT3CharacterBase* OwnerChar)
@@ -20,9 +21,10 @@ void UT3ExecuteRune::OnUnsocketed_Implementation(AT3CharacterBase* OwnerChar)
 	}
 	
 	OwnerChar->OnDamageDealt.RemoveDynamic(this, &UT3ExecuteRune::CheckExecution);
+	
 }
 
-void UT3ExecuteRune::CheckExecution(AActor* HitTarget)
+void UT3ExecuteRune::CheckExecution(AActor* HitTarget, float DamageDealt)
 {
 	if (!IsValid(HitTarget))
 	{
@@ -36,27 +38,24 @@ void UT3ExecuteRune::CheckExecution(AActor* HitTarget)
 		return;
 	}
 	
-	switch (Monster->GetMonsterType())
+	if (Monster->GetMonsterType() == ET3MonsterType::Normal)
 	{
-	case ET3MonsterType::Normal:
-		
-		if (Monster->GetHPPercent() <= ValueByGrade / 100.0f)
+		if (Monster->GetHPPercent() <= HPThresholdPercentByGrade / 100.0f)
 		{
-			Monster->InstantKill();
+			Monster->ApplyBonusDamage(99999.0f);
+				
+			UE_LOG(LogItem, Warning, TEXT("잡몹 처형"));
 		}
-		
-		UE_LOG(LogTemp, Warning, TEXT("잡몹 처형"));
-		return;
-		
-	case ET3MonsterType::MiddleBoss:
-		
-		return;
-	
-	case ET3MonsterType::Boss:
-		
-		return;
-		
-	default:
-		return;
+	}
+	else
+	{
+		if (Monster->GetHPPercent() <= HPThresholdPercentByGrade / 100.0f)
+		{
+			float Bonus = DamageDealt * BossBonusMultiplierByGrade;
+			
+			Monster->ApplyBonusDamage(Bonus);
+			
+			UE_LOG(LogItem, Log, TEXT("추가 데미지 : %.1f"), Bonus);
+		}
 	}
 }

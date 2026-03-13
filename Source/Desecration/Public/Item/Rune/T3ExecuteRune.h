@@ -16,9 +16,12 @@ public:
 	
 private:
 	UFUNCTION()
-	void CheckExecution(AActor* HitTarget);
+	void CheckExecution(AActor* HitTarget, float DamageDealt);
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Value")
-	float ValueByGrade = 10.0f;
+	float HPThresholdPercentByGrade = 10.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
+	float BossBonusMultiplierByGrade = 2.0f;
 	
 };

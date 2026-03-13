@@ -773,22 +773,24 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 	// TakeDamage 호출 시 커스텀 이벤트 구조체를 전달
 	else if (OwnerChar)
 	{
-		if (OwnerChar-> GetSmiteThreshold() > 0 && OwnerChar->GetSmiteCounter() >= OwnerChar->GetSmiteThreshold())
-		{
-			float FinalDamage = DamageAmount * OwnerChar->GetSmiteMultiplier();
-			
-			TargetActor->TakeDamage(FinalDamage, T3DamageEvent, OwnerPC, OwnerChar);
+		float ActualDamage = DamageAmount;
 
+		if (OwnerChar->GetSmiteThreshold() > 0 && OwnerChar->GetSmiteCounter() >= OwnerChar->GetSmiteThreshold())
+		{
+			ActualDamage = DamageAmount * OwnerChar->GetSmiteMultiplier();
+			
+			TargetActor->TakeDamage(ActualDamage, T3DamageEvent, OwnerPC, OwnerChar);
+			
 			OwnerChar->SetSmiteCounter(0);
 		}
 		else
 		{
 			OwnerChar->IncrementSmiteCounter();
-
-			TargetActor->TakeDamage(DamageAmount, T3DamageEvent, OwnerPC, OwnerChar);
+			
+			TargetActor->TakeDamage(ActualDamage, T3DamageEvent, OwnerPC, OwnerChar);
 		}
-		
-		OwnerChar->OnDamageDealt.Broadcast(TargetActor);
+
+		OwnerChar->OnDamageDealt.Broadcast(TargetActor, ActualDamage);
 		
 		UE_LOG(LogTemp, Warning, TEXT("현재 공격 횟수 : %d"), OwnerChar->GetSmiteCounter());
 	}
