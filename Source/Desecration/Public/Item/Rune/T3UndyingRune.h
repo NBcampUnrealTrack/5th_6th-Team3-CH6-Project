@@ -2,10 +2,10 @@
 
 #include "CoreMinimal.h"
 #include "Item/Rune/T3RuneBase.h"
-#include "T3RegenerationRune.generated.h"
+#include "T3UndyingRune.generated.h"
 
 UCLASS()
-class DESECRATION_API UT3RegenerationRune : public UT3RuneBase
+class DESECRATION_API UT3UndyingRune : public UT3RuneBase
 {
 	GENERATED_BODY()
 	
@@ -16,18 +16,24 @@ public:
 	
 private:
 	TWeakObjectPtr<AT3CharacterBase> CachedOwner;
-
-	FTimerHandle RegenerationHPTimerHandle;
+	
+	uint8 bIsSocketed : 1 = false;
+	
+	uint8 bIsCooldown : 1 = false;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Value")
-	float HealAmountByGrade = 1.0f;
+	float Cooldown = 10.f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Value")
-	float RecoveryInterval = 1.0f;
+	float ValueByGrade = 20.f;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Value")
-	float RecoveryTargetHPPercentByGrade= 0.3f;
+	FTimerHandle CooldownTimerHandle;
 	
 	UFUNCTION()
-	void RegenerationHP(ET3StatType StatType, float CurrentHP, float MaxHP);
+	void Activate();
+	
+	UFUNCTION()
+	void OnCooldownFinished();
+	
+	void RestoreHealthFromUndying(AT3CharacterBase* OwnerChar);
 };

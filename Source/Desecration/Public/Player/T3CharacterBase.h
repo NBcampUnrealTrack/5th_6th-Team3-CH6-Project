@@ -36,6 +36,7 @@ enum class ET3StatType : uint8
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnStatChangedDelegate, ET3StatType, StatType, float, CurrentValue, float, MaxValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnForcedMoveEndSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSellItemRequested, const FInventorySlot&, SlotData, const int32&, Count, EItemType, ItemType);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUndyingTriggered);
 
 UCLASS()
 class DESECRATION_API AT3CharacterBase : public ACharacter
@@ -308,7 +309,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ForceMove")
 	bool bIsSkillCanNotUse = false;
 
+#pragma region Rune
 public:
+	FOnUndyingTriggered OnUndyingTriggered;
+	
     void SetRuneAttackBonus(UObject* RuneSource, float Bonus);
     
 	void RemoveRuneAttackBonus(UObject* RuneSource);
@@ -316,6 +320,24 @@ public:
 	void SetPotionUsePlayRate(float NewPlayRate);
 	
 	void SetEvasionPlayRate(float NewPlayRate);
+
+	FORCEINLINE bool GetIsUndyingState() const { return bIsUndyingState; }
+	
+	void SetIsUndyingState(bool NewState);
+
+	FORCEINLINE float GetSmiteMultiplier() { return SmiteMultiplier; }
+	
+	void SetSmiteMultiplier(float NewMultiplier);
+
+	FORCEINLINE int32 GetSmiteThreshold() const { return SmiteThreshold; }
+
+	void SetSmiteThreshold(int32 NewThreshold);
+	
+	void IncrementSmiteCounter();
+
+	FORCEINLINE int32 GetSmiteCounter() const { return SmiteCounter; }
+
+	void SetSmiteCounter(int32 NewCount);
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rune")
@@ -329,7 +351,17 @@ private:
 	
     float CachedRuneAttackBonus = 0.f;
 	
+	uint8 bIsUndyingState : 1 = false;
+	
+	float SmiteMultiplier = 1.f;
+	
+	UPROPERTY(EditDefaultsOnly, Category ="Rune")
+	int32 SmiteThreshold = 0;
+	
+	int32 SmiteCounter = 0;
+
 	void RecalculateRuneBonus();
+#pragma endregion
 	
 public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Defence")

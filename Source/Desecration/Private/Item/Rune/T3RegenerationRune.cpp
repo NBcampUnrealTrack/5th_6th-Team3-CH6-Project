@@ -14,10 +14,10 @@ void UT3RegenerationRune::OnSocketed_Implementation(AT3CharacterBase* OwnerChar)
 	float CurrentHP = OwnerChar->GetCurrentHP();
 	float MaxHP = OwnerChar->GetMaxHP();
 
-	if (CurrentHP / MaxHP < 0.3f)
+	if (CurrentHP / MaxHP < RecoveryTargetHPPercentByGrade)
 	{
 		FTimerDelegate TimerDelegate;
-		TimerDelegate.BindUObject(OwnerChar, &AT3CharacterBase::RestoreHP, HealAmount);
+		TimerDelegate.BindUObject(OwnerChar, &AT3CharacterBase::RestoreHP, HealAmountByGrade);
 		
 		OwnerChar->GetWorldTimerManager().SetTimer(RegenerationHPTimerHandle,
 			TimerDelegate,
@@ -42,13 +42,18 @@ void UT3RegenerationRune::OnUnsocketed_Implementation(AT3CharacterBase* OwnerCha
 
 void UT3RegenerationRune::RegenerationHP(ET3StatType StatType, float CurrentHP, float MaxHP)
 {
+	if (StatType != ET3StatType::HP)
+	{
+		return;
+	}
+	
 	AT3CharacterBase* Owner = CachedOwner.Get();
 	if (!IsValid(Owner))
 	{
 		return;
 	}
 	
-	if (CurrentHP / MaxHP >= 0.3f)
+	if (CurrentHP / MaxHP >= RecoveryTargetHPPercentByGrade)
 	{
 		Owner->GetWorldTimerManager().ClearTimer(RegenerationHPTimerHandle);
 		return;
@@ -60,7 +65,7 @@ void UT3RegenerationRune::RegenerationHP(ET3StatType StatType, float CurrentHP, 
 	}
 	
 	FTimerDelegate TimerDelegate;
-	TimerDelegate.BindUObject(Owner, &AT3CharacterBase::RestoreHP, HealAmount);
+	TimerDelegate.BindUObject(Owner, &AT3CharacterBase::RestoreHP, HealAmountByGrade);
 
 	Owner->GetWorldTimerManager().SetTimer(
 		RegenerationHPTimerHandle,
