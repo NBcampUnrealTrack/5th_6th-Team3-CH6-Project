@@ -587,10 +587,11 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 		// 스태미나 50 차감 후 스태미너 0 이하로 떨어지면 막기 해제
 		ConsumeStamina(50.f);
 
-		if (OwnerChar->GetCurrentStamina() <= 0.f)
-		{
-			EndBlock();
-		}
+		
+		//if (OwnerChar->GetCurrentStamina() <= 0.f)
+		//{
+		//	EndBlock();
+		//}
 
 		// 팔라딘이라면 신성 게이지 10 상승
 		if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)

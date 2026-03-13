@@ -206,6 +206,7 @@ public:
 
 	// Stamina
 	FORCEINLINE float GetMaxStamina() const { return MaxStamina; }
+	UFUNCTION(BlueprintCallable, Category = "Stat")
 	FORCEINLINE float GetCurrentStamina() const { return CurrentStamina; }
 	void SetCurrentStamina(float NewStamina) { CurrentStamina = FMath::Clamp(NewStamina, 0.f, MaxStamina); BroadcastStatChange(ET3StatType::Stamina);}
 	bool bCanRegenStamina = true;
