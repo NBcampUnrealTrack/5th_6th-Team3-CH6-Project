@@ -11,6 +11,7 @@
 #include "NiagaraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Player/T3DamageTypes.h"
 
 // ============================================================
 // 데미지 처리
@@ -61,7 +62,9 @@ void AT3MidBossMonster::ApplyDamageToMidBoss(float DamageAmount, float StunAmoun
 
 	MidBossStats.CurrentHP -= DamageAmount;
 	OnMidBossDamaged.Broadcast();
-
+	
+	UE_LOG(LogItem, Log, TEXT("중간보스의 남은 체력 : %.1f"), MidBossStats.CurrentHP);
+	
 	// 피격 사운드 재생 (최소 간격 제한 — 연속 히트 시 씹힘 방지)
 	if (HitSound)
 	{
@@ -462,4 +465,21 @@ void AT3MidBossMonster::ExecuteParryCounter(AActor* ParriedAttacker)
 	}
 
 	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 패링 반격 — Slow 해제, 몽타주 이어서 재생"));
+}
+
+float AT3MidBossMonster::GetHPPercent() const
+{
+	return MidBossStats.CurrentHP / MidBossStats.MaxHP;
+}
+
+ET3MonsterType AT3MidBossMonster::GetMonsterType() const
+{
+	return MonsterType;
+}
+
+void AT3MidBossMonster::ApplyBonusDamage(float BonusDamage)
+{
+	FT3DamageEvent DamageEvent(UT3DamageType_Base::StaticClass());
+	
+	TakeDamage(BonusDamage, DamageEvent, nullptr, nullptr);
 }
