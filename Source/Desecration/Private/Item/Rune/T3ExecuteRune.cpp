@@ -21,7 +21,6 @@ void UT3ExecuteRune::OnUnsocketed_Implementation(AT3CharacterBase* OwnerChar)
 	}
 	
 	OwnerChar->OnDamageDealt.RemoveDynamic(this, &UT3ExecuteRune::CheckExecution);
-	
 }
 
 void UT3ExecuteRune::CheckExecution(AActor* HitTarget, float DamageDealt)

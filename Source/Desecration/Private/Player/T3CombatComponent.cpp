@@ -571,7 +571,7 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 			// 팔라딘의 경우 신성게이지 20 증가
 			if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
 			{
-				SkillComp->AddResource(20.f);
+				SkillComp->AddResource(HolyGaugeChargeAmount);
 			}
 			UE_LOG(LogTemp, Display, TEXT("Parrying!"));
 			// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("Result: [PARRY] - Success!"));
@@ -594,7 +594,7 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 		// 팔라딘이라면 신성 게이지 10 상승
 		if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
 		{
-			SkillComp->AddResource(10.f);
+			SkillComp->AddResource(HolyGaugeChargeAmount / 2.0f);
 		}
 
 		/*GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow,
@@ -893,3 +893,12 @@ void UT3CombatComponent::RequestUpdateSkill(int32 SkillID, bool bIsEquip)
 	}
 }
 
+float UT3CombatComponent::GetHolyGaugeChargeAmount() const
+{
+	return HolyGaugeChargeAmount;
+}
+
+void UT3CombatComponent::SetHolyGaugeChargeAmount(float NewAmount)
+{
+	HolyGaugeChargeAmount = NewAmount;
+}

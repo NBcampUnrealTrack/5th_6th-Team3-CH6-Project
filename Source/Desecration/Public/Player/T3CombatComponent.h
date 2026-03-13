@@ -263,6 +263,14 @@ public:
 protected:
 	bool bIsPowerStrike = false;
 
-
-
+#pragma region Rune
+public:
+	float GetHolyGaugeChargeAmount() const;
+	
+	void SetHolyGaugeChargeAmount(float NewAmount);
+	
+private:
+	float HolyGaugeChargeAmount = 20.f;
+	
+#pragma endregion
 };
