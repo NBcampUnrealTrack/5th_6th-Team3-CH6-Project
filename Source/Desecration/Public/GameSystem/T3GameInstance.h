@@ -5,6 +5,7 @@
 #include "GlobalEnums.h"
 #include "T3GameInstance.generated.h"
 
+class UT3SaveLostMoney;
 class UT3SaveUserSettings;
 class UT3CharacterDataAsset;
 class UT3SaveGame;
@@ -43,6 +44,9 @@ public:
 	//첫 게임 데이터 생성
 	TObjectPtr<UT3SaveGame> MakeFirstGameData();
 	
+	//잃어버린 재화 데이터 생성
+	void MakeFirstLostMoneyData();
+	
 	/**
 	 * 게임 저장하기
 	 * @return true : 저장 성공
@@ -60,19 +64,35 @@ public:
 	
 	//저장된 유저 세팅 불러오기
 	bool LoadUSerSettings();
+	
+	//잃어버린 재화 정보 저장
+	bool SaveLostMoney();
+	
+	//잃어버린 재화 정보 불러오기
+	bool LoadLostMoney();
 
 	/**
 	 * 레벨(맵) 이동하기
 	 * @param LevelName 이동할 레벨 (주의 : TitleLevel이나 SelectClassLevel로 지정하면 게임에서 벗어납니다.)
 	 */
 	UFUNCTION(BlueprintCallable)
-	void OpenLevel(UPARAM() ELevelName LevelName) const;
+	void OpenLevel(UPARAM() ELevelName LevelName);
+	
+	//저장된 데이터를 기준으로 레벨(맵) 이동
+	void OpenLevelBySavedData();
+	
+	//현재 레벨
+	UFUNCTION(BlueprintPure)
+	FORCEINLINE ELevelName GetCurrentLevel() const { return CurrentLevel; }
 
 	//저장된 게임
 	FORCEINLINE TObjectPtr<UT3SaveGame> GetSavedGameData() { return SavedGameData; }
 	
 	//현재 설정
 	FORCEINLINE TObjectPtr<UT3SaveUserSettings> GetCurrentSettings() { return CurrentSettings; }
+	
+	//잃어버린 재화
+	FORCEINLINE TObjectPtr<UT3SaveLostMoney> GetLostMoneyData() { return LostMoneyData; }
 	
 	//캐릭터 데이터
 	FORCEINLINE TObjectPtr<UT3CharacterDataAsset> GetCharacterData() { return CharacterData; }
@@ -96,6 +116,10 @@ private:
 	UPROPERTY()
 	TObjectPtr<UT3SaveGame> SavedGameData;
 	
+	//잃어버린 재화
+	UPROPERTY()
+	TObjectPtr<UT3SaveLostMoney> LostMoneyData; 
+	
 	//효과음
 	UPROPERTY(EditDefaultsOnly, Category = "Sound Class", meta = (AllowPrivateAccess = true))
 	TObjectPtr<USoundClass> SoundClassSE;
@@ -111,8 +135,12 @@ private:
 	// T3GameInstance.h
 	UPROPERTY(EditAnywhere, Category = "Level Settings")
 	TMap<ELevelName, TSoftObjectPtr<UWorld>> LevelMap;
+	
+	//현재 레벨
+	ELevelName CurrentLevel = ELevelName::Title;
 
 	//저장, 불러오기에 사용할 슬롯 이름
 	const FString SAVE_GAME_NAME = TEXT("SaveSlot1");
 	const FString SAVE_USER_SETTINGS_NAME = TEXT("UserSettings");
+	const FString SAVE_LOST_MONEY_NAME = TEXT("LostMoney");
 };

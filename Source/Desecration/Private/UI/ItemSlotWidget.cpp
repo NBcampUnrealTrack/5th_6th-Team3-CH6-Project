@@ -10,6 +10,18 @@ void UItemSlotWidget::SetSelected(bool bSelected)
 	Border_EquippedOrder->SetVisibility(bSelected ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 }
 
+bool UItemSlotWidget::GetIsRuneSlot() const
+{
+	return bIsRuneSlot;
+}
+
+bool UItemSlotWidget::SetIsRuneSlot(bool IsRuneSlot)
+{
+	bIsRuneSlot = IsRuneSlot;
+	
+	return bIsRuneSlot;
+}
+
 bool UItemSlotWidget::GetSlotData_Implementation(FInventorySlot& OutSlotData) const
 {
 	return false;
@@ -17,20 +29,21 @@ bool UItemSlotWidget::GetSlotData_Implementation(FInventorySlot& OutSlotData) co
 
 FReply UItemSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	// 왼쪽 마우스 버튼이 눌렸는지 확인
+	if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
+	{
+		OnSlotClicked.Broadcast(this, true);
+		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+	}
+	
 	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
 	{
 		if (!IsValid(InventoryComponent))
 		{
 			return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 		}
-		
-		if (!InventoryComponent->Items.IsValidIndex(SlotIndex))
-		{
-			return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
-		}
-		
-		if (InventoryComponent->Items[SlotIndex].ItemID == NAME_None)
+
+		FInventorySlot SlotData;
+		if (!GetSlotData(SlotData) || SlotData.ItemID == NAME_None)
 		{
 			return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 		}
@@ -42,7 +55,7 @@ FReply UItemSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, con
 			
 			// OnSlotClicked 브로드캐스트는 드래그 감지 후에 호출
 			// 이렇게 하면 드래그가 우선적으로 처리됨
-			OnSlotClicked.Broadcast(this);
+			OnSlotClicked.Broadcast(this, false);
 			
 			return FReply::Handled().DetectDrag(SlateWidget.ToSharedRef(), EKeys::LeftMouseButton);
 		}
@@ -52,7 +65,7 @@ FReply UItemSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, con
 		}
 		
 		// SlateWidget이 없으면 기본 동작
-		OnSlotClicked.Broadcast(this);
+		OnSlotClicked.Broadcast(this, false);
 		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 	}
 	
@@ -64,15 +77,10 @@ void UItemSlotWidget::NativeOnDragDetected(const FGeometry& InGeometry, const FP
 {
 	UE_LOG(LogTemp, Log, TEXT("[ItemSlotWidget] NativeOnDragDetected 호출됨 - 슬롯 %d"), SlotIndex);
 	
-	if (!IsValid(InventoryComponent) || !InventoryComponent->Items.IsValidIndex(SlotIndex))
+	FInventorySlot SlotData;
+	if (!IsValid(InventoryComponent) || !GetSlotData(SlotData) || SlotData.ItemID == NAME_None)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[ItemSlotWidget] InventoryComponent 또는 SlotIndex 유효하지 않음"));
-		return;
-	}
-	
-	if (InventoryComponent->Items[SlotIndex].ItemID == NAME_None)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[ItemSlotWidget] 슬롯 %d에 아이템이 없음"), SlotIndex);
+		UE_LOG(LogTemp, Warning, TEXT("[ItemSlotWidget] InventoryComponent 또는 슬롯 %d에 유효한 아이템 없음"), SlotIndex);
 		return;
 	}
 	
@@ -81,6 +89,7 @@ void UItemSlotWidget::NativeOnDragDetected(const FGeometry& InGeometry, const FP
 	// 드래그 시작한 슬롯 정보 저장
 	DragOperation->SourceSlotIndex = SlotIndex;
 	DragOperation->SourceSlotWidget = this;
+	DragOperation->DraggedItemID = SlotData.ItemID;
 	
 	if (IsValid(ItemIcon))
 	{
@@ -146,6 +155,11 @@ bool UItemSlotWidget::NativeOnDrop(const FGeometry& InGeometry, const FDragDropE
 		return false;
 	}
 	
+	if (ItemDragOp->bIsFromRuneSocket)
+	{
+		return true;
+	}
+	
 	if (SlotIndex < 0 || ItemDragOp->SourceSlotIndex < 0)
 	{
 		return false;
@@ -156,8 +170,14 @@ bool UItemSlotWidget::NativeOnDrop(const FGeometry& InGeometry, const FDragDropE
 		return false;
 	}
 	
-	// 실제 슬롯 교체
-	InventoryComponent->SwapSlots(ItemDragOp->SourceSlotIndex, SlotIndex);
+	if (bIsRuneSlot)
+	{
+		InventoryComponent->SwapRuneSlots(ItemDragOp->SourceSlotIndex, SlotIndex);
+	}
+	else
+	{
+		InventoryComponent->SwapSlots(ItemDragOp->SourceSlotIndex, SlotIndex);
+	}
 	
 	UE_LOG(LogTemp, Log, TEXT("드롭 완료: 슬롯 %d -> %d"), ItemDragOp->SourceSlotIndex, SlotIndex);
 	

@@ -4,6 +4,7 @@
 #include "Blueprint/UserWidget.h"
 #include "T3PopUpMenu.generated.h"
 
+class UT3SettingsPanel;
 class UT3GameInstance;
 class AT3PlayerController;
 class AT3GameMode;
@@ -18,11 +19,15 @@ class DESECRATION_API UT3PopUpMenu : public UUserWidget
 public:
 	virtual void NativeConstruct() override;
 	
-private:
 	//팝업 메뉴 열기 또는 닫기
 	UFUNCTION(BlueprintCallable)
 	void SetActivePopUpMenu(bool bActive);
 	
+	//팝업 메뉴의 열림 여부
+	UFUNCTION(BlueprintPure)
+	bool IsActivePopUpMenu();
+	
+private:
 	//계속하기
 	UFUNCTION()
 	void OnClickResumeButton();
@@ -39,9 +44,17 @@ private:
 	UFUNCTION()
 	void OnClickTitleButton();
 	
+	//설정 패널을 닫을 때 실행할 함수
+	UFUNCTION()
+	void OnCloseSettingsPanel();
+	
 	//타이틀로 나가기
 	UFUNCTION()
 	void GotoTitle();
+
+	//메뉴 부분 전체를 가진 보더
+	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
+	TObjectPtr<UWidget> MenuBorder;
 	
 	//계속하기 버튼
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
@@ -58,6 +71,10 @@ private:
 	//타이틀 버튼
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
 	TObjectPtr<UButton> TitleButton;
+	
+	//설정 패널
+	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = true, BindWidget))
+	TObjectPtr<UT3SettingsPanel> SettingsPanel;
 	
 	//확인 패널
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))

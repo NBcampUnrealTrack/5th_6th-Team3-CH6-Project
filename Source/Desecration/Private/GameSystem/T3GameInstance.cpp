@@ -2,6 +2,7 @@
 
 #include "GameFramework/GameUserSettings.h"
 #include "GameSystem/T3SaveGame.h"
+#include "GameSystem/T3SaveLostMoney.h"
 #include "GameSystem/T3SaveUserSettings.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundClass.h"
@@ -68,6 +69,15 @@ TObjectPtr<UT3SaveGame> UT3GameInstance::MakeFirstGameData()
 	return SavedGameData;
 }
 
+void UT3GameInstance::MakeFirstLostMoneyData()
+{
+	if (!LostMoneyData)
+	{
+		LostMoneyData = NewObject<UT3SaveLostMoney>();
+	}
+	LostMoneyData->ResetGameData();
+}
+
 bool UT3GameInstance::SaveGame()
 {
 	return UGameplayStatics::SaveGameToSlot(SavedGameData, SAVE_GAME_NAME, 0);
@@ -103,6 +113,23 @@ bool UT3GameInstance::LoadUSerSettings()
 	return true;
 }
 
+bool UT3GameInstance::SaveLostMoney()
+{
+	return UGameplayStatics::SaveGameToSlot(LostMoneyData, SAVE_LOST_MONEY_NAME, 0);
+}
+
+bool UT3GameInstance::LoadLostMoney()
+{
+	TObjectPtr<UT3SaveLostMoney> T3LostMoney = Cast<UT3SaveLostMoney>(UGameplayStatics::LoadGameFromSlot(SAVE_LOST_MONEY_NAME, 0));
+	if (!T3LostMoney)
+	{
+		return false;
+	}
+	
+	LostMoneyData = T3LostMoney;
+	return true;
+}
+
 //void UT3GameInstance::OpenLevel(const ELevelName LevelName) const
 //{	
 	//레벨 이동
@@ -113,7 +140,7 @@ bool UT3GameInstance::LoadUSerSettings()
 // T3GameInstance.cpp
 
 
-void UT3GameInstance::OpenLevel(const ELevelName LevelName) const // const 유지
+void UT3GameInstance::OpenLevel(const ELevelName LevelName)
 {	
     // 1. LevelMap에 해당 키가 있는지 확인
     if (!LevelMap.Contains(LevelName))
@@ -141,7 +168,16 @@ void UT3GameInstance::OpenLevel(const ELevelName LevelName) const // const 유�
     }
 
     UE_LOG(LogTemp, Warning, TEXT("Attempting to Open Level: %s"), *LevelPath);
+	CurrentLevel = LevelName;
     
     // 최종 호출
     UGameplayStatics::OpenLevel(CurrentWorld, FName(*LevelPath));
+}
+
+void UT3GameInstance::OpenLevelBySavedData()
+{
+	if (SavedGameData)
+	{
+		OpenLevel(SavedGameData->SavedLevelName);
+	}
 }

@@ -54,6 +54,10 @@ private:
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
 	TObjectPtr<UHorizontalBox> TabButtonsBox;
 	
+	//상단 탭 버튼
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UButton>> TabButtons;
+	
 	//닫기 버튼
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
 	TObjectPtr<UButton> CloseButton;
@@ -61,7 +65,7 @@ private:
 	//확인 버튼
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
 	TObjectPtr<UButton> ConfirmButton;
-	
+
 	//범주별로 나눈 설정 위젯들
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UT3SettingsPanelCategory>> CategoryWidgets;
@@ -69,10 +73,6 @@ private:
 	//설정 위젯의 부모
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
 	TObjectPtr<UCanvasPanel> SettingCategoriesParent;
-	
-	//게임 모드
-	UPROPERTY()
-	TObjectPtr<AT3TitleGameMode> TitleGameMode;
 	
 	//게임 인스턴스
 	UPROPERTY()

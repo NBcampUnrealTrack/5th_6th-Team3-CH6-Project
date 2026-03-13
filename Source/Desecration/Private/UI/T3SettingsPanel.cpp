@@ -5,22 +5,15 @@
 #include "Components/ComboBoxString.h"
 #include "Components/HorizontalBox.h"
 #include "GameSystem/T3GameInstance.h"
-#include "GameSystem/T3TitleGameMode.h"
 #include "UI/T3SettingsPanelCategory.h"
 
 void UT3SettingsPanel::NativeConstruct()
 {
-	//게임 모드
-	TitleGameMode = Cast<AT3TitleGameMode>(GetWorld()->GetAuthGameMode());
-	if (!TitleGameMode)
-	{
-		UE_LOG(LogTemp, Error, TEXT("%s : TitleGameMode가 NULL"), *GetNameSafe(this));
-		return;
-	}
+	Super::NativeConstruct();
 	
 	//게임 인스턴스
 	T3GameInstance = Cast<UT3GameInstance>(GetGameInstance());
-	if (!TitleGameMode)
+	if (!T3GameInstance)
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s : T3GameInstance가 NULL"), *GetNameSafe(this));
 		return;
@@ -45,15 +38,15 @@ void UT3SettingsPanel::NativeConstruct()
 	}
 	
 	//상단 탭 버튼
-	TArray<UWidget*> TabButtons = TabButtonsBox->GetAllChildren();
-	if (TabButtons.Num() != CategoryWidgets.Num())
+	TArray<UWidget*> ChildrenWidget = TabButtonsBox->GetAllChildren();
+	if (ChildrenWidget.Num() != CategoryWidgets.Num())
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s : 탭 버튼의 개수와 확인된 설정 범주 위젯의 개수가 다름"), *GetNameSafe(this));
 		return;
 	}
 	//탭 버튼마다 기능 부여
 	int32 PanelNum = 0;
-	for (TObjectPtr<UWidget> ChildWidget : TabButtons)
+	for (TObjectPtr<UWidget> ChildWidget : ChildrenWidget)
 	{
 		TObjectPtr<UButton> ChildButton = Cast<UButton>(ChildWidget);
 		if (!ChildButton)
@@ -61,8 +54,9 @@ void UT3SettingsPanel::NativeConstruct()
 			UE_LOG(LogTemp, Warning, TEXT("%s : 버튼이 아님"), *ChildWidget.GetName());
 			continue;
 		}
-		
-		TSharedPtr<SButton> SlateButton = StaticCastSharedPtr<SButton>(ChildButton->GetCachedWidget());
+		TabButtons.Add(ChildButton);
+
+		const TSharedPtr<SButton> SlateButton = StaticCastSharedPtr<SButton>(ChildButton->GetCachedWidget());
 		SlateButton->SetOnClicked(FOnClicked::CreateLambda([this, PanelNum]()
 		{
 			OnClickTabButton(PanelNum);
@@ -94,15 +88,23 @@ void UT3SettingsPanel::NativeConstruct()
 
 void UT3SettingsPanel::OnClickTabButton(const int32 PanelNum)
 {
-	//이전에 열리 패널 닫기
-	if (CategoryWidgets.IsValidIndex(CurrentPanelNum))
+	//동일 버튼 무시
+	if (PanelNum == CurrentPanelNum)
 	{
+		return;
+	}
+	
+	//이전 버튼 및 패널에 대한 처리
+	if (TabButtons.IsValidIndex(CurrentPanelNum))
+	{
+		TabButtons[CurrentPanelNum]->SetIsEnabled(true);
 		CategoryWidgets[CurrentPanelNum]->SetVisibility(ESlateVisibility::Collapsed);
 	}
 	
 	//누른 버튼에 대한 패널 열기
-	if (CategoryWidgets.IsValidIndex(PanelNum))
+	if (TabButtons.IsValidIndex(PanelNum))
 	{
+		TabButtons[PanelNum]->SetIsEnabled(false);
 		CategoryWidgets[PanelNum]->SetVisibility(ESlateVisibility::Visible);
 		CurrentPanelNum = PanelNum;
 	}
