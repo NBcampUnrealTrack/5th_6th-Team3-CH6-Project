@@ -4,12 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Interface/T3Monster.h"
 #include "Monster/T3HealthComponent.h"
 #include "Player/T3LockOnTarget.h"
 #include "T3MonsterBase.generated.h"
 
 UCLASS()
-class DESECRATION_API AT3MonsterBase : public ACharacter, public IT3LockOnTarget
+class DESECRATION_API AT3MonsterBase : public ACharacter, public IT3LockOnTarget, public IT3Monster
 {
 	GENERATED_BODY()
 
@@ -48,4 +49,17 @@ protected:
 
 public:
 	virtual void SetLockOnWidgetVisible(bool bVisible) override;
+	
+#pragma region ExecuteRune
+public:
+	virtual float GetHPPercent() const override;
+	
+	virtual ET3MonsterType GetMonsterType() const override;
+	
+	virtual void ApplyBonusDamage(float BonusDamage) override;
+	
+private:
+	ET3MonsterType MonsterType = ET3MonsterType::Normal;
+	
+#pragma endregion
 };
