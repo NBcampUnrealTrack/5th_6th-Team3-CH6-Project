@@ -22,6 +22,10 @@ void AT3GameMode::BeginPlay()
 	}
 }
 
+void AT3GameMode::MakeLostMoneyActors()
+{
+}
+
 EPlayerClass AT3GameMode::GetPlayerClass()
 {
 	const TObjectPtr<UT3SaveGame> SaveGame = T3GameInstance->GetSavedGameData();
