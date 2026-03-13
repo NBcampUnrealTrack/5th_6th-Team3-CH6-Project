@@ -32,10 +32,6 @@ private:
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	TObjectPtr<USceneComponent> RootComp;
 	
-	//메시
-	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = true))
-	TObjectPtr<UStaticMeshComponent> LostMoneyMesh;
-	
 	//콜리전 역할을 하는 박스
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	TObjectPtr<USphereComponent> CollisionSphere;
