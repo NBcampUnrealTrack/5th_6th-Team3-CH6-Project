@@ -13,6 +13,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBossStunDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBossDeathDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBossDamagedDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBossSpawnedDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBoss25perDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBoss50perDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBoss75perDelegate);
 
 USTRUCT(BlueprintType)
 struct FBossMonsterStats
@@ -69,6 +72,15 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FBossSpawnedDelegate OnBossSpawned;
+
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FBoss25perDelegate OnBoss25per;
+
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FBoss50perDelegate OnBoss50per;
+
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FBoss75perDelegate OnBoss75per;
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void Damage(float DamageAmount, float StunAmount);
