@@ -68,6 +68,10 @@
 		{
 			"Name": "MetaHumanSDK",
 			"Enabled": false
+		},
+		{
+			"Name": "ProceduralVegetationEditor",
+			"Enabled": true
 		}
 	]
 }
