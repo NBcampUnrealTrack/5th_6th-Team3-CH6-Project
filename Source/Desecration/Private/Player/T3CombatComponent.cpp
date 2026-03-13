@@ -563,6 +563,7 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 		else if (CurrentState == ECharacterCombatState::Parrying)
 		{
 			// 패링 성공 시 
+			OwnerChar->OnParryReaction();
 
 			// 보스에게 스턴치 10 부여
 			AT3BossMonster* HitBoss = Cast<AT3BossMonster>(DamageCauser);
@@ -571,7 +572,7 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 			// 팔라딘의 경우 신성게이지 20 증가
 			if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
 			{
-				SkillComp->AddResource(20.f);
+				SkillComp->AddResource(HolyGaugeChargeAmount);
 			}
 			UE_LOG(LogTemp, Display, TEXT("Parrying!"));
 			// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("Result: [PARRY] - Success!"));
@@ -582,19 +583,20 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 	else if (CurrentState == ECharacterCombatState::Blocking)
 	{
 		// 막기 성공 시
-
+		OwnerChar->OnBlockReaction();
 		// 스태미나 50 차감 후 스태미너 0 이하로 떨어지면 막기 해제
 		ConsumeStamina(50.f);
 
-		if (OwnerChar->GetCurrentStamina() <= 0.f)
-		{
-			EndBlock();
-		}
+		
+		//if (OwnerChar->GetCurrentStamina() <= 0.f)
+		//{
+		//	EndBlock();
+		//}
 
 		// 팔라딘이라면 신성 게이지 10 상승
 		if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
 		{
-			SkillComp->AddResource(10.f);
+			SkillComp->AddResource(HolyGaugeChargeAmount / 2.0f);
 		}
 
 		/*GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow,
@@ -773,20 +775,24 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 	// TakeDamage 호출 시 커스텀 이벤트 구조체를 전달
 	else if (OwnerChar)
 	{
-		if (OwnerChar-> GetSmiteThreshold() > 0 && OwnerChar->GetSmiteCounter() >= OwnerChar->GetSmiteThreshold())
-		{
-			float FinalDamage = DamageAmount * OwnerChar->GetSmiteMultiplier();
-			
-			TargetActor->TakeDamage(FinalDamage, T3DamageEvent, OwnerPC, OwnerChar);
+		float ActualDamage = DamageAmount;
 
+		if (OwnerChar->GetSmiteThreshold() > 0 && OwnerChar->GetSmiteCounter() >= OwnerChar->GetSmiteThreshold())
+		{
+			ActualDamage = DamageAmount * OwnerChar->GetSmiteMultiplier();
+			
+			TargetActor->TakeDamage(ActualDamage, T3DamageEvent, OwnerPC, OwnerChar);
+			
 			OwnerChar->SetSmiteCounter(0);
 		}
 		else
 		{
 			OwnerChar->IncrementSmiteCounter();
-
-			TargetActor->TakeDamage(DamageAmount, T3DamageEvent, OwnerPC, OwnerChar);
+			
+			TargetActor->TakeDamage(ActualDamage, T3DamageEvent, OwnerPC, OwnerChar);
 		}
+
+		OwnerChar->OnDamageDealt.Broadcast(TargetActor, ActualDamage);
 		
 		UE_LOG(LogTemp, Warning, TEXT("현재 공격 횟수 : %d"), OwnerChar->GetSmiteCounter());
 	}
@@ -889,3 +895,12 @@ void UT3CombatComponent::RequestUpdateSkill(int32 SkillID, bool bIsEquip)
 	}
 }
 
+float UT3CombatComponent::GetHolyGaugeChargeAmount() const
+{
+	return HolyGaugeChargeAmount;
+}
+
+void UT3CombatComponent::SetHolyGaugeChargeAmount(float NewAmount)
+{
+	HolyGaugeChargeAmount = NewAmount;
+}
