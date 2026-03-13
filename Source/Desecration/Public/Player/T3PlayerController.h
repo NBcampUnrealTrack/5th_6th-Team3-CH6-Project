@@ -138,6 +138,7 @@ private:
 	void Input_LockOn(const FInputActionValue& Value);
 	void Input_BlockStart(const FInputActionValue& Value);
 	void Input_BlockEnd(const FInputActionValue& Value);
+	void Input_Parry(const FInputActionValue& Value);
 	void Input_Roll(const FInputActionValue& Value);
 	void Input_Interact(const FInputActionValue& Value);
 	void Input_Test(const FInputActionValue& Value);
