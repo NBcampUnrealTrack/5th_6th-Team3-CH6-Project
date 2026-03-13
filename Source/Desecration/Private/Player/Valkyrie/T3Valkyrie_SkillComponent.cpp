@@ -74,7 +74,7 @@ void UT3Valkyrie_SkillComponent::BasicAttackCount()
     {
         if (OwnerChar)
         {
-            float HealAmount = (OwnerChar->GetMaxHP() * 0.1f) + (OwnerChar->GetMaxHP() * PassiveHealBonus);
+            float HealAmount = (OwnerChar->GetMaxHP() * 0.1f) + (OwnerChar->GetMaxHP() * PassiveHealBonus / 100);
             float NewHP = FMath::Clamp(OwnerChar->GetCurrentHP() + HealAmount, 0.0f, OwnerChar->GetMaxHP());
             OwnerChar->SetCurrentHP(NewHP);
             CurrentBasicAttackCount = 0;

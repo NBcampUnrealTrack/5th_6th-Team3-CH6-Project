@@ -10,7 +10,7 @@ void UT3ValkyrieRune::OnSocketed_Implementation(AT3CharacterBase* OwnerChar)
 		return;
 	}
 	
-	UT3Taoist_SkillComponent* SkillComp = Cast<UT3Taoist_SkillComponent>(OwnerChar->GetCombatComponent()->GetSkillComponent());
+	UT3Valkyrie_SkillComponent* SkillComp = Cast<UT3Valkyrie_SkillComponent>(OwnerChar->GetCombatComponent()->GetSkillComponent());
 	
 	if (!IsValid(SkillComp))
 	{
@@ -27,12 +27,12 @@ void UT3ValkyrieRune::OnUnsocketed_Implementation(AT3CharacterBase* OwnerChar)
 		return;
 	}
 	
-	UT3Valkyrie_SkillComponent* SkillComp = OwnerChar->GetComponentByClass<UT3Valkyrie_SkillComponent>();
+	UT3Valkyrie_SkillComponent* SkillComp = Cast<UT3Valkyrie_SkillComponent>(OwnerChar->GetCombatComponent()->GetSkillComponent());
 	
 	if (!IsValid(SkillComp))
 	{
 		return;
 	}
 	
-	SkillComp->SetPassiveHealBonus(0.1f);
+	SkillComp->SetPassiveHealBonus(0.0f);
 }
