@@ -25,10 +25,7 @@ void AT3TitleGameMode::MoveToSelectClassLevel()
 
 void AT3TitleGameMode::MoveToLastSavedLevel()
 {
-	if (const TObjectPtr<UT3SaveGame> SavedGame = T3GameInstance->GetSavedGameData())
-	{
-		T3GameInstance->OpenLevel(SavedGame->SavedLevelName);
-	}
+	T3GameInstance->OpenLevelBySavedData();
 }
 
 void AT3TitleGameMode::QuitGame()

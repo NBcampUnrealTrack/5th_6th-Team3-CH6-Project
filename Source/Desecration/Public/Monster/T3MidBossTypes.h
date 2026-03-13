@@ -27,7 +27,7 @@ enum class EMidBossPatternCategory : uint8
 // Struct: 공격 패턴 데이터
 // ============================================================
 
-// 체인 내 개별 몽타주 데이터
+// 체인 내 개별 몽타주 데이터 (한 섹션 = 한 공격)
 USTRUCT(BlueprintType)
 struct FPatternMontageData
 {
@@ -37,11 +37,15 @@ struct FPatternMontageData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<UAnimMontage> Montage = nullptr;
 
+	// 섹션 콤보 모드에서 재생할 섹션 이름 (bUseSectionCombo=true일 때만 사용)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName SectionName = NAME_None;
+
 	// 시작 배속
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float PlayRate = 1.0f;
 
-	// 이 구간 데미지
+	// 데미지
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Damage = 20.f;
 
@@ -49,9 +53,33 @@ struct FPatternMontageData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EHitIntensity HitIntensity = EHitIntensity::Light;
 
-	// 데미지 타입 (Base, Unparryable 등)
+	// 데미지 타입
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<UT3DamageType_Base> DamageTypeClass;
+
+	// 모션 워프 최대 거리 오버라이드 (0 이하 = 보스 기본값 사용)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MaxWarpDistanceOverride = 0.f;
+
+#if WITH_EDITORONLY_DATA
+	// 에디터 표시용 (TitleProperty) — 자동 생성, 직접 수정 불필요
+	UPROPERTY(VisibleAnywhere, Transient)
+	FString DisplayTitle;
+
+	// 에디터에서 값 변경 시 DisplayTitle 갱신
+	void UpdateDisplayTitle()
+	{
+		DisplayTitle = FString::Printf(TEXT("[%s] Dmg:%.2f Rate:%.2f"),
+			*SectionName.ToString(),
+			Damage,
+			PlayRate);
+
+		if (MaxWarpDistanceOverride > 0.f)
+		{
+			DisplayTitle += FString::Printf(TEXT(" Warp:%.0f"), MaxWarpDistanceOverride);
+		}
+	}
+#endif
 };
 
 // 노티파이별 기본 발동 확률
@@ -88,8 +116,14 @@ struct FMidBossAttackPattern
 	EMidBossPatternCategory Category = EMidBossPatternCategory::Melee;
 
 	// 체인 몽타주 배열 (순서대로 재생, 1개면 단타, 2개면 2타 체인)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (TitleProperty = "{DisplayTitle}"))
 	TArray<FPatternMontageData> MontageChain;
+
+	// 섹션 콤보 모드 — MontageChain[0]의 몽타주를 섹션으로 진행
+	// true: 같은 몽타주 내 섹션 자동 연결 (idle 복귀 없음)
+	// 마지막 엔트리에 다른 몽타주 지정 시 체인으로 연결 (자연스러운 idle 복귀용)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bUseSectionCombo = false;
 
 	// 해금 스테이지 (1 = 항상 사용 가능)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -99,9 +133,23 @@ struct FMidBossAttackPattern
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Cooldown = 0.f;
 
+	// 공용 쿨다운 그룹 (같은 그룹 패턴은 쿨다운 공유 — 예: "DK_Combo2" 그룹이면 Short/Mid/Full 동시 쿨다운)
+	// NAME_None이면 개별 쿨다운만 사용
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName CooldownGroup = NAME_None;
+
+	// 그룹 쿨다운 초 (이 패턴 사용 시 그룹 전체에 걸리는 쿨다운)
+	// Cooldown = 개별, GroupCooldown = 그룹 — 둘 다 적용됨
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (EditCondition = "CooldownGroup != NAME_None"))
+	float GroupCooldown = 0.f;
+
 	// ActionCount 소모량 (0 = 소모 안 함, 예: Evasion)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 ActionCountCost = 1;
+
+	// 패링 윈도우 사용 여부 (ParryWindowStart 노티파이가 이 패턴에서만 동작)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bHasParryWindow = false;
 
 	// 노티파이별 기본 발동 확률 (BP에서 ModifyNotifyChance로 상황별 보정 가능)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

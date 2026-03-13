@@ -6,3 +6,5 @@
 
 /** Main log category used across the project */
 DECLARE_LOG_CATEGORY_EXTERN(LogDesecration, Log, All);
+
+DECLARE_LOG_CATEGORY_EXTERN(LogItem, Log, All);
