@@ -563,6 +563,7 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 		else if (CurrentState == ECharacterCombatState::Parrying)
 		{
 			// 패링 성공 시 
+			OwnerChar->OnParryReaction();
 
 			// 보스에게 스턴치 10 부여
 			AT3BossMonster* HitBoss = Cast<AT3BossMonster>(DamageCauser);
@@ -582,14 +583,15 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 	else if (CurrentState == ECharacterCombatState::Blocking)
 	{
 		// 막기 성공 시
-
+		OwnerChar->OnBlockReaction();
 		// 스태미나 50 차감 후 스태미너 0 이하로 떨어지면 막기 해제
 		ConsumeStamina(50.f);
 
-		if (OwnerChar->GetCurrentStamina() <= 0.f)
-		{
-			EndBlock();
-		}
+		
+		//if (OwnerChar->GetCurrentStamina() <= 0.f)
+		//{
+		//	EndBlock();
+		//}
 
 		// 팔라딘이라면 신성 게이지 10 상승
 		if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
