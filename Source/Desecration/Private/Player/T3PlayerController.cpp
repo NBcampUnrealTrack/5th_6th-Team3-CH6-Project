@@ -107,8 +107,9 @@ void AT3PlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AT3PlayerController::Input_Look);
 
 		EnhancedInputComponent->BindAction(LockOnAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_LockOn);
-		EnhancedInputComponent->BindAction(BlockingAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_BlockStart);
+		EnhancedInputComponent->BindAction(BlockingAction, ETriggerEvent::Triggered, this, &AT3PlayerController::Input_BlockStart);
 		EnhancedInputComponent->BindAction(BlockingAction, ETriggerEvent::Completed, this, &AT3PlayerController::Input_BlockEnd);
+		EnhancedInputComponent->BindAction(BlockingAction, ETriggerEvent::Canceled, this, &AT3PlayerController::Input_Parry);
 		EnhancedInputComponent->BindAction(RollingAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_Roll);
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_Interact);
 		EnhancedInputComponent->BindAction(InputTest, ETriggerEvent::Started, this, &AT3PlayerController::Input_Test);
@@ -198,6 +199,18 @@ void AT3PlayerController::Input_BlockEnd(const FInputActionValue& Value)
 	}
 }
 
+void AT3PlayerController::Input_Parry(const FInputActionValue& Value)
+{
+	if (bIsInventoryOpen || bIsShopUIOpen || bIsUpgradeUIOpen || !OwnerChar->CanExecuteAction() || OwnerChar->bIsSkillCanNotUse)
+	{
+		return;
+	}
+	
+	if (OwnerChar)
+	{
+		OwnerChar->OnParry();
+	}
+}
 
 
 void AT3PlayerController::Input_Roll(const FInputActionValue& Value)

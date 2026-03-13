@@ -121,7 +121,11 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	// 막기/패링
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsBlockBreak = false;
+	
 	void StartBlock();
+	UFUNCTION(BlueprintCallable)
 	void EndBlock();
 	
 	void Attack();

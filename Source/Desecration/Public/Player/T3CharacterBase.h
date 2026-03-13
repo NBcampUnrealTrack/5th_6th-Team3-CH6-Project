@@ -208,6 +208,7 @@ public:
 
 	// Stamina
 	FORCEINLINE float GetMaxStamina() const { return MaxStamina; }
+	UFUNCTION(BlueprintCallable, Category = "Stat")
 	FORCEINLINE float GetCurrentStamina() const { return CurrentStamina; }
 	void SetCurrentStamina(float NewStamina) { CurrentStamina = FMath::Clamp(NewStamina, 0.f, MaxStamina); BroadcastStatChange(ET3StatType::Stamina);}
 	bool bCanRegenStamina = true;
@@ -363,6 +364,13 @@ private:
 	int32 SmiteCounter = 0;
 
 	void RecalculateRuneBonus();
-	
 #pragma endregion
+	
+public:
+	UFUNCTION(BlueprintImplementableEvent, Category = "Defence")
+	void OnParry();
+	UFUNCTION(BlueprintImplementableEvent, Category = "Defence")
+	void OnBlockReaction();
+	UFUNCTION(BlueprintImplementableEvent, Category = "Defence")
+	void OnParryReaction();
 };
