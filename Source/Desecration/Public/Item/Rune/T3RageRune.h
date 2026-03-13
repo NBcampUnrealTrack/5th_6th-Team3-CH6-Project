@@ -11,8 +11,8 @@ class DESECRATION_API UT3RageRune : public UT3RuneBase
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditDefaultsOnly, Category = "Rune|Rage")
-	float AttackBonusMultiplier = 0.2f;
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
+	float ValueByGrade = 2.0f;
 
 	virtual void OnSocketed_Implementation(AT3CharacterBase* OwnerChar) override;
 	

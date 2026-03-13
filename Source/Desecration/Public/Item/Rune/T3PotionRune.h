@@ -16,5 +16,5 @@ public:
 	
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Value")
-	float NormalValue = 1.2f;
+	float ValueByGrade = 1.2f;
 };

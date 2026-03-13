@@ -111,6 +111,26 @@ bool AT3MidBossMonster::HasSuperArmor() const
 }
 
 // ============================================================
+// 에디터 전용
+// ============================================================
+
+#if WITH_EDITOR
+void AT3MidBossMonster::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	// MontageChain 내 DisplayTitle 자동 갱신
+	for (FMidBossAttackPattern& Pattern : AttackPatterns)
+	{
+		for (FPatternMontageData& Entry : Pattern.MontageChain)
+		{
+			Entry.UpdateDisplayTitle();
+		}
+	}
+}
+#endif
+
+// ============================================================
 // BeginPlay / Tick
 // ============================================================
 

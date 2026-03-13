@@ -7,7 +7,7 @@ void UT3EvasionRune::OnSocketed_Implementation(AT3CharacterBase* OwnerChar)
 		return;
 	}
 	
-	OwnerChar->SetEvasionPlayRate(NormalValue);
+	OwnerChar->SetEvasionPlayRate(ValueByGrade);
 }
 
 void UT3EvasionRune::OnUnsocketed_Implementation(AT3CharacterBase* OwnerChar)

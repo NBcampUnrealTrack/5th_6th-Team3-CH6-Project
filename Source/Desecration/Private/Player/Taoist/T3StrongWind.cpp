@@ -5,6 +5,12 @@
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "Player/T3CharacterBase.h"
+#include "Player/T3CombatComponent.h"
+#include "NiagaraComponent.h"
+#include "NiagaraSystem.h"
+#include "NiagaraFunctionLibrary.h"
+
 
 
 AT3StrongWind::AT3StrongWind()
@@ -17,8 +23,8 @@ AT3StrongWind::AT3StrongWind()
     AttackArea->SetBoxExtent(FVector(500.f, 50.f, 50.f));
     AttackArea->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
 
-    ParticleComp = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ParticleComp"));
-    ParticleComp->SetupAttachment(RootComponent);
+    NiagaraComp = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraComponent"));
+    NiagaraComp->SetupAttachment(RootComponent);
 
     InitialLifeSpan = SpawnTime;
 }
@@ -28,6 +34,7 @@ void AT3StrongWind::BeginPlay()
     Super::BeginPlay();
     ImmediateDamageCheck();
     AttackArea->OnComponentBeginOverlap.AddDynamic(this, &AT3StrongWind::OnOverlapBegin);
+
 }
 
 void AT3StrongWind::SetDamage(float InDamage)
@@ -57,7 +64,17 @@ void AT3StrongWind::ProcessHit(AActor* TargetActor, const FString& HitType)
 {
     if (TargetActor && TargetActor != GetOwner() && !AlreadyHitActors.Contains(TargetActor))
     {
-        UGameplayStatics::ApplyDamage(TargetActor, Damage, GetInstigatorController(), this, nullptr);
+        
+        AT3CharacterBase* OwnerChar = Cast<AT3CharacterBase>(GetOwner());
+        if (!OwnerChar) return;
+
+        UT3CombatComponent* Combat = OwnerChar->GetCombatComponent();
+        if (!Combat) return;
+
+        if (TargetActor->IsA(AT3CharacterBase::StaticClass())) return;
+
+        Combat->RequestAttackDamage(TargetActor, Damage);
+
         AlreadyHitActors.Add(TargetActor); // 중복 히트 리스트에 추가
 
         UE_LOG(LogTemp, Display, TEXT("%s: %s"), *HitType, *TargetActor->GetName());
