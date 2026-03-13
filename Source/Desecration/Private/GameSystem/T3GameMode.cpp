@@ -3,7 +3,8 @@
 #include "Equipment/T3PlayerEquipmentComponent.h"
 #include "GameSystem/T3GameInstance.h"
 #include "GameSystem/T3SaveGame.h"
-#include "GameSystem/T3WorldSubsystem.h"
+#include "GameSystem/T3SaveLostMoney.h"
+#include "Interaction/T3LostMoney.h"
 #include "Item/Component/T3InventoryComponent.h"
 #include "Player/T3CharacterBase.h"
 #include "Player/T3CombatComponent.h"
@@ -20,10 +21,35 @@ void AT3GameMode::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("%s : T3GameInstance가 NULL"), *GetNameSafe(this));
 		return;
 	}
+	
+	//이 레벨에서 잃어버린 재화 생성
+	MakeLostMoneyActors();
 }
 
 void AT3GameMode::MakeLostMoneyActors()
 {
+	for (const TTuple<int32, FLostMoney> LostMoneyInfo : T3GameInstance->GetLostMoneyData()->LostMoneyList)
+	{
+		//이 레벨에 해당되는 것만 생성
+		FLostMoney LostMoney = LostMoneyInfo.Value;
+		if (LostMoney.LevelName != T3GameInstance->GetCurrentLevel())
+		{
+			continue;
+		}
+
+		if (TObjectPtr<AActor> SpawnedActor = GetWorld()->SpawnActor(LostMoneyClass, &LostMoney.Location))
+		{
+			TObjectPtr<AT3LostMoney> SpawnedLostMoney = Cast<AT3LostMoney>(SpawnedActor);
+			if (!SpawnedLostMoney)
+			{
+				SpawnedLostMoney->Destroy();
+				continue;
+			}
+			//정상적으로 생성했으면 번호와 재화의 양 지정하기
+			SpawnedLostMoney->SetLostMoneyID(LostMoneyInfo.Key);
+			SpawnedLostMoney->SetMoney(LostMoney.Money);
+		}
+	}
 }
 
 EPlayerClass AT3GameMode::GetPlayerClass()
