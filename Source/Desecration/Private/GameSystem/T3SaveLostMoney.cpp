@@ -7,6 +7,12 @@ void UT3SaveLostMoney::ResetGameData()
 
 void UT3SaveLostMoney::AddLostMoney(FLostMoney NewLostMoney)
 {
+	//0원을 잃어버린다?
+	if (NewLostMoney.Money <= 0)
+	{
+		return;
+	}
+	
 	//LostMoneyList내 객체 개수를 키로 잡은 다음 중복이 있다면 1씩 더해서 확인
 	int32 Key = LostMoneyList.Num();
 	while (true)
