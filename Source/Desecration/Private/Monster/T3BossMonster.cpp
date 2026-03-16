@@ -2,13 +2,14 @@
 
 
 #include "Monster/T3BossMonster.h"
+
+#include "Desecration.h"
 #include "Engine/DamageEvents.h"
 #include "GameFramework/Controller.h"
 #include "Player/T3DamageTypes.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/WidgetComponent.h"
 #include "Components/CapsuleComponent.h"
-
 
 void AT3BossMonster::BeginPlay()
 {
@@ -35,6 +36,8 @@ void AT3BossMonster::Damage(float DamageAmount, float StunAmount)
 	{
 		BossStats.CurrentHP -= DamageAmount;
 		OnBossDamaged.Broadcast();
+		
+		UE_LOG(LogItem, Log, TEXT("보스의 남은 체력 : %.1f"), BossStats.CurrentHP);
 
 		if (!bBossStun)
 		{
@@ -55,6 +58,23 @@ void AT3BossMonster::Damage(float DamageAmount, float StunAmount)
 		}
 
 		OnBossHit.Broadcast();
+
+		if (BossStats.CurrentHP / BossStats.MaxHP <= 0.25 )
+		{
+			OnBoss25per.Broadcast();
+			return;
+		}
+		else if (BossStats.CurrentHP / BossStats.MaxHP <= 0.5)
+		{
+			OnBoss50per.Broadcast();
+			return;
+		}
+		else if (BossStats.CurrentHP / BossStats.MaxHP <= 0.75)
+		{
+			OnBoss75per.Broadcast();
+			return;
+		}
+
 	}
 }
 
@@ -98,4 +118,19 @@ void AT3BossMonster::SetLockOnWidgetVisible(bool bVisible)
 	{
 		LockOnWidgetComponent->SetVisibility(bVisible);
 	}
+}
+
+float AT3BossMonster::GetHPPercent() const
+{
+	return BossStats.CurrentHP / BossStats.MaxHP;
+}
+
+ET3MonsterType AT3BossMonster::GetMonsterType() const
+{
+	return MonsterType;
+}
+
+void AT3BossMonster::ApplyBonusDamage(float BonusDamage)
+{
+	Damage(BonusDamage, 0.0f);
 }

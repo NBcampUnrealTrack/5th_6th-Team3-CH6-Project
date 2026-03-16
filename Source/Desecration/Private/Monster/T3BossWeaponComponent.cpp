@@ -2,12 +2,14 @@
 #include "Desecration.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/SphereComponent.h"
 #include "Components/TimelineComponent.h"
 #include "Curves/CurveFloat.h"
 
 UT3BossWeaponComponent::UT3BossWeaponComponent()
 {
-	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bStartWithTickEnabled = false;
 
 	// 무기 메시 (AttachToSocket에서 소켓 부착)
 	WeaponMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
@@ -44,6 +46,20 @@ UT3BossWeaponComponent::UT3BossWeaponComponent()
 	WeaponHitBoxWide->bDrawOnlyIfSelected = false;
 	WeaponHitBoxWide->ShapeColor = FColor::Orange;
 	WeaponHitBoxWide->SetHiddenInGame(true);
+
+	// 팔 공격 판정 구체 — AttachToSocket에서 캐릭터 메시 본에 부착
+	BodyHitSphere = CreateDefaultSubobject<USphereComponent>(TEXT("BodyHitSphere"));
+	BodyHitSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BodyHitSphere->SetCollisionObjectType(ECC_WorldDynamic);
+	BodyHitSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
+	BodyHitSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	BodyHitSphere->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
+	BodyHitSphere->SetGenerateOverlapEvents(true);
+	BodyHitSphere->SetSphereRadius(BodyAttackRadius);
+
+	BodyHitSphere->bDrawOnlyIfSelected = false;
+	BodyHitSphere->ShapeColor = FColor::Cyan;
+	BodyHitSphere->SetHiddenInGame(true);
 }
 
 void UT3BossWeaponComponent::BeginPlay()
@@ -73,12 +89,44 @@ void UT3BossWeaponComponent::BeginPlay()
 			this, &UT3BossWeaponComponent::OnWeaponOverlapBegin);
 	}
 
+	// 팔 공격 판정 오버랩 바인딩 (같은 콜백 공유)
+	if (BodyHitSphere)
+	{
+		BodyHitSphere->OnComponentBeginOverlap.AddDynamic(
+			this, &UT3BossWeaponComponent::OnWeaponOverlapBegin);
+	}
+
 	// 무기 메시 부착 상태 확인
 	if (WeaponMeshComponent)
 	{
 		UE_LOG(LogDesecration, Log, TEXT("T3_BossWeapon: WeaponMesh 부착 상태 — Parent:%s, Location:%s"),
 			WeaponMeshComponent->GetAttachParent() ? *WeaponMeshComponent->GetAttachParent()->GetName() : TEXT("없음"),
 			*WeaponMeshComponent->GetComponentLocation().ToString());
+	}
+}
+
+void UT3BossWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (bIsBlendingSocket && WeaponMeshComponent)
+	{
+		SocketBlendElapsed += DeltaTime;
+		float Alpha = FMath::Clamp(SocketBlendElapsed / SocketBlendDuration, 0.f, 1.f);
+
+		// EaseOut — 시작에 빠르게 이동, 끝에서 미세 안착
+		Alpha = FMath::InterpEaseOut(0.f, 1.f, Alpha, SocketBlendExponent);
+
+		FTransform BlendedTransform;
+		BlendedTransform.Blend(SocketBlendStartRelative, FTransform::Identity, Alpha);
+		WeaponMeshComponent->SetRelativeTransform(BlendedTransform);
+
+		if (Alpha >= 1.f)
+		{
+			WeaponMeshComponent->SetRelativeTransform(FTransform::Identity);
+			bIsBlendingSocket = false;
+			SetComponentTickEnabled(false);
+		}
 	}
 }
 
@@ -93,10 +141,10 @@ void UT3BossWeaponComponent::AttachToSocket(USkeletalMeshComponent* TargetMesh)
 	}
 
 	// 소켓 존재 확인
-	if (!TargetMesh->DoesSocketExist(WeaponSocketName))
+	if (!TargetMesh->DoesSocketExist(DefaultSocketName))
 	{
 		UE_LOG(LogDesecration, Error, TEXT("T3_BossWeapon: 소켓 '%s'이 스켈레탈 메시에 없음! 사용 가능한 소켓:"),
-			*WeaponSocketName.ToString());
+			*DefaultSocketName.ToString());
 
 		TArray<FName> AllSockets = TargetMesh->GetAllSocketNames();
 		for (const FName& SocketName : AllSockets)
@@ -107,7 +155,7 @@ void UT3BossWeaponComponent::AttachToSocket(USkeletalMeshComponent* TargetMesh)
 	}
 
 	WeaponMeshComponent->AttachToComponent(
-		TargetMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocketName);
+		TargetMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, DefaultSocketName);
 
 	// HitBox를 WeaponMesh에 명시적 재부착
 	// (생성자의 SetupAttachment가 UActorComponent 내부 생성 시 런타임에 유지 안 됨)
@@ -123,10 +171,97 @@ void UT3BossWeaponComponent::AttachToSocket(USkeletalMeshComponent* TargetMesh)
 			WeaponMeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 	}
 
+	// 소켓 스위칭용 캐싱
+	CachedTargetMesh = TargetMesh;
+
+	// 팔 공격 판정 구체를 캐릭터 메시 본에 부착
+	if (BodyHitSphere && TargetMesh->DoesSocketExist(BodyAttackBoneName))
+	{
+		BodyHitSphere->AttachToComponent(
+			TargetMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, BodyAttackBoneName);
+
+		// 런타임에 반경 반영
+		BodyHitSphere->SetSphereRadius(BodyAttackRadius);
+
+		UE_LOG(LogDesecration, Log, TEXT("T3_BossWeapon: BodyHitSphere → 본 '%s'에 부착 (반경:%.0f)"),
+			*BodyAttackBoneName.ToString(), BodyAttackRadius);
+	}
+	else if (BodyHitSphere)
+	{
+		UE_LOG(LogDesecration, Warning, TEXT("T3_BossWeapon: 본 '%s'이 스켈레탈 메시에 없음 — BodyHitSphere 미부착"),
+			*BodyAttackBoneName.ToString());
+	}
+
 	UE_LOG(LogDesecration, Log, TEXT("T3_BossWeapon: 소켓 '%s'에 부착 성공 (Mesh위치:%s, HitBox위치:%s)"),
-		*WeaponSocketName.ToString(),
+		*DefaultSocketName.ToString(),
 		*WeaponMeshComponent->GetComponentLocation().ToString(),
 		WeaponHitBox ? *WeaponHitBox->GetComponentLocation().ToString() : TEXT("nullptr"));
+}
+
+FName UT3BossWeaponComponent::GetSocketNameByType(EWeaponSocketType SocketType) const
+{
+	switch (SocketType)
+	{
+	case EWeaponSocketType::Alternative:
+		return AlternativeSocketName;
+	default:
+		return DefaultSocketName;
+	}
+}
+
+void UT3BossWeaponComponent::SwitchToSocket(EWeaponSocketType SocketType)
+{
+	if (!CachedTargetMesh || !WeaponMeshComponent || bIsWeaponDropped)
+	{
+		return;
+	}
+
+	const FName TargetSocketName = GetSocketNameByType(SocketType);
+
+	if (!CachedTargetMesh->DoesSocketExist(TargetSocketName))
+	{
+		UE_LOG(LogDesecration, Warning, TEXT("T3_BossWeapon: 소켓 스위칭 실패 — '%s' 소켓 없음"),
+			*TargetSocketName.ToString());
+		return;
+	}
+
+	// 블렌드용: 전환 전 월드 트랜스폼 저장
+	const FTransform OldWorldTransform = WeaponMeshComponent->GetComponentTransform();
+
+	// 새 소켓에 스냅 (상대 트랜스폼 = Identity)
+	WeaponMeshComponent->AttachToComponent(
+		CachedTargetMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TargetSocketName);
+
+	// 히트박스 재부착
+	if (WeaponHitBox)
+	{
+		WeaponHitBox->AttachToComponent(
+			WeaponMeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	}
+	if (WeaponHitBoxWide)
+	{
+		WeaponHitBoxWide->AttachToComponent(
+			WeaponMeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	}
+
+	// 블렌드 시작 — 옛 위치에서 새 소켓으로 부드럽게 전환
+	if (SocketBlendDuration > 0.f)
+	{
+		const FTransform NewSocketWorldTransform = WeaponMeshComponent->GetComponentTransform();
+		SocketBlendStartRelative = OldWorldTransform.GetRelativeTransform(NewSocketWorldTransform);
+		WeaponMeshComponent->SetRelativeTransform(SocketBlendStartRelative);
+		SocketBlendElapsed = 0.f;
+		bIsBlendingSocket = true;
+		SetComponentTickEnabled(true);
+	}
+
+	UE_LOG(LogDesecration, Log, TEXT("T3_BossWeapon: 소켓 스위칭 → '%s' (블렌드:%.2f초)"),
+		*TargetSocketName.ToString(), SocketBlendDuration);
+}
+
+void UT3BossWeaponComponent::ResetToDefaultSocket()
+{
+	SwitchToSocket(EWeaponSocketType::Default);
 }
 
 void UT3BossWeaponComponent::SetAttackCollisionEnabled(bool bEnable)
@@ -173,13 +308,39 @@ void UT3BossWeaponComponent::SetWideCollisionEnabled(bool bEnable)
 	}
 }
 
+void UT3BossWeaponComponent::SetBodyAttackCollisionEnabled(bool bEnable)
+{
+	if (BodyHitSphere)
+	{
+		if (bEnable)
+		{
+			HitActorsThisSwing.Reset();
+		}
+
+		BodyHitSphere->SetCollisionEnabled(
+			bEnable ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
+
+		UE_LOG(LogDesecration, Log,
+			TEXT("T3_BossWeapon: 팔 공격 콜리전 %s (본:%s, 반경:%.0f, 위치:%s)"),
+			bEnable ? TEXT("ON") : TEXT("OFF"),
+			*BodyAttackBoneName.ToString(),
+			BodyHitSphere->GetUnscaledSphereRadius(),
+			*BodyHitSphere->GetComponentLocation().ToString());
+	}
+	else
+	{
+		UE_LOG(LogDesecration, Warning, TEXT("T3_BossWeapon: BodyHitSphere가 nullptr!"));
+	}
+}
+
 void UT3BossWeaponComponent::OnWeaponOverlapBegin(UPrimitiveComponent* OverlappedComp,
 	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
 	bool bFromSweep, const FHitResult& SweepResult)
 {
 	// 어떤 히트박스에서 오버랩 발생했는지 구분
+	const bool bIsBodyAttack = (OverlappedComp == BodyHitSphere);
 	const bool bIsWideHitBox = (OverlappedComp == WeaponHitBoxWide);
-	const FString HitBoxName = bIsWideHitBox ? TEXT("Wide") : TEXT("Normal");
+	const FString HitBoxName = bIsBodyAttack ? TEXT("Body") : (bIsWideHitBox ? TEXT("Wide") : TEXT("Normal"));
 
 	UE_LOG(LogDesecration, Log, TEXT("T3_BossWeapon: [오버랩] HitBox:%s, Other:%s, Comp:%s"),
 		*HitBoxName,
@@ -214,6 +375,10 @@ void UT3BossWeaponComponent::DropWeapon()
 	}
 
 	bIsWeaponDropped = true;
+
+	// 소켓 블렌드 중단 — Detach 후 Tick이 상대 트랜스폼을 덮어쓰는 것 방지
+	bIsBlendingSocket = false;
+	SetComponentTickEnabled(false);
 
 	// 판정 비활성화
 	SetAttackCollisionEnabled(false);
