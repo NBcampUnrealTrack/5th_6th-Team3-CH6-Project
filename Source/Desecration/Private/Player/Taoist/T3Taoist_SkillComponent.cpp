@@ -339,8 +339,7 @@ void UT3Taoist_SkillComponent::ExecuteStrongWind()
         // 3. 몽타주 재생
         float Duration = OwnerChar->PlayAnimMontage(StrongWindData.SkillMontage);
 
-        // 4. 사운드 재생
-        PlaySkillEffectSound(Skill1Voice);
+        
 
         if (Duration > 0.f)
         {
@@ -398,6 +397,9 @@ void UT3Taoist_SkillComponent::SpawnStrongWind()
 
             // 스폰 완료
             StrongWindActor->FinishSpawning(FTransform(SpawnRotation, SpawnLocation));
+
+            // 사운드 재생
+            PlaySkillEffectSound(Skill1Voice);
         }
     }
 }
