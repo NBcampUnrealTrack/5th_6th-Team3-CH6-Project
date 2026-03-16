@@ -187,8 +187,12 @@ protected:
 
        void SpawnCharmInternal(AActor* Spawner, const FSkillData& SkillData);
 
-
-
-
-      
+#pragma region Rune
+public:
+    void SetCloneAttackBonus(float NewAttackBonus);
+    
+private:
+    float PendingCloneAttackBonus = 0.f;
+    
+#pragma endregion
 };
