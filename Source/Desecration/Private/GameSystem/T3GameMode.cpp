@@ -6,6 +6,8 @@
 #include "GameSystem/T3WorldSubsystem.h"
 #include "Item/Component/T3InventoryComponent.h"
 #include "Player/T3CharacterBase.h"
+#include "Player/T3CombatComponent.h"
+#include "Player/T3SkillComponentBase.h"
 
 void AT3GameMode::BeginPlay()
 {
@@ -76,19 +78,26 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 		EquipComp->GetEquipmentSaveData(SaveGame->WeaponSaveData, SaveGame->ArmorSaveData);
 	}
 	
-	//저장했던 물체 상태 제거
-	SaveGame->LevelObjectStates.Empty();
+	//스킬
+	TObjectPtr<UT3SkillComponentBase> SkillComponent;
+	if (const TObjectPtr<UT3CombatComponent> CombatComponent = Character->GetCombatComponent(); !CombatComponent || !CombatComponent->GetSkillComponent())
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : SkillComponent 접근 불가"), *GetNameSafe(this));
+		return false;
+	}
+	else
+	{
+		SkillComponent = CombatComponent->GetSkillComponent();
+	}
+	//SkillComponent->;
+	
+	//저장했던 적 상태 제거
+	SaveGame->EnemyStates.Empty();
 	
 	//임시 저장이라면 세이브 데이터를 가지고만 있고 직접 저장하지 않는다.
 	if (bTemporarySave)
 	{
 		return true;
-	}
-	
-	//임시 저장이 아니면 물체 상태 저장
-	if (const TObjectPtr<UT3WorldSubsystem> WorldSubsystem = GetWorld()->GetSubsystem<UT3WorldSubsystem>())
-	{
-		SaveGame->LevelObjectStates.Append(WorldSubsystem->GetAllStates());
 	}
 	
 	//저장
@@ -200,7 +209,12 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 
 void AT3GameMode::RegainLostMoney(const int32 LostMoneyID) const
 {
-	T3GameInstance->GetSavedGameData()->RegainLostMoney(LostMoneyID);
+	T3GameInstance->GetLostMoneyData()->RegainLostMoney(LostMoneyID);
+	if (!T3GameInstance->SaveLostMoney())
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : 잃어버린 재화 갱신 실패"), *GetNameSafe(this));
+		return;
+	}
 }
 
 bool AT3GameMode::YouHaveBeenCorrupted(const AT3CharacterBase* Character) const
@@ -223,15 +237,17 @@ bool AT3GameMode::YouHaveBeenCorrupted(const AT3CharacterBase* Character) const
 		UE_LOG(LogTemp, Error, TEXT("%s : 게임 오버 처리 실패 - 저장된 게임 데이터 없음"), *GetNameSafe(this));
 		return false;
 	}
+	T3GameInstance->GetSavedGameData()->Money = 0;
 	
 	//잃어버린 재화 정보
 	const int32 LostAmount = Character->InventoryComponent->GetMoney();
 	const FLostMoney NewLostMoney = FLostMoney(T3GameInstance->GetCurrentLevel(), Character->GetActorLocation(), LostAmount);
 	
 	//잃어버린 것을 반영하기 위한 저장
-	T3GameInstance->GetSavedGameData()->AddLostMoney(NewLostMoney);
-	T3GameInstance->GetSavedGameData()->Money = 0;
-	if (!T3GameInstance->SaveGame())
+	T3GameInstance->GetLostMoneyData()->AddLostMoney(NewLostMoney);
+	const bool SaveGameResult = T3GameInstance->SaveGame();
+	const bool SaveLostMoneyResult = T3GameInstance->SaveLostMoney();
+	if (!SaveGameResult || !SaveLostMoneyResult)
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s : 게임 오버 처리 실패 - 저장 실패"), *GetNameSafe(this));
 		return false;
