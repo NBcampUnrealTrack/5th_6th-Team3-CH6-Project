@@ -42,7 +42,7 @@ public:
     EHitIntensity AttackIntensity;
 
     // 데미지 타입 
-    UPROPERTY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
     TSubclassOf<class UT3DamageType_Base> DamageTypeClass;
 
     virtual void NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference) override;

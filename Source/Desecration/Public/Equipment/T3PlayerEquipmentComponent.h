@@ -9,11 +9,13 @@
 #include "Item/Rune/T3RuneBase.h"
 #include "T3PlayerEquipmentComponent.generated.h"
 
+struct FT3RuneItemData;
 class AT3CharacterBase;
 
 // 장비 스탯 변경 시 발송되는 델리게이트
 // 캐릭터팀에서 바인딩하여 공격력/방어력을 동기화
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEquipmentStatsChanged, float, NewAttackPower, float, NewDefensePower);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRuneSocketChanged);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class DESECRATION_API UT3PlayerEquipmentComponent : public UActorComponent
@@ -86,6 +88,8 @@ public:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UT3RuneBase>> ArmorActiveRunes;
 
+	UPROPERTY(BlueprintAssignable)
+	FOnRuneSocketChanged OnRuneSocketChanged;
 	// ==========================================================
 	// 기능
 	// ==========================================================
@@ -111,6 +115,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Rune")
 	bool UnsocketRune(FName RuneID, ET3EquipmentType TargetEquipment);
 
+	UFUNCTION(BlueprintCallable, Category = "Rune")
+	bool SocketRuneAuto(FName RuneID);
+	
 	// [통합] 강화 함수
 	UFUNCTION(BlueprintCallable, Category = "Upgrade")
 	bool TryUpgrade(ET3EquipmentType TargetType, int32 MaxAllowedLevel);
@@ -121,7 +128,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Stats")
 	float GetCurrentDefensePower() const { return CurrentDefensePower; }
 
-
+	UFUNCTION(BlueprintCallable)
+	bool GetSocketedRuneData(ET3EquipmentType EquipmentType, int32 SlotIndex, FT3RuneItemData& OutRuneData) const;
 protected:
 
 	// [신규] 실제로 계산된 스탯 값을 저장하는 캐시 변수

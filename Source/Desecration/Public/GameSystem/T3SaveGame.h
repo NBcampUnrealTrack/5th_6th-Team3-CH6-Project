@@ -7,6 +7,7 @@
 #include "T3SaveGame.generated.h"
 
 struct FInventorySlot;
+struct FSkillData;
 
 UCLASS()
 class DESECRATION_API UT3SaveGame : public USaveGame
@@ -25,6 +26,7 @@ public:
 	UPROPERTY()
 	FString PlayerName;
 	
+#pragma region 레벨(맵)
 	//저장한 곳의 맵 이름
 	UPROPERTY()
 	ELevelName SavedLevelName;
@@ -37,9 +39,14 @@ public:
 	UPROPERTY(Transient)
 	bool bSetLocation;
 	
-	//물체 상태
+	//모든 레벨의 물체 상태
 	UPROPERTY()
 	TMap<int32, int32> LevelObjectStates;
+	
+	//적들의 상태
+	UPROPERTY()
+	TMap<int32, int32> EnemyStates;
+#pragma endregion
 	
 #pragma region 캐릭터 스탯
 	//최대 HP
