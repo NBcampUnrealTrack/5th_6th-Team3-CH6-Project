@@ -114,16 +114,16 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	}
 	
 	//스킬
-	TObjectPtr<UT3SkillComponentBase> SkillComponent;
-	if (const TObjectPtr<UT3CombatComponent> CombatComponent = Character->GetCombatComponent(); !CombatComponent || !CombatComponent->GetSkillComponent())
-	{
-		UE_LOG(LogTemp, Error, TEXT("%s : SkillComponent 접근 불가"), *GetNameSafe(this));
-		return false;
-	}
-	else
-	{
-		SkillComponent = CombatComponent->GetSkillComponent();
-	}
+	// TObjectPtr<UT3SkillComponentBase> SkillComponent;
+	// if (const TObjectPtr<UT3CombatComponent> CombatComponent = Character->GetCombatComponent(); !CombatComponent || !CombatComponent->GetSkillComponent())
+	// {
+	// 	UE_LOG(LogTemp, Error, TEXT("%s : SkillComponent 접근 불가"), *GetNameSafe(this));
+	// 	return false;
+	// }
+	// else
+	// {
+	// 	SkillComponent = CombatComponent->GetSkillComponent();
+	// }
 	//SkillComponent->;
 	
 	//저장했던 적 상태 제거
