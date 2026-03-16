@@ -373,4 +373,7 @@ public:
 	void OnBlockReaction();
 	UFUNCTION(BlueprintImplementableEvent, Category = "Defence")
 	void OnParryReaction();
+	
+	UFUNCTION(BlueprintImplementableEvent, Category = "CameraShake")
+	void OnCameraShake();
 };

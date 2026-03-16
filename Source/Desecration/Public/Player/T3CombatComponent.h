@@ -277,4 +277,18 @@ private:
 	float HolyGaugeChargeAmount = 20.f;
 	
 #pragma endregion
+
+
+	private:
+		// 피격 사운드
+		void PlaySkillEffectSound(USoundBase* Sound, float Volume = 1.0f);
+
+		UPROPERTY(EditAnywhere, Category = "Sound")
+		class USoundBase* LightHitVoice;
+
+		UPROPERTY(EditAnywhere, Category = "Sound")
+		class USoundBase* MediumHitVoice;
+
+		UPROPERTY(EditAnywhere, Category = "Sound")
+		class USoundBase* HeavyHitVoice;
 };

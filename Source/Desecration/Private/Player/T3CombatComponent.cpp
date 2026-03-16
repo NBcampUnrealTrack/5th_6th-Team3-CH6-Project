@@ -617,10 +617,32 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 	// 팔라딘의 경우 신의 심판 시전 중 피격 당하면 스킬 캔슬
 	if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
 	{
-		if (IsValid(SkillComp))
+		if (IsValid(SkillComp) && SkillComp->bUsingSkill)
 		{
 			GetSkillComponent()->CancelCurrentSkill();
 			OwnerChar->StopAnimMontage();
+		}
+	}
+
+	// 팔라딘, 도사 피격 사운드
+	if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin || OwnerChar->GetCurrentClass() == ECharacterClass::Taoist)
+	{
+		switch (Intensity)
+		{
+		case EHitIntensity::Light:
+			PlaySkillEffectSound(LightHitVoice,3.0f);
+			UE_LOG(LogTemp, Display, TEXT("light hit"));
+			break;
+		case EHitIntensity::Medium:
+			PlaySkillEffectSound(MediumHitVoice, 3.0f);
+			UE_LOG(LogTemp, Display, TEXT("med hit"));
+			break;
+		case EHitIntensity::Heavy:
+			PlaySkillEffectSound(HeavyHitVoice, 3.0f);
+			UE_LOG(LogTemp, Display, TEXT("heavy hit"));
+			break;
+		default:
+			break;
 		}
 	}
 
@@ -903,4 +925,14 @@ float UT3CombatComponent::GetHolyGaugeChargeAmount() const
 void UT3CombatComponent::SetHolyGaugeChargeAmount(float NewAmount)
 {
 	HolyGaugeChargeAmount = NewAmount;
+}
+
+
+void UT3CombatComponent::PlaySkillEffectSound(USoundBase* Sound, float Volume)
+{
+	if (Sound && GetWorld())
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, Sound, GetOwner()->GetActorLocation(), Volume);
+		UE_LOG(LogTemp, Display, TEXT("play sound"));
+	}
 }
