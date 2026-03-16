@@ -28,6 +28,11 @@ void AT3GameMode::BeginPlay()
 
 void AT3GameMode::MakeLostMoneyActors()
 {
+	if (!T3GameInstance->GetLostMoneyData())
+	{
+		return;
+	}
+	
 	for (const TTuple<int32, FLostMoney> LostMoneyInfo : T3GameInstance->GetLostMoneyData()->LostMoneyList)
 	{
 		//이 레벨에 해당되는 것만 생성
