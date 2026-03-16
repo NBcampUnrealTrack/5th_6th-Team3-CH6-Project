@@ -23,7 +23,7 @@ FSkillData* UT3Paladin_SkillComponent::GetSkillDataByID(int32 SkillID)
     {
     case 1: return &SwordWaveData;
     case 2: return &ShieldStrikeData;
-    // case 3: return &Data;
+    case 3: return &LeafAttackData;
     case 4: return &JudgmentData;
     default: return nullptr;
     }
