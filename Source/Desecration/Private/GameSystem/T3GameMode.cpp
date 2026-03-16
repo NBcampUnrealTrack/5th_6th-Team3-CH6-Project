@@ -267,7 +267,7 @@ bool AT3GameMode::YouHaveBeenCorrupted(const AT3CharacterBase* Character) const
 	}
 	
 	//잃어버린 재화 내용을 마지막 저장 데이터에 반영
-	if (T3GameInstance->LoadGame())
+	if (!T3GameInstance->LoadGame())
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s : 게임 오버 처리 실패 - 저장된 게임 데이터 없음"), *GetNameSafe(this));
 		return false;
