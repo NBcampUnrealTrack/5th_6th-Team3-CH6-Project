@@ -78,11 +78,20 @@ void AT3TalismanProjectile::Tick(float DeltaTime)
 
 void AT3TalismanProjectile::OnTalismanOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-    // 1. 유효성 검사 (본인 및 소유자 제외, 중복 히트 방지)
+    // 1. 유효성 검사
+    if (!OtherActor || OtherActor == this) return; // 기본 유효성 및 자기 자신 제외
+
+    // 부적끼리는 충돌하지 않도록 클래스 체크
+    if (OtherActor->IsA(AT3TalismanProjectile::StaticClass())) return;
+
+    // 본인 소유자(분신) 및 본체(CharacterBase) 제외
     APawn* MyInstigator = GetInstigator();
     if (OtherActor == MyInstigator) return;
     if (OtherActor->IsA(AT3CharacterBase::StaticClass())) return;
-    if (!OtherActor || OtherActor == GetOwner() || HitActors.Contains(OtherActor) || OtherActor == this || OtherActor->IsA(AT3TaoistClone::StaticClass())) return;
+    if (OtherActor->IsA(AT3TaoistClone::StaticClass())) return;
+
+    // 이미 히트된 액터거나 소유자라면 무시
+    if (OtherActor == GetOwner() || HitActors.Contains(OtherActor)) return;
 
     AT3CharacterBase* OwnerChar = Cast<AT3CharacterBase>(GetOwner());
     if (!OwnerChar) return;

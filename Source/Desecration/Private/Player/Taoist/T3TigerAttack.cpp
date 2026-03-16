@@ -92,7 +92,6 @@ void AT3TigerAttack::TriggerExplosion(AActor* TargetActor, float DamageMultiplie
 
 }
 
-
 void AT3TigerAttack::LaunchTiger(FVector Direction, float Speed)
 {
     if (Direction.IsNearlyZero())

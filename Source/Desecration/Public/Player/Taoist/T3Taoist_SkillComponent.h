@@ -82,6 +82,19 @@ protected:
 
     // ===== 패시브 스킬 (회피 후 다음 공격 or 스킬 1회 30% 강화)
     
+public:
+    // 이매시브 강도를 조절하는 함수
+    void SetFanEmissive(bool bEnabled);
+
+protected:
+    // 머티리얼 파라미터 이름 (블루프린트 머티리얼과 일치해야 함)
+    UPROPERTY(EditAnywhere, Category = "Visual")
+    FName EmissiveParamName = TEXT("EmissiveStrength");
+
+    // 동적 머티리얼 인스턴스 저장용
+    UPROPERTY()
+    TObjectPtr<UMaterialInstanceDynamic> DynamicMaterial;
+
     // 회피 후 다음 공격 강화 여부
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skill|Passive")
     bool bIsSpiritualEmpowered = false;
@@ -93,6 +106,9 @@ protected:
 
     // 쿨타임 중인지 확인 (회피 시 체크용)
     bool bIsOnCooldown = false;
+
+    UPROPERTY(EditAnywhere, Category = "Sound")
+    class USoundBase* PassiveSound;
     
 public:
     // 외부에서 강화 상태를 변경할 때 사용
@@ -156,6 +172,9 @@ protected:
 
         // 2. 분신이 수명이 다해서 죽었을 때, 배열에서만 제거하는 용도 (델리게이트 바인딩용)
         void OnCloneDestroyed(AT3TaoistClone* DestroyedClone);
+
+        UPROPERTY(EditAnywhere, Category = "Sound")
+        class USoundBase* SpawnSound;
 
 
         // ========= 4스킬 : 호랑이 소환술
