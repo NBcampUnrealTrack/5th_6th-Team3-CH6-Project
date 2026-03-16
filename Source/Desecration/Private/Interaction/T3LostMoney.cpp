@@ -9,8 +9,6 @@ AT3LostMoney::AT3LostMoney()
 {
 	RootComp = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
 	SetRootComponent(RootComp);
-	LostMoneyMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LostMoneyMesh"));
-	LostMoneyMesh->SetupAttachment(RootComp);
 	CollisionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionSphere"));
 	CollisionSphere->SetupAttachment(RootComp);
 }
@@ -57,12 +55,15 @@ void AT3LostMoney::OnActorOverlap(UPrimitiveComponent* OverlappedComp, AActor* O
 	//돈 회수 처리
 	if (T3Character->InventoryComponent)
 	{
-		T3Character->InventoryComponent->SetMoney(Money);
+		const int32 SetValue = T3Character->InventoryComponent->GetMoney() + Money;
+		T3Character->InventoryComponent->SetMoney(SetValue);
 	}
 	if (const AT3GameMode* T3Gm = T3GameMode.Get())
 	{
 		T3Gm->RegainLostMoney(LostMoneyID);
 	}
+	
+	//UE_LOG(LogTemp, Warning, TEXT("돈 회수 : %d"), Money);
 	
 	//액터 제거
 	Destroy();
