@@ -173,6 +173,9 @@ protected:
         // 2. 분신이 수명이 다해서 죽었을 때, 배열에서만 제거하는 용도 (델리게이트 바인딩용)
         void OnCloneDestroyed(AT3TaoistClone* DestroyedClone);
 
+        UPROPERTY(EditAnywhere, Category = "Sound")
+        class USoundBase* SpawnSound;
+
 
         // ========= 4스킬 : 호랑이 소환술
 

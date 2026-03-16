@@ -447,6 +447,9 @@ void UT3Taoist_SkillComponent::SpawnSingleShadowClone(FVector ExplosionLocation,
         OwnerChar, OwnerChar, ESpawnActorCollisionHandlingMethod::AlwaysSpawn
     );
 
+    // 분신 스폰 사운드 재생
+    PlaySkillEffectSound(SpawnSound);
+
     if (NewClone)
     {
         NewClone->InitializeClone(OwnerChar);
@@ -590,9 +593,7 @@ void UT3Taoist_SkillComponent::PlayThrowChramMontage(const FSkillData& SkillData
     {
         OwnerChar->PlayAnimMontage(SkillData.SkillMontage);
 
-        // 사운드 재생
-        PlaySkillEffectSound(Skill3Sound);
-        PlaySkillEffectSound(Skill3Voice);
+
     }
 }
 
@@ -643,6 +644,10 @@ void UT3Taoist_SkillComponent::SpawnCharmInternal(AActor* Spawner, const FSkillD
             }
 
             Charm->LaunchCharm(ThrowDir.GetSafeNormal(), ThrowSpeed);
+
+            // 사운드 재생
+            PlaySkillEffectSound(Skill3Sound);
+            PlaySkillEffectSound(Skill3Voice);
         }
     }
 }
