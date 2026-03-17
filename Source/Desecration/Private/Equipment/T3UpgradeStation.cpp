@@ -9,6 +9,7 @@
 #include "Equipment/T3PlayerEquipmentComponent.h"
 #include "Equipment/T3TestItemInstance.h"
 #include "Item/Component/T3InventoryComponent.h"
+#include "Item/Data/T3RuneItemData.h"
 #include "Player/T3PlayerController.h"
 
 // ============================================================================
@@ -32,6 +33,8 @@ void AT3UpgradeStation::BeginPlay()
 {
 	Super::BeginPlay();
 
+	SynthesisSlots.Init(NAME_None, 3);
+	
 	UE_LOG(LogDesecration, Log, TEXT("[UpgradeStation] 초기화 완료 (MaxLevel: %d)"), MaxUpgradeLevel);
 }
 
@@ -77,6 +80,8 @@ void AT3UpgradeStation::CloseUpgradeUI(AT3PlayerController* T3PC)
 	{
 		return;
 	}
+	
+	ClearSynthesisSlots();
 	
 	// 위젯 제거
 	if (UpgradeWidgetInstance)
@@ -404,3 +409,149 @@ void AT3UpgradeStation::ConsumeStone(ET3UpgradeStoneGrade Grade)
 	}
 }
 
+bool AT3UpgradeStation::AddRuneToSynthesisSlot(FName RuneID)
+{
+	int32 EmptyIndex = SynthesisSlots.Find(NAME_None);
+	if (EmptyIndex == INDEX_NONE)
+	{
+		return false;
+	}
+
+	FName LockedID = GetLockedRuneID();
+	
+	if (LockedID != NAME_None && RuneID != LockedID)
+	{
+		return false;
+	}
+	
+	UT3InventoryComponent* Inventory = GetPlayerInventoryComponent();
+	
+	if (!Inventory || Inventory->GetRuneItemCountByRuneID(RuneID) <= 0)
+	{
+		return false;
+	}
+
+	Inventory->RemoveRuneItemByCount(RuneID, 1);
+	SynthesisSlots[EmptyIndex] = RuneID;
+
+	OnSynthesisSlotsChanged.Broadcast();
+	return true;
+}
+
+bool AT3UpgradeStation::RemoveRuneFromSynthesisSlot(int32 SlotIndex)
+{
+	if (!SynthesisSlots.IsValidIndex(SlotIndex) || SynthesisSlots[SlotIndex] == NAME_None)
+	{
+		return false;
+	}
+
+	FName RuneID = SynthesisSlots[SlotIndex];
+	
+	SynthesisSlots[SlotIndex] = NAME_None;
+
+	UT3InventoryComponent* Inventory = GetPlayerInventoryComponent();
+	
+	if (Inventory)
+	{
+		Inventory->AddRuneItemByCount(RuneID, 1);
+	}
+
+	OnSynthesisSlotsChanged.Broadcast();
+	return true;
+}
+
+bool AT3UpgradeStation::CanAddRuneToSlot(FName RuneID) const
+{
+	if (SynthesisSlots.Find(NAME_None) == INDEX_NONE)
+	{
+		return false;
+	}
+
+	FName LockedID = GetLockedRuneID();
+	
+	if (LockedID != NAME_None && RuneID != LockedID)
+	{
+		return false;
+	}
+
+	UT3InventoryComponent* Inventory = GetPlayerInventoryComponent();
+	
+	return Inventory && Inventory->GetRuneItemCountByRuneID(RuneID) > 0;
+}
+
+bool AT3UpgradeStation::CanSynthesize() const
+{
+	if (SynthesisSlots.Contains(NAME_None))
+	{
+		return false;
+	}
+
+	UT3InventoryComponent* Inventory = GetPlayerInventoryComponent();
+	
+	if (!Inventory || !Inventory->RuneTable)
+	{
+		return false;
+	}
+
+	const FT3RuneItemData* RuneRow = Inventory->RuneTable->FindRow<FT3RuneItemData>(SynthesisSlots[0], TEXT("CanSynthesize"));
+	
+	return RuneRow && RuneRow->NextGradeRuneID != NAME_None;
+}
+
+bool AT3UpgradeStation::SynthesizeRune()
+{
+	if (!CanSynthesize())
+	{
+		OnSynthesisFailed.Broadcast(FText::FromString(TEXT("합성 조건이 충족되지 않았습니다.")));
+		return false;
+	}
+
+	UT3InventoryComponent* Inventory = GetPlayerInventoryComponent();
+	
+	const FT3RuneItemData* RuneRow = Inventory->RuneTable->FindRow<FT3RuneItemData>(SynthesisSlots[0], TEXT("SynthesizeRune"));
+
+	FName ResultID = RuneRow->NextGradeRuneID;
+
+	for (FName& Slot : SynthesisSlots)
+	{
+		Slot = NAME_None;
+	}
+
+	Inventory->AddRuneItemByCount(ResultID, 1);
+
+	OnSynthesisSuccess.Broadcast(ResultID);
+	OnSynthesisSlotsChanged.Broadcast();
+
+	UE_LOG(LogDesecration, Log, TEXT("[UpgradeStation] 룬 합성 성공! → %s"), *ResultID.ToString());
+
+	return true;
+}
+
+void AT3UpgradeStation::ClearSynthesisSlots()
+{
+	UT3InventoryComponent* Inventory = GetPlayerInventoryComponent();
+
+	for (FName& Slot : SynthesisSlots)
+	{
+		if (Slot != NAME_None && Inventory)
+		{
+			Inventory->AddRuneItemByCount(Slot, 1);
+			Slot = NAME_None;
+		}
+	}
+
+	OnSynthesisSlotsChanged.Broadcast();
+}
+
+FName AT3UpgradeStation::GetLockedRuneID() const
+{
+	for (const FName& Slot : SynthesisSlots)
+	{
+		if (Slot != NAME_None)
+		{
+			return Slot;
+		}
+	}
+	
+	return NAME_None;
+}

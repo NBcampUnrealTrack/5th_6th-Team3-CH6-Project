@@ -6,6 +6,8 @@
 #include "Components/Button.h"
 #include "Components/Image.h"
 #include "Components/Border.h"
+#include "Item/Component/T3InventoryComponent.h"
+#include "Item/Data/T3RuneItemData.h"
 #include "Kismet/GameplayStatics.h"
 
 void UT3UpgradeUIWidget::NativeConstruct()
@@ -66,6 +68,21 @@ void UT3UpgradeUIWidget::NativeConstruct()
 		}
 	}
 
+	if (Btn_RuneTab)
+	{
+		Btn_RuneTab->OnClicked.AddDynamic(this, &UT3UpgradeUIWidget::OnRuneTabClicked);
+	}
+	
+	if (Btn_Synthesize)
+	{
+		Btn_Synthesize->OnClicked.AddDynamic(this, &UT3UpgradeUIWidget::OnSynthesizeClicked);
+	}
+	
+	if (UpgradeStation)
+	{
+		UpgradeStation->OnSynthesisSlotsChanged.AddDynamic(this, &UT3UpgradeUIWidget::RefreshSynthesisUI);
+	}
+	
 	// 초기 UI 갱신
 	RefreshUI();
 }
@@ -73,13 +90,34 @@ void UT3UpgradeUIWidget::NativeConstruct()
 void UT3UpgradeUIWidget::OnWeaponTabClicked()
 {
 	CurrentTab = ET3EquipmentType::Weapon;
+	
+	bIsRuneTabActive = false;
+	
 	RefreshUI();
+	
+	OnChangedTap.Broadcast(bIsRuneTabActive);
 }
 
 void UT3UpgradeUIWidget::OnArmorTabClicked()
 {
 	CurrentTab = ET3EquipmentType::Armor;
+	
+	bIsRuneTabActive = false;
+
 	RefreshUI();
+	
+	OnChangedTap.Broadcast(bIsRuneTabActive);
+}
+
+void UT3UpgradeUIWidget::OnRuneTabClicked()
+{
+	bIsRuneTabActive = true;
+	
+	RefreshSynthesisUI();
+	
+	OnRefreshRuneList();
+	
+	OnChangedTap.Broadcast(bIsRuneTabActive);
 }
 
 void UT3UpgradeUIWidget::OnUpgradeClicked()
@@ -91,6 +129,18 @@ void UT3UpgradeUIWidget::OnUpgradeClicked()
 
 	// 강화 후 UI 갱신 (레벨, 스탯, 버튼 상태 모두 업데이트)
 	RefreshUI();
+}
+
+void UT3UpgradeUIWidget::OnSynthesizeClicked()
+{
+	if (!UpgradeStation)
+	{
+		return;
+	}
+	
+	UpgradeStation->SynthesizeRune();
+	
+	OnRefreshRuneList();
 }
 
 void UT3UpgradeUIWidget::RefreshUI()
@@ -251,5 +301,48 @@ void UT3UpgradeUIWidget::RefreshUI()
 	if (Btn_Upgrade)
 	{
 		Btn_Upgrade->SetIsEnabled(UIData.bCanUpgrade);
+	}
+}
+
+void UT3UpgradeUIWidget::RefreshSynthesisUI()
+{
+	if (!UpgradeStation)
+	{
+		return;
+	}
+
+	UT3InventoryComponent* Inventory = UpgradeStation->GetPlayerInventoryComponent();
+	
+	const TArray<FName>& Slots = UpgradeStation->SynthesisSlots;
+
+	TObjectPtr<UImage> SlotImages[3] = { Img_SynthesisSlot_0, Img_SynthesisSlot_1, Img_SynthesisSlot_2 };
+
+	for (int32 i = 0; i < 3; i++)
+	{
+		if (!SlotImages[i]) continue;
+
+		if (Slots[i] == NAME_None)
+		{
+			SlotImages[i]->SetVisibility(ESlateVisibility::Collapsed);
+			continue;
+		}
+
+		// 룬 아이콘 표시
+		if (Inventory && Inventory->RuneTable)
+		{
+			const FT3RuneItemData* RuneRow = Inventory->RuneTable->FindRow<FT3RuneItemData>(Slots[i], TEXT("RefreshSynthesisUI"));
+			
+			if (RuneRow && RuneRow->ItemData.Icon)
+			{
+				SlotImages[i]->SetBrushFromTexture(RuneRow->ItemData.Icon);
+				SlotImages[i]->SetVisibility(ESlateVisibility::Visible);
+			}
+		}
+	}
+
+	// 합성 버튼 활성화
+	if (Btn_Synthesize)
+	{
+		Btn_Synthesize->SetIsEnabled(UpgradeStation->CanSynthesize());
 	}
 }
