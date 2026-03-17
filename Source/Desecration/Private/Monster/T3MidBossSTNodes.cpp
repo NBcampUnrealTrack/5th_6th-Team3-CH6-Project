@@ -170,6 +170,7 @@ EStateTreeRunStatus FT3STT_ApproachTarget::EnterState(
 
 	Data.bArrived = false;
 	Data.DelayElapsed = 0.f;
+	Data.ElapsedTime = 0.f;
 
 	if (!Data.Boss)
 	{
@@ -208,6 +209,19 @@ EStateTreeRunStatus FT3STT_ApproachTarget::Tick(
 	if (!Data.Boss || !Data.Boss->CombatTarget)
 	{
 		return EStateTreeRunStatus::Failed;
+	}
+
+	// 타임아웃 체크 — 도달 전에만 적용
+	if (!Data.bArrived)
+	{
+		Data.ElapsedTime += DeltaTime;
+		if (Data.ElapsedTime >= Data.Timeout)
+		{
+			UE_LOG(LogDesecration, Log,
+				TEXT("T3_ST: ApproachTarget 타임아웃 (%.1f초) — 패턴 재선택"),
+				Data.Timeout);
+			return EStateTreeRunStatus::Failed;
+		}
 	}
 
 	if (!Data.bArrived)
@@ -278,6 +292,15 @@ void FT3STT_ApproachTarget::ExitState(
 		{
 			AIC->StopMovement();
 		}
+
+		// 타임아웃(Failed)으로 종료되어도 ActionCount 리셋
+		if (Data.bResetActionCount && Transition.CurrentRunStatus == EStateTreeRunStatus::Failed)
+		{
+			Data.Boss->ActionCount = Data.ActionCountReset;
+			UE_LOG(LogDesecration, Log,
+				TEXT("T3_ST: ApproachTarget — 타임아웃, ActionCount 리셋 (%d)"),
+				Data.ActionCountReset);
+		}
 	}
 }
 
@@ -337,6 +360,7 @@ EStateTreeRunStatus FT3STT_Disengage::EnterState(
 	FT3STT_DisengageInstanceData& Data = Context.GetInstanceData(*this);
 
 	Data.ElapsedTime = 0.f;
+	Data.CachedDefaultSpeed = 0.f;
 
 	if (!Data.Boss)
 	{
@@ -355,6 +379,16 @@ EStateTreeRunStatus FT3STT_Disengage::EnterState(
 	if (Data.bStrafe)
 	{
 		Data.StrafeDirection = FMath::RandBool() ? 1.f : -1.f;
+	}
+
+	// Strafe 속도 적용
+	if (Data.StrafeSpeed > 0.f)
+	{
+		if (UCharacterMovementComponent* MoveComp = Data.Boss->GetCharacterMovement())
+		{
+			Data.CachedDefaultSpeed = MoveComp->MaxWalkSpeed;
+			MoveComp->MaxWalkSpeed = Data.StrafeSpeed;
+		}
 	}
 
 	// 루트모션 거리 스케일 적용
@@ -437,6 +471,16 @@ void FT3STT_Disengage::ExitState(
 		if (Data.RootMotionScale != 1.0f)
 		{
 			Data.Boss->SetAnimRootMotionTranslationScale(1.0f);
+		}
+
+		// Strafe 속도 복원 — Failed/Succeeded 모두 안전하게 복원
+		if (Data.CachedDefaultSpeed > 0.f)
+		{
+			if (UCharacterMovementComponent* MoveComp = Data.Boss->GetCharacterMovement())
+			{
+				MoveComp->MaxWalkSpeed = Data.CachedDefaultSpeed;
+			}
+			Data.CachedDefaultSpeed = 0.f;
 		}
 	}
 }

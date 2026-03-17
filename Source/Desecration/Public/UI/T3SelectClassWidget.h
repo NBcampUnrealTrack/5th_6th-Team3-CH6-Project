@@ -52,7 +52,7 @@ private:
 	TObjectPtr<UT3InputNamePanel> InputNamePanel;
 	
 	//게임 인스턴스
-	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	UPROPERTY()
 	TObjectPtr<UT3GameInstance> T3GameInstance;
 	
 	//플레이어 컨트롤러

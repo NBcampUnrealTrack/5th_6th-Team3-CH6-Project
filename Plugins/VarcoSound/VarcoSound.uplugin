@@ -1,0 +1,33 @@
+{
+    "FileVersion":  3,
+    "Version":  0,
+    "VersionName":  "0.1.3",
+    "FriendlyName":  "Varco Sound - AI Audio Generator",
+    "Description":  "AI-powered audio generation plugin for Unreal Engine. Generate sound effects, background music, auto-loop, variations, and voice conversion using Varco AI API. Features include text-to-sound generation, image-to-sound, prompt enhancement, and audio processing tools.",
+    "Category":  "Audio",
+    "CreatedBy":  "NCAI",
+    "CreatedByURL":  "https://nc-ai.com/en",
+    "DocsURL":  "https://api.varco.ai/ko/docs/plugin-sound?version=0",
+    "MarketplaceURL":  "",
+    "SupportURL":  "https://api.varco.ai/ko",
+    "CanContainContent":  false,
+    "IsBetaVersion":  false,
+    "IsExperimentalVersion":  false,
+    "Installed":  false,
+    "Modules":  [
+                    {
+                        "Name":  "VarcoSound",
+                        "Type":  "Editor",
+                        "LoadingPhase":  "Default",
+                        "PlatformAllowList":  [
+                                                  "Win64"
+                                              ]
+                    }
+                ],
+    "Plugins":  [
+                    {
+                        "Name":  "AudioCapture",
+                        "Enabled":  true
+                    }
+                ]
+}
