@@ -108,4 +108,10 @@ private:
 
     UPROPERTY()
     int32 CloneIndex = 0; // 소환 시 0 또는 1 부여
+    
+#pragma region Rune
+public:
+    float CloneAttackBonus = 0.f;
+    
+#pragma endregion
 };

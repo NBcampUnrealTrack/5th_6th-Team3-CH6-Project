@@ -37,6 +37,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnStatChangedDelegate, ET3StatTy
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnForcedMoveEndSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSellItemRequested, const FInventorySlot&, SlotData, const int32&, Count, EItemType, ItemType);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUndyingTriggered);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDamageDealt, AActor*, HitTarget, float, DamageDealt);
 
 UCLASS()
 class DESECRATION_API AT3CharacterBase : public ACharacter
@@ -207,6 +208,7 @@ public:
 
 	// Stamina
 	FORCEINLINE float GetMaxStamina() const { return MaxStamina; }
+	UFUNCTION(BlueprintCallable, Category = "Stat")
 	FORCEINLINE float GetCurrentStamina() const { return CurrentStamina; }
 	void SetCurrentStamina(float NewStamina) { CurrentStamina = FMath::Clamp(NewStamina, 0.f, MaxStamina); BroadcastStatChange(ET3StatType::Stamina);}
 	bool bCanRegenStamina = true;
@@ -312,6 +314,8 @@ public:
 public:
 	FOnUndyingTriggered OnUndyingTriggered;
 	
+	FOnDamageDealt OnDamageDealt;
+	
     void SetRuneAttackBonus(UObject* RuneSource, float Bonus);
     
 	void RemoveRuneAttackBonus(UObject* RuneSource);
@@ -360,6 +364,13 @@ private:
 	int32 SmiteCounter = 0;
 
 	void RecalculateRuneBonus();
-	
 #pragma endregion
+	
+public:
+	UFUNCTION(BlueprintImplementableEvent, Category = "Defence")
+	void OnParry();
+	UFUNCTION(BlueprintImplementableEvent, Category = "Defence")
+	void OnBlockReaction();
+	UFUNCTION(BlueprintImplementableEvent, Category = "Defence")
+	void OnParryReaction();
 };
