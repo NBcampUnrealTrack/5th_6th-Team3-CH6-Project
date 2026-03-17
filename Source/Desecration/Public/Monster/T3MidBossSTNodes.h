@@ -121,6 +121,10 @@ struct FT3STT_ApproachTargetInstanceData
 	UPROPERTY(EditAnywhere, Category = "Parameter")
 	float PostArrivalDelay = 2.5f;
 
+	// 최대 접근 시간 — 초과 시 Failed 반환하여 패턴 재선택 유도
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	float Timeout = 8.f;
+
 	// 입력 — 컨텍스트에서 바인딩
 	UPROPERTY(EditAnywhere, Category = "Context")
 	TObjectPtr<AT3MidBossMonster> Boss = nullptr;
@@ -131,6 +135,9 @@ struct FT3STT_ApproachTargetInstanceData
 
 	UPROPERTY()
 	float DelayElapsed = 0.f;
+
+	UPROPERTY()
+	float ElapsedTime = 0.f;
 };
 
 USTRUCT(meta = (DisplayName = "Approach Target"))
@@ -220,6 +227,10 @@ struct FT3STT_DisengageInstanceData
 	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "0.0", ClampMax = "2.0"))
 	float RootMotionScale = 1.0f;
 
+	// Strafe 시 이동 속도 (0 = 기본 MaxWalkSpeed 사용)
+	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "0.0"))
+	float StrafeSpeed = 0.f;
+
 	// 입력 — 컨텍스트에서 바인딩
 	UPROPERTY(EditAnywhere, Category = "Context")
 	TObjectPtr<AT3MidBossMonster> Boss = nullptr;
@@ -230,6 +241,9 @@ struct FT3STT_DisengageInstanceData
 
 	UPROPERTY()
 	float StrafeDirection = 1.f;
+
+	UPROPERTY()
+	float CachedDefaultSpeed = 0.f;
 };
 
 USTRUCT(meta = (DisplayName = "Disengage"))
