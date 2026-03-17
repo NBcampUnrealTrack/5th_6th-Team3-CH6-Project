@@ -92,6 +92,5 @@ void AT3WeaponBase::OnWeaponOverlap(UPrimitiveComponent* OverlappedComponent, AA
             UE_LOG(LogTemp, Warning, TEXT("Hit Monster! Damage: %.1f"), CurrentAttackDamage);
         }
         UE_LOG(LogTemp, Log, TEXT("Hit: %s"), *OtherActor->GetName());
-    
-
+    }
 }
