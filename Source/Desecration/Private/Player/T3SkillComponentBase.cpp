@@ -115,6 +115,12 @@ void UT3SkillComponentBase::BeginPlay()
     if (!SkillUnlockStates.Contains(1))
     {
         SkillUnlockStates.Add(1, true);
+
+        // UI 팀에게 알림
+        if (OnSkillUnlockStateChanged.IsBound())
+        {
+            OnSkillUnlockStateChanged.Broadcast(1, true);
+        }
     }
 
     // 나머지 2, 3, 4번이 없다면 false로 초기화
@@ -123,6 +129,11 @@ void UT3SkillComponentBase::BeginPlay()
         if (!SkillUnlockStates.Contains(i))
         {
             SkillUnlockStates.Add(i, false);
+
+            if (OnSkillUnlockStateChanged.IsBound())
+            {
+                OnSkillUnlockStateChanged.Broadcast(i, false);
+            }
         }
     }
 }
