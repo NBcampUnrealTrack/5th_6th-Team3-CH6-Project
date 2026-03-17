@@ -2,7 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
-#include "GameSystem/T3SaveLostMoney.h"
 #include "T3WorldSubsystem.generated.h"
 
 class UT3SaveGame;
@@ -13,7 +12,7 @@ class DESECRATION_API UT3WorldSubsystem : public UWorldSubsystem
 	GENERATED_BODY()
 	
 public:
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
 
 	/**
 	 * 지정한 물체의 상태
@@ -47,15 +46,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Object State")
 	void SetOrAddEnemyState(const int32 EnemyID, const int32 NewState) const;
 	
-	//현재 레벨에서 잃어버린 재화 목록
-	UFUNCTION(BlueprintPure, Category = "Lost Money")
-	TMap<int32, FLostMoney> GetAllLostMoney();
-	
 private:
 	//몬스터, 물체 상태 확인을 위한 저장된 게임 참조
 	UPROPERTY()
-	TSoftObjectPtr<UT3SaveGame> T3SaveGame;
-	
-	//이 레벨에서 잃어버린 재화
-	TMap<int32, FLostMoney> LostMoneyList;
+	TObjectPtr<UT3SaveGame> T3SaveGame;
 };

@@ -126,8 +126,14 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> ActiveConsumableSlotAction;
 
+	UPROPERTY()
 	TObjectPtr<class AT3CharacterBase> OwnerChar;
+	UPROPERTY()
 	TObjectPtr<class UT3CombatComponent> Combat;
+	
+	//설정에서 지정한 내용
+	UPROPERTY()
+	TObjectPtr<class UT3SaveUserSettings> SaveUserSettings;
 
 private:
 	bool bIsInventoryOpen = false;

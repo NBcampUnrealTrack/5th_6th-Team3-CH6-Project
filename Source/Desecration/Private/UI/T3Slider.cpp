@@ -17,7 +17,7 @@ void UT3Slider::SetValue(const float Value)
 	OriginalSlider->SetValue(Value);
 }
 
-FOnFloatValueChangedEvent UT3Slider::GetOnValueChangedEvent() const
+FOnFloatValueChangedEvent& UT3Slider::GetOnValueChangedEvent() const
 {
 	return OriginalSlider->OnValueChanged;
 }

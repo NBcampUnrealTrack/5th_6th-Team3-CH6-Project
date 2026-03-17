@@ -5,6 +5,8 @@
 #include "Components/SphereComponent.h"
 #include "Components/TimelineComponent.h"
 #include "Curves/CurveFloat.h"
+#include "NiagaraComponent.h"
+#include "NiagaraSystem.h"
 
 UT3BossWeaponComponent::UT3BossWeaponComponent()
 {
@@ -46,6 +48,11 @@ UT3BossWeaponComponent::UT3BossWeaponComponent()
 	WeaponHitBoxWide->bDrawOnlyIfSelected = false;
 	WeaponHitBoxWide->ShapeColor = FColor::Orange;
 	WeaponHitBoxWide->SetHiddenInGame(true);
+
+	// 무기 오라 이펙트 — WeaponMesh 자식 (소켓 전환과 무관하게 무기 추적)
+	WeaponAuraEffect = CreateDefaultSubobject<UNiagaraComponent>(TEXT("WeaponAuraEffect"));
+	WeaponAuraEffect->SetupAttachment(WeaponMeshComponent);
+	WeaponAuraEffect->SetAutoActivate(false);
 
 	// 팔 공격 판정 구체 — AttachToSocket에서 캐릭터 메시 본에 부착
 	BodyHitSphere = CreateDefaultSubobject<USphereComponent>(TEXT("BodyHitSphere"));
@@ -102,6 +109,21 @@ void UT3BossWeaponComponent::BeginPlay()
 		UE_LOG(LogDesecration, Log, TEXT("T3_BossWeapon: WeaponMesh 부착 상태 — Parent:%s, Location:%s"),
 			WeaponMeshComponent->GetAttachParent() ? *WeaponMeshComponent->GetAttachParent()->GetName() : TEXT("없음"),
 			*WeaponMeshComponent->GetComponentLocation().ToString());
+	}
+
+	// 오라 이펙트 부착 상태 확인
+	if (WeaponAuraEffect)
+	{
+		USceneComponent* AuraParent = WeaponAuraEffect->GetAttachParent();
+		UE_LOG(LogDesecration, Log,
+			TEXT("T3_BossWeapon: WeaponAura 부착 상태 — Parent:%s, AutoActivate:%d, Asset:%s"),
+			AuraParent ? *AuraParent->GetName() : TEXT("없음"),
+			WeaponAuraEffect->bAutoActivate,
+			WeaponAuraEffect->GetAsset() ? *WeaponAuraEffect->GetAsset()->GetName() : TEXT("미할당"));
+	}
+	else
+	{
+		UE_LOG(LogDesecration, Warning, TEXT("T3_BossWeapon: WeaponAuraEffect가 nullptr!"));
 	}
 }
 
@@ -169,6 +191,18 @@ void UT3BossWeaponComponent::AttachToSocket(USkeletalMeshComponent* TargetMesh)
 	{
 		WeaponHitBoxWide->AttachToComponent(
 			WeaponMeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	}
+
+	// 오라 이펙트 재부착 + 에셋 할당
+	if (WeaponAuraEffect)
+	{
+		WeaponAuraEffect->AttachToComponent(
+			WeaponMeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+
+		if (WeaponAuraSystem)
+		{
+			WeaponAuraEffect->SetAsset(WeaponAuraSystem);
+		}
 	}
 
 	// 소켓 스위칭용 캐싱
@@ -241,6 +275,11 @@ void UT3BossWeaponComponent::SwitchToSocket(EWeaponSocketType SocketType)
 	if (WeaponHitBoxWide)
 	{
 		WeaponHitBoxWide->AttachToComponent(
+			WeaponMeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	}
+	if (WeaponAuraEffect)
+	{
+		WeaponAuraEffect->AttachToComponent(
 			WeaponMeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 	}
 
@@ -367,6 +406,47 @@ void UT3BossWeaponComponent::OnWeaponOverlapBegin(UPrimitiveComponent* Overlappe
 		*HitBoxName, *OtherActor->GetName());
 }
 
+void UT3BossWeaponComponent::ActivateWeaponAura(UNiagaraSystem* OverrideSystem)
+{
+	if (WeaponAuraEffect)
+	{
+		// 노티파이에서 지정한 에셋 우선, 없으면 컴포넌트 기본값
+		UNiagaraSystem* SystemToUse = OverrideSystem ? OverrideSystem : WeaponAuraSystem.Get();
+
+		if (SystemToUse && WeaponAuraEffect->GetAsset() != SystemToUse)
+		{
+			WeaponAuraEffect->SetAsset(SystemToUse);
+		}
+
+		WeaponAuraEffect->Activate(true);
+
+		USceneComponent* AuraParent = WeaponAuraEffect->GetAttachParent();
+		const FString ParentName = AuraParent ? *AuraParent->GetName() : TEXT("미부착");
+		const FString ParentOwnerName = (AuraParent && AuraParent->GetOwner()) ? *AuraParent->GetOwner()->GetName() : TEXT("없음");
+		UE_LOG(LogDesecration, Warning,
+			TEXT("T3_BossWeapon: 오라 활성화 — 에셋:%s, Parent:%s (Owner:%s), Active:%d, 오라위치:%s, 무기위치:%s"),
+			SystemToUse ? *SystemToUse->GetName() : TEXT("없음"),
+			*ParentName,
+			*ParentOwnerName,
+			WeaponAuraEffect->IsActive(),
+			*WeaponAuraEffect->GetComponentLocation().ToString(),
+			WeaponMeshComponent ? *WeaponMeshComponent->GetComponentLocation().ToString() : TEXT("nullptr"));
+	}
+	else
+	{
+		UE_LOG(LogDesecration, Warning, TEXT("T3_BossWeapon: WeaponAuraEffect nullptr — 오라 활성화 실패"));
+	}
+}
+
+void UT3BossWeaponComponent::DeactivateWeaponAura()
+{
+	if (WeaponAuraEffect)
+	{
+		WeaponAuraEffect->Deactivate();
+		UE_LOG(LogDesecration, Log, TEXT("T3_BossWeapon: 무기 오라 비활성화"));
+	}
+}
+
 void UT3BossWeaponComponent::DropWeapon()
 {
 	if (bIsWeaponDropped || !WeaponMeshComponent)
@@ -379,6 +459,9 @@ void UT3BossWeaponComponent::DropWeapon()
 	// 소켓 블렌드 중단 — Detach 후 Tick이 상대 트랜스폼을 덮어쓰는 것 방지
 	bIsBlendingSocket = false;
 	SetComponentTickEnabled(false);
+
+	// 오라 이펙트 비활성화
+	DeactivateWeaponAura();
 
 	// 판정 비활성화
 	SetAttackCollisionEnabled(false);
