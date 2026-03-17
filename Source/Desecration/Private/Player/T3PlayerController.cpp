@@ -10,6 +10,8 @@
 #include "GameFramework/Character.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Blueprint/UserWidget.h"
+#include "GameSystem/T3GameInstance.h"
+#include "GameSystem/T3SaveUserSettings.h"
 #include "Item/Component/T3InventoryComponent.h"
 #include "UI/T3PopUpMenu.h"
 #include "UI/T3HUDSlotWidget.h"
@@ -94,7 +96,21 @@ void AT3PlayerController::BeginPlay()
 		}
 	}
 
-
+	//게임 인스턴스를 통해 설정 가져오기
+	if (TObjectPtr<UT3GameInstance> T3GameInstance = Cast<UT3GameInstance>(GetGameInstance()))
+	{
+		SaveUserSettings = T3GameInstance->GetCurrentSettings();
+		if (!SaveUserSettings)
+		{
+			UE_LOG(LogTemp, Error, TEXT("%s : 저장된 설정값 찾기 실패"), *GetNameSafe(this));
+			return;
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : 게임 인스턴스 에러"), *GetNameSafe(this));
+		return;
+	}
 }
 
 void AT3PlayerController::SetupInputComponent()
@@ -151,11 +167,13 @@ void AT3PlayerController::Input_Look(const FInputActionValue& Value)
 		return;
 	}
 
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
-
-	if (OwnerChar)
+	if (SaveUserSettings)
 	{
-		OwnerChar->Look(LookAxisVector);
+		const FVector2D LookAxisVector = Value.Get<FVector2D>() * SaveUserSettings->CameraSpeed;
+		if (OwnerChar)
+		{
+			OwnerChar->Look(LookAxisVector);
+		}
 	}
 }
 
