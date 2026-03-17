@@ -109,6 +109,9 @@ public:
 
 	void ShowShopUI(UT3ShopComponent* ShopComp);
 	
+	bool GetIsUpgradeUIOpen() const;
+	void SetIsUpgradeUIOpen(bool bIsOpen);
+	
 protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> ChangeSkillSlotAction;
@@ -123,8 +126,14 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> ActiveConsumableSlotAction;
 
+	UPROPERTY()
 	TObjectPtr<class AT3CharacterBase> OwnerChar;
+	UPROPERTY()
 	TObjectPtr<class UT3CombatComponent> Combat;
+	
+	//설정에서 지정한 내용
+	UPROPERTY()
+	TObjectPtr<class UT3SaveUserSettings> SaveUserSettings;
 
 private:
 	bool bIsInventoryOpen = false;
@@ -135,6 +144,7 @@ private:
 	void Input_LockOn(const FInputActionValue& Value);
 	void Input_BlockStart(const FInputActionValue& Value);
 	void Input_BlockEnd(const FInputActionValue& Value);
+	void Input_Parry(const FInputActionValue& Value);
 	void Input_Roll(const FInputActionValue& Value);
 	void Input_Interact(const FInputActionValue& Value);
 	void Input_Test(const FInputActionValue& Value);
@@ -148,8 +158,9 @@ private:
 	void Input_ChangePotionSlot(const FInputActionValue& Value);
 	void Input_ChangeConsumableSlot(const FInputActionValue& Value);
 	void Input_ActiveSkillSlot(const FInputActionValue& Value);
+	void Input_ActiveSkillSlot_Completed(const FInputActionValue& Value);
 	void Input_ActivePotionSlot(const FInputActionValue& Value);
 	void Input_ActiveConsumableSlot(const FInputActionValue& Value);
 
-
+	uint8 bIsUpgradeUIOpen : 1 = false;
 };

@@ -55,21 +55,29 @@ protected:
 
 	// 강화 레벨 (예: "+3 → +4" / "+7 (MAX)")
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UTextBlock> Txt_Level;
+	TObjectPtr<UTextBlock> Txt_CurrentLevel;
 
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> Txt_NextLevel;
+	
 	// 스탯 (예: "공격력: 150 → 180" / "방어력: 200")
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UTextBlock> Txt_Stat;
+	TObjectPtr<UTextBlock> Txt_CurrentStat;
 
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> Txt_NextStat;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> Text_StatName;
+	
 	// 강화석 Border (소모 예정 강조용)
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UBorder> Border_NormalStone;
+	TObjectPtr<UBorder> Border_NormalStoneFocus;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UBorder> Border_EpicStone;
+	TObjectPtr<UBorder> Border_EpicStoneFocus;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UBorder> Border_LegendaryStone;
+	TObjectPtr<UBorder> Border_LegendaryStoneFocus;
 
 	// 강화석 아이콘 (등급별)
 	UPROPERTY(meta = (BindWidget))

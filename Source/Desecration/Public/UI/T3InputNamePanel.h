@@ -14,11 +14,11 @@ class DESECRATION_API UT3InputNamePanel : public UUserWidget
 	GENERATED_BODY()
 	
 	friend UT3SelectClassWidget;
-	
+
 protected:
-	virtual void NativeConstruct() override;
+	virtual void NativeOnInitialized() override;
 	
-private:
+private:	
 	//확인 버튼
 	UFUNCTION()
 	void OnClickConfirmButton();

@@ -20,19 +20,20 @@
 #include "Player/T3LockOnTarget.h"
 #include "Components/WidgetComponent.h"
 #include "Monster/T3MonsterBase.h"
+#include "Player/Taoist/T3Taoist_SkillComponent.h"
+#include "Player/Taoist/T3FanWeapon.h"
 
 
 UT3CombatComponent::UT3CombatComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = false;
+	bWantsInitializeComponent = true;
 }
 
 void UT3CombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	OwnerChar = Cast<AT3CharacterBase>(GetOwner());
-	SpringArm = OwnerChar->FindComponentByClass<USpringArmComponent>();
 
 	if (OwnerChar)
 	{
@@ -47,6 +48,40 @@ void UT3CombatComponent::BeginPlay()
 		AIPC = OwnerChar->GetController<AController>();
 	}
 
+}
+
+void UT3CombatComponent::InitializeComponent()
+{
+	Super::InitializeComponent();
+
+	// BeginPlay보다 먼저 Owner를 캐싱하여 안전성 확보
+	OwnerChar = Cast<AT3CharacterBase>(GetOwner());
+	if (OwnerChar)
+	{
+		SpringArm = OwnerChar->FindComponentByClass<USpringArmComponent>();
+	}
+}
+
+void UT3CombatComponent::SetCombatState(ECharacterCombatState NewState)
+{
+	if (CurrentState == NewState) return;
+
+	// 이전 상태에서 빠져나올 때 처리
+	if (CurrentState == ECharacterCombatState::Dead) return; 
+	CurrentState = NewState;
+}
+
+void UT3CombatComponent::SetInvincible(bool bIsInvincible)
+{
+	if (bIsInvincible)
+	{
+		SetCombatState(ECharacterCombatState::Invincible);
+	}
+	else
+	{
+		// 무적 해제 시 Idle로 돌아가기
+		SetCombatState(ECharacterCombatState::Idle);
+	}
 }
 
 void UT3CombatComponent::InitializeWeapons(const TMap<EEquipSlot, FWeaponEquipInfo>& WeaponMap)
@@ -99,32 +134,27 @@ void UT3CombatComponent::ClearWeapons()
 // --- 막기 로직 ---
 void UT3CombatComponent::StartBlock()
 {
-	// 스태미너 50이상만 막기 가능
-	if (!OwnerChar || OwnerChar->GetCurrentStamina() < 50.f)
-	{
-		// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("You Need Stamina."));
-		return;
-	}
+	// 1. 조건 체크 (스태미너 등)
+	if (!OwnerChar || OwnerChar->GetCurrentStamina() < 50.f) return;
+	if (CurrentState != ECharacterCombatState::Idle || !bCanBlock) return;
 
-	if (OwnerChar->PlayerInputState.bIsBlocking || CurrentState != ECharacterCombatState::Idle || !bCanBlock) return;
-
-	// 2. 초기 상태 설정: 패링(Parrying) 모드 진입
-	// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Blue, TEXT("BlockingModeOn"));
-	CurrentState = ECharacterCombatState::Parrying;
+	// 2. 즉시 막기 상태로 전환
+	CurrentState = ECharacterCombatState::Blocking;
 	OwnerChar->PlayerInputState.bIsBlocking = true;
 	bCanBlock = false;
 	OwnerChar->GetCharacterMovement()->MaxWalkSpeed = 200.0f;
 
 
-	// 0.2초 후 SwitchToBlockingState 호출
-	GetWorld()->GetTimerManager().ClearTimer(ParryingToBlockingTimerHandle);
-	GetWorld()->GetTimerManager().SetTimer(
-		ParryingToBlockingTimerHandle,
-		this,
-		&UT3CombatComponent::SwitchToBlockingState,
-		0.2f,
-		false
-	);
+	// 도사인 경우 방어 시작 시 부채 펴기
+	if (OwnerChar->GetCurrentClass() == ECharacterClass::Taoist)
+	{
+		AT3FanWeapon* FanWeapon = Cast<AT3FanWeapon>(GetWeaponBySlot(EEquipSlot::RightHand));
+		if (IsValid(FanWeapon))
+		{
+			FanWeapon->OpenFan();
+		}
+	}
+
 }
 
 void UT3CombatComponent::EndBlock()
@@ -135,8 +165,6 @@ void UT3CombatComponent::EndBlock()
 	OwnerChar->PlayerInputState.bIsBlocking = false;
 	OwnerChar->GetCharacterMovement()->MaxWalkSpeed = 500.0f;
 	
-	GetWorld()->GetTimerManager().ClearTimer(ParryingToBlockingTimerHandle);
-
 	GetWorld()->GetTimerManager().SetTimer(
 		BlockingCooldownTimerHandle,
 		this,
@@ -144,6 +172,17 @@ void UT3CombatComponent::EndBlock()
 		BlockCooldownTime,
 		false
 	);
+
+
+	// 도사인 경우 방어 종료 시 부채 접기
+	if (OwnerChar->GetCurrentClass() == ECharacterClass::Taoist)
+	{
+		AT3FanWeapon* FanWeapon = Cast<AT3FanWeapon>(GetWeaponBySlot(EEquipSlot::RightHand));
+		if (IsValid(FanWeapon))
+		{
+			FanWeapon->CloseFan();
+		}
+	}
 }
 
 void UT3CombatComponent::ResetBlockCooldown()
@@ -158,13 +197,23 @@ void UT3CombatComponent::Attack()
 		// 공격 시 스태미너 10 소모
 	{
 		OwnerChar->OnAttack();
+		UE_LOG(LogTemp, Warning, TEXT("attack"));
 	}
 }
 
 void UT3CombatComponent::SetParryingEnabled(bool bEnabled)
 {
-	if (CurrentState == ECharacterCombatState::Idle) return;
-	CurrentState = bEnabled ? ECharacterCombatState::Parrying : ECharacterCombatState::Blocking;
+	if (bEnabled)
+	{
+		// 이전 상태 저장 후 패링으로 전환
+		PreState = CurrentState;
+		CurrentState = ECharacterCombatState::Parrying;
+	}
+	else
+	{
+		// 패링 시간이 끝나면 Idle이나 원래 하던 Blocking으로 복구
+		CurrentState = PreState;
+	}
 }
 
 void UT3CombatComponent::SetDodgingEnabled(bool bEnabled)
@@ -184,15 +233,6 @@ void UT3CombatComponent::SetDodgingEnabled(bool bEnabled)
 		}
 	}
 }
-
-void UT3CombatComponent::SwitchToBlockingState()
-{
-	if (CurrentState == ECharacterCombatState::Parrying)
-	{
-		CurrentState = ECharacterCombatState::Blocking;
-	}
-}
-
 
 // --- 록온 로직 ---
 void UT3CombatComponent::ToggleLockOn()
@@ -491,7 +531,7 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 {
 	if (Damage <= 0.f || !OwnerChar || CurrentState == ECharacterCombatState::Dead) return;
 	if (!DamageCauser || !DamageType) return;
-	
+
 	// 1. [디버그] 공격자 정보 및 데미지 타입 확인
 	FString TypeName = DamageType ? DamageType->GetClass()->GetName() : TEXT("Normal");
 	// GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::White,
@@ -504,44 +544,59 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 	// 3. [상태별 로그 출력]
 	if (FinalDamage <= 0.f)
 	{
+		// 회피 성공 시
 		if (CurrentState == ECharacterCombatState::Dodge)
-		{ }
-			// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Result: [EVADE] - Invincible Frame!"));
+		{
+			
+			// 도사인 경우 회피 성공 시 패시브 스킬 효과 발동
+			if (OwnerChar->GetCurrentClass() == ECharacterClass::Taoist)
+			{
+				UT3Taoist_SkillComponent* TaoistSkill = Cast< UT3Taoist_SkillComponent>(SkillComp);
+				if (IsValid(TaoistSkill))
+				{
+					TaoistSkill->SetEmpowermentState(true);
+				}
+			}
+		}
+		// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Result: [EVADE] - Invincible Frame!"));
 
 		else if (CurrentState == ECharacterCombatState::Parrying)
-		{ }
-		// 패링 성공 시 
-		
-		// 보스에게 스턴치 10 부여
-		AT3BossMonster* HitBoss = Cast<AT3BossMonster>(DamageCauser);
-		if (HitBoss) { HitBoss->Damage(0, 10.f); }
-
-		// 팔라딘의 경우 신성게이지 20 증가
-		if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
 		{
-			SkillComp->AddResource(20.f);
-		}
+			// 패링 성공 시 
+			OwnerChar->OnParryReaction();
 
-		UE_LOG(LogTemp, Display, TEXT("Parrying!"));
+			// 보스에게 스턴치 10 부여
+			AT3BossMonster* HitBoss = Cast<AT3BossMonster>(DamageCauser);
+			if (HitBoss) { HitBoss->Damage(0, 10.f); }
+
+			// 팔라딘의 경우 신성게이지 20 증가
+			if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
+			{
+				SkillComp->AddResource(HolyGaugeChargeAmount);
+			}
+			UE_LOG(LogTemp, Display, TEXT("Parrying!"));
 			// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("Result: [PARRY] - Success!"));
-		return;
+			return;
+		}
 	}
+
 	else if (CurrentState == ECharacterCombatState::Blocking)
 	{
 		// 막기 성공 시
-		
+		OwnerChar->OnBlockReaction();
 		// 스태미나 50 차감 후 스태미너 0 이하로 떨어지면 막기 해제
 		ConsumeStamina(50.f);
 
-		if (OwnerChar->GetCurrentStamina() <= 0.f)
-		{
-			EndBlock();
-		}
+		
+		//if (OwnerChar->GetCurrentStamina() <= 0.f)
+		//{
+		//	EndBlock();
+		//}
 
 		// 팔라딘이라면 신성 게이지 10 상승
 		if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
 		{
-			SkillComp->AddResource(10.f);
+			SkillComp->AddResource(HolyGaugeChargeAmount / 2.0f);
 		}
 
 		/*GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow,
@@ -556,26 +611,52 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 
 	//GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red,
 	//	FString::Printf(TEXT("HP Status: %.1f / %.1f"), NewHP, OwnerChar->GetMaxHP()));
-	   UE_LOG(LogTemp, Warning, TEXT("HP Status: %.1f / %.1f"), NewHP, OwnerChar->GetMaxHP());
-	   UE_LOG(LogTemp, Display, TEXT("final : %.1f"), FinalDamage);
+	UE_LOG(LogTemp, Warning, TEXT("HP Status: %.1f / %.1f"), NewHP, OwnerChar->GetMaxHP());
+	UE_LOG(LogTemp, Display, TEXT("final : %.1f"), FinalDamage);
 
-	   // 팔라딘의 경우 신의 심판 시전 중 피격 당하면 스킬 캔슬
-	   if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
-	   {
-		   if (IsValid(SkillComp))
-		   {
-			   GetSkillComponent()->CancelCurrentSkill();
-			   OwnerChar->StopAnimMontage();
-		   }
-	   }
+	// 팔라딘의 경우 신의 심판 시전 중 피격 당하면 스킬 캔슬
+	if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
+	{
+		if (IsValid(SkillComp) && SkillComp->bUsingSkill)
+		{
+			GetSkillComponent()->CancelCurrentSkill();
+			OwnerChar->StopAnimMontage();
+		}
+	}
+
+	// 팔라딘, 도사 피격 사운드
+	if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin || OwnerChar->GetCurrentClass() == ECharacterClass::Taoist)
+	{
+		switch (Intensity)
+		{
+		case EHitIntensity::Light:
+			PlaySkillEffectSound(LightHitVoice,2.0f);
+			break;
+		case EHitIntensity::Medium:
+			PlaySkillEffectSound(MediumHitVoice, 2.0f);
+			break;
+		case EHitIntensity::Heavy:
+			PlaySkillEffectSound(HeavyHitVoice, 2.0f);
+			break;
+		default:
+			break;
+		}
+	}
 
 	// 사망 판정
 	if (NewHP <= 0.f)
 	{
-		CurrentState = ECharacterCombatState::Dead;
-		// 사망 로직 실행
-		OwnerChar->OnDeath();
-		return;
+		if (OwnerChar->GetIsUndyingState())
+		{
+			OwnerChar->OnUndyingTriggered.Broadcast();
+		}
+		else
+		{
+			CurrentState = ECharacterCombatState::Dead;
+			// 사망 로직 실행
+			OwnerChar->OnDeath();
+			return;
+		}
 	}
 
 
@@ -593,17 +674,27 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 	FString DirName = StaticEnum<EHitDirection>()->GetNameStringByValue((int64)HitDir);
 	//GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Orange, FString::Printf(TEXT("Hit Direction: [%s]"), *DirName));
 	//UE_LOG(LogTemp, Warning, TEXT("Hit Direction: [%s]"), *DirName);
+	
+	OnTakeDamage.Broadcast();
 }
+
 
 // 피격 데미지 계산
 float UT3CombatComponent::CalculateFinalDamage(float IncomingDamage, const class UDamageType* DamageType, float ReceievedDamageMultiplier)
 {
+	// 0. 무적 상태
+	if (CurrentState == ECharacterCombatState::Invincible)
+	{
+		return 0.f;
+	}
+
+	// 데미지 계산 로직
 	float Defence = OwnerChar->GetDefense();
 	float DamageReductionScale = FMath::Max(0.5f, ReceievedDamageMultiplier - Defence);
 	IncomingDamage *= DamageReductionScale;  // 데미지 * (데미지 배율 - 방어력 배율)
 
 
-	// 어떤 상황이든 예외 없이 데미지
+	// 무적 상태가 아니면 무조건 데미지
 	if (DamageType->IsA(UT3DamageType_Undodgable::StaticClass()))
 	{
 		return IncomingDamage;
@@ -696,20 +787,46 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 	if (HitBoss)
 	{
 		// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Hit Boss!"));
-		HitBoss->Damage(DamageAmount, 20.f);  // 테스트용 스턴 20
+		HitBoss->Damage(DamageAmount, InStunAmount);  // 테스트용 스턴 20
 		// HitBoss->Damage(CurrentAttackDamage, StunAmount);
 	}
-
+	
 	// TakeDamage 호출 시 커스텀 이벤트 구조체를 전달
 	else if (OwnerChar)
 	{
-		TargetActor->TakeDamage(DamageAmount, T3DamageEvent, OwnerPC, OwnerChar);
+		float ActualDamage = DamageAmount;
+
+		if (OwnerChar->GetSmiteThreshold() > 0 && OwnerChar->GetSmiteCounter() >= OwnerChar->GetSmiteThreshold())
+		{
+			ActualDamage = DamageAmount * OwnerChar->GetSmiteMultiplier();
+			
+			TargetActor->TakeDamage(ActualDamage, T3DamageEvent, OwnerPC, OwnerChar);
+			
+			OwnerChar->SetSmiteCounter(0);
+		}
+		else
+		{
+			OwnerChar->IncrementSmiteCounter();
+			
+			TargetActor->TakeDamage(ActualDamage, T3DamageEvent, OwnerPC, OwnerChar);
+		}
+
+		OwnerChar->OnDamageDealt.Broadcast(TargetActor, ActualDamage);
+		
+		UE_LOG(LogTemp, Warning, TEXT("현재 공격 횟수 : %d"), OwnerChar->GetSmiteCounter());
 	}
 	else if (AIChar) // OwnerChar가 아닐 때만 AIChar로 실행
 	{
 		TargetActor->TakeDamage(DamageAmount, T3DamageEvent, AIPC, AIChar);
 	}
 	
+	if (SkillComp && DamageTypeClass)
+	{
+		if (DamageTypeClass->GetName().Contains(TEXT("BP_T3DamageType_ValkyriePassive")))
+		{
+			SkillComp->BasicAttackCount(); // 발키리면 스택 1 증가!
+		}
+	}
 	// 디버그 출력
 	// const UEnum* EnumPtr = StaticEnum<EHitIntensity>();
 	// FString IntensityString = EnumPtr ? EnumPtr->GetNameStringByValue((int64)Intensity) : TEXT("Unknown");
@@ -773,6 +890,20 @@ void UT3CombatComponent::ExecuteCurrentSlotAction(ESlotType Type)
 	}
 }
 
+void UT3CombatComponent::ExecuteCurrentSlotAction_Completed(ESlotType Type)
+{
+	switch (Type)
+	{
+	case ESlotType::Skill:
+		if (SkillComp) SkillComp->ExecuteSkill_Completed(CurrentSkillSlot);
+		break;
+	case ESlotType::Consumable:
+		break;
+	case ESlotType::Potion:
+		break;
+	}
+}
+
 // 인벤토리에서 호출할 스킬 슬롯 업데이트 함수
 UFUNCTION(BlueprintCallable)
 void UT3CombatComponent::RequestUpdateSkill(int32 SkillID, bool bIsEquip)
@@ -783,3 +914,21 @@ void UT3CombatComponent::RequestUpdateSkill(int32 SkillID, bool bIsEquip)
 	}
 }
 
+float UT3CombatComponent::GetHolyGaugeChargeAmount() const
+{
+	return HolyGaugeChargeAmount;
+}
+
+void UT3CombatComponent::SetHolyGaugeChargeAmount(float NewAmount)
+{
+	HolyGaugeChargeAmount = NewAmount;
+}
+
+
+void UT3CombatComponent::PlaySkillEffectSound(USoundBase* Sound, float Volume)
+{
+	if (Sound && GetWorld())
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, Sound, GetOwner()->GetActorLocation(), Volume);
+	}
+}

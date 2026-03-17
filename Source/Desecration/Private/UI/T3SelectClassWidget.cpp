@@ -2,6 +2,7 @@
 
 #include "Components/Button.h"
 #include "Components/HorizontalBox.h"
+#include "GameSystem/T3GameInstance.h"
 #include "Player/T3SelectClassPlayerController.h"
 #include "UI/T3InputNamePanel.h"
 
@@ -9,11 +10,19 @@ void UT3SelectClassWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 	
+	//게임 인스턴스
+	T3GameInstance = Cast<UT3GameInstance>(GetGameInstance());
+	if (!T3GameInstance)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : T3GameInstance가 NULL"), *GetNameSafe(this));
+		return;
+	}
+	
 	//플레이어 컨트롤러
 	SelectClassPlayerController = Cast<AT3SelectClassPlayerController>(GetOwningPlayer());
 	if (!SelectClassPlayerController)
 	{
-		UE_LOG(LogTemp, Error, TEXT("%s : SelectClassPlayerController is NULL"), *GetNameSafe(this));
+		UE_LOG(LogTemp, Error, TEXT("%s : SelectClassPlayerController가 NULL"), *GetNameSafe(this));
 		return;
 	}
 	
@@ -58,17 +67,23 @@ void UT3SelectClassWidget::TutorialStart(const FString& PlayerName)
 	SelectClassPlayerController->TutorialStart(PlayerName, SelectedPlayerClass);
 }
 
-void UT3SelectClassWidget::OnClickSelectClassButton(const EPlayerClass ButtonValue)
+void UT3SelectClassWidget::OnPressEsc()
 {
-	//연속으로 같은 버튼을 누르면 이름 입력하기
-	if (SelectedPlayerClass == ButtonValue)
+	//이름 입력 패널이 열린 상태에서는 패널 닫기
+	if (InputNamePanelParent->GetVisibility() == ESlateVisibility::Visible)
 	{
-		SetActiveInputNamePanel(true);
+		SetActiveInputNamePanel(false);
 		return;
 	}
 	
-	//TODO : 누른 버튼의 변화
+	//타이틀로
+	T3GameInstance->OpenLevel(ELevelName::Title);
+}
+
+void UT3SelectClassWidget::OnClickSelectClassButton(const EPlayerClass ButtonValue)
+{
 	SelectedPlayerClass = ButtonValue;
+	SetActiveInputNamePanel(true);
 }
 
 void UT3SelectClassWidget::ReturnToTitle()

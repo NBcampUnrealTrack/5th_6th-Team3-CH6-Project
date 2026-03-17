@@ -7,14 +7,25 @@
 UT3InventoryComponent::UT3InventoryComponent()
 	:
 InventorySize(20),
+RuneInventorySize(20),
 Money(0),
 NormalStoneCount(0),
 EpicStoneCount(0),
-LegendaryStoneCount(0)
+LegendaryStoneCount(0),
+InitialHPPotionAmount(3),
+InitialMPPotionAmount(3),
+HPPotionCount(0),
+MPPotionCount(0),
+HPPotionID(NAME_None),
+MPPotionID(NAME_None),
+CurrentPotionID(NAME_None),
+PotionAmountUpgradeLevel(0),
+PotionRecoveryUpgradeLevel(0)
 {
 	PrimaryComponentTick.bCanEverTick = false;
 	
 	Items.SetNum(InventorySize);
+	RuneItems.SetNum(RuneInventorySize);
 }
 
 void UT3InventoryComponent::BeginPlay()
@@ -23,9 +34,14 @@ void UT3InventoryComponent::BeginPlay()
 	
 	OwnerCharacter = Cast<AT3CharacterBase>(GetOwner());
 	
+	if (!IsValid(OwnerCharacter))
+	{
+		return;
+	}
+	
 	InitializePotionIDs();
-	SetHPPotionCount(3);
-	SetMPPotionCount(3);
+	SetHPPotionCount(GetMaxHPPotionCount());
+	SetMPPotionCount(GetMaxMPPotionCount());
 	
 	OnInventoryInitialized.Broadcast();
 }
@@ -67,6 +83,11 @@ void UT3InventoryComponent::AddItem(const FName& ItemName)
 			Items[i].ItemStack++;
 			
 			UE_LOG(LogTemp, Log, TEXT("[%s] 1개 추가, 현재 개수: %d"), *ItemName.ToString(), Items[i].ItemStack)
+			
+			if (EquippedItemIDs.Contains(ItemName))
+			{
+				OnEquippedItemChanged.Broadcast();
+			}
 			
 			OnInventoryUpdated.Broadcast();
 			return;
@@ -155,34 +176,59 @@ void UT3InventoryComponent::SwapSlots(int32 SourceSlotIndex, int32 TargetSlotInd
 	{
 		return;
 	}
-    
+
 	if (SourceSlotIndex == TargetSlotIndex)
 	{
 		return;
 	}
-	
+
 	FInventorySlot TempSlot = Items[SourceSlotIndex];
 	Items[SourceSlotIndex] = Items[TargetSlotIndex];
 	Items[TargetSlotIndex] = TempSlot;
-	
+
 	OnInventoryUpdated.Broadcast();
+}
+
+void UT3InventoryComponent::SwapRuneSlots(int32 SourceSlotIndex, int32 TargetSlotIndex)
+{
+	if (!RuneItems.IsValidIndex(SourceSlotIndex) || !RuneItems.IsValidIndex(TargetSlotIndex))
+	{
+		return;
+	}
+
+	if (SourceSlotIndex == TargetSlotIndex)
+	{
+		return;
+	}
+
+	FInventorySlot TempSlot = RuneItems[SourceSlotIndex];
+	RuneItems[SourceSlotIndex] = RuneItems[TargetSlotIndex];
+	RuneItems[TargetSlotIndex] = TempSlot;
+
+	OnRuneInventoryUpdated.Broadcast();
 }
 
 bool UT3InventoryComponent::RemoveItem(const FName& ItemName)
 {
-	for (int32 i = 0; i < Items.Num(); i++)
+	for (FInventorySlot& Item : Items)
 	{
-		if (Items[i].ItemID == ItemName)
+		if (Item.ItemID == ItemName)
 		{
-			Items[i].ItemStack--;
+			Item.ItemStack--;
 			
-			if (Items[i].ItemStack <= 0)
+			if (Item.ItemStack <= 0)
 			{
-				Items[i].ItemID = NAME_None;
-				Items[i].ItemStack = 0;
+				Item.ItemID = NAME_None;
+				Item.ItemStack = 0;
+				
+				if (EquippedItemIDs.Remove(ItemName) != 0)
+				{
+					OnEquippedItemChanged.Broadcast();
+				}
 			}
 			
 			OnInventoryUpdated.Broadcast();
+			
 			return true;
 		}
 	}
@@ -219,7 +265,164 @@ int32 UT3InventoryComponent::SetMoney(int32 NewMoney)
 {
 	Money = NewMoney;
 	
+	OnMoneyUpdated.Broadcast(Money);
 	return Money;
+}
+
+int32 UT3InventoryComponent::GetItemCountByItemID(const FName& ItemName)
+{
+	for (FInventorySlot& Item : Items)
+	{
+		if (Item.ItemID == ItemName)
+		{
+			return Item.ItemStack;
+		}
+	}
+	return 0;
+}
+
+int32 UT3InventoryComponent::GetRuneCountByItemID(const FName& ItemName)
+{
+	for (FInventorySlot& RuneItem : RuneItems)
+	{
+		if (RuneItem.ItemID == ItemName)
+		{
+			return RuneItem.ItemStack;
+		}
+	}
+	return 0;
+}
+
+void UT3InventoryComponent::AddItemByCount(const FName& ItemName, int32 Count)
+{
+	for (FInventorySlot& Item : Items)
+	{
+		if (Item.ItemID == ItemName)
+		{
+			Item.ItemStack += Count;
+			
+			UE_LOG(LogTemp, Log, TEXT("[%s] %d개 추가됨"), *Item.ItemID.ToString(), Count);
+			
+			if (EquippedItemIDs.Contains(ItemName))
+			{
+				OnEquippedItemChanged.Broadcast();
+			}
+			
+			OnInventoryUpdated.Broadcast();
+			return;
+		}
+	}
+	
+	for (FInventorySlot& Item : Items)
+	{
+		if (Item.ItemID == NAME_None)
+		{
+			Item.ItemID = ItemName;
+			Item.ItemStack = Count;
+			
+			OnInventoryUpdated.Broadcast();
+			return;
+		}
+	}
+}
+
+bool UT3InventoryComponent::RemoveItemByCount(const FName& ItemName, int32 Count)
+{
+	for (FInventorySlot& Item : Items)
+	{
+		if (Item.ItemID == ItemName)
+		{
+			if (Item.ItemStack < Count)
+			{
+				UE_LOG(LogTemp, Error, TEXT("보유한 아이템 개수보다 파는 아이템이 많음"));
+				return false;
+			}
+			
+			Item.ItemStack -= Count;
+			
+			if (Item.ItemStack <= 0)
+			{
+				Item.ItemID = NAME_None;
+				Item.ItemStack = 0;
+				
+				if (EquippedItemIDs.Remove(ItemName) != 0)
+				{
+					OnEquippedItemChanged.Broadcast();
+				}	
+			}
+			OnInventoryUpdated.Broadcast();
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+void UT3InventoryComponent::AddRuneItemByCount(const FName& ItemName, int32 Count)
+{
+	for (FInventorySlot& RuneItem : RuneItems)
+	{
+		if (RuneItem.ItemID == ItemName)
+		{
+			RuneItem.ItemStack += Count;
+			
+			UE_LOG(LogTemp, Log, TEXT("[%s] %d개 추가됨"), *RuneItem.ItemID.ToString(), Count);
+			
+			OnRuneInventoryUpdated.Broadcast();
+			return;
+		}
+	}
+	
+	for (FInventorySlot& RuneItem : RuneItems)
+	{
+		if (RuneItem.ItemID == NAME_None)
+		{
+			RuneItem.ItemID = ItemName;
+			RuneItem.ItemStack = Count;
+			
+			OnRuneInventoryUpdated.Broadcast();
+			return;
+		}
+	}
+}
+
+bool UT3InventoryComponent::RemoveRuneItemByCount(const FName& ItemName, int32 Count)
+{
+	for (FInventorySlot& RuneItem : RuneItems)
+	{
+		if (RuneItem.ItemID == ItemName)
+		{
+			if (RuneItem.ItemStack < Count)
+			{
+				UE_LOG(LogTemp, Error, TEXT("보유한 아이템 개수보다 파는 아이템이 많음"));
+				return false;
+			}
+			
+			RuneItem.ItemStack -= Count;
+			
+			if (RuneItem.ItemStack <= 0)
+			{
+				RuneItem.ItemID = NAME_None;
+				RuneItem.ItemStack = 0;
+			}
+			OnRuneInventoryUpdated.Broadcast();
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+int32 UT3InventoryComponent::GetRuneItemCountByRuneID(const FName& RuneID)
+{
+	for (FInventorySlot& RuneItem : RuneItems)
+	{
+		if (RuneItem.ItemID == RuneID)
+		{
+			return RuneItem.ItemStack;
+		}
+	}
+	return 0;
 }
 
 int32 UT3InventoryComponent::GetNormalStoneCount() const
@@ -312,14 +515,14 @@ void UT3InventoryComponent::ToggleEquipItem(const FName& ItemName)
 	{
 		UnequipItem(ItemName);
 		
-		OnToggleItemEquipped.Broadcast();
+		OnEquippedItemChanged.Broadcast();
 		OnInventoryUpdated.Broadcast();
 		return;
 	}
 	
 	EquippedItemIDs.Emplace(ItemName);
 	
-	OnToggleItemEquipped.Broadcast();
+	OnEquippedItemChanged.Broadcast();
 	OnInventoryUpdated.Broadcast();
 }
 
@@ -329,18 +532,8 @@ void UT3InventoryComponent::UnequipItem(const FName& ItemName)
 	{
 		return;
 	}
-	
-	if (!EquippedItemIDs.Contains(ItemName))
-	{
-		return;
-	}
-	
-	int32 Index = GetEquippedItemIndex(ItemName);
-	
-	if (Index != INDEX_NONE)
-	{
-		EquippedItemIDs.RemoveAt(Index);
-	}
+
+	EquippedItemIDs.Remove(ItemName);
 }
 
 int32 UT3InventoryComponent::GetEquippedItemIndex(const FName& ItemName) const
@@ -362,7 +555,7 @@ void UT3InventoryComponent::SwapEquippedItem()
 	
 	FName TempName = EquippedItemIDs[0];
 	
-	EquippedItemIDs.RemoveAt(0);
+	EquippedItemIDs.Remove(TempName);
 	EquippedItemIDs.Emplace(TempName);
 
 	OnChangedBuffItemSlot.Broadcast();
@@ -411,29 +604,9 @@ void UT3InventoryComponent::UseEquippedItem()
 			true);
 	}
 	
-	for (FInventorySlot& Item : Items)
-	{
-		if (Item.ItemID == ItemIDToUse)
-		{
-			Item.ItemStack--;
-			
-			UE_LOG(LogTemp, Log, TEXT("[%s]를 1개 사용했습니다. 현재 개수: %d"), *Item.ItemID.ToString(), Item.ItemStack)
-
-			if (Item.ItemStack <= 0)
-			{
-				UE_LOG(LogTemp, Log, TEXT("[%s]를 모두 사용했습니다."), *Item.ItemID.ToString())
-		
-				Item.ItemID = NAME_None;
-				EquippedItemIDs.RemoveAt(0);
-				
-				Item.ItemStack = 0;
-			}
-			break;
-		}
-	}
+	RemoveItem(ItemIDToUse);
 	
 	OnBuffItemUsed.Broadcast();
-	OnInventoryUpdated.Broadcast();
 }
 
 int32 UT3InventoryComponent::GetCurrentBuffItemCount() const
@@ -549,12 +722,12 @@ void UT3InventoryComponent::InitializePotionIDs()
 
 void UT3InventoryComponent::SetHPPotionCount(int32 Count)
 {
-	HPPotionCount = Count;
+	HPPotionCount = FMath::Clamp(Count, 0, GetMaxHPPotionCount());
 }
 
 void UT3InventoryComponent::SetMPPotionCount(int32 Count)
 {
-	MPPotionCount = Count;
+	MPPotionCount = FMath::Clamp(Count, 0, GetMaxMPPotionCount());
 }
 
 void UT3InventoryComponent::UseCurrentPotion()
@@ -581,7 +754,7 @@ void UT3InventoryComponent::UseCurrentPotion()
 
 void UT3InventoryComponent::SwapHPMPSlot()
 {
-	if (CurrentPotionID == NAME_None || OwnerCharacter->bIsUsingItem)
+	if (CurrentPotionID == NAME_None)
 	{
 		return;
 	}
@@ -673,7 +846,7 @@ void UT3InventoryComponent::UseHPPotion()
 		return;
 	}
 	
-	if (!OwnerCharacter->ItemUseComponent->ApplyConsumableItem(*ItemRow))
+	if (!OwnerCharacter->ItemUseComponent->ApplyConsumableItem(*ItemRow, GetPotionRecoveryBonus()))
 	{
 		return;
 	}
@@ -718,7 +891,7 @@ void UT3InventoryComponent::UseMPPotion()
 		return;
 	}
 	
-	if (!OwnerCharacter->ItemUseComponent->ApplyConsumableItem(*ItemRow))
+	if (!OwnerCharacter->ItemUseComponent->ApplyConsumableItem(*ItemRow, GetPotionRecoveryBonus()))
 	{
 		return;
 	}
@@ -739,4 +912,80 @@ void UT3InventoryComponent::UseMPPotion()
 	MPPotionCount--;
 	
 	OnRecoverItemUsed.Broadcast();
+}
+
+bool UT3InventoryComponent::IsRuneEquipped(const FName& ItemName)
+{
+	return false;
+}
+
+void UT3InventoryComponent::UpgradePotionAmount()
+{
+	PotionAmountUpgradeLevel++;
+	
+	OnPotionUpgraded.Broadcast();
+}
+
+void UT3InventoryComponent::UpgradePotionRecovery()
+{
+	PotionRecoveryUpgradeLevel++;
+	
+	OnPotionUpgraded.Broadcast();
+}
+
+int32 UT3InventoryComponent::GetMaxHPPotionCount() const
+{
+	return InitialHPPotionAmount + PotionAmountUpgradeLevel;
+}
+
+int32 UT3InventoryComponent::GetMaxMPPotionCount() const
+{
+	return InitialMPPotionAmount + PotionAmountUpgradeLevel;
+}
+
+int32 UT3InventoryComponent::GetPotionRecoveryBonus() const
+{
+	return PotionRecoveryUpgradeLevel * 10;
+}
+
+int32 UT3InventoryComponent::GetCurrentHPPotionRecovery() const
+{
+	if (!IsValid(OwnerCharacter) || !IsValid(OwnerCharacter->ItemDataTable))
+	{
+		return -1;
+	}
+	
+	FT3ConsumableItemData* ItemRow =
+		OwnerCharacter->ItemDataTable->FindRow<FT3ConsumableItemData>(HPPotionID, TEXT("GetCurrentHPPotionRecovery"));
+	
+	return ItemRow->BuffValue + GetPotionRecoveryBonus();
+}
+
+int32 UT3InventoryComponent::GetCurrentMPPotionRecovery() const
+{
+	if (!IsValid(OwnerCharacter) || !IsValid(OwnerCharacter->ItemDataTable))
+	{
+		return -1;
+	}
+	
+	FT3ConsumableItemData* ItemRow =
+		OwnerCharacter->ItemDataTable->FindRow<FT3ConsumableItemData>(MPPotionID, TEXT("GetCurrentMPPotionRecovery"));
+	
+	return ItemRow->BuffValue + GetPotionRecoveryBonus();
+}
+
+int32 UT3InventoryComponent::GetPotionAmountUpgradeLevel() const
+{
+	return PotionAmountUpgradeLevel;
+}
+
+int32 UT3InventoryComponent::GetPotionRecoveryUpgradeLevel() const
+{
+	return PotionRecoveryUpgradeLevel;
+}
+
+void UT3InventoryComponent::LoadPotionUpgradeLevel(int32 AmountLevel, int32 RecoveryLevel)
+{
+	PotionAmountUpgradeLevel = AmountLevel;
+	PotionRecoveryUpgradeLevel = RecoveryLevel;
 }

@@ -1,5 +1,5 @@
 // T3MidBossSTNodes.h
-// StateTree 커스텀 노드 — Mid-Boss (Evaluator 1개 + Task 6개 + Condition 2개)
+// StateTree 커스텀 노드 — Mid-Boss (Evaluator 1개 + Task 6개 + Condition 3개 + Consideration 2개)
 
 #pragma once
 
@@ -7,6 +7,7 @@
 #include "StateTreeTaskBase.h"
 #include "StateTreeEvaluatorBase.h"
 #include "StateTreeConditionBase.h"
+#include "StateTreeConsiderationBase.h"
 #include "T3MidBossSTNodes.generated.h"
 
 class AT3MidBossMonster;
@@ -69,6 +70,9 @@ struct FT3STT_ExecutePatternInstanceData
 	UPROPERTY()
 	int32 CachedActionCountCost = 1;
 
+	UPROPERTY()
+	int32 CachedRequiredStage = 1;
+
 	// 델리게이트 기반 완료 감지 (non-UPROPERTY, 런타임 전용)
 	bool bPatternCompleted = false;
 	FDelegateHandle PatternCompletedHandle;
@@ -117,6 +121,10 @@ struct FT3STT_ApproachTargetInstanceData
 	UPROPERTY(EditAnywhere, Category = "Parameter")
 	float PostArrivalDelay = 2.5f;
 
+	// 최대 접근 시간 — 초과 시 Failed 반환하여 패턴 재선택 유도
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	float Timeout = 8.f;
+
 	// 입력 — 컨텍스트에서 바인딩
 	UPROPERTY(EditAnywhere, Category = "Context")
 	TObjectPtr<AT3MidBossMonster> Boss = nullptr;
@@ -127,6 +135,9 @@ struct FT3STT_ApproachTargetInstanceData
 
 	UPROPERTY()
 	float DelayElapsed = 0.f;
+
+	UPROPERTY()
+	float ElapsedTime = 0.f;
 };
 
 USTRUCT(meta = (DisplayName = "Approach Target"))
@@ -188,7 +199,7 @@ struct DESECRATION_API FT3STT_WaitForStunEnd : public FStateTreeTaskCommonBase
 
 // ============================================================
 // Task: FT3STT_Disengage
-// 이탈 행동 (제자리 대기 or 횡이동)
+// 이탈 행동 (제자리 대기 / 횡이동 / 백스텝)
 // ============================================================
 
 USTRUCT()
@@ -200,8 +211,25 @@ struct FT3STT_DisengageInstanceData
 	UPROPERTY(EditAnywhere, Category = "Parameter")
 	float Duration = 3.0f;
 
+	// 횡이동 — Duration 동안 타겟 주위를 좌/우 랜덤 이동
 	UPROPERTY(EditAnywhere, Category = "Parameter")
 	bool bStrafe = false;
+
+	// 백스텝 — 타겟 반대 방향으로 후퇴
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	bool bBackStep = false;
+
+	// 백스텝 몽타주 (선택) — 없으면 슬라이드 이동만
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	TObjectPtr<UAnimMontage> BackStepMontage = nullptr;
+
+	// 루트모션 거리 스케일 (1.0 = 원본, 0.5 = 절반 거리, 0 = 이동 없음)
+	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "0.0", ClampMax = "2.0"))
+	float RootMotionScale = 1.0f;
+
+	// Strafe 시 이동 속도 (0 = 기본 MaxWalkSpeed 사용)
+	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "0.0"))
+	float StrafeSpeed = 0.f;
 
 	// 입력 — 컨텍스트에서 바인딩
 	UPROPERTY(EditAnywhere, Category = "Context")
@@ -213,6 +241,9 @@ struct FT3STT_DisengageInstanceData
 
 	UPROPERTY()
 	float StrafeDirection = 1.f;
+
+	UPROPERTY()
+	float CachedDefaultSpeed = 0.f;
 };
 
 USTRUCT(meta = (DisplayName = "Disengage"))
@@ -290,6 +321,10 @@ struct FT3STT_RunToAttackRangeInstanceData
 	UPROPERTY(EditAnywhere, Category = "Parameter")
 	TObjectPtr<UAnimMontage> RunMontage = nullptr;
 
+	// 돌진 전 회전 대기 (SetFocus 후 몸 돌릴 시간)
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	float PreDashDelay = 0.3f;
+
 	// 입력 — 컨텍스트에서 바인딩
 	UPROPERTY(EditAnywhere, Category = "Context")
 	TObjectPtr<AT3MidBossMonster> Boss = nullptr;
@@ -358,6 +393,41 @@ struct DESECRATION_API FT3STC_PatternOffCooldown : public FStateTreeConditionCom
 };
 
 // ============================================================
+// Condition: FT3STC_PatternAvailableAtStage
+// 패턴의 RequiredStage ≤ Boss의 BossStage인지 체크
+// 맵별 스테이지에 따라 패턴 사용 가능 여부 필터링
+// ============================================================
+
+USTRUCT()
+struct FT3STC_PatternAvailableAtStageInstanceData
+{
+	GENERATED_BODY()
+
+	// 파라미터 — 에디터에서 패턴 이름 설정
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	FName PatternName = NAME_None;
+
+	// 입력 — 컨텍스트에서 바인딩
+	UPROPERTY(EditAnywhere, Category = "Context")
+	TObjectPtr<AT3MidBossMonster> Boss = nullptr;
+};
+
+USTRUCT(meta = (DisplayName = "Pattern Available At Stage"))
+struct DESECRATION_API FT3STC_PatternAvailableAtStage : public FStateTreeConditionCommonBase
+{
+	GENERATED_BODY()
+
+	using FInstanceDataType = FT3STC_PatternAvailableAtStageInstanceData;
+
+	virtual const UStruct* GetInstanceDataType() const override
+	{
+		return FT3STC_PatternAvailableAtStageInstanceData::StaticStruct();
+	}
+
+	virtual bool TestCondition(FStateTreeExecutionContext& Context) const override;
+};
+
+// ============================================================
 // Condition: FT3STC_DistanceToTarget
 // 타겟과의 거리 비교 — EnterCondition 평가 시점에만 계산
 // ============================================================
@@ -399,4 +469,121 @@ struct DESECRATION_API FT3STC_DistanceToTarget : public FStateTreeConditionCommo
 	}
 
 	virtual bool TestCondition(FStateTreeExecutionContext& Context) const override;
+};
+
+// ============================================================
+// Consideration: FT3Consideration_DisengageUrge
+// ActionCount가 줄어들수록 점수 증가 (패턴 많이 할수록 Disengage 확률 상승)
+// 점수 = Clamp(1.0 - ActionCount / MaxActionCount, 0, 1)
+// ============================================================
+
+USTRUCT()
+struct FT3Consideration_DisengageUrgeInstanceData
+{
+	GENERATED_BODY()
+
+	// 스테이지별 기여도 (패턴 1회당)
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	int32 Stage1UrgeCost = 1;
+
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	int32 Stage2UrgeCost = 2;
+
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	int32 Stage3UrgeCost = 3;
+
+	// 이 값에 도달하면 점수 1.0
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	int32 MaxUrge = 10;
+
+	// 최소 점수 (0이어도 이 확률은 유지)
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	float MinScore = 0.05f;
+
+	UPROPERTY(EditAnywhere, Category = "Context")
+	TObjectPtr<AT3MidBossMonster> Boss = nullptr;
+};
+
+USTRUCT(meta = (DisplayName = "Disengage Urge (Consideration)"))
+struct DESECRATION_API FT3Consideration_DisengageUrge : public FStateTreeConsiderationCommonBase
+{
+	GENERATED_BODY()
+
+	using FInstanceDataType = FT3Consideration_DisengageUrgeInstanceData;
+
+	virtual const UStruct* GetInstanceDataType() const override
+	{
+		return FT3Consideration_DisengageUrgeInstanceData::StaticStruct();
+	}
+
+protected:
+	virtual float GetScore(FStateTreeExecutionContext& Context) const override;
+};
+
+// ============================================================
+// Consideration: FT3Consideration_PatternOffCooldown
+// 쿨다운 중이면 0.0 → 랜덤 풀에서 제외
+// 사용 가능하면 1.0 → Weight 기반 랜덤 참여
+// ============================================================
+
+USTRUCT()
+struct FT3Consideration_PatternOffCooldownInstanceData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	FName PatternName = NAME_None;
+
+	UPROPERTY(EditAnywhere, Category = "Context")
+	TObjectPtr<AT3MidBossMonster> Boss = nullptr;
+};
+
+USTRUCT(meta = (DisplayName = "Pattern Off Cooldown (Consideration)"))
+struct DESECRATION_API FT3Consideration_PatternOffCooldown : public FStateTreeConsiderationCommonBase
+{
+	GENERATED_BODY()
+
+	using FInstanceDataType = FT3Consideration_PatternOffCooldownInstanceData;
+
+	virtual const UStruct* GetInstanceDataType() const override
+	{
+		return FT3Consideration_PatternOffCooldownInstanceData::StaticStruct();
+	}
+
+protected:
+	virtual float GetScore(FStateTreeExecutionContext& Context) const override;
+};
+
+// ============================================================
+// Consideration: FT3Consideration_PatternAvailableAtStage
+// 스테이지 미달이면 0.0 → 랜덤 풀에서 제외
+// 사용 가능하면 1.0 → Weight 기반 랜덤 참여
+// ============================================================
+
+USTRUCT()
+struct FT3Consideration_PatternAvailableAtStageInstanceData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	FName PatternName = NAME_None;
+
+	UPROPERTY(EditAnywhere, Category = "Context")
+	TObjectPtr<AT3MidBossMonster> Boss = nullptr;
+};
+
+USTRUCT(meta = (DisplayName = "Pattern Available At Stage (Consideration)"))
+struct DESECRATION_API FT3Consideration_PatternAvailableAtStage : public FStateTreeConsiderationCommonBase
+{
+	GENERATED_BODY()
+
+	using FInstanceDataType = FT3Consideration_PatternAvailableAtStageInstanceData;
+
+	virtual const UStruct* GetInstanceDataType() const override
+	{
+		return FT3Consideration_PatternAvailableAtStageInstanceData::StaticStruct();
+	}
+
+protected:
+	virtual float GetScore(FStateTreeExecutionContext& Context) const override;
 };

@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "T3PlayerInputState.h"
 #include "InputActionValue.h"
+#include "Item/Data/T3ItemBaseData.h"
 #include "T3CharacterBase.generated.h"
 
 
@@ -34,7 +35,9 @@ enum class ET3StatType : uint8
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnStatChangedDelegate, ET3StatType, StatType, float, CurrentValue, float, MaxValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnForcedMoveEndSignature);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSellItemRequested, const FInventorySlot&, SlotData);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSellItemRequested, const FInventorySlot&, SlotData, const int32&, Count, EItemType, ItemType);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUndyingTriggered);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDamageDealt, AActor*, HitTarget, float, DamageDealt);
 
 UCLASS()
 class DESECRATION_API AT3CharacterBase : public ACharacter
@@ -54,7 +57,7 @@ FOnForcedMoveEndSignature OnForcedMoveEnd;
 
 // 아이템 관련 델리게이트 바인딩 함수
 UFUNCTION(BlueprintCallable)
-void RequestSellItem(const FInventorySlot& SlotData);
+void RequestSellItem(const FInventorySlot& SlotData, const int32& Count = 1, EItemType ItemType = EItemType::None);
 UPROPERTY(BlueprintAssignable)
 FOnSellItemRequested OnSellItemRequested;
 
@@ -63,7 +66,7 @@ TObjectPtr <UDataTable> ItemDataTable;
 
 protected:
 	virtual void BeginPlay() override;
-	// virtual void PostInitializeComponents();
+	virtual void PostInitializeComponents() override; // BeginPlay보다 앞선 초기화 지점
 	virtual void Tick( float DeltaTime ) override;
 	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
 	
@@ -130,6 +133,8 @@ public:
 	bool bIsDead = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	bool bIsUsingItem = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SuperArmor")
+	bool bIsSuperArmor = false;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TObjectPtr<UT3InventoryComponent> InventoryComponent; 
@@ -192,6 +197,7 @@ public:
 	FORCEINLINE float GetMaxHP() const { return MaxHP; }
 	FORCEINLINE float GetCurrentHP() const { return CurrentHP; }
 	void SetCurrentHP(float NewHP) { CurrentHP = FMath::Clamp(NewHP, 0.f, MaxHP); BroadcastStatChange(ET3StatType::HP);}
+	void SetMaxHP(float NewHP) { MaxHP = NewHP; BroadcastStatChange(ET3StatType::HP); }
 
 	// Mana
 	FORCEINLINE float GetMaxMana() const { return MaxMana; }
@@ -202,12 +208,14 @@ public:
 
 	// Stamina
 	FORCEINLINE float GetMaxStamina() const { return MaxStamina; }
+	UFUNCTION(BlueprintCallable, Category = "Stat")
 	FORCEINLINE float GetCurrentStamina() const { return CurrentStamina; }
 	void SetCurrentStamina(float NewStamina) { CurrentStamina = FMath::Clamp(NewStamina, 0.f, MaxStamina); BroadcastStatChange(ET3StatType::Stamina);}
 	bool bCanRegenStamina = true;
 
 	// Attack
-	FORCEINLINE float GetAttackPower() const { return AttackPower; }
+	UFUNCTION(BlueprintCallable, Category = "Stat")
+	virtual float GetAttackPower() const { return AttackPower + CachedRuneAttackBonus; }
 	FORCEINLINE void SetAttackPower(float NewPower) { AttackPower = NewPower; BroadcastStatChange(ET3StatType::Attack);}
 
 	// Defense
@@ -251,6 +259,7 @@ protected:
 	float StaminaRegenInterval = 0.1f;
 	FTimerHandle StaminaRegenTimerHandle;
 	
+	public:
 	UFUNCTION(BlueprintPure)
 	ERollDirection GetRollDirection(float Angle) const;
 
@@ -267,7 +276,6 @@ private:
 	float OriginalMoveSpeed;
 
 
-	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* InstigatedBy, AActor* DamageCauser) override;
 
 	//사망 후 이 시간이 지나면 게임 로드 실행 (단위 : 초)
 	UPROPERTY(EditAnywhere, Category = "Death")
@@ -286,6 +294,8 @@ private:
 		float ForcedMoveSpeed = 200.f;
 		float DefaultMaxWalkSpeed = 500.f;
 		bool bIsRotatingToTarget = false;
+
+	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* InstigatedBy, AActor* DamageCauser) override;
 public:
 	// 툴에서 호출할 함수 (좌표를 인자로 받음)
 	UFUNCTION(BlueprintCallable, Category = "Tool")
@@ -300,4 +310,70 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ForceMove")
 	bool bIsSkillCanNotUse = false;
 
+#pragma region Rune
+public:
+	FOnUndyingTriggered OnUndyingTriggered;
+	
+	FOnDamageDealt OnDamageDealt;
+	
+    void SetRuneAttackBonus(UObject* RuneSource, float Bonus);
+    
+	void RemoveRuneAttackBonus(UObject* RuneSource);
+
+	void SetPotionUsePlayRate(float NewPlayRate);
+	
+	void SetEvasionPlayRate(float NewPlayRate);
+
+	FORCEINLINE bool GetIsUndyingState() const { return bIsUndyingState; }
+	
+	void SetIsUndyingState(bool NewState);
+
+	FORCEINLINE float GetSmiteMultiplier() { return SmiteMultiplier; }
+	
+	void SetSmiteMultiplier(float NewMultiplier);
+
+	FORCEINLINE int32 GetSmiteThreshold() const { return SmiteThreshold; }
+
+	void SetSmiteThreshold(int32 NewThreshold);
+	
+	void IncrementSmiteCounter();
+
+	FORCEINLINE int32 GetSmiteCounter() const { return SmiteCounter; }
+
+	void SetSmiteCounter(int32 NewCount);
+
+protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rune")
+	float PotionUsePlayRate = 1.0f;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rune")
+	float EvasionPlayRate = 1.0f;
+	
+private:
+    TMap<TObjectPtr<UObject>, float> RuneAttackBonusMap;
+	
+    float CachedRuneAttackBonus = 0.f;
+	
+	uint8 bIsUndyingState : 1 = false;
+	
+	float SmiteMultiplier = 1.f;
+	
+	UPROPERTY(EditDefaultsOnly, Category ="Rune")
+	int32 SmiteThreshold = 0;
+	
+	int32 SmiteCounter = 0;
+
+	void RecalculateRuneBonus();
+#pragma endregion
+	
+public:
+	UFUNCTION(BlueprintImplementableEvent, Category = "Defence")
+	void OnParry();
+	UFUNCTION(BlueprintImplementableEvent, Category = "Defence")
+	void OnBlockReaction();
+	UFUNCTION(BlueprintImplementableEvent, Category = "Defence")
+	void OnParryReaction();
+	
+	UFUNCTION(BlueprintImplementableEvent, Category = "CameraShake")
+	void OnCameraShake();
 };

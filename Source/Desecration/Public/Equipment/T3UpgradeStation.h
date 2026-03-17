@@ -7,42 +7,12 @@
 #include "Equipment/T3EquipmentTypes.h"
 #include "T3UpgradeStation.generated.h"
 
-class USphereComponent;
 class UStaticMeshComponent;
-class UWidgetComponent;
-class UInputAction;
-class UInputMappingContext;
+class USceneComponent;
 class AT3CharacterBase;
 class UT3PlayerEquipmentComponent;
 class UT3InventoryComponent;
-
-// ============================================================================
-// IT3Interactable 인터페이스
-// 상호작용 가능한 오브젝트가 구현하는 인터페이스
-// ============================================================================
-UINTERFACE(MinimalAPI, Blueprintable)
-class UT3Interactable : public UInterface
-{
-	GENERATED_BODY()
-};
-
-class IT3Interactable
-{
-	GENERATED_BODY()
-
-public:
-	// 상호작용 실행
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
-	void Interact(AT3CharacterBase* Interactor);
-
-	// 상호작용 가능 여부
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
-	bool CanInteract(AT3CharacterBase* Interactor) const;
-
-	// 상호작용 프롬프트 텍스트
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
-	FText GetInteractionPrompt() const;
-};
+class AT3PlayerController;
 
 // ============================================================================
 // FT3UpgradeUIData - UI에 표시할 장비 정보 구조체
@@ -105,7 +75,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUpgradeFailed, FText, FailReason)
 // AT3UpgradeStation - 강화 스테이션 액터
 // ============================================================================
 UCLASS()
-class DESECRATION_API AT3UpgradeStation : public AActor, public IT3Interactable
+class DESECRATION_API AT3UpgradeStation : public AActor
 {
 	GENERATED_BODY()
 
@@ -120,17 +90,13 @@ protected:
 	// ========================================================================
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UStaticMeshComponent> MeshComponent;
-
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	TObjectPtr<USphereComponent> InteractionSphere;
+	TObjectPtr<USceneComponent> SceneComponent;
 
 	// ========================================================================
 	// 설정
 	// ========================================================================
-	// 상호작용 범위
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
-	float InteractionRadius = 200.0f;
-
 	// 강화 최대 레벨 제한
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
 	int32 MaxUpgradeLevel = 10;
@@ -150,10 +116,6 @@ protected:
 	// ========================================================================
 	// 상태
 	// ========================================================================
-	// 현재 범위 내 플레이어
-	UPROPERTY(BlueprintReadOnly, Category = "State")
-	TObjectPtr<AT3CharacterBase> PlayerInRange;
-
 	// UI 열림 상태
 	UPROPERTY(BlueprintReadOnly, Category = "State")
 	bool bIsUpgradeUIOpen = false;
@@ -166,26 +128,7 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "UI")
 	TObjectPtr<UUserWidget> UpgradeWidgetInstance;
 
-	// ========================================================================
-	// 오버랩 이벤트 (Core)
-	// ========================================================================
-	UFUNCTION()
-	void OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	UFUNCTION()
-	void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-
 public:
-	//
-	// ========================================================================
-	// IT3Interactable 인터페이스 구현 (Core)
-	// ========================================================================
-	virtual void Interact_Implementation(AT3CharacterBase* Interactor) override;
-	virtual bool CanInteract_Implementation(AT3CharacterBase* Interactor) const override;
-	virtual FText GetInteractionPrompt_Implementation() const override;
-
 	// ========================================================================
 	// UI 델리게이트 (Blueprint에서 바인딩)
 	// ========================================================================
@@ -206,10 +149,10 @@ public:
 	// ========================================================================
 	// UI 열기/닫기
 	UFUNCTION(BlueprintCallable, Category = "Upgrade|UI")
-	void OpenUpgradeUI();
+	void OpenUpgradeUI(AT3PlayerController* T3PC);
 
 	UFUNCTION(BlueprintCallable, Category = "Upgrade|UI")
-	void CloseUpgradeUI();
+	void CloseUpgradeUI(AT3PlayerController* T3PC);
 
 	UFUNCTION(BlueprintPure, Category = "Upgrade|UI")
 	bool IsUpgradeUIOpen() const { return bIsUpgradeUIOpen; }
@@ -289,14 +232,6 @@ public:
 	// ========================================================================
 	// 유틸리티 (Core)
 	// ========================================================================
-	// 플레이어가 범위 내에 있는지
-	UFUNCTION(BlueprintPure, Category = "Upgrade|Utility")
-	bool IsPlayerInRange() const { return PlayerInRange != nullptr; }
-
-	// 범위 내 플레이어 반환
-	UFUNCTION(BlueprintPure, Category = "Upgrade|Utility")
-	AT3CharacterBase* GetPlayerInRange() const { return PlayerInRange; }
-
 	// EquipmentComponent 조회 헬퍼
 	UFUNCTION(BlueprintPure, Category = "Upgrade|Utility")
 	UT3PlayerEquipmentComponent* GetPlayerEquipmentComponent() const;
@@ -305,24 +240,4 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Upgrade|Utility")
 	UT3InventoryComponent* GetPlayerInventoryComponent() const;
 
-// ============================================================================
-// [TEST] 테스트용 코드 - 정식 Interaction 시스템 연동 후 제거 예정
-// ============================================================================
-#pragma region TEST_CODE
-
-protected:
-	// [TEST] F키 입력 처리 (Character 팀의 Interaction 시스템으로 대체 예정)
-	void HandleInteractInput();
-	void BindInputToPlayer(APlayerController* PC);
-	void UnbindInputFromPlayer(APlayerController* PC);
-
-public:
-	// [TEST] 레거시 강화 함수 (MaxLevel 파라미터 버전) - 삭제 예정
-	UFUNCTION(BlueprintCallable, Category = "Upgrade|Test", meta = (DeprecatedFunction, DeprecationMessage = "Use UpgradeWeapon() instead"))
-	bool TryUpgradeWeapon(int32 MaxLevel = 10);
-
-	UFUNCTION(BlueprintCallable, Category = "Upgrade|Test", meta = (DeprecatedFunction, DeprecationMessage = "Use UpgradeArmor() instead"))
-	bool TryUpgradeArmor(int32 MaxLevel = 10);
-
-#pragma endregion TEST_CODE
 };

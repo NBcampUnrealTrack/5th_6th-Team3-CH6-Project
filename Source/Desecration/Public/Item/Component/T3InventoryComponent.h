@@ -5,15 +5,20 @@
 #include "Engine/DataTable.h"
 #include "T3InventoryComponent.generated.h"
 
+class AT3CharacterBase;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryInitialized);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnToggleItemEquipped);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRuneInventoryUpdated);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEquippedItemChanged);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnChangedBuffItemSlot);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBuffItemUsed);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSwapRecoverSlot);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRecoverItemUsed);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCooldownUpdated, FName, ItemID, float, RemainingTime);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCooldownProgressUpdated, FName, ItemID, float, Progress);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMoneyUpdated, int32, NewMoney);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPotionUpgraded);
 
 UENUM(BlueprintType)
 enum class EConsumableItemType : uint8
@@ -22,8 +27,6 @@ enum class EConsumableItemType : uint8
 	Recover,
 	Buff
 };
-
-class AT3CharacterBase;
 
 USTRUCT(BlueprintType)
 struct FInventorySlot
@@ -56,6 +59,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void SwapSlots(int32 SourceSlotIndex, int32 TargetSlotIndex);
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void SwapRuneSlots(int32 SourceSlotIndex, int32 TargetSlotIndex);
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	float GetCooldownProgressByItemID(const FName& ItemName);
@@ -66,14 +72,47 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	int32 SetMoney(int32 NewMoney);
 	
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory")
+	int32 GetItemCountByItemID(const FName& ItemName);
+	
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory")
+	int32 GetRuneCountByItemID(const FName& ItemName);
+	
+	UFUNCTION(BlueprintCallable)
+	void AddItemByCount(const FName& ItemName, int32 Count = 1);
+
+	UFUNCTION(BlueprintCallable)
+	bool RemoveItemByCount(const FName& ItemName, int32 Count = 1);
+
+	UFUNCTION(BlueprintCallable)
+	void AddRuneItemByCount(const FName& ItemName, int32 Count = 1);
+	
+	UFUNCTION(BlueprintCallable)
+	bool RemoveRuneItemByCount(const FName& ItemName, int32 Count = 1);
+	
+	UFUNCTION(BlueprintCallable)
+	int32 GetRuneItemCountByRuneID(const FName& RuneID);
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TArray<FInventorySlot> Items;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory")
+	TArray<FInventorySlot> RuneItems;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Inventory")
 	int32 InventorySize;
 	
+	UPROPERTY(BlueprintReadOnly, Category = "Rune")
+	int32 RuneInventorySize;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Data|Rune")
+	TObjectPtr<UDataTable> RuneTable;
+	
 	UPROPERTY(BlueprintAssignable, Category = "Inventory")
 	FOnInventoryUpdated OnInventoryUpdated;
+	
+	UPROPERTY(BlueprintAssignable, Category = "Inventory")
+	FOnRuneInventoryUpdated OnRuneInventoryUpdated;
 	
 	UPROPERTY(BlueprintAssignable, Category = "Inventory")
 	FOnInventoryInitialized OnInventoryInitialized;
@@ -84,6 +123,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Cooldown")
 	FOnCooldownProgressUpdated OnCooldownProgressUpdated;
 	
+	UPROPERTY(BlueprintAssignable, Category = "Money")
+	FOnMoneyUpdated OnMoneyUpdated;
+	
 	UPROPERTY(BlueprintReadOnly)
 	EConsumableItemType ConsumableItemType = EConsumableItemType::None;
 	
@@ -92,7 +134,6 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Money")
 	int32 Money;
-
 	
 #pragma region Stone // 강화석
 	int32 NormalStoneCount;
@@ -170,7 +211,7 @@ public:
 	FName GetNextBuffItemName() const;
 	
 	UPROPERTY(BlueprintAssignable, Category = "Equipment")
-	FOnToggleItemEquipped OnToggleItemEquipped;
+	FOnEquippedItemChanged OnEquippedItemChanged;
 	
 	UPROPERTY(BlueprintAssignable, Category = "Equipment")
 	FOnChangedBuffItemSlot OnChangedBuffItemSlot;
@@ -180,21 +221,34 @@ public:
 #pragma endregion
 	
 #pragma region Recover Potion
+
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Recover")
-	int32 HPPotionCount = 0;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Recover")
-	int32 MPPotionCount = 0;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Recover")
-	FName HPPotionID = NAME_None;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Recover")
-	FName MPPotionID = NAME_None;
+	int32 InitialHPPotionAmount;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Recover")
-	FName CurrentPotionID = NAME_None;
+	int32 InitialMPPotionAmount;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Recover")
+	int32 HPPotionCount;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Recover")
+	int32 MPPotionCount;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Recover")
+	FName HPPotionID;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Recover")
+	FName MPPotionID;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Recover")
+	FName CurrentPotionID;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Potion|Upgrade")
+	int32 PotionAmountUpgradeLevel;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Potion|Upgrade")
+	int32 PotionRecoveryUpgradeLevel;
 	
 public:
 	UFUNCTION(BlueprintCallable, Category = "Recover")
@@ -227,14 +281,53 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Recover")
 	int32 GetCurrentPotionCount() const;
 
+	UFUNCTION(BlueprintCallable, Category = "Recover|Upgrade")
+	void UpgradePotionAmount();
+
+	UFUNCTION(BlueprintCallable, Category = "Recover|Upgrade")
+	void UpgradePotionRecovery();
+
+	UFUNCTION(BlueprintCallable, Category = "Recover|Upgrade")
+	int32 GetMaxHPPotionCount() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Recover|Upgrade")
+	int32 GetMaxMPPotionCount() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Recover|Upgrade")
+	int32 GetPotionRecoveryBonus() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Recover|Upgrade")
+	int32 GetCurrentHPPotionRecovery() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Recover|Upgrade")
+	int32 GetCurrentMPPotionRecovery() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Recover|Upgrade")
+	int32 GetPotionAmountUpgradeLevel() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Recover|Upgrade")
+	int32 GetPotionRecoveryUpgradeLevel() const;
+	
+	// SaveGame 로드 시 레벨 복원용
+	UFUNCTION(BlueprintCallable, Category = "Potion|Upgrade")
+	void LoadPotionUpgradeLevel(int32 AmountLevel, int32 RecoveryLevel);
+
 	UPROPERTY(BlueprintAssignable, Category = "Recover")
 	FOnSwapRecoverSlot OnSwapRecoverSlot;
 	
 	UPROPERTY(BlueprintAssignable, Category = "Recover")
 	FOnRecoverItemUsed OnRecoverItemUsed;
+	
+	UPROPERTY(BlueprintAssignable, Category = "Potion|Upgrade")
+	FOnPotionUpgraded OnPotionUpgraded;
 private:
 	void UseHPPotion();
 	
 	void UseMPPotion();
+#pragma endregion
+	
+#pragma region Rune
+	UFUNCTION(BlueprintCallable, Category = "Rune")
+	bool IsRuneEquipped(const FName& ItemName);
 #pragma endregion
 };

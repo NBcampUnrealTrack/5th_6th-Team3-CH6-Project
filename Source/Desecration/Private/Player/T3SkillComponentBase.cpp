@@ -4,6 +4,7 @@
 #include "Player/T3SkillComponentBase.h"
 #include "Player/T3CharacterBase.h"
 #include "Player/T3CombatComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 void UT3SkillComponentBase::CancelCurrentSkill()
 {
@@ -13,6 +14,10 @@ void UT3SkillComponentBase::ExecuteSkillNotify(int32 Index)
 {
 }
 void UT3SkillComponentBase::ExecuteSkill(int32 SkillSlot)
+{
+}
+
+void UT3SkillComponentBase::ExecuteSkill_Completed(int32 SkillSlot)
 {
 }
 
@@ -145,6 +150,14 @@ bool UT3SkillComponentBase::CanExecuteSkill(FSkillData& Data)
     return true;
 }
 
+void UT3SkillComponentBase::PlaySkillEffectSound(USoundBase* Sound, float Volume)
+{
+    if (Sound && GetWorld())
+    {
+        UGameplayStatics::PlaySoundAtLocation(this, Sound, GetOwner()->GetActorLocation(), Volume);
+    }
+}
+
 void UT3SkillComponentBase::StartCooldown(int32 SkillID, FSkillData& Data)
 {
     // 1. 데이터 업데이트
@@ -216,6 +229,10 @@ void UT3SkillComponentBase::SwapSkills()
 void UT3SkillComponentBase::OnSkillMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 
+}
+
+void UT3SkillComponentBase::BasicAttackCount()
+{
 }
 
 

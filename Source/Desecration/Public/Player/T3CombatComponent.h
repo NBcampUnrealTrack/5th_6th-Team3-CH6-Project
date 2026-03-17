@@ -19,6 +19,7 @@ enum class ECharacterCombatState : uint8
 	Parrying,
 	Dodge,
 	Attacking,
+	Invincible,
 	Dead,
 	Cooldown
 };
@@ -31,8 +32,9 @@ enum class ECombatWindowType : uint8
 	Parry      UMETA(DisplayName = "Parry Window"),
 	Dodge UMETA(DisplayName = "Dodge Window"),
 	Attack     UMETA(DisplayName = "Attack Collision"),
-	PrevenRegen UMETA(DisplayName = "PrevenRegen")
-	
+	PrevenRegen UMETA(DisplayName = "PrevenRegen"),
+	PowerStrike UMETA(DisplayName = "Power Strike"),
+	Invincible UMETA(DisplayName = "Invincible")
 };
 
 // 피격 방향 ENUM
@@ -56,8 +58,7 @@ enum class ESlotType : uint8
 
 // 현재 선택된 슬롯이 바뀔 때 (전투 화면에서 슬롯 체인지)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSlotSelectionChanged, ESlotType, SlotType, int32, NewSlotIndex);
-
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTakeDamage);
 
 UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class DESECRATION_API UT3CombatComponent : public UActorComponent
@@ -77,22 +78,42 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Combat|UI")
 	FOnSlotSelectionChanged OnSlotSelectionChanged;
 
+	UPROPERTY(BlueprintAssignable, Category = "Rune")
+	FOnTakeDamage OnTakeDamage;
+	
 	UFUNCTION(BlueprintCallable)
 	void RequestUpdateSkill(int32 SkillID, bool bIsEquip);
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void InitializeComponent() override;
 
 
 
 public:	
+	// 상태 변수
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	ECharacterCombatState CurrentState;
+
+	ECharacterCombatState PreState;
+
+	// 전체적인 상태 변경 함수
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void SetCombatState(ECharacterCombatState NewState);
+
+	// 무적 상태 전용 편의 함수
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void SetInvincible(bool bIsInvincible);
+
+	// 현재 상태 확인용
+	UFUNCTION(BlueprintPure, Category = "Combat")
+	FORCEINLINE ECharacterCombatState GetCurrentState() const { return CurrentState; }
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EHitDirection HitDirection;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EHitIntensity HitIntensity;
-	// 상태 변수
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	ECharacterCombatState CurrentState;
+	
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector CurrentDamageCauserLocation;
@@ -100,7 +121,11 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	// 막기/패링
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsBlockBreak = false;
+	
 	void StartBlock();
+	UFUNCTION(BlueprintCallable)
 	void EndBlock();
 	
 	void Attack();
@@ -127,9 +152,6 @@ public:
 	AActor* GetCurrentTarget() const { return CurrentTarget; }
 
 	void UpdateLockOnWidgetScale();
-
-	// 캐릭터 상태 Getter
-	FORCEINLINE ECharacterCombatState GetCurrentState() const { return CurrentState; }
 
 	// 공격 함수
 	UFUNCTION(BlueprintCallable)
@@ -160,6 +182,8 @@ public:
 	// 현재 슬롯 실행 (실제 키 입력 시 호출)
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	void ExecuteCurrentSlotAction(ESlotType Type);
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	void ExecuteCurrentSlotAction_Completed(ESlotType Type);
 
 	void SetSkillComponent(UT3SkillComponentBase* InSkillComp) { SkillComp = InSkillComp; }
 	UFUNCTION(BlueprintCallable, Category = "Skill")
@@ -193,9 +217,6 @@ private:
 	// void SetLockOnTarget(AActor* NewTarget);
 
 	// 패링
-	FTimerHandle ParryingToBlockingTimerHandle;
-	UFUNCTION()
-	void SwitchToBlockingState();
 
 	UPROPERTY()
 	TObjectPtr<class AT3CharacterBase> OwnerChar;
@@ -238,7 +259,36 @@ private:
 	TObjectPtr<AActor> CurrentTarget;
 	void ResetBlockCooldown();
 
+public:
+	bool GetIsPowerStrike() const {return bIsPowerStrike;}
+	
+	void SetPowerStrike(bool bState) {bIsPowerStrike = bState;}
+	
+protected:
+	bool bIsPowerStrike = false;
+
+#pragma region Rune
+public:
+	float GetHolyGaugeChargeAmount() const;
+	
+	void SetHolyGaugeChargeAmount(float NewAmount);
+	
+private:
+	float HolyGaugeChargeAmount = 20.f;
+	
+#pragma endregion
 
 
+	private:
+		// 피격 사운드
+		void PlaySkillEffectSound(USoundBase* Sound, float Volume = 1.0f);
 
+		UPROPERTY(EditAnywhere, Category = "Sound")
+		class USoundBase* LightHitVoice;
+
+		UPROPERTY(EditAnywhere, Category = "Sound")
+		class USoundBase* MediumHitVoice;
+
+		UPROPERTY(EditAnywhere, Category = "Sound")
+		class USoundBase* HeavyHitVoice;
 };

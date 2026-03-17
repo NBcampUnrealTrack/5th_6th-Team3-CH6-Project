@@ -5,6 +5,7 @@
 #include "GameSystem/GlobalEnums.h"
 #include "T3SelectClassWidget.generated.h"
 
+class UT3GameInstance;
 class UT3InputNamePanel;
 class UHorizontalBox;
 class AT3SelectClassPlayerController;
@@ -21,9 +22,14 @@ protected:
 public:
 	//이름 입력 패널 활성화 여부
 	void SetActiveInputNamePanel(bool bActive);
-	
+
 	//입력한 이름으로 튜토리얼 시작하기
 	void TutorialStart(const FString& PlayerName);
+	
+protected:
+	//블루프린트에서 Esc를 누를 때 실행할 함수
+	UFUNCTION(BlueprintCallable)
+	void OnPressEsc();
 	
 private:
 	//클래스 선택 버튼
@@ -44,6 +50,10 @@ private:
 	//이름 입력 패널
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
 	TObjectPtr<UT3InputNamePanel> InputNamePanel;
+	
+	//게임 인스턴스
+	UPROPERTY()
+	TObjectPtr<UT3GameInstance> T3GameInstance;
 	
 	//플레이어 컨트롤러
 	UPROPERTY()

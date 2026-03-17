@@ -16,7 +16,7 @@ protected:
 	virtual void BeginPlay() override;
 	
 public:
-	//시작 데이터 생성하기 (true : 생성 성공)
+	//시작 데이터 생성하기
 	void MakeFirstGameData(const FString& PlayerName, const EPlayerClass SelectedPlayerClass);
 	
 	//튜토리얼 시작

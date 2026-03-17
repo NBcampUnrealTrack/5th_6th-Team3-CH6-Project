@@ -15,6 +15,9 @@ AT3WeaponBase::AT3WeaponBase()
     WeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
     RootComponent = WeaponMesh;
 
+    WeaponSkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponSkeletalMesh"));
+    WeaponSkeletalMesh->SetupAttachment(RootComponent);
+
     WeaponCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("WeaponCollision"));
     WeaponCollision->SetupAttachment(RootComponent);
 
@@ -32,10 +35,10 @@ void AT3WeaponBase::BeginPlay()
     OwnerChar = Cast<AT3CharacterBase>(GetOwner());
     Combat = OwnerChar->GetCombatComponent();
 
-    WeaponCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-    if (WeaponCollision)
+    if (IsValid(WeaponCollision))
     {
+        WeaponCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
         WeaponCollision->OnComponentBeginOverlap.AddDynamic(this, &AT3WeaponBase::OnWeaponOverlap);
         UE_LOG(LogTemp, Warning, TEXT("Overlap Delegate Bound Successfully!"));
     }
@@ -43,7 +46,8 @@ void AT3WeaponBase::BeginPlay()
 
 void AT3WeaponBase::SetWeaponCollisionEnabled(bool bEnabled, float InDamageMultiplier, TSubclassOf<UT3DamageType_Base> InType, EHitIntensity InIntensity, float InStunAmount, float StaminaAmount)
 {
-    if (bEnabled && OwnerChar)
+   
+    if (bEnabled && OwnerChar && WeaponCollision)
     {
         CurrentAttackDamage = OwnerChar->GetAttackPower() * InDamageMultiplier;
         CurrentDamageType = InType;
@@ -57,7 +61,7 @@ void AT3WeaponBase::SetWeaponCollisionEnabled(bool bEnabled, float InDamageMulti
         UE_LOG(LogTemp, Display, TEXT("Weapon Collision: %s"), *CollisionState);
     }
 
-    else
+    else if(IsValid(WeaponCollision))
     {
         WeaponCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
         AlreadyHitActors.Empty();
@@ -82,21 +86,21 @@ void AT3WeaponBase::OnWeaponOverlap(UPrimitiveComponent* OverlappedComponent, AA
 
         AT3BossMonster* HitBoss = Cast<AT3BossMonster>(OtherActor);
 
-        if (HitBoss)
-        {
-            HitBoss->Damage(CurrentAttackDamage, StunAmount); 
-            //GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Hit Boss! Damage :  %.1f,  Stun : %.1f"), CurrentAttackDamage, StunAmount));
-            UE_LOG(LogTemp, Warning, TEXT("Hit Boss! Damage: %.1f, Stun: %.1f"), CurrentAttackDamage, StunAmount);
-        }
+        //if (HitBoss)
+        //{
+        //    HitBoss->Damage(CurrentAttackDamage, StunAmount); 
+        //    //GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Hit Boss! Damage :  %.1f,  Stun : %.1f"), CurrentAttackDamage, StunAmount));
+        //    UE_LOG(LogTemp, Warning, TEXT("Hit Boss! Damage: %.1f, Stun: %.1f"), CurrentAttackDamage, StunAmount);
+        //}
 
-        if (Combat && !HitBoss)
-        {
+
+        
             Combat->RequestAttackDamage(OtherActor, CurrentAttackDamage, CurrentIntensity, 1.f, CurrentDamageType, StunAmount);
             //GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Hit Monster!"));
             //GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Hit Monster! Damage :  %.1f"), CurrentAttackDamage));
             UE_LOG(LogTemp, Warning, TEXT("Hit Monster! Damage: %.1f"), CurrentAttackDamage);
         }
         UE_LOG(LogTemp, Log, TEXT("Hit: %s"), *OtherActor->GetName());
-    }
+    
 
 }

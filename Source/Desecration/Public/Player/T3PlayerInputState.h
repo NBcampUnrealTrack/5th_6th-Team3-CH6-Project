@@ -23,7 +23,8 @@ UENUM(BlueprintType)
 enum class ECharacterClass : uint8
 {
 	Paladin,
-	Taoist
+	Taoist,
+	Valkyrie
 };
 
 UENUM(BlueprintType)
@@ -46,6 +47,9 @@ struct DESECRATION_API FT3PlayerInputState
 	GENERATED_BODY()
 	
 public:
+
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	bool bWantsToMove = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
@@ -69,6 +73,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	bool bIsJustLanded = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
+	bool bIsParring = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	float ComboCount = 0.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	float CurrentSpeed = 0.0f;
@@ -76,6 +82,7 @@ public:
 	float FutureSpeed = 0.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	float FallingSpeed = 0.0f;
+	
 	
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")

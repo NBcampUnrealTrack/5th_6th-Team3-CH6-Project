@@ -1,0 +1,20 @@
+﻿newmtl MI_ivy_03
+	map_Kd MI_ivy_03_D.bmp
+	map_Ks MI_ivy_03_S.bmp
+	bump MI_ivy_03_N.bmp
+
+newmtl MI_Leaf_02
+	map_Kd MI_Leaf_02_D.bmp
+	map_Ks MI_Leaf_02_S.bmp
+	bump MI_Leaf_02_N.bmp
+
+newmtl MI_Bark_02
+	map_Kd MI_Bark_02_D.bmp
+	map_Ks MI_Bark_02_S.bmp
+	bump MI_Bark_02_N.bmp
+
+newmtl MI_Grass_1-3
+	map_Kd MI_Grass_1-3_D.bmp
+	map_Ks MI_Grass_1-3_S.bmp
+	bump MI_Grass_1-3_N.bmp
+

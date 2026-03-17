@@ -2,61 +2,63 @@
 
 #include "GameFramework/GameUserSettings.h"
 #include "GameSystem/T3SaveGame.h"
+#include "GameSystem/T3SaveLostMoney.h"
+#include "GameSystem/T3SaveUserSettings.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundClass.h"
+
+FText UT3GameInstance::GetTextFromTable(const FString& Namespace, const FString& Key)
+{
+	FText ReturnValue;
+	FText::FindTextInLiveTable_Advanced(FTextKey(Namespace), FTextKey(Key), ReturnValue);
+	return ReturnValue;
+}
+
+FString UT3GameInstance::GetStringFromTable(const FString& Namespace, const FString& Key)
+{
+	return GetTextFromTable(Namespace, Key).ToString();
+}
 
 void UT3GameInstance::Init()
 {
 	Super::Init();
 	
-	CurrentSettings = TSharedPtr<FSettings>();
-	
-	if (!GEngine)
-	{
-		UE_LOG(LogTemp, Error, TEXT("%s : GEngine이 null"), *GetNameSafe(this));
-		return;
-	}
-	UserSettings = GEngine->GetGameUserSettings();
-	if (!UserSettings)
-	{
-		UE_LOG(LogTemp, Error, TEXT("%s : GEngine의 GameUserSettings가 null"), *GetNameSafe(this));
-		return;
-	}
-	
+	//게임 데이터
 	LoadGame();
+	
+	//잃어버린 재화
+	LoadLostMoney();
+	
+	//설정
+	if (!LoadUSerSettings())
+	{
+		MakeFirstSettings();
+	}
 }
 
 void UT3GameInstance::MakeFirstSettings()
 {
-	//현 모니터의 최고 크기에 전체 창모드를 기본으로
-	FIntPoint MaxResolution;
-	if (TArray<FIntPoint> Resolutions; UKismetSystemLibrary::GetSupportedFullscreenResolutions(Resolutions))
-	{
-		MaxResolution = Resolutions.Last();
-		ET3Resolution SuitableValue = static_cast<ET3Resolution>(MaxResolution.X * 10000 + MaxResolution.Y);
-		CurrentSettings->Resolution = SuitableValue;
-		CurrentSettings->ScreenMode = ET3ScreenMode::WindowedFullscreen;
-	}
-	else//최대 해상도 확인 실패시 최소 해상도에 창모드로
-	{
-		MaxResolution = FIntPoint(800, 600);
-		CurrentSettings->Resolution = ET3Resolution::W800H600;
-		CurrentSettings->ScreenMode = ET3ScreenMode::Windowed;
-	}
-	UserSettings->SetScreenResolution(MaxResolution);
-	
-	//그래픽 퀄리티는 낮음으로
-	UserSettings->SetOverallScalabilityLevel(0);
-	CurrentSettings->GraphicQuality = EGraphicQuality::Low;
-	
-	//화면 모드, 해상도 적용
-	UserSettings->ApplySettings(true);
-	
 	//효과음, 배경음 모두 0.8을 기본으로
-	CurrentSettings->SoundEffectsVolume = 0.8f;
-	CurrentSettings->BackgroundVolume = 0.8f;
-	//마우스 감도는 1을 기본으로
-	CurrentSettings->MouseSensitivity = 1.0f;
+	SoundClassBGM->Properties.Volume = SoundClassSE->Properties.Volume = 0.8f;
+	
+	//그래픽 퀄리티는 높음
+	if (GEngine)
+	{
+		GEngine->GetGameUserSettings()->SetOverallScalabilityLevel(2);
+		GEngine->GetGameUserSettings()->ApplySettings(true);
+	}
+	
+	//CurrentSettings를 사용하는 구간
+	if (!CurrentSettings)
+	{
+		CurrentSettings = NewObject<UT3SaveUserSettings>();
+	}
+	CurrentSettings->ResetUserSettings();
+
+	//회전 감도는 1을 기본으로
+	CurrentSettings->CameraSpeed = 1.0f;
+	
+	SaveUserSettings();
 }
 
 TObjectPtr<UT3SaveGame> UT3GameInstance::MakeFirstGameData()
@@ -68,6 +70,15 @@ TObjectPtr<UT3SaveGame> UT3GameInstance::MakeFirstGameData()
 	SavedGameData->ResetGameData();
 	
 	return SavedGameData;
+}
+
+void UT3GameInstance::MakeFirstLostMoneyData()
+{
+	if (!LostMoneyData)
+	{
+		LostMoneyData = NewObject<UT3SaveLostMoney>();
+	}
+	LostMoneyData->ResetGameData();
 }
 
 bool UT3GameInstance::SaveGame()
@@ -88,47 +99,38 @@ bool UT3GameInstance::LoadGame()
 	return true;
 }
 
-void UT3GameInstance::SetResolution(ET3Resolution Resolution)
+bool UT3GameInstance::SaveUserSettings()
 {
-	CurrentSettings->Resolution = Resolution;
+	return UGameplayStatics::SaveGameToSlot(CurrentSettings, SAVE_USER_SETTINGS_NAME, 0);
+}
+
+bool UT3GameInstance::LoadUSerSettings()
+{
+	TObjectPtr<UT3SaveUserSettings> T3UserSettings = Cast<UT3SaveUserSettings>(UGameplayStatics::LoadGameFromSlot(SAVE_USER_SETTINGS_NAME, 0));
+	if (!T3UserSettings)
+	{
+		return false;
+	}
 	
-	//ET3Resolution의 각 항목은 [가로 * 10000 + 세로]인 값을 가진다.
-	int32 Width = static_cast<int>(Resolution) / 10000;
-	int32 Height = static_cast<int>(Resolution) % 10000;
-	UserSettings->SetScreenResolution(FInt32Point(Width, Height));
-	UserSettings->ApplySettings(true);
+	CurrentSettings = T3UserSettings;
+	return true;
 }
 
-void UT3GameInstance::SetScreenMode(ET3ScreenMode ScreenMode)
+bool UT3GameInstance::SaveLostMoney()
 {
-	CurrentSettings->ScreenMode = ScreenMode;
-	UserSettings->SetFullscreenMode(static_cast<EWindowMode::Type>(ScreenMode));
-	UserSettings->ApplySettings(true);
+	return UGameplayStatics::SaveGameToSlot(LostMoneyData, SAVE_LOST_MONEY_NAME, 0);
+}
+
+bool UT3GameInstance::LoadLostMoney()
+{
+	TObjectPtr<UT3SaveLostMoney> T3LostMoney = Cast<UT3SaveLostMoney>(UGameplayStatics::LoadGameFromSlot(SAVE_LOST_MONEY_NAME, 0));
+	if (!T3LostMoney)
+	{
+		return false;
+	}
 	
-#if WITH_EDITOR
-	//화면 모드 변경은 에디터에서 알 수 없기 때문에 로그로 표시
-	const FString LogOutValue = UEnum::GetValueAsString(ScreenMode);
-	UE_LOG(LogTemp, Warning, TEXT("화면 모드 변경 : %s"), *LogOutValue);
-#endif
-}
-
-void UT3GameInstance::SetSoundEffectsVolume(const float Volume)
-{
-	SoundClassSE->Properties.Volume = Volume;
-	CurrentSettings->SoundEffectsVolume = Volume;
-}
-
-void UT3GameInstance::SetBackgroundVolume(const float Volume)
-{
-	SoundClassBGM->Properties.Volume = Volume;
-	CurrentSettings->BackgroundVolume = Volume;
-}
-
-void UT3GameInstance::SetGraphicQuality(const EGraphicQuality GraphicQuality)
-{
-	CurrentSettings->GraphicQuality = GraphicQuality;
-	UserSettings->SetOverallScalabilityLevel(static_cast<int32>(GraphicQuality));
-	UserSettings->ApplySettings(true);
+	LostMoneyData = T3LostMoney;
+	return true;
 }
 
 //void UT3GameInstance::OpenLevel(const ELevelName LevelName) const
@@ -141,7 +143,7 @@ void UT3GameInstance::SetGraphicQuality(const EGraphicQuality GraphicQuality)
 // T3GameInstance.cpp
 
 
-void UT3GameInstance::OpenLevel(const ELevelName LevelName) const // const 유지
+void UT3GameInstance::OpenLevel(const ELevelName LevelName)
 {	
     // 1. LevelMap에 해당 키가 있는지 확인
     if (!LevelMap.Contains(LevelName))
@@ -169,7 +171,16 @@ void UT3GameInstance::OpenLevel(const ELevelName LevelName) const // const 유�
     }
 
     UE_LOG(LogTemp, Warning, TEXT("Attempting to Open Level: %s"), *LevelPath);
+	CurrentLevel = LevelName;
     
     // 최종 호출
     UGameplayStatics::OpenLevel(CurrentWorld, FName(*LevelPath));
+}
+
+void UT3GameInstance::OpenLevelBySavedData()
+{
+	if (SavedGameData)
+	{
+		OpenLevel(SavedGameData->SavedLevelName);
+	}
 }
