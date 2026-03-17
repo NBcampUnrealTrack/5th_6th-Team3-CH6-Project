@@ -632,16 +632,13 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 		switch (Intensity)
 		{
 		case EHitIntensity::Light:
-			PlaySkillEffectSound(LightHitVoice,3.0f);
-			UE_LOG(LogTemp, Display, TEXT("light hit"));
+			PlaySkillEffectSound(LightHitVoice,2.0f);
 			break;
 		case EHitIntensity::Medium:
-			PlaySkillEffectSound(MediumHitVoice, 3.0f);
-			UE_LOG(LogTemp, Display, TEXT("med hit"));
+			PlaySkillEffectSound(MediumHitVoice, 2.0f);
 			break;
 		case EHitIntensity::Heavy:
-			PlaySkillEffectSound(HeavyHitVoice, 3.0f);
-			UE_LOG(LogTemp, Display, TEXT("heavy hit"));
+			PlaySkillEffectSound(HeavyHitVoice, 2.0f);
 			break;
 		default:
 			break;
@@ -950,6 +947,5 @@ void UT3CombatComponent::PlaySkillEffectSound(USoundBase* Sound, float Volume)
 	if (Sound && GetWorld())
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, Sound, GetOwner()->GetActorLocation(), Volume);
-		UE_LOG(LogTemp, Display, TEXT("play sound"));
 	}
 }
