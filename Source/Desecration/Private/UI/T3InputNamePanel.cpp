@@ -4,9 +4,9 @@
 #include "Components/EditableTextBox.h"
 #include "UI/T3SelectClassWidget.h"
 
-void UT3InputNamePanel::NativeConstruct()
+void UT3InputNamePanel::NativeOnInitialized()
 {
-	Super::NativeConstruct();
+	Super::NativeOnInitialized();
 	
 	//버튼 바인딩
 	ConfirmButton->OnClicked.AddDynamic(this, &ThisClass::OnClickConfirmButton);

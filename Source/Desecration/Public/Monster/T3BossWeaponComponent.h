@@ -13,6 +13,8 @@ class USphereComponent;
 class USkeletalMeshComponent;
 class UTimelineComponent;
 class UCurveFloat;
+class UNiagaraComponent;
+class UNiagaraSystem;
 
 // 무기 소켓 타입 — 애님팩별 그립 보정용
 UENUM(BlueprintType)
@@ -76,6 +78,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|BodyAttack", meta = (ClampMin = "5.0", ClampMax = "100.0"))
 	float BodyAttackRadius = 30.f;
 
+	// 무기 오라 이펙트 — WeaponMeshComponent 자식으로 부착 (소켓 전환 무관하게 추적)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|FX")
+	TObjectPtr<UNiagaraComponent> WeaponAuraEffect;
+
+	// BP에서 할당할 Niagara 에셋
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|FX")
+	TObjectPtr<UNiagaraSystem> WeaponAuraSystem;
+
 	// 무기 히트 델리게이트 — Monster에서 바인딩하여 데미지 적용
 	UPROPERTY(BlueprintAssignable, Category = "Weapon|Events")
 	FOnWeaponHitActor OnWeaponHitActor;
@@ -106,6 +116,14 @@ public:
 	// 팔 공격 판정 ON/OFF (ON 시 히트 목록 초기화)
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void SetBodyAttackCollisionEnabled(bool bEnable);
+
+	// 무기 오라 이펙트 활성화 (OverrideSystem 지정 시 해당 에셋 사용, 없으면 WeaponAuraSystem 사용)
+	UFUNCTION(BlueprintCallable, Category = "Weapon|FX")
+	void ActivateWeaponAura(UNiagaraSystem* OverrideSystem = nullptr);
+
+	// 무기 오라 이펙트 비활성화
+	UFUNCTION(BlueprintCallable, Category = "Weapon|FX")
+	void DeactivateWeaponAura();
 
 	// 무기 드롭 (사망 연출용)
 	UFUNCTION(BlueprintCallable, Category = "Weapon")

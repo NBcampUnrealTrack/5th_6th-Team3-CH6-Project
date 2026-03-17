@@ -4,6 +4,7 @@
 #include "GameFramework/GameMode.h"
 #include "T3GameMode.generated.h"
 
+class AT3LostMoney;
 class UT3GameInstance;
 class AT3CharacterBase;
 enum class EPlayerClass;
@@ -16,6 +17,10 @@ class DESECRATION_API AT3GameMode : public AGameMode
 	
 protected:
 	virtual void BeginPlay() override;
+	
+private:
+	//잃어버린 재화 액터 생성
+	void MakeLostMoneyActors();
 	
 public:
 	//캐릭터의 클래스
@@ -43,6 +48,10 @@ public:
 	bool YouHaveBeenCorrupted(const AT3CharacterBase* Character) const;
 	
 private:
+	//잃어버린 재화 액터
+	UPROPERTY(EditDefaultsOnly, Category = "Game Over", meta = (AllowPrivateAccess = true))
+	TSubclassOf<AT3LostMoney> LostMoneyClass;
+	
 	//게임 인스턴스
 	UPROPERTY()
 	TObjectPtr<UT3GameInstance> T3GameInstance;

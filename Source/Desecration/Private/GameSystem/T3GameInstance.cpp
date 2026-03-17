@@ -26,6 +26,9 @@ void UT3GameInstance::Init()
 	//게임 데이터
 	LoadGame();
 	
+	//잃어버린 재화
+	LoadLostMoney();
+	
 	//설정
 	if (!LoadUSerSettings())
 	{
