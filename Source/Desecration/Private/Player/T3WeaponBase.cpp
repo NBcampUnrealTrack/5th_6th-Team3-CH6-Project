@@ -13,10 +13,10 @@ AT3WeaponBase::AT3WeaponBase()
 
 {
     WeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
+    RootComponent = WeaponMesh;
 
     WeaponSkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponSkeletalMesh"));
     WeaponSkeletalMesh->SetupAttachment(RootComponent);
-    RootComponent = WeaponMesh;
 
     WeaponCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("WeaponCollision"));
     WeaponCollision->SetupAttachment(RootComponent);
