@@ -57,6 +57,7 @@ bool AT3MidBossMonster::ExecutePattern(FName PatternName)
 	// 패턴 실행 시작
 	CurrentPatternName = PatternName;
 	CurrentChainIndex = 0;
+	ConsecutiveDisengageCount = 0;
 	AddStateTag(TAG_Boss_State_ExecutingPattern);
 
 	// 보정기에 패턴 사용 횟수 기록

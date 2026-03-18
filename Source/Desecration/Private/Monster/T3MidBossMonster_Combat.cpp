@@ -96,8 +96,8 @@ void AT3MidBossMonster::ApplyDamageToMidBoss(float DamageAmount, float StunAmoun
 		UE_LOG(LogDesecration, Warning, TEXT("T3_MidBoss: HitCameraShakeClass가 할당되지 않음!"));
 	}
 
-	// 히트 리액션 — 슈퍼아머 + 비기절 + 비공격 + 생존 시에만 재생
-	if (HasSuperArmor() && !IsStunned() && !IsExecutingPattern() && MidBossStats.CurrentHP > 0.f)
+	// 히트 리액션 — 슈퍼아머 + 비기절 + 비공격 + 비이탈 + 생존 시에만 재생
+	if (HasSuperArmor() && !IsStunned() && !IsExecutingPattern() && !IsDisengaging() && MidBossStats.CurrentHP > 0.f)
 	{
 		PlayAdditiveHitReaction(DamageCauser);
 	}

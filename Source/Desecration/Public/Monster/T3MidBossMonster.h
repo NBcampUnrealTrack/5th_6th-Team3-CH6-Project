@@ -30,6 +30,7 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_Stunned);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_ExecutingPattern);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_SuperArmor);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_ParryWindow);
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_Disengaging);
 
 // StateTree 이벤트 태그 (extern — STNodes에서 참조)
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_Event_StunRecovered);
@@ -84,6 +85,9 @@ public:
 	// [0]=Stage1, [1]=Stage2, [2]=Stage3
 	int32 StagePatternCounts[3] = {0, 0, 0};
 
+	// 연속 Disengage 횟수 (패턴 실행 시 리셋, ConsecutiveDisengagePenalty Consideration용)
+	int32 ConsecutiveDisengageCount = 0;
+
 	// --- 상태 태그 ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|State")
 	FGameplayTagContainer ActiveGameplayTags;
@@ -108,6 +112,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "MidBoss|State")
 	bool HasSuperArmor() const;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "MidBoss|State")
+	bool IsDisengaging() const;
 
 	// --- 보스 정보 & 스탯 ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Info")

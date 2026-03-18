@@ -368,9 +368,16 @@ EStateTreeRunStatus FT3STT_Disengage::EnterState(
 		return EStateTreeRunStatus::Failed;
 	}
 
+	// Disengaging 상태 태그 설정 (히트리액션 무시용)
+	Data.Boss->AddStateTag(TAG_Boss_State_Disengaging);
+
+	// 연속 Disengage 카운터 증가
+	Data.Boss->ConsecutiveDisengageCount++;
+
 	// 스테이지별 패턴 카운트 리셋
-	UE_LOG(LogDesecration, Log, TEXT("T3_ST: Disengage — StagePatternCounts 리셋 [%d,%d,%d → 0]"),
-		Data.Boss->StagePatternCounts[0], Data.Boss->StagePatternCounts[1], Data.Boss->StagePatternCounts[2]);
+	UE_LOG(LogDesecration, Log, TEXT("T3_ST: Disengage — StagePatternCounts 리셋 [%d,%d,%d → 0], 연속횟수:%d"),
+		Data.Boss->StagePatternCounts[0], Data.Boss->StagePatternCounts[1], Data.Boss->StagePatternCounts[2],
+		Data.Boss->ConsecutiveDisengageCount);
 	Data.Boss->StagePatternCounts[0] = 0;
 	Data.Boss->StagePatternCounts[1] = 0;
 	Data.Boss->StagePatternCounts[2] = 0;
@@ -461,6 +468,9 @@ void FT3STT_Disengage::ExitState(
 
 	if (Data.Boss)
 	{
+		// Disengaging 상태 태그 해제
+		Data.Boss->RemoveStateTag(TAG_Boss_State_Disengaging);
+
 		// 백스텝 몽타주 정지
 		if (Data.bBackStep && Data.BackStepMontage)
 		{
@@ -831,4 +841,28 @@ float FT3Consideration_PatternAvailableAtStage::GetScore(FStateTreeExecutionCont
 	}
 
 	return Data.Boss->BossStage >= PatternData->RequiredStage ? 1.f : 0.f;
+}
+
+// ============================================================
+// Consideration: FT3Consideration_ConsecutiveDisengagePenalty
+// 연속 Disengage 시 점수 감쇄 — PenaltyPerCount ^ ConsecutiveDisengageCount
+// ============================================================
+
+float FT3Consideration_ConsecutiveDisengagePenalty::GetScore(FStateTreeExecutionContext& Context) const
+{
+	const FT3Consideration_ConsecutiveDisengagePenaltyInstanceData& Data = Context.GetInstanceData(*this);
+
+	if (!Data.Boss)
+	{
+		return 0.f;
+	}
+
+	const int32 Count = Data.Boss->ConsecutiveDisengageCount;
+	if (Count <= 0)
+	{
+		return 1.f;
+	}
+
+	// PenaltyPerCount ^ Count (0.5^1=0.5, 0.5^2=0.25 ...)
+	return FMath::Pow(Data.PenaltyPerCount, static_cast<float>(Count));
 }
