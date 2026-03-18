@@ -4,7 +4,7 @@
 #include "Player/Valkyrie/T3Valkyrie_SkillComponent.h"
 #include "Player/Valkyrie/T3LunarSlash.h"
 #include "Player/T3CharacterBase.h"
-
+#include "Player/T3CombatComponent.h"
 
 FSkillData* UT3Valkyrie_SkillComponent::GetSkillDataByID(int32 SkillID)
 {
@@ -74,7 +74,7 @@ void UT3Valkyrie_SkillComponent::BasicAttackCount()
     {
         if (OwnerChar)
         {
-            float HealAmount = OwnerChar->GetMaxHP() * 0.1f;
+            float HealAmount = (OwnerChar->GetMaxHP() * 0.1f) + (OwnerChar->GetMaxHP() * PassiveHealBonus / 100);
             float NewHP = FMath::Clamp(OwnerChar->GetCurrentHP() + HealAmount, 0.0f, OwnerChar->GetMaxHP());
             OwnerChar->SetCurrentHP(NewHP);
             CurrentBasicAttackCount = 0;
@@ -163,4 +163,9 @@ void UT3Valkyrie_SkillComponent::ExecuteSkillNotify(int32 Index)
 
 void UT3Valkyrie_SkillComponent::CancelCurrentSkill()
 {
+}
+
+void UT3Valkyrie_SkillComponent::SetPassiveHealBonus(float NewHealBonus)
+{
+    PassiveHealBonus = NewHealBonus;
 }

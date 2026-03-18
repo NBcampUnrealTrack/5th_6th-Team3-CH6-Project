@@ -596,4 +596,6 @@ global_rules.md
 ### VisualStudio Patch ###
 # Additional files built by Visual Studio
 
+Config/DefaultEngine.ini
+
 # End of https://www.toptal.com/developers/gitignore/api/windows,unrealengine,rider,visualstudio
