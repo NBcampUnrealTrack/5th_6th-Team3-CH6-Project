@@ -1,21 +1,15 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
 #include "T3EquipmentTypes.generated.h"
 
-/**
- * 
- */
-
-// 장비 종류를 구분하는 딱지(Tag)
 UENUM(BlueprintType)
 enum class ET3EquipmentType : uint8
 {
 	Weapon,
-	Armor
+	Armor,
+	Rune
 };
 
 // 강화석 등급
@@ -25,6 +19,14 @@ enum class ET3UpgradeStoneGrade : uint8
 	Normal,     // 하급 (1~3강)
 	Epic,       // 중급 (1~5강)
 	Legendary   // 상급 (1~7강)
+};
+
+UENUM(BlueprintType)
+enum class ET3RuneGrade : uint8
+{
+	Normal,
+	Epic,
+	Legendary
 };
 
 // 무기 강화 레벨별 데이터
