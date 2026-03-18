@@ -3,7 +3,8 @@
 #include "Equipment/T3PlayerEquipmentComponent.h"
 #include "GameSystem/T3GameInstance.h"
 #include "GameSystem/T3SaveGame.h"
-#include "GameSystem/T3WorldSubsystem.h"
+#include "GameSystem/T3SaveLostMoney.h"
+#include "Interaction/T3LostMoney.h"
 #include "Item/Component/T3InventoryComponent.h"
 #include "Player/T3CharacterBase.h"
 #include "Player/T3CombatComponent.h"
@@ -19,6 +20,40 @@ void AT3GameMode::BeginPlay()
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s : T3GameInstance가 NULL"), *GetNameSafe(this));
 		return;
+	}
+	
+	//이 레벨에서 잃어버린 재화 생성
+	MakeLostMoneyActors();
+}
+
+void AT3GameMode::MakeLostMoneyActors()
+{
+	if (!T3GameInstance->GetLostMoneyData())
+	{
+		return;
+	}
+	
+	for (const TTuple<int32, FLostMoney> LostMoneyInfo : T3GameInstance->GetLostMoneyData()->LostMoneyList)
+	{
+		//이 레벨에 해당되는 것만 생성
+		FLostMoney LostMoney = LostMoneyInfo.Value;
+		if (LostMoney.LevelName != T3GameInstance->GetCurrentLevel())
+		{
+			continue;
+		}
+
+		if (TObjectPtr<AActor> SpawnedActor = GetWorld()->SpawnActor(LostMoneyClass, &LostMoney.Location))
+		{
+			TObjectPtr<AT3LostMoney> SpawnedLostMoney = Cast<AT3LostMoney>(SpawnedActor);
+			if (!SpawnedLostMoney)
+			{
+				SpawnedLostMoney->Destroy();
+				continue;
+			}
+			//정상적으로 생성했으면 번호와 재화의 양 지정하기
+			SpawnedLostMoney->SetLostMoneyID(LostMoneyInfo.Key);
+			SpawnedLostMoney->SetMoney(LostMoney.Money);
+		}
 	}
 }
 
@@ -79,16 +114,16 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	}
 	
 	//스킬
-	TObjectPtr<UT3SkillComponentBase> SkillComponent;
-	if (const TObjectPtr<UT3CombatComponent> CombatComponent = Character->GetCombatComponent(); !CombatComponent || !CombatComponent->GetSkillComponent())
-	{
-		UE_LOG(LogTemp, Error, TEXT("%s : SkillComponent 접근 불가"), *GetNameSafe(this));
-		return false;
-	}
-	else
-	{
-		SkillComponent = CombatComponent->GetSkillComponent();
-	}
+	// TObjectPtr<UT3SkillComponentBase> SkillComponent;
+	// if (const TObjectPtr<UT3CombatComponent> CombatComponent = Character->GetCombatComponent(); !CombatComponent || !CombatComponent->GetSkillComponent())
+	// {
+	// 	UE_LOG(LogTemp, Error, TEXT("%s : SkillComponent 접근 불가"), *GetNameSafe(this));
+	// 	return false;
+	// }
+	// else
+	// {
+	// 	SkillComponent = CombatComponent->GetSkillComponent();
+	// }
 	//SkillComponent->;
 	
 	//저장했던 적 상태 제거
@@ -232,7 +267,7 @@ bool AT3GameMode::YouHaveBeenCorrupted(const AT3CharacterBase* Character) const
 	}
 	
 	//잃어버린 재화 내용을 마지막 저장 데이터에 반영
-	if (T3GameInstance->LoadGame())
+	if (!T3GameInstance->LoadGame())
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s : 게임 오버 처리 실패 - 저장된 게임 데이터 없음"), *GetNameSafe(this));
 		return false;
