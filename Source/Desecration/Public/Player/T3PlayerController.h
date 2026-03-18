@@ -163,4 +163,8 @@ private:
 	void Input_ActiveConsumableSlot(const FInputActionValue& Value);
 
 	uint8 bIsUpgradeUIOpen : 1 = false;
+	
+public:
+	UPROPERTY(BlueprintReadWrite, Category = "UI")
+	bool bIsConfirmDialogOpen = false;
 };
