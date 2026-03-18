@@ -61,9 +61,15 @@ void UT3ControllerSettings::OnSelectionChangedControllerComboBox(FString Selecte
 		return;
 	}
 
-	//컨트롤러 변경
+	//컨트롤러 가이드 기준 변경
 	const int32 SelectedIndex = ControllerComboBox->GetSelectedIndex();
 	T3GameInstance->GetCurrentSettings()->UsingController = SelectedIndex;
+	
+	//설정 패널의 UI 갱신
+	if (LayoutTextures.IsValidIndex(SelectedIndex))
+	{
+		ControlGuideImage->SetBrushFromTexture(LayoutTextures[SelectedIndex]);
+	}
 }
 
 void UT3ControllerSettings::OnCheckStateChangedInvertVerticalCheckBox(bool bIsChecked)
