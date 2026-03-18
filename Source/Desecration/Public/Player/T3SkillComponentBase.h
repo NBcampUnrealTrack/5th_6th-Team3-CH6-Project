@@ -87,7 +87,7 @@ public:
         OutSlot2 = *GetSkillDataByID(NextSkillSlot);
     }
     
-    UFUNCTION(BlueprintCallable, Category = "Skill")
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Skill")
     UTexture2D* GetSkillIconByID(int32 SkillID)
     {
         FSkillData* Data = GetSkillDataByID(SkillID);
@@ -208,6 +208,10 @@ public:
         // 모든 스킬의 해금 상태를 전달
         UPROPERTY(BlueprintAssignable, Category = "Events | UI")
         FOnSkillUnlockStateChanged OnSkillUnlockStateChanged;
+
+        // 위젯 바인딩 후 호출 - 현재 모든 스킬 해금 상태를 브로드캐스트
+        UFUNCTION(BlueprintCallable, Category = "Skill")
+        void BroadcastCurrentUnlockStates();
 
 protected:
     // 스킬 ID와 해금 여부를 매핑

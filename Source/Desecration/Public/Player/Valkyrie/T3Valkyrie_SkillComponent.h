@@ -103,6 +103,12 @@ public:
     //UPROPERTY(EditAnywhere, Category = "Skill Data")
     //FSkillData SwordWaveData;
 
-
+#pragma region Rune
+public:
+	void SetPassiveHealBonus(float NewHealBonus);
 	
+private:
+	float PassiveHealBonus = 0.0f;
+	
+#pragma endregion
 };
