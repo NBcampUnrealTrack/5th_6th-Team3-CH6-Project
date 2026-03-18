@@ -40,15 +40,27 @@ protected:
 
 	void ReportTouchStimulus(AActor* OtherActor, const FVector& TouchLocation);
 
-
-
-protected:
 	// 록온 위젯을 담을 컴포넌트
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
 	class UWidgetComponent* LockOnWidgetComponent;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
+	float BaseDamage = 20.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
+	float DamageMultiplier = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
+	float LevelMultiplier = 1.0f;
+
 public:
 	virtual void SetLockOnWidgetVisible(bool bVisible) override;
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Monster")
+	void HalfHpSuperArmor();
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	virtual float GetCurrentAttackDamage() const;
 	
 #pragma region ExecuteRune
 public:

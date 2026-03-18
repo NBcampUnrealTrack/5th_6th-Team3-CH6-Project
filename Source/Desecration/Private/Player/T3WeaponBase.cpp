@@ -86,21 +86,11 @@ void AT3WeaponBase::OnWeaponOverlap(UPrimitiveComponent* OverlappedComponent, AA
 
         AT3BossMonster* HitBoss = Cast<AT3BossMonster>(OtherActor);
 
-        //if (HitBoss)
-        //{
-        //    HitBoss->Damage(CurrentAttackDamage, StunAmount); 
-        //    //GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Hit Boss! Damage :  %.1f,  Stun : %.1f"), CurrentAttackDamage, StunAmount));
-        //    UE_LOG(LogTemp, Warning, TEXT("Hit Boss! Damage: %.1f, Stun: %.1f"), CurrentAttackDamage, StunAmount);
-        //}
-
-
-        
+        if (IsValid(Combat))
+        {
             Combat->RequestAttackDamage(OtherActor, CurrentAttackDamage, CurrentIntensity, 1.f, CurrentDamageType, StunAmount);
-            //GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Hit Monster!"));
-            //GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Hit Monster! Damage :  %.1f"), CurrentAttackDamage));
             UE_LOG(LogTemp, Warning, TEXT("Hit Monster! Damage: %.1f"), CurrentAttackDamage);
         }
         UE_LOG(LogTemp, Log, TEXT("Hit: %s"), *OtherActor->GetName());
-    
-
+    }
 }

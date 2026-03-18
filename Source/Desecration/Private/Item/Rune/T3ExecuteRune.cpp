@@ -50,11 +50,12 @@ void UT3ExecuteRune::CheckExecution(AActor* HitTarget, float DamageDealt)
 	{
 		if (Monster->GetHPPercent() <= HPThresholdPercentByGrade / 100.0f)
 		{
-			float Bonus = DamageDealt * BossBonusMultiplierByGrade;
+			float Bonus = DamageDealt * BossBonusMultiplierByGrade / 100.0f;
 			
 			Monster->ApplyBonusDamage(Bonus);
 			
 			UE_LOG(LogItem, Log, TEXT("추가 데미지 : %.1f"), Bonus);
 		}
+		UE_LOG(LogItem, Log, TEXT("보스 호출 테스트"));
 	}
 }

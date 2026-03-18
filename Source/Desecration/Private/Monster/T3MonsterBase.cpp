@@ -115,8 +115,18 @@ void AT3MonsterBase::SetLockOnWidgetVisible(bool bVisible)
 	}
 }
 
+float AT3MonsterBase::GetCurrentAttackDamage() const
+{
+	return BaseDamage * DamageMultiplier * LevelMultiplier;
+}
+
 float AT3MonsterBase::GetHPPercent() const
 {
+	if (!HealthComponent || HealthComponent->MaxHP <= 0.f)
+	{
+		return 0.f;
+	}
+
 	return HealthComponent->CurrentHP / HealthComponent->MaxHP;
 }
 
