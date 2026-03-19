@@ -1,4 +1,4 @@
-#include "Item/Rune/T3RageRune.h"
+﻿#include "Item/Rune/T3RageRune.h"
 #include "Equipment/T3PlayerEquipmentComponent.h"
 
 void UT3RageRune::OnSocketed_Implementation(AT3CharacterBase* OwnerChar)
@@ -49,7 +49,7 @@ void UT3RageRune::OnHPChanged(ET3StatType StatType, float CurrentValue, float Ma
 	ApplyAttackBonus();
 }
 
-void UT3RageRune::OnEquipmentStatsUpdated(float NewAtk, float NewDef)
+void UT3RageRune::OnEquipmentStatsUpdated(float NewAtk, float NewDef, float WeaponLevel)
 {
 	ApplyAttackBonus();
 }

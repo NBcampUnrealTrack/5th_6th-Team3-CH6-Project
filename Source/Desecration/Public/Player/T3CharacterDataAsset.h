@@ -8,6 +8,13 @@
 #include "Player/T3SkillComponentBase.h"
 #include "T3CharacterDataAsset.generated.h"
 
+// 캐릭터 데미지 타입
+UENUM(BlueprintType)
+enum class EDamageType : uint8
+{
+    Physical    UMETA(DisplayName = "Physical"),
+    Magical     UMETA(DisplayName = "Magical")
+};
 
 // 무기 장착 위치 정의
 UENUM(BlueprintType)
@@ -42,6 +49,9 @@ class DESECRATION_API UT3CharacterDataAsset : public UPrimaryDataAsset
 public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Class")
     ECharacterClass CharacterClass;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stat")
+    EDamageType PrimaryDamageType; 
     
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skill")
     TSubclassOf<UT3SkillComponentBase> SkillComponent;
@@ -59,5 +69,5 @@ public:
 
     // 기본 스탯
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stat")
-    float MaxHealth = 100.f; 
+    float MaxHealth = 150.f; 
 };

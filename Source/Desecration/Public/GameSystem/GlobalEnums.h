@@ -11,6 +11,9 @@ enum class ELevelName : uint8
 	Tutorial UMETA(DisplayName = "T3_TutrorialMaps"),
 	Town UMETA(DisplayName = "T3Town"),
 	Castle_1 UMETA(DisplayName = "T3Castle_1"),
+	Mountain UMETA(DisplayName = "T3MF"),
+	Cathedral UMETA(DisplayName = "T3_CathedralMaps2"),
+	Dragon UMETA(DisplayName = "T3_DragonMap")
 };
 
 //플레이어의 클래스

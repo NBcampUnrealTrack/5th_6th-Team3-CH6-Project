@@ -184,3 +184,57 @@ void UT3GameInstance::OpenLevelBySavedData()
 		OpenLevel(SavedGameData->SavedLevelName);
 	}
 }
+
+// ===== 레벨 해금 =====
+void UT3GameInstance::UnlockLevel(ELevelName LevelName)
+{
+	if (!LevelProgressMap.Contains(LevelName))
+	{
+		FLevelProgressData NewData;
+		NewData.bLevelUnlocked = true;
+		LevelProgressMap.Add(LevelName, NewData);
+	}
+	else
+	{
+		LevelProgressMap[LevelName].bLevelUnlocked = true;
+	}
+}
+
+// ===== 세이브포인트 해금 =====
+void UT3GameInstance::UnlockSavePoint(ELevelName LevelName, FName SavePointID)
+{
+	if (!LevelProgressMap.Contains(LevelName))
+	{
+		FLevelProgressData NewData;
+		NewData.bLevelUnlocked = true; // 세이브포인트 열리면 레벨도 열린 걸로
+		NewData.SavePoints.Add(SavePointID, true);
+		LevelProgressMap.Add(LevelName, NewData);
+	}
+	else
+	{
+		LevelProgressMap[LevelName].SavePoints.Add(SavePointID, true);
+	}
+}
+
+// ===== 레벨 해금 여부 =====
+bool UT3GameInstance::IsLevelUnlocked(ELevelName LevelName)
+{
+	if (LevelProgressMap.Contains(LevelName))
+	{
+		return LevelProgressMap[LevelName].bLevelUnlocked;
+	}
+	return false;
+}
+
+// ===== 세이브포인트 해금 여부 =====
+bool UT3GameInstance::IsSavePointUnlocked(ELevelName LevelName, FName SavePointID)
+{
+	if (LevelProgressMap.Contains(LevelName))
+	{
+		if (LevelProgressMap[LevelName].SavePoints.Contains(SavePointID))
+		{
+			return LevelProgressMap[LevelName].SavePoints[SavePointID];
+		}
+	}
+	return false;
+}

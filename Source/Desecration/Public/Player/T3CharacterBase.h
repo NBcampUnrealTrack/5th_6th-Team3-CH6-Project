@@ -23,14 +23,22 @@ class UT3CharacterDataAsset;
 UENUM(BlueprintType)
 enum class ET3StatType : uint8
 {
-	HP,
-	MP,
-	Stamina,
-	Attack,
-	Defense,
-	CriticalChance,
-	CriticalDamage,
-	MoveSpeed
+	// --- 기존 기본 타입 ---
+	HP              UMETA(DisplayName = "HP"),
+	MP              UMETA(DisplayName = "MP"),
+	Stamina         UMETA(DisplayName = "Stamina"),
+	Attack          UMETA(DisplayName = "Attack"),
+	Defense         UMETA(DisplayName = "Defense"),
+	CriticalChance  UMETA(DisplayName = "Critical Chance"),
+	CriticalDamage  UMETA(DisplayName = "Critical Damage"),
+	MoveSpeed       UMETA(DisplayName = "Move Speed"),
+
+	// --- 핵심 스탯 ---
+	Vigor           UMETA(DisplayName = "Vigor"),        // 체력 스탯 (HP량 결정)
+	Endurance       UMETA(DisplayName = "Endurance"),    // 기력 스탯 (스테미나량 결정)
+	Mind            UMETA(DisplayName = "Mind"),         // 정신력 스탯 (MP량 결정)
+	Strength        UMETA(DisplayName = "Strength"),     // 근력 스탯 (물리공격력 결정)
+	Intelligence    UMETA(DisplayName = "Intelligence")  // 지력 스탯 (마법공격력 결정)
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnStatChangedDelegate, ET3StatType, StatType, float, CurrentValue, float, MaxValue);
@@ -144,7 +152,7 @@ public:
 	TObjectPtr<UT3PlayerEquipmentComponent> EquipComp;
 
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
-	void OnEquipmentStatsUpdated(float Atk, float Def);
+	void OnEquipmentStatsUpdated(float Atk, float Def, float WeaponLevel);
 
 
 	// Stat 관련
@@ -215,7 +223,7 @@ public:
 
 	// Attack
 	UFUNCTION(BlueprintCallable, Category = "Stat")
-	virtual float GetAttackPower() const { return AttackPower + CachedRuneAttackBonus; }
+	virtual float GetAttackPower() const;
 	FORCEINLINE void SetAttackPower(float NewPower) { AttackPower = NewPower; BroadcastStatChange(ET3StatType::Attack);}
 
 	// Defense
@@ -376,4 +384,46 @@ public:
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "CameraShake")
 	void OnCameraShake();
+
+
+	// ==== 캐릭터 스탯
+
+	protected:
+		// --- 5대 핵심 스탯 ---
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat|Core")
+		int32 Vigor = 10;         // 체력 스탯
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat|Core")
+		int32 Endurance = 10;     // 기력 스탯
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat|Core")
+		int32 Mind = 10;          // 정신력 스탯
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat|Core")
+		int32 Strength = 5;       // 근력 스탯
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat|Core")
+		int32 Intelligence = 5;   // 지력 스탯
+
+		// 장비 강화 수치 (지력/근력 반영용)
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat|Equipment")
+		float EquipmentEnhanceValue = 0.0f;
+
+	public:
+
+		// --- Getters ---
+		FORCEINLINE int32 GetVigor() const { return Vigor; }
+		FORCEINLINE int32 GetEndurance() const { return Endurance; }
+		FORCEINLINE int32 GetMind() const { return Mind; }
+		FORCEINLINE int32 GetStrength() const { return Strength; }
+		FORCEINLINE int32 GetIntelligence() const { return Intelligence; }
+
+		// 스탯 투자 시 호출할 함수
+		UFUNCTION(BlueprintCallable, Category = "Stat|Logic")
+		void UpgradeStat(ET3StatType StatType);
+
+
+private:
+	// 내부 수치 재계산 함수
+	void RecalculateDerivedStats();
 };
