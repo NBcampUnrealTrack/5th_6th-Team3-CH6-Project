@@ -345,4 +345,6 @@ void UT3UpgradeUIWidget::RefreshSynthesisUI()
 	{
 		Btn_Synthesize->SetIsEnabled(UpgradeStation->CanSynthesize());
 	}
+	
+	OnRefreshRuneList();
 }
