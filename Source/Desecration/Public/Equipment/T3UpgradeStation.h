@@ -70,6 +70,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUpgradeUIOpened);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUpgradeUIClosed);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUpgradeSuccess, ET3EquipmentType, UpgradedType);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUpgradeFailed, FText, FailReason);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSynthesisSuccess, FName, ResultRuneID);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSynthesisFailed, FText, FailReason);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSynthesisSlotsChanged);
 
 // ============================================================================
 // AT3UpgradeStation - 강화 스테이션 액터
@@ -240,4 +243,39 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Upgrade|Utility")
 	UT3InventoryComponent* GetPlayerInventoryComponent() const;
 
+#pragma region Synthesis
+public:
+	UPROPERTY(BlueprintReadOnly, Category = "Rune|Synthesis")
+	TArray<FName> SynthesisSlots;
+
+	UFUNCTION(BlueprintCallable, Category = "Rune|Synthesis")
+	bool AddRuneToSynthesisSlot(FName RuneID);
+
+	UFUNCTION(BlueprintCallable, Category = "Rune|Synthesis")
+	bool RemoveRuneFromSynthesisSlot(int32 SlotIndex);
+
+	UFUNCTION(BlueprintPure, Category = "Rune|Synthesis")
+	bool CanAddRuneToSlot(FName RuneID) const;
+
+	UFUNCTION(BlueprintPure, Category = "Rune|Synthesis")
+	bool CanSynthesize() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Rune|Synthesis")
+	bool SynthesizeRune();
+
+	UFUNCTION(BlueprintCallable, Category = "Rune|Synthesis")
+	void ClearSynthesisSlots();
+
+	UFUNCTION(BlueprintPure, Category = "Rune|Synthesis")
+	FName GetLockedRuneID() const;
+	
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnSynthesisSuccess OnSynthesisSuccess;
+
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnSynthesisFailed OnSynthesisFailed;
+	
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnSynthesisSlotsChanged OnSynthesisSlotsChanged;
+#pragma endregion
 };

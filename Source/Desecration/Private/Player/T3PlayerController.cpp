@@ -166,14 +166,23 @@ void AT3PlayerController::Input_Look(const FInputActionValue& Value)
 	{
 		return;
 	}
+	
+	FVector2D LookAxisVector = Value.Get<FVector2D>();
 
 	if (SaveUserSettings)
 	{
-		const FVector2D LookAxisVector = Value.Get<FVector2D>() * SaveUserSettings->CameraSpeed;
-		if (OwnerChar)
+		//회전 가속
+		LookAxisVector *= SaveUserSettings->CameraSpeed;
+		//수직 회전 반전
+		if (SaveUserSettings->bInvertVertical)
 		{
-			OwnerChar->Look(LookAxisVector);
+			LookAxisVector.Y = -LookAxisVector.Y;
 		}
+	}
+	
+	if (OwnerChar)
+	{
+		OwnerChar->Look(LookAxisVector);
 	}
 }
 

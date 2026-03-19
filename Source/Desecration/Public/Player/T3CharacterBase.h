@@ -258,7 +258,7 @@ public:
 	FORCEINLINE ECharacterClass GetCurrentClass() const { return CurrentClass; }
 
 protected:
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Class")
 	ECharacterClass CurrentClass;
 
 	// 스태미나 자연 회복

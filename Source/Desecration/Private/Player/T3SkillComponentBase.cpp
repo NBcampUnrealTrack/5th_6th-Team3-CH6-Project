@@ -274,6 +274,14 @@ bool UT3SkillComponentBase::IsSkillUnlocked(int32 SkillID) const
     return false;
 }
 
+void UT3SkillComponentBase::BroadcastCurrentUnlockStates()
+{
+    for (auto& Pair : SkillUnlockStates)
+    {
+        OnSkillUnlockStateChanged.Broadcast(Pair.Key, Pair.Value);
+    }
+}
+
 void UT3SkillComponentBase::SetSkillUnlockState(int32 SkillID, bool bUnlock)
 {
     SkillUnlockStates.FindOrAdd(SkillID) = bUnlock;
