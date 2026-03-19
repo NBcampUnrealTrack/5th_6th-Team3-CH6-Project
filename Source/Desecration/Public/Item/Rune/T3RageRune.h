@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "Item/Rune/T3RuneBase.h"
@@ -25,7 +25,7 @@ private:
 	void OnHPChanged(ET3StatType StatType, float CurrentValue, float MaxValue);
 
 	UFUNCTION()
-	void OnEquipmentStatsUpdated(float NewAtk, float NewDef);
+	void OnEquipmentStatsUpdated(float NewAtk, float NewDef, float WeaponLevel);
 
 	void ApplyAttackBonus();
 };
