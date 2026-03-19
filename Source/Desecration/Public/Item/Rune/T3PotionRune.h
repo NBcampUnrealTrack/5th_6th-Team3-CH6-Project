@@ -14,7 +14,15 @@ public:
 	
 	virtual void OnUnsocketed_Implementation(AT3CharacterBase* OwnerChar) override;
 	
+	virtual void SetGrade(ET3RuneGrade InGrade) override;
+
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Value")
-	float ValueByGrade = 1.2f;
+	float PotionUseAnimSpeedBonusPercentNormal = 30.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
+	float PotionUseAnimSpeedBonusPercentEpic = 50.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
+	float PotionUseAnimSpeedBonusPercentLegendary = 70.0f;
 };
