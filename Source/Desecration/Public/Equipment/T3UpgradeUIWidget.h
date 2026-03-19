@@ -13,11 +13,8 @@ class UButton;
 class UImage;
 class UBorder;
 
-/**
- * 강화 UI 위젯 베이스 클래스
- * WBP_UpgradeUI의 Parent Class로 지정하여 사용
- * BindWidget으로 Blueprint 위젯과 C++ 로직을 연결
- */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnChangedTap, bool, IsRuneTabActive);
+
 UCLASS()
 class DESECRATION_API UT3UpgradeUIWidget : public UUserWidget
 {
@@ -100,14 +97,14 @@ protected:
 	TObjectPtr<UTextBlock> Txt_LegendaryStoneCount;
 
 	// 강화 버튼 (최대레벨 or 강화석 없음 → 비활성화)
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	TObjectPtr<UButton> Btn_Upgrade;
 
 	// 탭 버튼
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	TObjectPtr<UButton> Btn_WeaponTab;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	TObjectPtr<UButton> Btn_ArmorTab;
 
 private:
@@ -121,4 +118,44 @@ private:
 	// 강화 버튼 클릭 핸들러
 	UFUNCTION()
 	void OnUpgradeClicked();
+	
+#pragma region Rune
+public:
+	UFUNCTION(BlueprintCallable, Category = "Upgrade")
+	void RefreshSynthesisUI();
+
+	// Blueprint에서 오버라이드 - 인벤토리 룬 목록 재생성
+	UFUNCTION(BlueprintImplementableEvent, Category = "Upgrade")
+	void OnRefreshRuneList();
+
+	UPROPERTY(BlueprintAssignable, Category = "Tap")
+	FOnChangedTap OnChangedTap;
+
+protected:
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	TObjectPtr<UButton> Btn_RuneTab;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UImage> Img_SynthesisSlot_0;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UImage> Img_SynthesisSlot_1;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UImage> Img_SynthesisSlot_2;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UButton> Btn_Synthesize;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Upgrade")
+	bool bIsRuneTabActive = false;
+	
+private:
+	UFUNCTION()
+	void OnRuneTabClicked();
+
+	UFUNCTION()
+	void OnSynthesizeClicked();
+	
+#pragma endregion
 };

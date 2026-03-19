@@ -25,7 +25,7 @@ bool UItemSlotWidget::SetIsRuneSlot(bool IsRuneSlot)
 bool UItemSlotWidget::GetSlotData_Implementation(FInventorySlot& OutSlotData) const
 {
 	return false;
-}
+}	
 
 FReply UItemSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {

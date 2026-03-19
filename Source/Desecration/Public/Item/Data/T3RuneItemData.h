@@ -20,4 +20,10 @@ struct FT3RuneItemData : public FTableRowBase
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rune")
 	ET3EquipmentType EquipmentType = ET3EquipmentType::Weapon;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Synthesis")
+	ET3RuneGrade RuneGrade = ET3RuneGrade::Normal;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Synthesis")
+	FName NextGradeRuneID = NAME_None;
 };

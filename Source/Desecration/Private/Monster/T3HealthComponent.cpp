@@ -1,6 +1,7 @@
 ﻿// T3HealthComponent.cpp
 
 #include "Monster/T3HealthComponent.h"
+#include "Monster/T3MonsterBase.h"
 #include "Engine/Engine.h"
 #include "Perception/AISense_Damage.h"
 
@@ -49,6 +50,16 @@ void UT3HealthComponent::HandleTakeDamage(float DamageAmount, const FDamageEvent
 			FVector::ZeroVector
 		);
 	}
+
+	// 몬스터의 체력이 40퍼센트 이하로 내려가면 슈퍼아머 발동(블루프린트에서 Do Once로 1회 제어)
+	if (CurrentHP <= MaxHP * 0.4f)
+	{
+		if (AT3MonsterBase* Monster = Cast<AT3MonsterBase>(GetOwner()))
+		{
+			Monster->HalfHpSuperArmor();
+		}
+	}
+
 
 	if (CurrentHP <= 0.f)
 	{
