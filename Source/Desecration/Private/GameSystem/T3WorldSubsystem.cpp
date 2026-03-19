@@ -3,9 +3,9 @@
 #include "GameSystem/T3GameInstance.h"
 #include "GameSystem/T3SaveGame.h"
 
-void UT3WorldSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+void UT3WorldSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 {
-	Super::Initialize(Collection);
+	Super::OnWorldBeginPlay(InWorld);
 
 	//게임 인스턴스
 	const TObjectPtr<UT3GameInstance> T3GameInstance = Cast<UT3GameInstance>(GetWorld()->GetGameInstance());
@@ -23,22 +23,11 @@ void UT3WorldSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	
 	//저장된 게임
 	T3SaveGame = T3GameInstance->GetSavedGameData();
-	
-	//잃어버린 재화
-	for (TTuple<int32, FLostMoney> LostMoney : T3GameInstance->GetLostMoneyData()->LostMoneyList)
-	{
-		if (T3GameInstance->GetCurrentLevel() != LostMoney.Value.LevelName)
-		{
-			continue;
-		}
-		
-		LostMoneyList.Emplace(LostMoney.Key, LostMoney.Value);
-	}
 }
 
 int32 UT3WorldSubsystem::GetObjectState(const int32 ObjectID) const
 {
-	if (!T3SaveGame.IsValid())
+	if (!T3SaveGame)
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s : 저장된 게임 데이터가 없음"), *GetNameSafe(this));
 		return 0;
@@ -55,7 +44,7 @@ int32 UT3WorldSubsystem::GetObjectState(const int32 ObjectID) const
 
 void UT3WorldSubsystem::SetOrAddObjectState(const int32 ObjectID, const int32 NewState) const
 {
-	if (!T3SaveGame.IsValid())
+	if (!T3SaveGame)
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s : 저장된 게임 데이터가 없음"), *GetNameSafe(this));
 		return;
@@ -72,7 +61,7 @@ void UT3WorldSubsystem::SetOrAddObjectState(const int32 ObjectID, const int32 Ne
 
 int32 UT3WorldSubsystem::GetEnemyState(const int32 EnemyID) const
 {
-	if (!T3SaveGame.IsValid())
+	if (!T3SaveGame)
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s : 저장된 게임 데이터가 없음"), *GetNameSafe(this));
 		return 0;
@@ -89,7 +78,7 @@ int32 UT3WorldSubsystem::GetEnemyState(const int32 EnemyID) const
 
 void UT3WorldSubsystem::SetOrAddEnemyState(const int32 EnemyID, const int32 NewState) const
 {
-	if (!T3SaveGame.IsValid())
+	if (!T3SaveGame)
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s : 저장된 게임 데이터가 없음"), *GetNameSafe(this));
 		return;
@@ -102,9 +91,4 @@ void UT3WorldSubsystem::SetOrAddEnemyState(const int32 EnemyID, const int32 NewS
 	}
 	
 	T3SaveGame->EnemyStates.Emplace(EnemyID, NewState);
-}
-
-TMap<int32, FLostMoney> UT3WorldSubsystem::GetAllLostMoney()
-{
-	return LostMoneyList;
 }

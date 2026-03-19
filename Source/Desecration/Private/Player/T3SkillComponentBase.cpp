@@ -108,6 +108,34 @@ void UT3SkillComponentBase::BeginPlay()
     {
         UE_LOG(LogTemp, Error, TEXT("[SkillBase] Owner is not AT3CharacterBase!"));
     }
+
+    // 스킬 상태 초기화
+
+    // 기본적으로 1번 스킬은 해금 상태로 초기화
+    if (!SkillUnlockStates.Contains(1))
+    {
+        SkillUnlockStates.Add(1, true);
+
+        // UI 팀에게 알림
+        if (OnSkillUnlockStateChanged.IsBound())
+        {
+            OnSkillUnlockStateChanged.Broadcast(1, true);
+        }
+    }
+
+    // 나머지 2, 3, 4번이 없다면 false로 초기화
+    for (int32 i = 2; i <= 4; ++i)
+    {
+        if (!SkillUnlockStates.Contains(i))
+        {
+            SkillUnlockStates.Add(i, false);
+
+            if (OnSkillUnlockStateChanged.IsBound())
+            {
+                OnSkillUnlockStateChanged.Broadcast(i, false);
+            }
+        }
+    }
 }
 
 bool UT3SkillComponentBase::CanExecuteSkill(FSkillData& Data)
@@ -235,4 +263,33 @@ void UT3SkillComponentBase::BasicAttackCount()
 {
 }
 
+bool UT3SkillComponentBase::IsSkillUnlocked(int32 SkillID) const
+{
+    if (const bool* bUnlocked = SkillUnlockStates.Find(SkillID))
+    {
+        return *bUnlocked;
+    }
+    return false;
+}
+
+void UT3SkillComponentBase::BroadcastCurrentUnlockStates()
+{
+    for (auto& Pair : SkillUnlockStates)
+    {
+        OnSkillUnlockStateChanged.Broadcast(Pair.Key, Pair.Value);
+    }
+}
+
+void UT3SkillComponentBase::SetSkillUnlockState(int32 SkillID, bool bUnlock)
+{
+    SkillUnlockStates.FindOrAdd(SkillID) = bUnlock;
+
+    // UI 팀에게 알림
+    if (OnSkillUnlockStateChanged.IsBound())
+    {
+        OnSkillUnlockStateChanged.Broadcast(SkillID, bUnlock);
+    }
+
+    UE_LOG(LogTemp, Log, TEXT("Skill %d Unlock State Changed: %s"), SkillID, bUnlock ? TEXT("Unlocked") : TEXT("Locked"));
+}
 

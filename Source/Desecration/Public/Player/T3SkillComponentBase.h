@@ -48,6 +48,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSkillCooldownStarted, int32, Ski
 // 게이지 업데이트 델리게이트
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnResourceChanged, float, CurrentAmount);
 
+// 스킬 활성화 여부 전달 델리게이트
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSkillUnlockStateChanged, int32, SkillID, bool, bIsUnlocked);
+
 
 UCLASS( Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class DESECRATION_API UT3SkillComponentBase : public UActorComponent
@@ -84,7 +87,7 @@ public:
         OutSlot2 = *GetSkillDataByID(NextSkillSlot);
     }
     
-    UFUNCTION(BlueprintCallable, Category = "Skill")
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Skill")
     UTexture2D* GetSkillIconByID(int32 SkillID)
     {
         FSkillData* Data = GetSkillDataByID(SkillID);
@@ -189,6 +192,31 @@ public:
 
     UPROPERTY(EditAnywhere, Category = "Sound")
     class USoundBase* Skill4Sound;
+
+
+    // === 스킬 활성화 여부
+    public:
+
+        //  스킬 해금 상태 확인
+        UFUNCTION(BlueprintCallable, Category = "Skill")
+        bool IsSkillUnlocked(int32 SkillID) const;
+
+        // 스킬 해금/잠금 설정
+        UFUNCTION(BlueprintCallable, Category = "Skill")
+        void SetSkillUnlockState(int32 SkillID, bool bUnlock);
+
+        // 모든 스킬의 해금 상태를 전달
+        UPROPERTY(BlueprintAssignable, Category = "Events | UI")
+        FOnSkillUnlockStateChanged OnSkillUnlockStateChanged;
+
+        // 위젯 바인딩 후 호출 - 현재 모든 스킬 해금 상태를 브로드캐스트
+        UFUNCTION(BlueprintCallable, Category = "Skill")
+        void BroadcastCurrentUnlockStates();
+
+protected:
+    // 스킬 ID와 해금 여부를 매핑
+    UPROPERTY(EditAnywhere, Category = "Skill | Data")
+    TMap<int32, bool> SkillUnlockStates;
 };
 
 

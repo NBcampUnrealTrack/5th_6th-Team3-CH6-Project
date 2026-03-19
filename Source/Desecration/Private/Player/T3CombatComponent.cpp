@@ -1,6 +1,8 @@
 ﻿// T3CombatComponent.cpp
 
 #include "Player/T3CombatComponent.h"
+
+#include "Desecration.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerController.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -630,16 +632,13 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 		switch (Intensity)
 		{
 		case EHitIntensity::Light:
-			PlaySkillEffectSound(LightHitVoice,3.0f);
-			UE_LOG(LogTemp, Display, TEXT("light hit"));
+			PlaySkillEffectSound(LightHitVoice,2.0f);
 			break;
 		case EHitIntensity::Medium:
-			PlaySkillEffectSound(MediumHitVoice, 3.0f);
-			UE_LOG(LogTemp, Display, TEXT("med hit"));
+			PlaySkillEffectSound(MediumHitVoice, 2.0f);
 			break;
 		case EHitIntensity::Heavy:
-			PlaySkillEffectSound(HeavyHitVoice, 3.0f);
-			UE_LOG(LogTemp, Display, TEXT("heavy hit"));
+			PlaySkillEffectSound(HeavyHitVoice, 2.0f);
 			break;
 		default:
 			break;
@@ -790,8 +789,25 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 	if (HitBoss)
 	{
 		// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Hit Boss!"));
-		HitBoss->Damage(DamageAmount, InStunAmount);  // 테스트용 스턴 20
+		//HitBoss->Damage(DamageAmount, InStunAmount);  // 테스트용 스턴 20
 		// HitBoss->Damage(CurrentAttackDamage, StunAmount);
+		
+		float ActualDamage = DamageAmount;
+		
+		if (OwnerChar->GetSmiteThreshold() > 0 && OwnerChar->GetSmiteCounter() >= OwnerChar->GetSmiteThreshold())
+		{
+			ActualDamage = DamageAmount * OwnerChar->GetSmiteMultiplier();
+			
+			OwnerChar->SetSmiteCounter(0);
+		}
+		else
+		{
+			OwnerChar->IncrementSmiteCounter();
+		}
+
+		HitBoss->Damage(ActualDamage, InStunAmount);
+		
+		OwnerChar->OnDamageDealt.Broadcast(TargetActor, DamageAmount);
 	}
 	
 	// TakeDamage 호출 시 커스텀 이벤트 구조체를 전달
@@ -803,20 +819,18 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 		{
 			ActualDamage = DamageAmount * OwnerChar->GetSmiteMultiplier();
 			
-			TargetActor->TakeDamage(ActualDamage, T3DamageEvent, OwnerPC, OwnerChar);
-			
 			OwnerChar->SetSmiteCounter(0);
 		}
 		else
 		{
 			OwnerChar->IncrementSmiteCounter();
-			
-			TargetActor->TakeDamage(ActualDamage, T3DamageEvent, OwnerPC, OwnerChar);
 		}
-
+		
+		TargetActor->TakeDamage(ActualDamage, T3DamageEvent, OwnerPC, OwnerChar);
+		
 		OwnerChar->OnDamageDealt.Broadcast(TargetActor, ActualDamage);
 		
-		UE_LOG(LogTemp, Warning, TEXT("현재 공격 횟수 : %d"), OwnerChar->GetSmiteCounter());
+		UE_LOG(LogItem, Warning, TEXT("현재 공격 횟수 : %d"), OwnerChar->GetSmiteCounter());
 	}
 	else if (AIChar) // OwnerChar가 아닐 때만 AIChar로 실행
 	{
@@ -933,6 +947,5 @@ void UT3CombatComponent::PlaySkillEffectSound(USoundBase* Sound, float Volume)
 	if (Sound && GetWorld())
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, Sound, GetOwner()->GetActorLocation(), Volume);
-		UE_LOG(LogTemp, Display, TEXT("play sound"));
 	}
 }
