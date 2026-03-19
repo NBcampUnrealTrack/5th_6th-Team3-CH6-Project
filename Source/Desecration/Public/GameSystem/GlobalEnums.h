@@ -22,3 +22,12 @@ enum class EPlayerClass
 	Taoist,
 	Valkyrie
 };
+
+//현재 열려있는 인벤토리 위젯의 타입
+UENUM(BlueprintType)
+enum class ET3InventoryContext : uint8
+{
+	MainInventory    UMETA(DisplayName = "메인 인벤토리"),
+	Shop             UMETA(DisplayName = "상점"),
+	UpgradeStation   UMETA(DisplayName = "강화소")
+};
