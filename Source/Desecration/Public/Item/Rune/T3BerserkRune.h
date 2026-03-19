@@ -28,9 +28,6 @@ private:
 	float Cooldown = 0.f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Value")
-	float ValueByGrade = 0.0f;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Value")
 	float OnHitAttackBonusPercentNormal = 10.0f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Value")

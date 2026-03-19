@@ -22,4 +22,7 @@ public:
 	virtual void SetGrade(ET3RuneGrade InGrade);
 	
 	virtual bool CanUnsocket() const;
+	
+protected:
+	float ValueByGrade = 0.0f;
 };
