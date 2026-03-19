@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -14,7 +14,7 @@ class AT3CharacterBase;
 
 // 장비 스탯 변경 시 발송되는 델리게이트
 // 캐릭터팀에서 바인딩하여 공격력/방어력을 동기화
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEquipmentStatsChanged, float, NewAttackPower, float, NewDefensePower);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnEquipmentStatsChanged, float, NewAttackPower, float, NewDefensePower, float, NewWeaponLevel);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRuneSocketChanged);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))

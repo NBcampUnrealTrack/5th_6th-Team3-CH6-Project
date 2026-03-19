@@ -23,16 +23,26 @@ void UT3SkillComponentBase::ExecuteSkill_Completed(int32 SkillSlot)
 
 void UT3SkillComponentBase::SetSkillSlot(int32 NewSkillID, bool bIsEquip)
 {
+    bool bFinalEquipState = false;
+
     if (bIsEquip)
     {
-        // [장착 로직] 중복 검사 후 빈 곳에 우선 할당
+        // [장착 로직] 중복 검사
         if (CurrentSkillSlot == NewSkillID || NextSkillSlot == NewSkillID) return;
 
-        if (CurrentSkillSlot == 0) { CurrentSkillSlot = NewSkillID; }
-        else if (NextSkillSlot == 0) { NextSkillSlot = NewSkillID; }
+        if (CurrentSkillSlot == 0)
+        {
+            CurrentSkillSlot = NewSkillID;
+            bFinalEquipState = true;
+        }
+        else if (NextSkillSlot == 0)
+        {
+            NextSkillSlot = NewSkillID;
+            bFinalEquipState = true;
+        }
         else
         {
-            UE_LOG(LogTemp, Warning, TEXT("모든 스킬 슬롯이 가득 찼습니다."));
+            UE_LOG(LogTemp, Warning, TEXT("슬롯이 꽉 찼습니다."));
             return;
         }
     }
@@ -41,46 +51,35 @@ void UT3SkillComponentBase::SetSkillSlot(int32 NewSkillID, bool bIsEquip)
         // [탈착 로직]
         if (CurrentSkillSlot == NewSkillID)
         {
-            // 메인 슬롯을 비울 때, 서브 슬롯에 스킬이 있다면 메인으로 당겨옴
-            CurrentSkillSlot = NextSkillSlot;
+            CurrentSkillSlot = NextSkillSlot; // 뒤에꺼 당겨오기
             NextSkillSlot = 0;
+            bFinalEquipState = false;
         }
         else if (NextSkillSlot == NewSkillID)
         {
             NextSkillSlot = 0;
+            bFinalEquipState = false;
         }
         else { return; }
     }
 
-    //UI팀 : 1번은 큰 슬롯(Current), 2번은 작은 슬롯(Next)
-    if (OnSkillSlotUpdated.IsBound())
-    {
-        FSkillData* NextData = GetSkillDataByID(NextSkillSlot);
-        // 현재 슬롯 갱신
-        FSkillData* CurrentData = GetSkillDataByID(CurrentSkillSlot);
-        if (CurrentData)
-        {
-            OnSkillSlotUpdated.Broadcast(1, CurrentSkillSlot, *CurrentData);
-        }
-        else
-        {
-            // 데이터가 없을 때 전송할 빈 구조체 정의 혹은 처리 로직
-            OnSkillSlotUpdated.Broadcast(1, CurrentSkillSlot, FSkillData());
-        }
+    // 1. 장착 상태 맵 업데이트
+    SkillEquipStates.FindOrAdd(NewSkillID) = bFinalEquipState;
 
-        // 다음 슬롯 갱신
-        if (NextData)
-        {
-            OnSkillSlotUpdated.Broadcast(2, NextSkillSlot, *NextData);
-        }
-        else
-        {
-            // 탈착 시 데이터가 nullptr이면 빈 구조체를 넘겨 UI에서 '비어있음'을 표현하게 함
-            OnSkillSlotUpdated.Broadcast(2, NextSkillSlot, FSkillData());
-        }
+    // 2. 인벤토리 UI를 위한 '장착 여부' 브로드캐스트 (E 아이콘 표시용)
+    if (OnSkillEquipStateChanged.IsBound())
+    {
+        OnSkillEquipStateChanged.Broadcast(NewSkillID, bFinalEquipState);
+
+        // 메인 슬롯을 뺐을 때 Next가 Current로 올라갔다면, Next였던 스킬의 장착 상태도 UI가 알아야 함
     }
 
-    UE_LOG(LogTemp, Log, TEXT("슬롯 상태 - CurrentSlot: %d, NextSlot: %d"), CurrentSkillSlot, NextSkillSlot);
+    // 3. 전투 UI(슬롯 이미지)를 위한 브로드캐스트
+    if (OnSkillSlotUpdated.IsBound())
+    {
+        OnSkillSlotUpdated.Broadcast(1, CurrentSkillSlot, *GetSkillDataByID(CurrentSkillSlot));
+        OnSkillSlotUpdated.Broadcast(2, NextSkillSlot, *GetSkillDataByID(NextSkillSlot));
+    }
 }
 
 int32 UT3SkillComponentBase::GetSkillIDBySlotIndex(int32 Index) const
@@ -136,6 +135,9 @@ void UT3SkillComponentBase::BeginPlay()
             }
         }
     }
+
+    // 초기 스킬슬롯 설정 (1번 스킬만 장착, 나머지는 0)
+    InitializeDefaultSlots();
 }
 
 bool UT3SkillComponentBase::CanExecuteSkill(FSkillData& Data)
@@ -293,3 +295,29 @@ void UT3SkillComponentBase::SetSkillUnlockState(int32 SkillID, bool bUnlock)
     UE_LOG(LogTemp, Log, TEXT("Skill %d Unlock State Changed: %s"), SkillID, bUnlock ? TEXT("Unlocked") : TEXT("Locked"));
 }
 
+void UT3SkillComponentBase::InitializeDefaultSlots()
+{
+    // 초기화: 1번 스킬만 메인 슬롯에, 서브는 비움
+    CurrentSkillSlot = 1;
+    NextSkillSlot = 0;
+
+    // 장착 상태 데이터 업데이트
+    SkillEquipStates.Empty();
+    SkillEquipStates.Add(1, true); // 1번은 장착됨
+
+    // UI팀에 1번 장착됨을 알림
+    if (OnSkillEquipStateChanged.IsBound())
+    {
+        OnSkillEquipStateChanged.Broadcast(1, true);
+    }
+}
+
+bool UT3SkillComponentBase::IsSkillEquipped(int32 SkillID) const
+{
+    // 맵에서 찾아서 반환 (없으면 false)
+    if (const bool* bEquipped = SkillEquipStates.Find(SkillID))
+    {
+        return *bEquipped;
+    }
+    return false;
+}

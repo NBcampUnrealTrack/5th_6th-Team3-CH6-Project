@@ -14,14 +14,29 @@ public:
 	
 	virtual void OnUnsocketed_Implementation(AT3CharacterBase* OwnerChar) override;
 	
+	virtual void SetGrade(ET3RuneGrade InGrade) override;
+
 private:
 	UFUNCTION()
 	void CheckExecution(AActor* HitTarget, float DamageDealt);
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Value")
-	float HPThresholdPercentByGrade = 10.0f;
+	UPROPERTY(EditDefaultsOnly, Category = "Value|HPThreshold")
+	float HPThresholdPercentNormal = 10.0f;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Value")
-	float BossBonusMultiplierByGrade = 2.0f;
+	UPROPERTY(EditDefaultsOnly, Category = "Value|HPThreshold")
+	float HPThresholdPercentEpic = 20.0f;
 	
+	UPROPERTY(EditDefaultsOnly, Category = "Value|HPThreshold")
+	float HPThresholdPercentLegendary = 30.0f;
+	
+	float BossAttackBonusPercentByGrade = 0.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Value|BossAttackBonus")
+	float BossAttackBonusPercentNormal = 10.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Value|BossAttackBonus")
+	float BossAttackBonusPercentEpic = 20.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Value|BossAttackBonus")
+	float BossAttackBonusPercentLegendary = 30.0f;
 };
