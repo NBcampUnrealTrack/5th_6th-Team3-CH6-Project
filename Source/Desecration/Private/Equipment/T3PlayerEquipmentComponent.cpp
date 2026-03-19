@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Equipment/T3PlayerEquipmentComponent.h"
@@ -281,7 +281,7 @@ void UT3PlayerEquipmentComponent::RefreshStats()
     CurrentAttackPower = CalculateWeaponPower();
     CurrentDefensePower = CalculateArmorPower();
 
-    OnEquipmentStatsChanged.Broadcast(CurrentAttackPower, CurrentDefensePower);
+    OnEquipmentStatsChanged.Broadcast(CurrentAttackPower, CurrentDefensePower, WeaponInstance->CurrentLevel);
 }
 
 bool UT3PlayerEquipmentComponent::TryUpgrade(ET3EquipmentType TargetType, int32 MaxAllowedLevel)
