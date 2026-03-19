@@ -178,12 +178,13 @@ void AT3CharacterBase::BeginPlay()
 	}
 }
 
-void AT3CharacterBase::OnEquipmentStatsUpdated(float Atk, float Def, float WeaponLevel)
+void AT3CharacterBase::OnEquipmentStatsUpdated(float Atk, float Def, float CurrentWeaponLevel)
 {
 	SetAttackPower(Atk);
 	SetDefense(Def * 0.01);
+	SetWeaponLevel(CurrentWeaponLevel);
 
-	UE_LOG(LogTemp, Display, TEXT("Atk : %.1f, Def : %.1f, WeaponLevel : %.1f"), AttackPower, Defense, WeaponLevel);
+	UE_LOG(LogTemp, Display, TEXT("Atk : %.1f, Def : %.1f, WeaponLevel : %.1f"), AttackPower, Defense, CurrentWeaponLevel);
 }
 
 
@@ -732,12 +733,12 @@ float AT3CharacterBase::GetAttackPower() const
 	{
 		if (Strength <= 30)
 		{
-			BaseAttack = Strength * (1.0f + EquipmentEnhanceValue);
+			BaseAttack = Strength * (1.0f + WeaponLevel);
 		}
 		else
 		{
 			// 30까지는 정상 반영 + 30 초과분은 스탯당 5씩
-			BaseAttack = (30.f * (1.0f + EquipmentEnhanceValue)) + ((Strength - 30) * 5.f);
+			BaseAttack = (30.f * (1.0f + WeaponLevel)) + ((Strength - 30) * 5.f);
 		}
 	}
 	// 마법 캐릭터인 경우 지력 반영
@@ -745,11 +746,11 @@ float AT3CharacterBase::GetAttackPower() const
 	{
 		if (Intelligence <= 30)
 		{
-			BaseAttack = Intelligence * (1.0f + EquipmentEnhanceValue);
+			BaseAttack = Intelligence * (1.0f + WeaponLevel);
 		}
 		else
 		{
-			BaseAttack = (30.f * (1.0f + EquipmentEnhanceValue)) + ((Intelligence - 30) * 5.f);
+			BaseAttack = (30.f * (1.0f + WeaponLevel)) + ((Intelligence - 30) * 5.f);
 		}
 	}
 

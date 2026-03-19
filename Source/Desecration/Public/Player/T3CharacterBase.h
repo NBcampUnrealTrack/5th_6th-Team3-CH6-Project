@@ -155,7 +155,6 @@ public:
 	void OnEquipmentStatsUpdated(float Atk, float Def, float WeaponLevel);
 
 
-	// Stat 관련
 
 protected:
 	// 캐릭터 스탯 (고정값)
@@ -407,7 +406,7 @@ public:
 
 		// 장비 강화 수치 (지력/근력 반영용)
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat|Equipment")
-		float EquipmentEnhanceValue = 0.0f;
+		float WeaponLevel = 0;
 
 	public:
 
@@ -422,8 +421,11 @@ public:
 		UFUNCTION(BlueprintCallable, Category = "Stat|Logic")
 		void UpgradeStat(ET3StatType StatType);
 
+		UFUNCTION(BlueprintCallable, Category = "Stat|Logic")
+		void SetWeaponLevel(float CurrentWeaponLevel) { WeaponLevel = CurrentWeaponLevel; }
+
 
 private:
 	// 내부 수치 재계산 함수
-	void RecalculateDerivedStats();
+	// void RecalculateDerivedStats();
 };
