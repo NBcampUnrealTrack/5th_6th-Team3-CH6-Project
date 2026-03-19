@@ -599,6 +599,7 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 		if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
 		{
 			SkillComp->AddResource(HolyGaugeChargeAmount / 2.0f);
+			UE_LOG(LogItem, Display, TEXT("신성 게이지 %.1f 상승"), HolyGaugeChargeAmount / 2.0f);
 		}
 
 		/*GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow,

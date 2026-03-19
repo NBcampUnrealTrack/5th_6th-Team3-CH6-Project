@@ -128,4 +128,15 @@ private:
     void ApplyJudgmentDamage(int32 RemainingHits); // 다단 히트 처리
     void FinishJudgmentSkill();
     void CancleJudgmentLaser(); // 피격 시 신의 심판 캔슬
+    
+#pragma region Paladin Rune
+public:
+    FORCEINLINE float GetHolyModeAttackSpeedMultiplier() const { return HolyModeAttackSpeedMultiplier; }
+    
+    void SetHolyModeAttackSpeedMultiplier(float NewMultiplier);
+    
+private:
+    UPROPERTY(EditDefaultsOnly, Category = "Paladin|Stats")
+    float HolyModeAttackSpeedMultiplier = 1.2f;
+#pragma endregion
 };
