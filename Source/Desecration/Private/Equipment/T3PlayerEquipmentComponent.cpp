@@ -429,6 +429,9 @@ bool UT3PlayerEquipmentComponent::SocketRune(FName RuneID, ET3EquipmentType Targ
 	Inventory->RemoveRuneItemByCount(RuneID);
 
 	UT3RuneBase* NewRune = NewObject<UT3RuneBase>(this, RuneRow->RuneLogicClass);
+	
+	NewRune->SetGrade(RuneRow->RuneGrade);
+	
 	SocketedIDs.Add(RuneID);
 	ActiveRunes.Add(NewRune);
 
@@ -456,6 +459,11 @@ bool UT3PlayerEquipmentComponent::UnsocketRune(FName RuneID, ET3EquipmentType Ta
 		return false;
 	}
 	
+	if (!ActiveRunes[Index]->CanUnsocket())
+	{
+		return false;
+	}
+	
 	ActiveRunes[Index]->OnUnsocketed(OwnerCharacter);
 	
 	SocketedIDs.RemoveAt(Index);
@@ -471,7 +479,6 @@ bool UT3PlayerEquipmentComponent::UnsocketRune(FName RuneID, ET3EquipmentType Ta
 	OnRuneSocketChanged.Broadcast();
 	
 	return true;
-	
 }
 
 bool UT3PlayerEquipmentComponent::SocketRuneAuto(FName RuneID)
