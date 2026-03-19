@@ -34,6 +34,30 @@ void UT3BerserkRune::OnUnsocketed_Implementation(AT3CharacterBase* OwnerChar)
 	CachedOwner = nullptr;
 }
 
+void UT3BerserkRune::SetGrade(ET3RuneGrade InGrade)
+{
+	switch (InGrade)
+	{
+	case ET3RuneGrade::Normal:
+		
+		ValueByGrade = OnHitAttackBonusPercentNormal;
+		break;
+	
+	case ET3RuneGrade::Epic:
+		
+		ValueByGrade = OnHitAttackBonusPercentEpic;
+		break;
+		
+	case ET3RuneGrade::Legendary:
+		
+		ValueByGrade = OnHitAttackBonusPercentLegendary;
+		break;
+		
+	default:
+		break;
+	}
+}
+
 void UT3BerserkRune::Activate()
 {
 	AT3CharacterBase* Owner = CachedOwner.Get();
@@ -51,7 +75,7 @@ void UT3BerserkRune::Activate()
 	{
 		bIsCooldown = true;
 		
-		float Bonus = FMath::RoundToFloat(Owner->EquipComp->GetCurrentAttackPower() * ValueByGrade * 10.0f) / 10.0f;
+		float Bonus = FMath::RoundToFloat(Owner->EquipComp->GetCurrentAttackPower() * (ValueByGrade / 100.0f) * 10.0f) / 10.0f;
 		
 		Owner->SetRuneAttackBonus(this, Bonus);
 		
@@ -90,4 +114,9 @@ void UT3BerserkRune::OnCooldownFinished()
 	bIsCooldown = false;
 	
 	UE_LOG(LogTemp, Warning, TEXT("광폭 룬 쿨타임 돌았음"));
+}
+
+bool UT3BerserkRune::CanUnsocket() const
+{
+	return !bIsCooldown;
 }

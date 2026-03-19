@@ -178,12 +178,12 @@ void AT3CharacterBase::BeginPlay()
 	}
 }
 
-void AT3CharacterBase::OnEquipmentStatsUpdated(float Atk, float Def)
+void AT3CharacterBase::OnEquipmentStatsUpdated(float Atk, float Def, float WeaponLevel)
 {
 	SetAttackPower(Atk);
 	SetDefense(Def * 0.01);
 
-	UE_LOG(LogTemp, Display, TEXT("Atk : %.1f, Def : %.1f"), AttackPower, Defense);
+	UE_LOG(LogTemp, Display, TEXT("Atk : %.1f, Def : %.1f, WeaponLevel : %.1f"), AttackPower, Defense, WeaponLevel);
 }
 
 
@@ -670,4 +670,88 @@ void AT3CharacterBase::RecalculateRuneBonus()
 	}
 	
 	BroadcastStatChange(ET3StatType::Attack);
+}
+
+
+void AT3CharacterBase::UpgradeStat(ET3StatType StatType)
+{
+	// 1. 스탯 포인트 증가 및 수치 반영 로직
+	switch (StatType)
+	{
+	case ET3StatType::HP: // Vigor 증가
+	{
+		float Increase = 15.f + (Vigor * 0.7f);
+		if (Vigor >= 30) Increase /= 3.f;
+
+		Vigor++;
+		MaxHP += Increase;
+		CurrentHP += Increase; 
+		break;
+	}
+	case ET3StatType::Stamina: // Endurance 증가
+	{
+		float Increase = 10.f + (Endurance * 0.5f);
+		if (Endurance >= 30) Increase /= 3.f;
+
+		Endurance++;
+		MaxStamina += Increase;
+		CurrentStamina += Increase;
+		break;
+	}
+	case ET3StatType::MP: // Mind 증가
+	{
+		float Increase = 10.f + (Mind * 0.7f); 
+		if (Mind >= 30) Increase /= 3.f;
+
+		Mind++;
+		MaxMana += Increase;
+		CurrentMana += Increase;
+		break;
+	}
+	case ET3StatType::Strength:
+		Strength++;
+		BroadcastStatChange(ET3StatType::Attack);
+		break;
+
+	case ET3StatType::Intelligence:
+		Intelligence++;
+		BroadcastStatChange(ET3StatType::Attack);
+		break;
+	}
+
+	// 델리게이트 호출
+	BroadcastStatChange(StatType);
+}
+
+float AT3CharacterBase::GetAttackPower() const
+{
+	float BaseAttack = 0.f;
+
+	// 물리 캐릭터인 경우 근력 반영
+	if (CharacterData->PrimaryDamageType == EDamageType::Physical)
+	{
+		if (Strength <= 30)
+		{
+			BaseAttack = Strength * (1.0f + EquipmentEnhanceValue);
+		}
+		else
+		{
+			// 30까지는 정상 반영 + 30 초과분은 스탯당 5씩
+			BaseAttack = (30.f * (1.0f + EquipmentEnhanceValue)) + ((Strength - 30) * 5.f);
+		}
+	}
+	// 마법 캐릭터인 경우 지력 반영
+	else
+	{
+		if (Intelligence <= 30)
+		{
+			BaseAttack = Intelligence * (1.0f + EquipmentEnhanceValue);
+		}
+		else
+		{
+			BaseAttack = (30.f * (1.0f + EquipmentEnhanceValue)) + ((Intelligence - 30) * 5.f);
+		}
+	}
+
+	return BaseAttack + CachedRuneAttackBonus;
 }
