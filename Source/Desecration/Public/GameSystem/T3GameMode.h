@@ -28,10 +28,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
 	ECharacterClass GetPlayerClass();
 	
-	//캐릭터의 클래스를 기반으로 캐릭터 데이터 에셋을 가져온다
-	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
-	UT3CharacterDataAsset* GetCharacterDataAsset();
-	
 	//게임 저장하기 (true : 저장 성공)
 	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
 	bool SaveGame(const AT3CharacterBase* Character, const ELevelName LevelName, const bool bTemporarySave);
@@ -51,6 +47,10 @@ public:
 	//게임 오버에 대한 처리
 	UFUNCTION(BlueprintCallable, Category = "Game Over")
 	bool YouHaveBeenCorrupted(const AT3CharacterBase* Character) const;
+	
+	//개발용 : 그 자리에서 즉시 저장
+	UFUNCTION(BlueprintCallable, Category = "Test")
+	void InstantSave();
 	
 private:
 	//잃어버린 재화 액터

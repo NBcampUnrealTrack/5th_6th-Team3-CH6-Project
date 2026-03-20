@@ -15,6 +15,7 @@
 #include "Player/T3DamageTypes.h"
 #include "Player/T3SkillComponentBase.h"
 #include "Equipment/T3PlayerEquipmentComponent.h"
+#include "GameSystem/T3GameInstance.h"
 #include "GameSystem/T3GameMode.h"
 #include "Item/Data/T3ItemBaseData.h"
 #include "Player/T3PlayerController.h"
@@ -70,11 +71,24 @@ void AT3CharacterBase::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-	// 데이터 에셋이 있다면 엔진이 액터를 완전히 구성한 직후 바로 적용
+	//데이터 에셋이 있다면 엔진이 액터를 완전히 구성한 직후 바로 적용, 없다면 게임 인스턴스 참고
+	TObjectPtr<UT3CharacterDataAsset> CharData = nullptr;
 	if (CharacterData)
 	{
-		ApplyCharacterData(CharacterData);
+		CharData = CharacterData;
 	}
+	else if (const TObjectPtr<UT3GameInstance> T3GameInstance = Cast<UT3GameInstance>(GetGameInstance()))
+	{
+		CharData = T3GameInstance->GetCharacterDataAsset();
+		CharacterData = CharData;
+	}
+	
+	if (!CharData)
+	{
+		return;
+	}
+	
+	ApplyCharacterData(CharData);
 }
 
 void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)

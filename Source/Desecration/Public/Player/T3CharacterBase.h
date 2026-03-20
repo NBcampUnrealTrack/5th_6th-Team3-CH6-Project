@@ -86,6 +86,8 @@ protected:
 	// 스탯 변경 시 내부적으로 델리게이트를 호출해주는 헬퍼 함수
 	void BroadcastStatChange(ET3StatType StatType);
 
+	//캐릭터 데이터
+	//평소 플레이시 이 값을 비워 게임 인스턴스를 참조하도록 만고 테스트시에만 할당
 	UPROPERTY(EditAnywhere, Category = "Character Data")
 	TObjectPtr<class UT3CharacterDataAsset> CharacterData;
 
