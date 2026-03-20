@@ -70,25 +70,22 @@ void AT3CharacterBase::RequestSellItem(const FInventorySlot& SlotData, const int
 void AT3CharacterBase::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
+	
+#if WITH_EDITOR
+	//에디터 한정으로, 현재 플레이 상태가 아니면 무시한다.
+	if (const UWorld* World = GetWorld(); !World || World->WorldType == EWorldType::EditorPreview)
+	{
+		return;
+	}
+#endif
 
 	//데이터 에셋이 있다면 엔진이 액터를 완전히 구성한 직후 바로 적용, 없다면 게임 인스턴스 참고
-	TObjectPtr<UT3CharacterDataAsset> CharData = nullptr;
-	if (CharacterData)
-	{
-		CharData = CharacterData;
-	}
-	else if (const TObjectPtr<UT3GameInstance> T3GameInstance = Cast<UT3GameInstance>(GetGameInstance()))
-	{
-		CharData = T3GameInstance->GetCharacterDataAsset();
-		CharacterData = CharData;
-	}
-	
-	if (!CharData)
+	if (!CheckCharacterData())
 	{
 		return;
 	}
 	
-	ApplyCharacterData(CharData);
+	ApplyCharacterData(CharacterData);
 }
 
 void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)
@@ -372,6 +369,22 @@ void AT3CharacterBase::OnMovementModeChanged(EMovementMode PrevMovementMode, uin
 	}
 }
 
+bool AT3CharacterBase::CheckCharacterData()
+{
+	if (CharacterData)
+	{
+		return true;
+	}
+	
+	const TObjectPtr<UT3GameInstance> T3GameInstance = Cast<UT3GameInstance>(GetGameInstance());
+	if (!T3GameInstance)
+	{
+		return false;
+	}
+	
+	CharacterData = T3GameInstance->GetCharacterDataAsset();
+	return CharacterData != nullptr;
+}
 
 
 void AT3CharacterBase::Move(const FVector2D& Value)
@@ -737,9 +750,14 @@ void AT3CharacterBase::UpgradeStat(ET3StatType StatType)
 	BroadcastStatChange(StatType);
 }
 
-float AT3CharacterBase::GetAttackPower() const
+float AT3CharacterBase::GetAttackPower()
 {
 	float AdditionalAttack = 0.f;
+	
+	if (!CheckCharacterData())
+	{
+		return 0.0f;
+	}
 
 	// 물리 캐릭터인 경우 근력 반영
 	if (CharacterData->PrimaryDamageType == EDamageType::Physical)

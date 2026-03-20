@@ -83,6 +83,12 @@ protected:
 	virtual void Tick( float DeltaTime ) override;
 	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
 	
+	/**
+	 * CharacterData가 null이면 게임 인스턴스를 통해 할당한다.
+	 * @return 이미 할당된 상태 또는 할당에 성공시 true, 그 외에는 false
+	 */
+	bool CheckCharacterData();
+	
 	// 스탯 변경 시 내부적으로 델리게이트를 호출해주는 헬퍼 함수
 	void BroadcastStatChange(ET3StatType StatType);
 
@@ -229,7 +235,7 @@ public:
 
 	// Attack
 	UFUNCTION(BlueprintCallable, Category = "Stat")
-	virtual float GetAttackPower() const;
+	virtual float GetAttackPower();
 	FORCEINLINE void SetAttackPower(float NewPower) { AttackPower = NewPower; BroadcastStatChange(ET3StatType::Attack);}
 
 	// Defense
