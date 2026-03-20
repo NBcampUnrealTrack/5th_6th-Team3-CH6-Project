@@ -70,25 +70,14 @@ void AT3CharacterBase::RequestSellItem(const FInventorySlot& SlotData, const int
 void AT3CharacterBase::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-
-	//데이터 에셋이 있다면 엔진이 액터를 완전히 구성한 직후 바로 적용, 없다면 게임 인스턴스 참고
-	TObjectPtr<UT3CharacterDataAsset> CharData = nullptr;
-	if (CharacterData)
-	{
-		CharData = CharacterData;
-	}
-	else if (const TObjectPtr<UT3GameInstance> T3GameInstance = Cast<UT3GameInstance>(GetGameInstance()))
-	{
-		CharData = T3GameInstance->GetCharacterDataAsset();
-		CharacterData = CharData;
-	}
 	
-	if (!CharData)
+	//데이터 에셋이 있다면 엔진이 액터를 완전히 구성한 직후 바로 적용, 없다면 게임 인스턴스 참고
+	if (!CheckCharacterData())
 	{
 		return;
 	}
 	
-	ApplyCharacterData(CharData);
+	ApplyCharacterData(CharacterData);
 }
 
 void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)
@@ -753,9 +742,14 @@ void AT3CharacterBase::UpgradeStat(ET3StatType StatType)
 	BroadcastStatChange(StatType);
 }
 
-float AT3CharacterBase::GetAttackPower() const
+float AT3CharacterBase::GetAttackPower()
 {
 	float AdditionalAttack = 0.f;
+	
+	if (!CheckCharacterData())
+	{
+		return 0.0f;
+	}
 
 	// 물리 캐릭터인 경우 근력 반영
 	if (CharacterData->PrimaryDamageType == EDamageType::Physical)
