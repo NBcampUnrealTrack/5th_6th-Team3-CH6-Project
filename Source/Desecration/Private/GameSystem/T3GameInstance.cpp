@@ -5,6 +5,7 @@
 #include "GameSystem/T3SaveLostMoney.h"
 #include "GameSystem/T3SaveUserSettings.h"
 #include "Kismet/GameplayStatics.h"
+#include "Player/T3CharacterDataAsset.h"
 #include "Sound/SoundClass.h"
 
 FText UT3GameInstance::GetTextFromTable(const FString& Namespace, const FString& Key)
@@ -25,6 +26,9 @@ void UT3GameInstance::Init()
 	
 	//게임 데이터
 	LoadGame();
+	
+	//잃어버린 재화
+	LoadLostMoney();
 	
 	//설정
 	if (!LoadUSerSettings())
@@ -130,6 +134,22 @@ bool UT3GameInstance::LoadLostMoney()
 	return true;
 }
 
+UT3CharacterDataAsset* UT3GameInstance::GetCharacterDataAsset()
+{
+	if (!SavedGameData)
+	{
+		return nullptr;
+	}
+	
+	const ECharacterClass CharacterClass = SavedGameData->PlayerClass;
+	if (const int32 IndexNum = static_cast<int32>(CharacterClass); CharacterData.IsValidIndex(IndexNum))
+	{
+		return CharacterData[IndexNum].Get();
+	}
+	
+	return nullptr;
+}
+
 //void UT3GameInstance::OpenLevel(const ELevelName LevelName) const
 //{	
 	//레벨 이동
@@ -180,4 +200,58 @@ void UT3GameInstance::OpenLevelBySavedData()
 	{
 		OpenLevel(SavedGameData->SavedLevelName);
 	}
+}
+
+// ===== 레벨 해금 =====
+void UT3GameInstance::UnlockLevel(ELevelName LevelName)
+{
+	if (!LevelProgressMap.Contains(LevelName))
+	{
+		FLevelProgressData NewData;
+		NewData.bLevelUnlocked = true;
+		LevelProgressMap.Add(LevelName, NewData);
+	}
+	else
+	{
+		LevelProgressMap[LevelName].bLevelUnlocked = true;
+	}
+}
+
+// ===== 세이브포인트 해금 =====
+void UT3GameInstance::UnlockSavePoint(ELevelName LevelName, FName SavePointID)
+{
+	if (!LevelProgressMap.Contains(LevelName))
+	{
+		FLevelProgressData NewData;
+		NewData.bLevelUnlocked = true; // 세이브포인트 열리면 레벨도 열린 걸로
+		NewData.SavePoints.Add(SavePointID, true);
+		LevelProgressMap.Add(LevelName, NewData);
+	}
+	else
+	{
+		LevelProgressMap[LevelName].SavePoints.Add(SavePointID, true);
+	}
+}
+
+// ===== 레벨 해금 여부 =====
+bool UT3GameInstance::IsLevelUnlocked(ELevelName LevelName)
+{
+	if (LevelProgressMap.Contains(LevelName))
+	{
+		return LevelProgressMap[LevelName].bLevelUnlocked;
+	}
+	return false;
+}
+
+// ===== 세이브포인트 해금 여부 =====
+bool UT3GameInstance::IsSavePointUnlocked(ELevelName LevelName, FName SavePointID)
+{
+	if (LevelProgressMap.Contains(LevelName))
+	{
+		if (LevelProgressMap[LevelName].SavePoints.Contains(SavePointID))
+		{
+			return LevelProgressMap[LevelName].SavePoints[SavePointID];
+		}
+	}
+	return false;
 }

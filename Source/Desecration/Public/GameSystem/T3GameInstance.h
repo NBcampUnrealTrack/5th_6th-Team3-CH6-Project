@@ -5,10 +5,23 @@
 #include "GlobalEnums.h"
 #include "T3GameInstance.generated.h"
 
+enum class ECharacterClass : uint8;
 class UT3SaveLostMoney;
 class UT3SaveUserSettings;
 class UT3CharacterDataAsset;
 class UT3SaveGame;
+
+USTRUCT(BlueprintType)
+struct FLevelProgressData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bLevelUnlocked = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TMap<FName, bool> SavePoints;
+};
 
 UCLASS()
 class DESECRATION_API UT3GameInstance : public UGameInstance
@@ -35,6 +48,26 @@ public:
 	static FString GetStringFromTable(const FString& Namespace, const FString& Key);
 	
 	virtual void Init() override;
+	
+	UPROPERTY(BlueprintReadWrite)
+	TMap<ELevelName, FLevelProgressData> LevelProgressMap;
+	
+	// 레벨 해금
+	UFUNCTION(BlueprintCallable)
+	void UnlockLevel(ELevelName LevelName);
+
+	// 세이브포인트 해금
+	UFUNCTION(BlueprintCallable)
+	void UnlockSavePoint(ELevelName LevelName, FName SavePointID);
+
+	// 레벨 해금 체크
+	UFUNCTION(BlueprintPure)
+	bool IsLevelUnlocked(ELevelName LevelName);
+
+	// 세이브포인트 해금 체크
+	UFUNCTION(BlueprintPure)
+	bool IsSavePointUnlocked(ELevelName LevelName, FName SavePointID);
+	
 	
 private:
 	//최초 설정값 생성
@@ -70,6 +103,9 @@ public:
 	
 	//잃어버린 재화 정보 불러오기
 	bool LoadLostMoney();
+	
+	//지정한 캐릭터 클래스에 해당되는 데이터 에셋
+	UT3CharacterDataAsset* GetCharacterDataAsset();
 
 	/**
 	 * 레벨(맵) 이동하기
@@ -93,9 +129,6 @@ public:
 	
 	//잃어버린 재화
 	FORCEINLINE TObjectPtr<UT3SaveLostMoney> GetLostMoneyData() { return LostMoneyData; }
-	
-	//캐릭터 데이터
-	FORCEINLINE TObjectPtr<UT3CharacterDataAsset> GetCharacterData() { return CharacterData; }
 	
 	//배경음 사운드 클래스
 	FORCEINLINE TObjectPtr<USoundClass> GetSoundClassBGM() { return SoundClassBGM; }
@@ -128,9 +161,13 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Sound Class", meta = (AllowPrivateAccess = true))
 	TObjectPtr<USoundClass> SoundClassBGM;
 	
-	//캐릭터 데이터
+
+	/**
+	 * 캐릭터 데이터
+	 * @note 할당 순서는 T3PlayerInputState.h에서 ECharacterClass를 참조
+	 */
 	UPROPERTY(EditDefaultsOnly, Category = "Character Data", meta = (AllowPrivateAccess = true))
-	TObjectPtr<UT3CharacterDataAsset> CharacterData;
+	TArray<TSoftObjectPtr<UT3CharacterDataAsset>> CharacterData;
 
 	// T3GameInstance.h
 	UPROPERTY(EditAnywhere, Category = "Level Settings")

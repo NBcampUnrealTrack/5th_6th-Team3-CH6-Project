@@ -23,7 +23,7 @@ FSkillData* UT3Paladin_SkillComponent::GetSkillDataByID(int32 SkillID)
     {
     case 1: return &SwordWaveData;
     case 2: return &ShieldStrikeData;
-    // case 3: return &Data;
+    case 3: return &LeafAttackData;
     case 4: return &JudgmentData;
     default: return nullptr;
     }
@@ -346,7 +346,7 @@ void UT3Paladin_SkillComponent::ActivateHolyMode()
     bIsHolyMode = true;
 
     // 1. 공격 속도/딜레이 감소 적용
-    AttackSpeedMultiplier += 0.2f;
+    AttackSpeedMultiplier = HolyModeAttackSpeedMultiplier;
 
     // 2. 20초 뒤 복구 예약
     GetWorld()->GetTimerManager().SetTimer(HolyModeTimerHandle, this, &UT3Paladin_SkillComponent::DeactivateHolyMode, 20.f, false);
@@ -372,4 +372,12 @@ void UT3Paladin_SkillComponent::DeactivateHolyMode()
     UE_LOG(LogTemp, Warning, TEXT("Holy Mode Deactivated!"));
 }
 
-
+void UT3Paladin_SkillComponent::SetHolyModeAttackSpeedMultiplier(float NewMultiplier)
+{
+    HolyModeAttackSpeedMultiplier = NewMultiplier;
+    
+    if (bIsHolyMode)
+    {
+        AttackSpeedMultiplier = HolyModeAttackSpeedMultiplier;
+    }
+}

@@ -5,6 +5,7 @@
 #include "GameSystem/GlobalEnums.h"
 #include "T3SelectClassWidget.generated.h"
 
+enum class ECharacterClass : uint8;
 class UT3GameInstance;
 class UT3InputNamePanel;
 class UHorizontalBox;
@@ -33,7 +34,7 @@ protected:
 	
 private:
 	//클래스 선택 버튼
-	void OnClickSelectClassButton(const EPlayerClass ButtonValue);
+	void OnClickSelectClassButton(const ECharacterClass ButtonValue);
 	
 	//타이틀로 돌아가기
 	UFUNCTION()
@@ -52,7 +53,7 @@ private:
 	TObjectPtr<UT3InputNamePanel> InputNamePanel;
 	
 	//게임 인스턴스
-	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	UPROPERTY()
 	TObjectPtr<UT3GameInstance> T3GameInstance;
 	
 	//플레이어 컨트롤러
@@ -60,5 +61,5 @@ private:
 	TObjectPtr<AT3SelectClassPlayerController> SelectClassPlayerController;
 	
 	//마지막으로 선택한 클래스
-	EPlayerClass SelectedPlayerClass;
+	ECharacterClass SelectedPlayerClass;
 };

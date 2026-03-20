@@ -1,4 +1,4 @@
-#include "Item/Rune/T3RageRune.h"
+﻿#include "Item/Rune/T3RageRune.h"
 #include "Equipment/T3PlayerEquipmentComponent.h"
 
 void UT3RageRune::OnSocketed_Implementation(AT3CharacterBase* OwnerChar)
@@ -49,7 +49,7 @@ void UT3RageRune::OnHPChanged(ET3StatType StatType, float CurrentValue, float Ma
 	ApplyAttackBonus();
 }
 
-void UT3RageRune::OnEquipmentStatsUpdated(float NewAtk, float NewDef)
+void UT3RageRune::OnEquipmentStatsUpdated(float NewAtk, float NewDef, float WeaponLevel)
 {
 	ApplyAttackBonus();
 }
@@ -57,6 +57,7 @@ void UT3RageRune::OnEquipmentStatsUpdated(float NewAtk, float NewDef)
 void UT3RageRune::ApplyAttackBonus()
 {
 	AT3CharacterBase* Owner = CachedOwner.Get();
+	
 	if (!IsValid(Owner) || !IsValid(Owner->EquipComp))
 	{
 		return;
@@ -67,4 +68,28 @@ void UT3RageRune::ApplyAttackBonus()
 	float Bonus = FMath::RoundToFloat((Owner->EquipComp->GetCurrentAttackPower() * (1.f - HPPercent) * (ValueByGrade / 10) * 10.0f)) / 10.0f;
 
 	Owner->SetRuneAttackBonus(this, Bonus);
+}
+
+void UT3RageRune::SetGrade(ET3RuneGrade InGrade)
+{
+	switch (InGrade)
+	{
+	case ET3RuneGrade::Normal:
+		
+		ValueByGrade = AttackBonusPerHPTenPercentNormal;
+		break;
+		
+	case ET3RuneGrade::Epic:
+		
+		ValueByGrade = AttackBonusPerHPTenPercentEpic;
+		break;
+		
+	case ET3RuneGrade::Legendary:
+		
+		ValueByGrade = AttackBonusPerHPTenPercentLegendary;
+		break;
+		
+	default:
+		break;
+	}
 }

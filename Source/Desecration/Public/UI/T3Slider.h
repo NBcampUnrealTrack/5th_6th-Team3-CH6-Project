@@ -21,7 +21,7 @@ public:
 	
 	//슬라이더의 OnValueChanged 이벤트
 	//* 주의 : Clear 또는 RemoveAll 사용 금지
-	FOnFloatValueChangedEvent GetOnValueChangedEvent() const;
+	FOnFloatValueChangedEvent& GetOnValueChangedEvent() const;
 	
 private:
 	//슬라이더 동작시 프로그래스 바도 똑같이 움직인다. 

@@ -176,6 +176,12 @@ void UT3Taoist_SkillComponent::SpawnTalisman()
         return;
     }
 
+    if (OwnerChar->GetCurrentStamina() < 10.f)
+    {
+        UE_LOG(LogTemp, Display, TEXT("You need Stamina"));
+        return;
+    }
+
     UWorld* World = GetWorld();
     if (World)
     {
@@ -223,6 +229,61 @@ void UT3Taoist_SkillComponent::SpawnTalisman()
 
             // 4. 스폰 완료 (이때 BeginPlay가 호출됨)
             Talisman->FinishSpawning(SpawnTransform);
+
+            // 사운드 재생
+            
+            PlaySkillEffectSound(AttackSound);
+            PlaySkillEffectSound(AttackVoice);
+
+            // 스태미나 10 소모
+            OwnerChar->GetCombatComponent()->ConsumeStamina(10.f);
+        }
+    }
+}
+
+void UT3Taoist_SkillComponent::SetFanEmissive(bool bEnabled)
+{
+    if (!IsValid(FanWeapon)) return;
+
+    // 1. 이름으로 'WeaponSkeletalMesh'를 직접 찾음
+    USkeletalMeshComponent* FanMesh = nullptr;
+
+    TArray<USkeletalMeshComponent*> SkeletalMeshComps;
+    FanWeapon->GetComponents<USkeletalMeshComponent>(SkeletalMeshComps);
+
+    for (USkeletalMeshComponent* Mesh : SkeletalMeshComps)
+    {
+        // 블루프린트에 적힌 정확한 이름 "WeaponSkeletalMesh" 확인
+        if (Mesh && Mesh->GetName().Contains(TEXT("WeaponSkeletalMesh")))
+        {
+            FanMesh = Mesh;
+            break;
+        }
+    }
+
+    // 못 찾았다면 첫 번째 스켈레탈 메시라도 시도
+    if (!FanMesh && SkeletalMeshComps.Num() > 0) FanMesh = SkeletalMeshComps[0];
+
+    if (!FanMesh)
+    {
+        return;
+    }
+
+    // 2. 이제 머티리얼 적용 (진짜 부채니까 NumMaterials가 2가 나올 거야)
+    int32 NumMaterials = FanMesh->GetNumMaterials();
+
+    for (int32 i = 0; i < NumMaterials; ++i)
+    {
+        UMaterialInstanceDynamic* DMI = Cast<UMaterialInstanceDynamic>(FanMesh->GetMaterial(i));
+        if (!DMI)
+        {
+            DMI = FanMesh->CreateDynamicMaterialInstance(i);
+        }
+
+        if (DMI)
+        {
+            float Strength = bEnabled ? 20.f : 0.f;
+            DMI->SetScalarParameterValue(TEXT("EmissiveStrength"), Strength);
         }
     }
 }
@@ -233,11 +294,16 @@ void UT3Taoist_SkillComponent::SetEmpowermentState(bool bEnabled)
     if (bEnabled && bIsOnCooldown) return;
 
     bIsSpiritualEmpowered = bEnabled;
+    SetFanEmissive(bEnabled);
+    UE_LOG(LogTemp, Display, TEXT("Empowered"));
 
     if (bIsSpiritualEmpowered)
     {
-        // 부채 빛나는 효과 넣기
-        UE_LOG(LogTemp, Log, TEXT("도력 강화 활성화!"));
+        if (OwnerChar)
+        {
+     PlaySkillEffectSound(PassiveSound);
+                
+        }
     }
     else
     {
@@ -279,6 +345,8 @@ void UT3Taoist_SkillComponent::ExecuteStrongWind()
 
         // 3. 몽타주 재생
         float Duration = OwnerChar->PlayAnimMontage(StrongWindData.SkillMontage);
+
+        
 
         if (Duration > 0.f)
         {
@@ -336,6 +404,9 @@ void UT3Taoist_SkillComponent::SpawnStrongWind()
 
             // 스폰 완료
             StrongWindActor->FinishSpawning(FTransform(SpawnRotation, SpawnLocation));
+
+            // 사운드 재생
+            PlaySkillEffectSound(Skill1Voice);
         }
     }
 }
@@ -363,6 +434,10 @@ void UT3Taoist_SkillComponent::ExecuteTaoistDodge()
 
     SetGhostTrailActive(true);
     OnTaoistDodgeTriggered();
+
+    // 사운드 재생
+    PlaySkillEffectSound(Skill2Sound);
+    PlaySkillEffectSound(Skill2Voice);
 }
 
 void UT3Taoist_SkillComponent::SpawnSingleShadowClone(FVector ExplosionLocation, AActor* Spawner)
@@ -378,6 +453,9 @@ void UT3Taoist_SkillComponent::SpawnSingleShadowClone(FVector ExplosionLocation,
         FTransform(OwnerChar->GetActorRotation(), ExplosionLocation),
         OwnerChar, OwnerChar, ESpawnActorCollisionHandlingMethod::AlwaysSpawn
     );
+
+    // 분신 스폰 사운드 재생
+    PlaySkillEffectSound(SpawnSound);
 
     if (NewClone)
     {
@@ -414,7 +492,6 @@ void UT3Taoist_SkillComponent::DestroyAllActiveClones()
     }
     ActiveClones.Empty();
 }
-
 
 void UT3Taoist_SkillComponent::NotifyClonesAction(EActionType ActionType)
 {
@@ -483,11 +560,17 @@ void UT3Taoist_SkillComponent::SummonTigerAtLocation(FVector ExplosionLocation, 
         SummonedTiger->SetDamage(FinalDamage);
         SummonedTiger->FinishSpawning(FTransform(ActualOwner->GetActorRotation(), SpawnLocation));
         SummonedTiger->LaunchTiger(ActualOwner->GetActorForwardVector(), 600.f);
+
+        // 사운드 재생
+        PlaySkillEffectSound(Skill4Sound);
     }
 }
 
 void UT3Taoist_SkillComponent::ThrowSummonCharm(const FSkillData& SkillData)
 {
+   
+    
+    
     // 분신술일 때는 기존 분신 제거 + 분신은 이 스킬을 따라하지 않음
     if (&SkillData == &ShadowCloneData)
     {
@@ -516,6 +599,8 @@ void UT3Taoist_SkillComponent::PlayThrowChramMontage(const FSkillData& SkillData
     if (SkillData.SkillMontage)
     {
         OwnerChar->PlayAnimMontage(SkillData.SkillMontage);
+
+
     }
 }
 
@@ -524,7 +609,7 @@ void UT3Taoist_SkillComponent::SpawnCharmInternal(AActor* Spawner, const FSkillD
     if (!Spawner || !SkillData.ProjectileClass) return;
 
     // 분신술이면 2개, 아니면 1개
-    int32 Count = (&SkillData == &ShadowCloneData) ? 2 : 1;
+    int32 Count = (&SkillData == &ShadowCloneData) ? CloneCount : 1;
 
     for (int32 i = 0; i < Count; i++)
     {
@@ -566,6 +651,10 @@ void UT3Taoist_SkillComponent::SpawnCharmInternal(AActor* Spawner, const FSkillD
             }
 
             Charm->LaunchCharm(ThrowDir.GetSafeNormal(), ThrowSpeed);
+
+            // 사운드 재생
+            PlaySkillEffectSound(Skill3Sound);
+            PlaySkillEffectSound(Skill3Voice);
         }
     }
 }
@@ -580,5 +669,25 @@ void UT3Taoist_SkillComponent::SetCloneAttackBonus(float NewAttackBonus)
         {
             Clone->CloneAttackBonus = NewAttackBonus;
         }
+    }
+}
+
+void UT3Taoist_SkillComponent::SetCloneCount(int32 NewCount)
+{
+    CloneCount = NewCount;
+}
+
+void UT3Taoist_SkillComponent::RemoveLastActiveClone()
+{
+    if (ActiveClones.Num() == 0)
+    {
+        return;
+    }
+
+    int32 LastIndex = ActiveClones.Num() - 1;
+
+    if (IsValid(ActiveClones[LastIndex]))
+    {
+        ActiveClones[LastIndex]->Destroy();
     }
 }

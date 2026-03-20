@@ -2,7 +2,6 @@
 
 #include "GameSystem/T3GameInstance.h"
 #include "GameSystem/T3TitleGameMode.h"
-#include "UI/T3SettingsPanel.h"
 #include "UI/T3TitleLevelWidget.h"
 
 void AT3TitlePlayerController::BeginPlay()

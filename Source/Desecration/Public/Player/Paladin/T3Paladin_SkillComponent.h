@@ -29,7 +29,7 @@ public:
     UFUNCTION(BlueprintImplementableEvent, Category = "Skill")
     void ShieldStrike();
     
-    UFUNCTION(BlueprintImplementableEvent, Category = "Skill")
+    UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Skill")
     void LeafAttack();
 
     // 실제 투사체 스폰 (AnimNotify에서 호출될 용도)
@@ -47,6 +47,12 @@ private:
 
     UPROPERTY(EditAnywhere, Category = "Skill Data")
     FSkillData ShieldStrikeData;
+
+    UPROPERTY(EditAnywhere, Category = "Skill Data")
+    FSkillData LeafAttackData;
+
+    UPROPERTY(EditAnywhere, Category = "Skill Data")
+    FSkillData JudgmentData;
 
     UPROPERTY(EditAnywhere, Category = "Skill Data")
     FSkillData EmptySkillData;
@@ -92,8 +98,7 @@ public:
     // ==== 신의 심판 데이터 ====
 
 protected:
-    UPROPERTY(EditAnywhere, Category = "Skill Data")
-    FSkillData JudgmentData;
+
 
     UPROPERTY(EditAnywhere, Category = "Skill|Judgement")
     float JudgementExexcuteDistance = 500.f;
@@ -123,4 +128,15 @@ private:
     void ApplyJudgmentDamage(int32 RemainingHits); // 다단 히트 처리
     void FinishJudgmentSkill();
     void CancleJudgmentLaser(); // 피격 시 신의 심판 캔슬
+    
+#pragma region Paladin Rune
+public:
+    FORCEINLINE float GetHolyModeAttackSpeedMultiplier() const { return HolyModeAttackSpeedMultiplier; }
+    
+    void SetHolyModeAttackSpeedMultiplier(float NewMultiplier);
+    
+private:
+    UPROPERTY(EditDefaultsOnly, Category = "Paladin|Stats")
+    float HolyModeAttackSpeedMultiplier = 1.2f;
+#pragma endregion
 };
