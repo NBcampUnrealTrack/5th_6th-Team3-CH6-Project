@@ -51,6 +51,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnResourceChanged, float, CurrentAm
 // 스킬 활성화 여부 전달 델리게이트
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSkillUnlockStateChanged, int32, SkillID, bool, bIsUnlocked);
 
+// 스킬 장착 여부 전달 델리게이트
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSkillEquipStateChanged, int32, SkillID, bool, bIsEquipped);
+
 
 UCLASS( Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class DESECRATION_API UT3SkillComponentBase : public UActorComponent
@@ -217,6 +220,25 @@ protected:
     // 스킬 ID와 해금 여부를 매핑
     UPROPERTY(EditAnywhere, Category = "Skill | Data")
     TMap<int32, bool> SkillUnlockStates;
+
+
+    // === 스킬 장착 여부
+
+    public:
+        UPROPERTY(BlueprintAssignable, Category = "Events")
+        FOnSkillEquipStateChanged OnSkillEquipStateChanged;
+
+        // 특정 스킬의 장착 여부를 확인하는 함수
+        UFUNCTION(BlueprintCallable, Category = "Skill")
+        bool IsSkillEquipped(int32 SkillID) const;
+
+protected:
+    // 장착 상태를 관리할 맵 (ID, 장착여부)
+    UPROPERTY()
+    TMap<int32, bool> SkillEquipStates;
+
+    // 초기화 시 1번만 장착되게 설정
+    void InitializeDefaultSlots();
 };
 
 

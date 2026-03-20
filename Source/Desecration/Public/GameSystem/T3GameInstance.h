@@ -10,6 +10,18 @@ class UT3SaveUserSettings;
 class UT3CharacterDataAsset;
 class UT3SaveGame;
 
+USTRUCT(BlueprintType)
+struct FLevelProgressData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bLevelUnlocked = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TMap<FName, bool> SavePoints;
+};
+
 UCLASS()
 class DESECRATION_API UT3GameInstance : public UGameInstance
 {
@@ -35,6 +47,26 @@ public:
 	static FString GetStringFromTable(const FString& Namespace, const FString& Key);
 	
 	virtual void Init() override;
+	
+	UPROPERTY(BlueprintReadWrite)
+	TMap<ELevelName, FLevelProgressData> LevelProgressMap;
+	
+	// 레벨 해금
+	UFUNCTION(BlueprintCallable)
+	void UnlockLevel(ELevelName LevelName);
+
+	// 세이브포인트 해금
+	UFUNCTION(BlueprintCallable)
+	void UnlockSavePoint(ELevelName LevelName, FName SavePointID);
+
+	// 레벨 해금 체크
+	UFUNCTION(BlueprintPure)
+	bool IsLevelUnlocked(ELevelName LevelName);
+
+	// 세이브포인트 해금 체크
+	UFUNCTION(BlueprintPure)
+	bool IsSavePointUnlocked(ELevelName LevelName, FName SavePointID);
+	
 	
 private:
 	//최초 설정값 생성
