@@ -80,6 +80,7 @@ void AT3CharacterBase::PostInitializeComponents()
 	else if (const TObjectPtr<UT3GameInstance> T3GameInstance = Cast<UT3GameInstance>(GetGameInstance()))
 	{
 		CharData = T3GameInstance->GetCharacterDataAsset();
+		CharacterData = CharData;
 	}
 	
 	if (!CharData)
