@@ -14,7 +14,19 @@ public:
 	
 	virtual void OnUnsocketed_Implementation(AT3CharacterBase* OwnerChar) override;
 	
+	virtual void SetGrade(ET3RuneGrade InGrade) override;
+	
 private:
+	int32 OriginTriggerAttackCount = 0;
+	
 	UPROPERTY(EditDefaultsOnly, Category = "Value")
-	float ValueByGrade = 10.0f;
+	float MaxHPRecoveryPercentNormal = 2.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
+	float MaxHPRecoveryPercentEpic = 4.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
+	float MaxHPRecoveryPercentLegendary = 6.0f;
+	
+	uint8 bIsLegendary : 1 = false;
 };
