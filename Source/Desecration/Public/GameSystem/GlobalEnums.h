@@ -16,16 +16,6 @@ enum class ELevelName : uint8
 	Dragon UMETA(DisplayName = "T3_DragonMap")
 };
 
-//플레이어의 클래스
-UENUM()
-enum class EPlayerClass
-{
-	None,
-	Warrior,
-	Taoist,
-	Valkyrie
-};
-
 //현재 열려있는 인벤토리 위젯의 타입
 UENUM(BlueprintType)
 enum class ET3InventoryContext : uint8
