@@ -134,8 +134,14 @@ bool UT3GameInstance::LoadLostMoney()
 	return true;
 }
 
-UT3CharacterDataAsset* UT3GameInstance::GetCharacterDataAsset(const ECharacterClass CharacterClass)
+UT3CharacterDataAsset* UT3GameInstance::GetCharacterDataAsset()
 {
+	if (!SavedGameData)
+	{
+		return nullptr;
+	}
+	
+	const ECharacterClass CharacterClass = SavedGameData->PlayerClass;
 	if (const int32 IndexNum = static_cast<int32>(CharacterClass); CharacterData.IsValidIndex(IndexNum))
 	{
 		return CharacterData[IndexNum].Get();
