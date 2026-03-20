@@ -372,6 +372,22 @@ void AT3CharacterBase::OnMovementModeChanged(EMovementMode PrevMovementMode, uin
 	}
 }
 
+bool AT3CharacterBase::CheckCharacterData()
+{
+	if (CharacterData)
+	{
+		return true;
+	}
+	
+	const TObjectPtr<UT3GameInstance> T3GameInstance = Cast<UT3GameInstance>(GetGameInstance());
+	if (!T3GameInstance)
+	{
+		return false;
+	}
+	
+	CharacterData = T3GameInstance->GetCharacterDataAsset();
+	return CharacterData != nullptr;
+}
 
 
 void AT3CharacterBase::Move(const FVector2D& Value)
