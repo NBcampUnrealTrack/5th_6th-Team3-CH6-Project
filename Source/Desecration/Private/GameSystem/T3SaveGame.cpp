@@ -16,7 +16,7 @@ void UT3SaveGame::ResetGameData()
 	// 	return;
 	// }
 	
-	PlayerClass = EPlayerClass::None;
+	PlayerClass = ECharacterClass::Paladin;
 	PlayerName = TEXT("");
 	//캐릭터 위치
 	SavedLevelName = ELevelName::Tutorial;

@@ -8,6 +8,7 @@
 
 struct FInventorySlot;
 struct FSkillData;
+enum class ECharacterClass : uint8;
 
 UCLASS()
 class DESECRATION_API UT3SaveGame : public USaveGame
@@ -20,7 +21,7 @@ public:
 	
 	//플레이어의 클래스
 	UPROPERTY()
-	EPlayerClass PlayerClass;
+	ECharacterClass PlayerClass;
 	
 	//플레이어 이름
 	UPROPERTY()
