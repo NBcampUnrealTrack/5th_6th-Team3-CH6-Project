@@ -261,7 +261,8 @@ public:
 	void RestoreMP(float Amount);
 
 	// 클래스
-	FORCEINLINE ECharacterClass GetCurrentClass() const { return CurrentClass; }
+	UFUNCTION(BlueprintCallable)
+	ECharacterClass GetCurrentClass() const { return CurrentClass; }
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Class")
