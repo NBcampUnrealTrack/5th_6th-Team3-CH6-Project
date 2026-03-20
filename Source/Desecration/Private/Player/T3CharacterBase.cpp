@@ -71,6 +71,14 @@ void AT3CharacterBase::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 	
+#if WITH_EDITOR
+	//에디터 한정으로, 현재 플레이 상태가 아니면 무시한다.
+	if (const UWorld* World = GetWorld(); !World || World->WorldType == EWorldType::EditorPreview)
+	{
+		return;
+	}
+#endif
+
 	//데이터 에셋이 있다면 엔진이 액터를 완전히 구성한 직후 바로 적용, 없다면 게임 인스턴스 참고
 	if (!CheckCharacterData())
 	{
