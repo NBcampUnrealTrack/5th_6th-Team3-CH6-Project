@@ -176,6 +176,12 @@ void UT3Taoist_SkillComponent::SpawnTalisman()
         return;
     }
 
+    if (OwnerChar->GetCurrentStamina() < 10.f)
+    {
+        UE_LOG(LogTemp, Display, TEXT("You need Stamina"));
+        return;
+    }
+
     UWorld* World = GetWorld();
     if (World)
     {
@@ -229,7 +235,8 @@ void UT3Taoist_SkillComponent::SpawnTalisman()
             PlaySkillEffectSound(AttackSound);
             PlaySkillEffectSound(AttackVoice);
 
-
+            // 스태미나 10 소모
+            OwnerChar->GetCombatComponent()->ConsumeStamina(10.f);
         }
     }
 }
