@@ -1,9 +1,7 @@
 #include "Player/T3SelectClassPlayerController.h"
 
-#include "GameSystem/T3GameInstance.h"
 #include "GameSystem/T3SaveGame.h"
 #include "GameSystem/T3SelectClassGameMode.h"
-#include "Kismet/GameplayStatics.h"
 #include "UI/T3SelectClassWidget.h"
 
 void AT3SelectClassPlayerController::BeginPlay()
@@ -33,7 +31,7 @@ void AT3SelectClassPlayerController::BeginPlay()
 	SelectClassWidgetInstance->AddToViewport();
 }
 
-void AT3SelectClassPlayerController::TutorialStart(const FString& PlayerName, const EPlayerClass SelectedPlayerClass)
+void AT3SelectClassPlayerController::TutorialStart(const FString& PlayerName, const ECharacterClass SelectedPlayerClass)
 {	
 	SelectClassGameMode->MakeFirstGameData(PlayerName, SelectedPlayerClass);
 	SelectClassGameMode->TutorialStart();

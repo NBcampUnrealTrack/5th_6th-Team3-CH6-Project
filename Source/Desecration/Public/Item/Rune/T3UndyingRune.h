@@ -14,6 +14,12 @@ public:
 	
 	virtual void OnUnsocketed_Implementation(AT3CharacterBase* OwnerChar) override;
 	
+	virtual void SetGrade(ET3RuneGrade InGrade) override;
+	
+	virtual float GetCooldownRemaining() const override;
+	
+	virtual void RestoreCooldown(float RemainingTime) override;
+	
 private:
 	TWeakObjectPtr<AT3CharacterBase> CachedOwner;
 	
@@ -22,10 +28,25 @@ private:
 	uint8 bIsCooldown : 1 = false;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Value")
-	float Cooldown = 10.f;
+	float CooldownByGrade = 0.0f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Value")
-	float ValueByGrade = 20.f;
+	float CooldownNormal = 900.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
+	float CooldownEpic = 600.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
+	float CooldownLegendary = 300.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
+	float OnDeathHealPercentNormal = 20.f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
+	float OnDeathHealPercentEpic = 35.f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
+	float OnDeathHealPercentLegendary = 50.f;
 	
 	FTimerHandle CooldownTimerHandle;
 	

@@ -2,6 +2,8 @@
 
 
 #include "Player/Valkyrie/T3Valkyrie_SkillComponent.h"
+
+#include "Desecration.h"
 #include "Player/Valkyrie/T3LunarSlash.h"
 #include "Player/T3CharacterBase.h"
 #include "Player/T3CombatComponent.h"
@@ -70,7 +72,7 @@ void UT3Valkyrie_SkillComponent::BasicAttackCount()
 {
     CurrentBasicAttackCount++;
     
-    if (CurrentBasicAttackCount >= 4)
+    if (CurrentBasicAttackCount >= TriggerAttackCount)
     {
         if (OwnerChar)
         {
@@ -78,6 +80,8 @@ void UT3Valkyrie_SkillComponent::BasicAttackCount()
             float NewHP = FMath::Clamp(OwnerChar->GetCurrentHP() + HealAmount, 0.0f, OwnerChar->GetMaxHP());
             OwnerChar->SetCurrentHP(NewHP);
             CurrentBasicAttackCount = 0;
+            
+            UE_LOG(LogItem, Log, TEXT("발키리 패시브 발동 : %.1f 회복됨"), HealAmount);
         }
     }
 }
@@ -168,4 +172,9 @@ void UT3Valkyrie_SkillComponent::CancelCurrentSkill()
 void UT3Valkyrie_SkillComponent::SetPassiveHealBonus(float NewHealBonus)
 {
     PassiveHealBonus = NewHealBonus;
+}
+
+void UT3Valkyrie_SkillComponent::SetTriggerAttackCount(int32 NewCount)
+{
+    TriggerAttackCount = NewCount;
 }

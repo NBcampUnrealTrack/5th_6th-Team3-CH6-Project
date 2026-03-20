@@ -75,7 +75,7 @@ void UT3HUDSlotWidget::HandleSkillSlotUpdated(int32 SlotIndex, int32 SkillID, co
 	// 1. 틱 활성화 (쿨타임 처리를 위해)
 	bIsTickActive = true;
 
-	// 2. ★ 시각적 이미지 즉시 갱신 (이게 빠져있었음)
+	// 2. ★ 시각적 이미지 즉시 갱신
 	SetSlotVisual(SlotIndex, SkillData.SkillIcon);
 
 	UE_LOG(LogTemp, Log, TEXT("Slot %d Updated: SkillID %d"), SlotIndex, SkillID);

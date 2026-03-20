@@ -5,6 +5,7 @@
 #include "GameSystem/T3SaveLostMoney.h"
 #include "GameSystem/T3SaveUserSettings.h"
 #include "Kismet/GameplayStatics.h"
+#include "Player/T3CharacterDataAsset.h"
 #include "Sound/SoundClass.h"
 
 FText UT3GameInstance::GetTextFromTable(const FString& Namespace, const FString& Key)
@@ -131,6 +132,22 @@ bool UT3GameInstance::LoadLostMoney()
 	
 	LostMoneyData = T3LostMoney;
 	return true;
+}
+
+UT3CharacterDataAsset* UT3GameInstance::GetCharacterDataAsset()
+{
+	if (!SavedGameData)
+	{
+		return nullptr;
+	}
+	
+	const ECharacterClass CharacterClass = SavedGameData->PlayerClass;
+	if (const int32 IndexNum = static_cast<int32>(CharacterClass); CharacterDataList.IsValidIndex(IndexNum))
+	{
+		return CharacterDataList[IndexNum].Get();
+	}
+	
+	return nullptr;
 }
 
 //void UT3GameInstance::OpenLevel(const ELevelName LevelName) const
