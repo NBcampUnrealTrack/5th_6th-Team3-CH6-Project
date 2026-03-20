@@ -8,6 +8,7 @@
 #include "Item/Component/T3InventoryComponent.h"
 #include "Player/T3CharacterBase.h"
 #include "Player/T3CombatComponent.h"
+#include "Player/T3PlayerController.h"
 #include "Player/T3SkillComponentBase.h"
 
 void AT3GameMode::BeginPlay()
@@ -301,4 +302,33 @@ bool AT3GameMode::YouHaveBeenCorrupted(const AT3CharacterBase* Character) const
 	T3GameInstance->OpenLevelBySavedData();
 	
 	return true;
+}
+
+void AT3GameMode::InstantSave()
+{
+#if WITH_EDITOR
+	if (!T3GameInstance)
+	{
+		return;
+	}
+	
+	TObjectPtr<AT3PlayerController> T3Controller = Cast<AT3PlayerController>(GetWorld()->GetFirstPlayerController());
+	if (!T3Controller)
+	{
+		return;
+	}
+	
+	TObjectPtr<AT3CharacterBase> Character = Cast<AT3CharacterBase>(T3Controller->GetPawn());
+	if (!Character)
+	{
+		return;
+	}
+	
+	if (SaveGame(Character, T3GameInstance->GetCurrentLevel(), false))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("즉시 저장 성공"));
+	}
+#else
+	return;
+#endif
 }

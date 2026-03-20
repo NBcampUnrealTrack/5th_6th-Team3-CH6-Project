@@ -142,9 +142,9 @@ UT3CharacterDataAsset* UT3GameInstance::GetCharacterDataAsset()
 	}
 	
 	const ECharacterClass CharacterClass = SavedGameData->PlayerClass;
-	if (const int32 IndexNum = static_cast<int32>(CharacterClass); CharacterData.IsValidIndex(IndexNum))
+	if (const int32 IndexNum = static_cast<int32>(CharacterClass); CharacterDataList.IsValidIndex(IndexNum))
 	{
-		return CharacterData[IndexNum].Get();
+		return CharacterDataList[IndexNum].Get();
 	}
 	
 	return nullptr;

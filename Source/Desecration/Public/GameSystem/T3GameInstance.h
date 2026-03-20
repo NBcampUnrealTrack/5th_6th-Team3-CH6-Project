@@ -167,7 +167,7 @@ private:
 	 * @note 할당 순서는 T3PlayerInputState.h에서 ECharacterClass를 참조
 	 */
 	UPROPERTY(EditDefaultsOnly, Category = "Character Data", meta = (AllowPrivateAccess = true))
-	TArray<TSoftObjectPtr<UT3CharacterDataAsset>> CharacterData;
+	TArray<TObjectPtr<UT3CharacterDataAsset>> CharacterDataList;
 
 	// T3GameInstance.h
 	UPROPERTY(EditAnywhere, Category = "Level Settings")
