@@ -69,17 +69,6 @@ ECharacterClass AT3GameMode::GetPlayerClass()
 	return SaveGame->PlayerClass;
 }
 
-UT3CharacterDataAsset* AT3GameMode::GetCharacterDataAsset()
-{
-	if (!T3GameInstance)
-	{
-		UE_LOG(LogTemp, Error, TEXT("%s : T3GameInstance가 NULL"), *GetNameSafe(this));
-		return nullptr;
-	}
-	
-	return T3GameInstance->GetCharacterDataAsset(GetPlayerClass());
-}
-
 bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName LevelName, const bool bTemporarySave)
 {
 	//캐릭터 정보를 저장된 게임 데이터에 저장한다.

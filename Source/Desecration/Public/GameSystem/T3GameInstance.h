@@ -105,7 +105,7 @@ public:
 	bool LoadLostMoney();
 	
 	//지정한 캐릭터 클래스에 해당되는 데이터 에셋
-	UT3CharacterDataAsset* GetCharacterDataAsset(const ECharacterClass CharacterClass);
+	UT3CharacterDataAsset* GetCharacterDataAsset();
 
 	/**
 	 * 레벨(맵) 이동하기
@@ -162,8 +162,10 @@ private:
 	TObjectPtr<USoundClass> SoundClassBGM;
 	
 
-	//캐릭터 데이터
-	//할당 순서는 T3PlayerInputState.h에서 ECharacterClass를 참고할 것
+	/**
+	 * 캐릭터 데이터
+	 * @note 할당 순서는 T3PlayerInputState.h에서 ECharacterClass를 참조
+	 */
 	UPROPERTY(EditDefaultsOnly, Category = "Character Data", meta = (AllowPrivateAccess = true))
 	TArray<TSoftObjectPtr<UT3CharacterDataAsset>> CharacterData;
 
