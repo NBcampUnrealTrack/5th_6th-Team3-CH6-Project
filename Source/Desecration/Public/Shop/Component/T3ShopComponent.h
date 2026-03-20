@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Player/T3PlayerInputState.h"
 #include "T3ShopComponent.generated.h"
 
 class UDataTable;
@@ -89,6 +90,9 @@ struct FT3ShopRuneUIData
 	
 	UPROPERTY(BlueprintReadOnly)
 	FText ItemInfo = FText::GetEmpty();
+	
+	UPROPERTY(BlueprintReadOnly)
+	ECharacterClass CharacterClass = ECharacterClass::None;
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
