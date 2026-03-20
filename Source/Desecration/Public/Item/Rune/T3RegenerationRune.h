@@ -14,19 +14,35 @@ public:
 	
 	virtual void OnUnsocketed_Implementation(AT3CharacterBase* OwnerChar) override;
 	
+	virtual void SetGrade(ET3RuneGrade InGrade) override;
+	
 private:
 	TWeakObjectPtr<AT3CharacterBase> CachedOwner;
 
 	FTimerHandle RegenerationHPTimerHandle;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Value")
-	float HealAmountByGrade = 1.0f;
+	float HealAmountNormal = 1.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
+	float HealAmountEpic = 1.5f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
+	float HealAmountLegendary = 2.0f;
+	
+	float RecoveryTargetHPPercentByGrade = 0.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
+	float RecoveryTargetHPPercentNormal= 30.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
+	float RecoveryTargetHPPercentEpic= 40.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
+	float RecoveryTargetHPPercentLegendary = 50.0f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Value")
 	float RecoveryInterval = 1.0f;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Value")
-	float RecoveryTargetHPPercentByGrade= 0.3f;
 	
 	UFUNCTION()
 	void RegenerationHP(ET3StatType StatType, float CurrentHP, float MaxHP);

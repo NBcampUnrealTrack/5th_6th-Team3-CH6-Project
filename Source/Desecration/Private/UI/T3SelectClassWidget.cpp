@@ -3,6 +3,7 @@
 #include "Components/Button.h"
 #include "Components/HorizontalBox.h"
 #include "GameSystem/T3GameInstance.h"
+#include "Player/T3PlayerInputState.h"
 #include "Player/T3SelectClassPlayerController.h"
 #include "UI/T3InputNamePanel.h"
 
@@ -27,7 +28,7 @@ void UT3SelectClassWidget::NativeConstruct()
 	}
 	
 	//각 클래스 버튼은 SButton에 Lambda로 바인딩한다.
-	int32 TempClassValue = static_cast<int32>(EPlayerClass::Warrior);
+	int32 TempClassValue = static_cast<int32>(ECharacterClass::Paladin);
 	for (TObjectPtr<UWidget> ChildWidget : SelectClassBox->GetAllChildren())
 	{
 		TObjectPtr<UButton> ChildButton = Cast<UButton>(ChildWidget);
@@ -39,7 +40,7 @@ void UT3SelectClassWidget::NativeConstruct()
 		TSharedPtr<SButton> SlateButton = StaticCastSharedPtr<SButton>(ChildButton->GetCachedWidget());
 		SlateButton->SetOnClicked(FOnClicked::CreateLambda([this, TempClassValue]()
 		{
-			OnClickSelectClassButton(static_cast<EPlayerClass>(TempClassValue));
+			OnClickSelectClassButton(static_cast<ECharacterClass>(TempClassValue));
 			return FReply::Handled(); 
 		}));
 		
@@ -54,7 +55,7 @@ void UT3SelectClassWidget::NativeConstruct()
 	InputNamePanelParent->SetVisibility(ESlateVisibility::Collapsed);
 	
 	//그외 나머지 초기화
-	SelectedPlayerClass = EPlayerClass::None;
+	SelectedPlayerClass = ECharacterClass::Paladin;
 }
 
 void UT3SelectClassWidget::SetActiveInputNamePanel(bool bActive)
@@ -80,7 +81,7 @@ void UT3SelectClassWidget::OnPressEsc()
 	T3GameInstance->OpenLevel(ELevelName::Title);
 }
 
-void UT3SelectClassWidget::OnClickSelectClassButton(const EPlayerClass ButtonValue)
+void UT3SelectClassWidget::OnClickSelectClassButton(const ECharacterClass ButtonValue)
 {
 	SelectedPlayerClass = ButtonValue;
 	SetActiveInputNamePanel(true);
