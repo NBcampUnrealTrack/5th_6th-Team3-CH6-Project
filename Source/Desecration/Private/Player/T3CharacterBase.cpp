@@ -673,54 +673,101 @@ void AT3CharacterBase::RecalculateRuneBonus()
 	BroadcastStatChange(ET3StatType::Attack);
 }
 
-void AT3CharacterBase::UpgradeStat(ET3StatType StatType)
+void AT3CharacterBase::UpgradeStat(ET3StatType StatType, int32 Amount)
 {
+
+	if (Amount <= 0) return;
+
 	// 1. 스탯 포인트 증가 및 수치 반영 로직
+	for (int32 i = 0; i < Amount; ++i)
+	{
+		switch (StatType)
+		{
+		case ET3StatType::Vigor:
+		{
+			// 찍기 '직전' 스탯 기준 계산
+			float Increase = 15.f + (Vigor * 0.7f);
+			if (Vigor >= 30) Increase /= 3.f;
+
+			Vigor++; // 이제 스탯 증가
+			MaxHP += Increase;
+			CurrentHP += Increase;
+			break;
+		}
+		case ET3StatType::Endurance:
+		{
+			float Increase = 10.f + (Endurance * 0.5f);
+			if (Endurance >= 30) Increase /= 3.f;
+
+			Endurance++;
+			MaxStamina += Increase;
+			CurrentStamina += Increase;
+			break;
+		}
+		case ET3StatType::Mind:
+		{
+			float Increase = 10.f + (Mind * 0.7f);
+			if (Mind >= 30) Increase /= 3.f;
+
+			Mind++;
+			MaxMana += Increase;
+			CurrentMana += Increase;
+			break;
+		}
+		case ET3StatType::Strength:
+			Strength++;
+			break;
+
+		case ET3StatType::Intelligence:
+			Intelligence++;
+			break;
+		}
+	}
+
+	// 모든 루프가 끝난 후 딱 한 번만 델리게이트 호출
+	BroadcastStatChange(StatType);
+	if (StatType == ET3StatType::Strength || StatType == ET3StatType::Intelligence)
+	{
+		BroadcastStatChange(ET3StatType::Attack);
+	}
+}
+
+float AT3CharacterBase::GetStatIncreasePreview(ET3StatType StatType, int32 TargetStatValue) const
+{
+	float Increase = 0.f;
 	switch (StatType)
 	{
-	case ET3StatType::Vigor: // Vigor 증가
-	{
-		float Increase = 15.f + (Vigor * 0.7f);
-		if (Vigor >= 30) Increase /= 3.f;
+	case ET3StatType::Vigor:
+		Increase = 15.f + (TargetStatValue * 0.7f);
+		if (TargetStatValue >= 30) Increase /= 3.f;
+		break;
 
-		Vigor++;
-		MaxHP += Increase;
-		CurrentHP += Increase; 
+	case ET3StatType::Endurance:
+		Increase = 10.f + (TargetStatValue * 0.5f);
+		if (TargetStatValue >= 30) Increase /= 3.f;
+		break;
+
+	case ET3StatType::Mind:
+		Increase = 10.f + (TargetStatValue * 0.7f);
+		if (TargetStatValue >= 30) Increase /= 3.f;
+		break;
+
+		// Strength나 Intelligence는 단순 수치 증가가 아니라 
+		// 무기 보정치 계산이 들어가니 일단 0이나 기본값 반환 후 별도 처리
+	default:
 		break;
 	}
-	case ET3StatType::Endurance: // Endurance 증가
-	{
-		float Increase = 10.f + (Endurance * 0.5f);
-		if (Endurance >= 30) Increase /= 3.f;
+	return Increase;
+}
 
-		Endurance++;
-		MaxStamina += Increase;
-		CurrentStamina += Increase;
-		break;
-	}
-	case ET3StatType::Mind: // Mind 증가
-	{
-		float Increase = 10.f + (Mind * 0.7f); 
-		if (Mind >= 30) Increase /= 3.f;
+int32 AT3CharacterBase::GetCalculatedLevel() const
+{
+	// 모든 핵심 스탯 합산
+	int32 StatSum = Vigor + Endurance + Mind + Strength + Intelligence;
 
-		Mind++;
-		MaxMana += Increase;
-		CurrentMana += Increase;
-		break;
-	}
-	case ET3StatType::Strength:
-		Strength++;
-		BroadcastStatChange(ET3StatType::Attack);
-		break;
+	int32 Level = StatSum - 39;
 
-	case ET3StatType::Intelligence:
-		Intelligence++;
-		BroadcastStatChange(ET3StatType::Attack);
-		break;
-	}
-
-	// 델리게이트 호출
-	BroadcastStatChange(StatType);
+	return FMath::Max(1, Level); // 최소 1레벨 보장
 }
 
 float AT3CharacterBase::GetAttackPower() const
