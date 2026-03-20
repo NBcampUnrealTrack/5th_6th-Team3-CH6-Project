@@ -341,12 +341,12 @@ void AT3MidBossMonster::ExecuteAoEDamage(float Radius, float DamageAmount, EHitI
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 			this, AoEEffect, AoECenter, GetActorRotation(), ScaleVec);
 	}
-	else
-	{
-		// Niagara 없을 때 임시 범위 표시
-		DrawDebugSphere(GetWorld(), AoECenter, Radius, 24,
-			FColor::Red, false, 1.5f, 0, 3.f);
-	}
+
+#if WITH_EDITOR
+	// 디버그 범위 표시 (빨간색) — 이펙트 유무와 무관하게 항상 표시
+	DrawDebugSphere(GetWorld(), AoECenter, Radius, 24,
+		FColor::Red, false, 1.5f, 0, 3.f);
+#endif
 
 	// AoE 사운드
 	if (AoESound)

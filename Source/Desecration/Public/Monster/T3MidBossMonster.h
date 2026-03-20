@@ -256,14 +256,25 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Skill")
 	TObjectPtr<UNiagaraSystem> AoEEffect;
 
+	// AoE 프리뷰 이펙트 (범위 표시용 — 데미지 없이 시각적 경고만)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Skill")
+	TObjectPtr<UNiagaraSystem> AoEPreviewEffect;
+
 	// AoE 이펙트 스케일 (BP에서 눈으로 보고 조절)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Skill", meta = (ClampMin = "0.1"))
 	float AoEEffectScale = 1.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Skill")
+	// AoE 프리뷰 사운드 (범위 경고음)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound")
+	TObjectPtr<USoundBase> AoEPreviewSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound")
+	float AoEPreviewVolumeMultiplier = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound")
 	TObjectPtr<USoundBase> AoESound;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Skill")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound")
 	float AoEVolumeMultiplier = 1.5f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Skill")
@@ -293,10 +304,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Parry")
 	float ParryWindowDuration = 1.5f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Parry")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound")
 	TObjectPtr<USoundBase> ParrySound;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Parry")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound")
 	float ParryVolumeMultiplier = 2.0f;
 
 	// --- 카메라 쉐이크 ---
@@ -378,7 +389,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Dissolve", meta = (EditCondition = "bEnableDissolve"))
 	FName DissolveParameterName = TEXT("Dissolve");
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Dissolve", meta = (EditCondition = "bEnableDissolve"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound", meta = (EditCondition = "bEnableDissolve"))
 	TObjectPtr<USoundBase> DissolveSound;
 
 	UFUNCTION(BlueprintCallable, Category = "MidBoss|Dissolve")
