@@ -23,23 +23,13 @@ void UT3SkillComponentBase::ExecuteSkill_Completed(int32 SkillSlot)
 
 void UT3SkillComponentBase::SetSkillSlot(int32 NewSkillID, bool bIsEquip)
 {
-    bool bFinalEquipState = false;
-
+    // 1. [장착/탈착 로직] 먼저 수행 (ID 값부터 확정 짓기)
     if (bIsEquip)
     {
-        // [장착 로직] 중복 검사
         if (CurrentSkillSlot == NewSkillID || NextSkillSlot == NewSkillID) return;
 
-        if (CurrentSkillSlot == 0)
-        {
-            CurrentSkillSlot = NewSkillID;
-            bFinalEquipState = true;
-        }
-        else if (NextSkillSlot == 0)
-        {
-            NextSkillSlot = NewSkillID;
-            bFinalEquipState = true;
-        }
+        if (CurrentSkillSlot == 0) { CurrentSkillSlot = NewSkillID; }
+        else if (NextSkillSlot == 0) { NextSkillSlot = NewSkillID; }
         else
         {
             UE_LOG(LogTemp, Warning, TEXT("슬롯이 꽉 찼습니다."));
@@ -48,38 +38,46 @@ void UT3SkillComponentBase::SetSkillSlot(int32 NewSkillID, bool bIsEquip)
     }
     else
     {
-        // [탈착 로직]
         if (CurrentSkillSlot == NewSkillID)
         {
             CurrentSkillSlot = NextSkillSlot; // 뒤에꺼 당겨오기
             NextSkillSlot = 0;
-            bFinalEquipState = false;
         }
         else if (NextSkillSlot == NewSkillID)
         {
             NextSkillSlot = 0;
-            bFinalEquipState = false;
         }
         else { return; }
     }
 
-    // 1. 장착 상태 맵 업데이트
-    SkillEquipStates.FindOrAdd(NewSkillID) = bFinalEquipState;
+    // 2. 장착 상태 데이터 업데이트
+    // NewSkillID의 장착 여부를 맵에 기록
+    SkillEquipStates.FindOrAdd(NewSkillID) = bIsEquip;
 
-    // 2. 인벤토리 UI를 위한 '장착 여부' 브로드캐스트 (E 아이콘 표시용)
-    if (OnSkillEquipStateChanged.IsBound())
-    {
-        OnSkillEquipStateChanged.Broadcast(NewSkillID, bFinalEquipState);
+    // 만약 탈착 시 Next가 Current로 올라갔다면, 그 스킬은 여전히 장착 상태임 (이미 true일 것)
 
-        // 메인 슬롯을 뺐을 때 Next가 Current로 올라갔다면, Next였던 스킬의 장착 상태도 UI가 알아야 함
-    }
-
-    // 3. 전투 UI(슬롯 이미지)를 위한 브로드캐스트
+    // 3. UI 알림 (안전하게 처리)
     if (OnSkillSlotUpdated.IsBound())
     {
-        OnSkillSlotUpdated.Broadcast(1, CurrentSkillSlot, *GetSkillDataByID(CurrentSkillSlot));
-        OnSkillSlotUpdated.Broadcast(2, NextSkillSlot, *GetSkillDataByID(NextSkillSlot));
+        // 1번 슬롯 처리
+        FSkillData* Data1 = GetSkillDataByID(CurrentSkillSlot);
+        // 포인터가 null이면 빈 구조체를 만들어서 '값'으로 넘김 (참조 에러 방지)
+        FSkillData SafeData1 = Data1 ? *Data1 : FSkillData();
+        OnSkillSlotUpdated.Broadcast(1, CurrentSkillSlot, SafeData1);
+
+        // 2번 슬롯 처리
+        FSkillData* Data2 = GetSkillDataByID(NextSkillSlot);
+        FSkillData SafeData2 = Data2 ? *Data2 : FSkillData();
+        OnSkillSlotUpdated.Broadcast(2, NextSkillSlot, SafeData2);
     }
+
+    // 4. 인벤토리 E 아이콘 갱신용 알림
+    if (OnSkillEquipStateChanged.IsBound())
+    {
+        OnSkillEquipStateChanged.Broadcast(NewSkillID, bIsEquip);
+    }
+
+    UE_LOG(LogTemp, Log, TEXT("Slot Update Complete - S1: %d, S2: %d"), CurrentSkillSlot, NextSkillSlot);
 }
 
 int32 UT3SkillComponentBase::GetSkillIDBySlotIndex(int32 Index) const

@@ -34,11 +34,16 @@ enum class ET3StatType : uint8
 	MoveSpeed       UMETA(DisplayName = "Move Speed"),
 
 	// --- 핵심 스탯 ---
-	Vigor           UMETA(DisplayName = "Vigor"),        // 체력 스탯 (HP량 결정)
-	Endurance       UMETA(DisplayName = "Endurance"),    // 기력 스탯 (스테미나량 결정)
-	Mind            UMETA(DisplayName = "Mind"),         // 정신력 스탯 (MP량 결정)
-	Strength        UMETA(DisplayName = "Strength"),     // 근력 스탯 (물리공격력 결정)
-	Intelligence    UMETA(DisplayName = "Intelligence")  // 지력 스탯 (마법공격력 결정)
+	// 체력 스탯 (HP량 결정)
+	Vigor           UMETA(DisplayName = "Vigor"),       
+	// 기력 스탯 (스테미나량 결정)
+	Endurance       UMETA(DisplayName = "Endurance"),    
+	// 정신력 스탯 (MP량 결정)
+	Mind            UMETA(DisplayName = "Mind"),      
+	// 근력 스탯 (물리공격력 결정)
+	Strength        UMETA(DisplayName = "Strength"),     
+	// 지력 스탯 (마법공격력 결정)
+	Intelligence    UMETA(DisplayName = "Intelligence")  
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnStatChangedDelegate, ET3StatType, StatType, float, CurrentValue, float, MaxValue);
@@ -155,7 +160,6 @@ public:
 	void OnEquipmentStatsUpdated(float Atk, float Def, float WeaponLevel);
 
 
-	// Stat 관련
 
 protected:
 	// 캐릭터 스탯 (고정값)
@@ -410,7 +414,7 @@ public:
 
 		// 장비 강화 수치 (지력/근력 반영용)
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat|Equipment")
-		float EquipmentEnhanceValue = 0.0f;
+		float WeaponLevel = 0;
 
 	public:
 
@@ -425,8 +429,17 @@ public:
 		UFUNCTION(BlueprintCallable, Category = "Stat|Logic")
 		void UpgradeStat(ET3StatType StatType);
 
+		UFUNCTION(BlueprintCallable, Category = "Stat|Logic")
+		void SetWeaponLevel(float CurrentWeaponLevel) { WeaponLevel = CurrentWeaponLevel; BroadcastStatChange(ET3StatType::Attack);}
 
-private:
-	// 내부 수치 재계산 함수
-	void RecalculateDerivedStats();
+
+		// === 낙사 관련 로직
+		protected:
+			// 땅에 착지했을 때 호출되는 엔진 오버라이드 함수
+			virtual void Landed(const FHitResult& Hit) override;
+
+			// 사망에 이르는 최소 하강 속도 (마이너스 값)
+			UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+			float MinDeathVelocity = -1500.f;
+
 };
