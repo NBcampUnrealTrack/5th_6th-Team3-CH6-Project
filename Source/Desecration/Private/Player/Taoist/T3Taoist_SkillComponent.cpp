@@ -176,6 +176,12 @@ void UT3Taoist_SkillComponent::SpawnTalisman()
         return;
     }
 
+    if (OwnerChar->GetCurrentStamina() < 10.f)
+    {
+        UE_LOG(LogTemp, Display, TEXT("You need Stamina"));
+        return;
+    }
+
     UWorld* World = GetWorld();
     if (World)
     {
@@ -229,7 +235,8 @@ void UT3Taoist_SkillComponent::SpawnTalisman()
             PlaySkillEffectSound(AttackSound);
             PlaySkillEffectSound(AttackVoice);
 
-
+            // 스태미나 10 소모
+            OwnerChar->GetCombatComponent()->ConsumeStamina(10.f);
         }
     }
 }
@@ -602,7 +609,7 @@ void UT3Taoist_SkillComponent::SpawnCharmInternal(AActor* Spawner, const FSkillD
     if (!Spawner || !SkillData.ProjectileClass) return;
 
     // 분신술이면 2개, 아니면 1개
-    int32 Count = (&SkillData == &ShadowCloneData) ? 2 : 1;
+    int32 Count = (&SkillData == &ShadowCloneData) ? CloneCount : 1;
 
     for (int32 i = 0; i < Count; i++)
     {
@@ -662,5 +669,25 @@ void UT3Taoist_SkillComponent::SetCloneAttackBonus(float NewAttackBonus)
         {
             Clone->CloneAttackBonus = NewAttackBonus;
         }
+    }
+}
+
+void UT3Taoist_SkillComponent::SetCloneCount(int32 NewCount)
+{
+    CloneCount = NewCount;
+}
+
+void UT3Taoist_SkillComponent::RemoveLastActiveClone()
+{
+    if (ActiveClones.Num() == 0)
+    {
+        return;
+    }
+
+    int32 LastIndex = ActiveClones.Num() - 1;
+
+    if (IsValid(ActiveClones[LastIndex]))
+    {
+        ActiveClones[LastIndex]->Destroy();
     }
 }
