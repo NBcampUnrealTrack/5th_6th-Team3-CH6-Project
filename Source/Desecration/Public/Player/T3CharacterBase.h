@@ -34,11 +34,16 @@ enum class ET3StatType : uint8
 	MoveSpeed       UMETA(DisplayName = "Move Speed"),
 
 	// --- 핵심 스탯 ---
-	Vigor           UMETA(DisplayName = "Vigor"),        // 체력 스탯 (HP량 결정)
-	Endurance       UMETA(DisplayName = "Endurance"),    // 기력 스탯 (스테미나량 결정)
-	Mind            UMETA(DisplayName = "Mind"),         // 정신력 스탯 (MP량 결정)
-	Strength        UMETA(DisplayName = "Strength"),     // 근력 스탯 (물리공격력 결정)
-	Intelligence    UMETA(DisplayName = "Intelligence")  // 지력 스탯 (마법공격력 결정)
+	// 체력 스탯 (HP량 결정)
+	Vigor           UMETA(DisplayName = "Vigor"),       
+	// 기력 스탯 (스테미나량 결정)
+	Endurance       UMETA(DisplayName = "Endurance"),    
+	// 정신력 스탯 (MP량 결정)
+	Mind            UMETA(DisplayName = "Mind"),      
+	// 근력 스탯 (물리공격력 결정)
+	Strength        UMETA(DisplayName = "Strength"),     
+	// 지력 스탯 (마법공격력 결정)
+	Intelligence    UMETA(DisplayName = "Intelligence")  
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnStatChangedDelegate, ET3StatType, StatType, float, CurrentValue, float, MaxValue);
@@ -78,9 +83,17 @@ protected:
 	virtual void Tick( float DeltaTime ) override;
 	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
 	
+	/**
+	 * CharacterData가 null이면 게임 인스턴스를 통해 할당한다.
+	 * @return 이미 할당된 상태 또는 할당에 성공시 true, 그 외에는 false
+	 */
+	bool CheckCharacterData();
+	
 	// 스탯 변경 시 내부적으로 델리게이트를 호출해주는 헬퍼 함수
 	void BroadcastStatChange(ET3StatType StatType);
 
+	//캐릭터 데이터
+	//평소 플레이시 이 값을 비워 게임 인스턴스를 참조하도록 만고 테스트시에만 할당
 	UPROPERTY(EditAnywhere, Category = "Character Data")
 	TObjectPtr<class UT3CharacterDataAsset> CharacterData;
 
@@ -155,7 +168,6 @@ public:
 	void OnEquipmentStatsUpdated(float Atk, float Def, float WeaponLevel);
 
 
-	// Stat 관련
 
 protected:
 	// 캐릭터 스탯 (고정값)
@@ -223,7 +235,7 @@ public:
 
 	// Attack
 	UFUNCTION(BlueprintCallable, Category = "Stat")
-	virtual float GetAttackPower() const;
+	virtual float GetAttackPower();
 	FORCEINLINE void SetAttackPower(float NewPower) { AttackPower = NewPower; BroadcastStatChange(ET3StatType::Attack);}
 
 	// Defense
@@ -255,7 +267,8 @@ public:
 	void RestoreMP(float Amount);
 
 	// 클래스
-	FORCEINLINE ECharacterClass GetCurrentClass() const { return CurrentClass; }
+	UFUNCTION(BlueprintCallable)
+	ECharacterClass GetCurrentClass() const { return CurrentClass; }
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Class")
@@ -407,7 +420,10 @@ public:
 
 		// 장비 강화 수치 (지력/근력 반영용)
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat|Equipment")
-		float EquipmentEnhanceValue = 0.0f;
+		float WeaponLevel = 0;
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+		int32 CharacterLevel = 1;
 
 	public:
 
@@ -418,12 +434,31 @@ public:
 		FORCEINLINE int32 GetStrength() const { return Strength; }
 		FORCEINLINE int32 GetIntelligence() const { return Intelligence; }
 
+		UFUNCTION(BlueprintCallable, Category = "Stat")
+		int32 GetCharacterLevel() const { return CharacterLevel; }
+
+		// 현재 스탯 총합을 기반으로 계산된 레벨
+		UFUNCTION(BlueprintPure, Category = "Stat|Logic")
+		int32 GetCalculatedLevel() const;
+
 		// 스탯 투자 시 호출할 함수
 		UFUNCTION(BlueprintCallable, Category = "Stat|Logic")
-		void UpgradeStat(ET3StatType StatType);
+		void UpgradeStat(ET3StatType StatType, int32 Amount);
+
+		UFUNCTION(BlueprintPure, Category = "Stat|Logic")
+		float GetStatIncreasePreview(ET3StatType StatType, int32 TargetStatValue) const;
+
+		UFUNCTION(BlueprintCallable, Category = "Stat|Logic")
+		void SetWeaponLevel(float CurrentWeaponLevel) { WeaponLevel = CurrentWeaponLevel; BroadcastStatChange(ET3StatType::Attack);}
 
 
-private:
-	// 내부 수치 재계산 함수
-	void RecalculateDerivedStats();
+		// === 낙사 관련 로직
+		protected:
+			// 땅에 착지했을 때 호출되는 엔진 오버라이드 함수
+			virtual void Landed(const FHitResult& Hit) override;
+
+			// 사망에 이르는 최소 하강 속도 (마이너스 값)
+			UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+			float MinDeathVelocity = -1500.f;
+
 };

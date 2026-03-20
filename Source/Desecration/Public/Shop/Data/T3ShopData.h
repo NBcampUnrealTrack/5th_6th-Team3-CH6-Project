@@ -29,4 +29,7 @@ struct FT3ShopData : public FTableRowBase
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data", meta = (MultiLine = true))
 	FText ItemInfo = FText::GetEmpty();
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
+	ECharacterClass CharacterClass = ECharacterClass::None;
 };

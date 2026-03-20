@@ -4,10 +4,11 @@
 #include "GameFramework/PlayerController.h"
 #include "T3SelectClassPlayerController.generated.h"
 
+
 class UT3SelectClassWidget;
 class AT3SelectClassGameMode;
 class UT3GameInstance;
-enum class EPlayerClass;
+enum class ECharacterClass : uint8;
 
 UCLASS()
 class DESECRATION_API AT3SelectClassPlayerController : public APlayerController
@@ -19,7 +20,7 @@ protected:
 	
 public:
 	//튜토리얼 시작
-	void TutorialStart(const FString& PlayerName, const EPlayerClass SelectedPlayerClass);
+	void TutorialStart(const FString& PlayerName, const ECharacterClass SelectedPlayerClass);
 	
 	//타이틀 화면으로
 	void ReturnToTitleLevel();

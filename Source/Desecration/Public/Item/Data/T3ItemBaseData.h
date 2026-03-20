@@ -9,7 +9,8 @@ enum class EItemType : uint8
 {
 	None,
 	Rune,
-	Consumable
+	Consumable,
+	Etc
 };
 
 USTRUCT(BlueprintType)
@@ -25,4 +26,7 @@ struct DESECRATION_API FT3ItemBaseData
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
 	EItemType ItemType = EItemType::None;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
+	FText Description = FText::GetEmpty();
 };

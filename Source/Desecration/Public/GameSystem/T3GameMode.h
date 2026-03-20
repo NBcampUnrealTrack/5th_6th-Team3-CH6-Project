@@ -4,10 +4,11 @@
 #include "GameFramework/GameMode.h"
 #include "T3GameMode.generated.h"
 
+class UT3CharacterDataAsset;
 class AT3LostMoney;
 class UT3GameInstance;
 class AT3CharacterBase;
-enum class EPlayerClass;
+enum class ECharacterClass : uint8;
 enum class ELevelName : uint8;
 
 UCLASS()
@@ -25,7 +26,7 @@ private:
 public:
 	//캐릭터의 클래스
 	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
-	EPlayerClass GetPlayerClass();
+	ECharacterClass GetPlayerClass();
 	
 	//게임 저장하기 (true : 저장 성공)
 	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
@@ -46,6 +47,10 @@ public:
 	//게임 오버에 대한 처리
 	UFUNCTION(BlueprintCallable, Category = "Game Over")
 	bool YouHaveBeenCorrupted(const AT3CharacterBase* Character) const;
+	
+	//개발용 : 그 자리에서 즉시 저장
+	UFUNCTION(BlueprintCallable, Category = "Test")
+	void InstantSave();
 	
 private:
 	//잃어버린 재화 액터
