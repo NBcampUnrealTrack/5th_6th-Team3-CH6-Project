@@ -8,15 +8,7 @@
 
 void UT3SaveGame::ResetGameData()
 {
-	//스탯 초기화를 위한 게임 인스턴스
-	// TObjectPtr<UT3GameInstance> T3GameInstance = Cast<UT3GameInstance>(GetWorld()->GetGameInstance());
-	// if (!T3GameInstance)
-	// {
-	// 	UE_LOG(LogTemp, Error, TEXT("%s : T3GameInstance is NULL"), *GetNameSafe(this));
-	// 	return;
-	// }
-	
-	PlayerClass = EPlayerClass::None;
+	PlayerClass = ECharacterClass::Paladin;
 	PlayerName = TEXT("");
 	//캐릭터 위치
 	SavedLevelName = ELevelName::Tutorial;
@@ -26,9 +18,7 @@ void UT3SaveGame::ResetGameData()
 	//물체 상태
 	LevelObjectStates.Empty();
 	
-	//스탯
-	//TODO : 하드코딩된 초기 스탯 수정하기
-	//const TObjectPtr<UT3CharacterDataAsset> CharacterData = T3GameInstance->GetCharacterData();
+	//스탯 : 이 값은 초기 생성용 임시 값
 	MaxHP = 150.0f;
 	CurrentHP = MaxHP;
 	MaxMana = 100.0f;
