@@ -4,6 +4,7 @@
 #include "GameFramework/GameMode.h"
 #include "T3GameMode.generated.h"
 
+class UT3CharacterDataAsset;
 class AT3LostMoney;
 class UT3GameInstance;
 class AT3CharacterBase;
@@ -26,6 +27,10 @@ public:
 	//캐릭터의 클래스
 	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
 	ECharacterClass GetPlayerClass();
+	
+	//캐릭터의 클래스를 기반으로 캐릭터 데이터 에셋을 가져온다
+	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
+	UT3CharacterDataAsset* GetCharacterDataAsset();
 	
 	//게임 저장하기 (true : 저장 성공)
 	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")

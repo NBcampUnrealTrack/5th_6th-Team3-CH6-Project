@@ -5,6 +5,7 @@
 #include "GlobalEnums.h"
 #include "T3GameInstance.generated.h"
 
+enum class ECharacterClass : uint8;
 class UT3SaveLostMoney;
 class UT3SaveUserSettings;
 class UT3CharacterDataAsset;
@@ -70,6 +71,9 @@ public:
 	
 	//잃어버린 재화 정보 불러오기
 	bool LoadLostMoney();
+	
+	//지정한 캐릭터 클래스에 해당되는 데이터 에셋
+	UT3CharacterDataAsset* GetCharacterDataAsset(const ECharacterClass CharacterClass);
 
 	/**
 	 * 레벨(맵) 이동하기
@@ -93,9 +97,6 @@ public:
 	
 	//잃어버린 재화
 	FORCEINLINE TObjectPtr<UT3SaveLostMoney> GetLostMoneyData() { return LostMoneyData; }
-	
-	//캐릭터 데이터
-	FORCEINLINE TObjectPtr<UT3CharacterDataAsset> GetCharacterData() { return CharacterData; }
 	
 	//배경음 사운드 클래스
 	FORCEINLINE TObjectPtr<USoundClass> GetSoundClassBGM() { return SoundClassBGM; }
@@ -128,9 +129,11 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Sound Class", meta = (AllowPrivateAccess = true))
 	TObjectPtr<USoundClass> SoundClassBGM;
 	
+
 	//캐릭터 데이터
+	//할당 순서는 T3PlayerInputState.h에서 ECharacterClass를 참고할 것
 	UPROPERTY(EditDefaultsOnly, Category = "Character Data", meta = (AllowPrivateAccess = true))
-	TObjectPtr<UT3CharacterDataAsset> CharacterData;
+	TArray<TSoftObjectPtr<UT3CharacterDataAsset>> CharacterData;
 
 	// T3GameInstance.h
 	UPROPERTY(EditAnywhere, Category = "Level Settings")

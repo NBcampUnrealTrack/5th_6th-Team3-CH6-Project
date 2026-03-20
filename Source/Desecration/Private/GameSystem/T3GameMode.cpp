@@ -59,8 +59,25 @@ void AT3GameMode::MakeLostMoneyActors()
 
 ECharacterClass AT3GameMode::GetPlayerClass()
 {
+	if (!T3GameInstance)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : T3GameInstance가 NULL"), *GetNameSafe(this));
+		return ECharacterClass::Paladin;
+	}
+	
 	const TObjectPtr<UT3SaveGame> SaveGame = T3GameInstance->GetSavedGameData();
 	return SaveGame->PlayerClass;
+}
+
+UT3CharacterDataAsset* AT3GameMode::GetCharacterDataAsset()
+{
+	if (!T3GameInstance)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : T3GameInstance가 NULL"), *GetNameSafe(this));
+		return nullptr;
+	}
+	
+	return T3GameInstance->GetCharacterDataAsset(GetPlayerClass());
 }
 
 bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName LevelName, const bool bTemporarySave)
