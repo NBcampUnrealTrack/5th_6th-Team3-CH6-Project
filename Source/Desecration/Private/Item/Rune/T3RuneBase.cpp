@@ -16,3 +16,12 @@ bool UT3RuneBase::CanUnsocket() const
 {
 	return true;
 }
+
+float UT3RuneBase::GetCooldownRemaining() const
+{
+	return 0.0f;
+}
+
+void UT3RuneBase::RestoreCooldown(float RemainingTime)
+{
+}
