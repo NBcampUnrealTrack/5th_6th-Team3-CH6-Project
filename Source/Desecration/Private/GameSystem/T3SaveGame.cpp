@@ -60,7 +60,9 @@ void UT3SaveGame::ResetGameData()
 	ArmorSaveData.Level = 0;
 	ArmorSaveData.Type = ET3EquipmentType::Armor;
 	
-	//TODO : 스킬 초기화
+	//스킬
+	SkillUnlockStates.Empty();
+	CurrentSkillSlot = NextSkillSlot = 0;
 }
 
 void UT3SaveGame::SetStatByCharacterData(const TObjectPtr<UT3CharacterDataAsset> CharacterData)

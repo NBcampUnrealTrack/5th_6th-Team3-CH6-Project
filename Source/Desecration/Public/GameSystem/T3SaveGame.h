@@ -144,13 +144,16 @@ public:
 #pragma endregion
 
 #pragma region 스킬
-	//TODO : 스킬 타입 및 이름에 맞게 변경하기
-	//보유 스킬
+	//보유중인 스킬 정보
 	UPROPERTY()
-	TArray<int32> OwnedSkills;
+	TMap<int32, bool> SkillUnlockStates;
 	
-	//스킬 슬롯
+	//현재 스킬
 	UPROPERTY()
-	TArray<int32> EquippedSkills;
+	int32 CurrentSkillSlot;
+	
+	//다음 스킬
+	UPROPERTY()
+	int32 NextSkillSlot;
 #pragma endregion
 };
