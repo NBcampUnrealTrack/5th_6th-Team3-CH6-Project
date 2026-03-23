@@ -48,6 +48,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Game Over")
 	bool YouHaveBeenCorrupted(const AT3CharacterBase* Character) const;
 	
+	//개발용 : 그 자리에서 즉시 저장
+	UFUNCTION(BlueprintCallable, Category = "Test")
+	void InstantSave();
+	
 private:
 	//잃어버린 재화 액터
 	UPROPERTY(EditDefaultsOnly, Category = "Game Over", meta = (AllowPrivateAccess = true))
