@@ -11,6 +11,22 @@ class UT3SaveUserSettings;
 class UT3CharacterDataAsset;
 class UT3SaveGame;
 
+// 세이브 포인트의 상세 정보를 담는 구조체 추가
+USTRUCT(BlueprintType)
+struct FSavePointData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsUnlocked = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector SaveLocation = FVector::ZeroVector;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FRotator SaveRotation = FRotator::ZeroRotator;
+};
+
 USTRUCT(BlueprintType)
 struct FLevelProgressData
 {
@@ -19,8 +35,9 @@ struct FLevelProgressData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bLevelUnlocked = false;
 
+	// bool 대신 FSavePointData 구조체를 사용하도록 변경
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TMap<FName, bool> SavePoints;
+	TMap<FName, FSavePointData> SavePoints;
 };
 
 UCLASS()
@@ -56,9 +73,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void UnlockLevel(ELevelName LevelName);
 
-	// 세이브포인트 해금
+	// 세이브포인트 해금 (위치/회전 정보 포함 버전으로 업데이트)
 	UFUNCTION(BlueprintCallable)
-	void UnlockSavePoint(ELevelName LevelName, FName SavePointID);
+	void UnlockSavePoint(ELevelName LevelName, FName SavePointID, FVector Location, FRotator Rotation);
 
 	// 레벨 해금 체크
 	UFUNCTION(BlueprintPure)
@@ -67,6 +84,10 @@ public:
 	// 세이브포인트 해금 체크
 	UFUNCTION(BlueprintPure)
 	bool IsSavePointUnlocked(ELevelName LevelName, FName SavePointID);
+	
+	// 특정 세이브 포인트의 위치 정보 가져오기 (이동 구현용)
+	UFUNCTION(BlueprintPure)
+	bool GetSavePointTransform(ELevelName LevelName, FName SavePointID, FVector& OutLocation, FRotator& OutRotation);
 	
 	
 private:

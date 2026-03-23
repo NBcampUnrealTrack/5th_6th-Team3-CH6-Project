@@ -218,19 +218,24 @@ void UT3GameInstance::UnlockLevel(ELevelName LevelName)
 }
 
 // ===== 세이브포인트 해금 =====
-void UT3GameInstance::UnlockSavePoint(ELevelName LevelName, FName SavePointID)
+void UT3GameInstance::UnlockSavePoint(ELevelName LevelName, FName SavePointID, FVector Location, FRotator Rotation)
 {
+    // 1. 해당 레벨 데이터가 없으면 새로 생성
 	if (!LevelProgressMap.Contains(LevelName))
 	{
-		FLevelProgressData NewData;
-		NewData.bLevelUnlocked = true; // 세이브포인트 열리면 레벨도 열린 걸로
-		NewData.SavePoints.Add(SavePointID, true);
-		LevelProgressMap.Add(LevelName, NewData);
+		FLevelProgressData NewLevelData;
+		NewLevelData.bLevelUnlocked = true;
+		LevelProgressMap.Add(LevelName, NewLevelData);
 	}
-	else
-	{
-		LevelProgressMap[LevelName].SavePoints.Add(SavePointID, true);
-	}
+
+    // 2. 세이브 포인트 데이터 구성
+    FSavePointData PointData;
+    PointData.bIsUnlocked = true;
+    PointData.SaveLocation = Location;
+    PointData.SaveRotation = Rotation;
+
+    // 3. 맵에 추가 또는 갱신
+	LevelProgressMap[LevelName].SavePoints.Add(SavePointID, PointData);
 }
 
 // ===== 레벨 해금 여부 =====
@@ -248,10 +253,28 @@ bool UT3GameInstance::IsSavePointUnlocked(ELevelName LevelName, FName SavePointI
 {
 	if (LevelProgressMap.Contains(LevelName))
 	{
-		if (LevelProgressMap[LevelName].SavePoints.Contains(SavePointID))
+		if (const FSavePointData* PointData = LevelProgressMap[LevelName].SavePoints.Find(SavePointID))
 		{
-			return LevelProgressMap[LevelName].SavePoints[SavePointID];
+			return PointData->bIsUnlocked;
 		}
 	}
 	return false;
+}
+
+// ===== 특정 세이브 포인트 위치 정보 가져오기 (추가) =====
+bool UT3GameInstance::GetSavePointTransform(ELevelName LevelName, FName SavePointID, FVector& OutLocation, FRotator& OutRotation)
+{
+    if (LevelProgressMap.Contains(LevelName))
+    {
+        if (const FSavePointData* PointData = LevelProgressMap[LevelName].SavePoints.Find(SavePointID))
+        {
+            if (PointData->bIsUnlocked)
+            {
+                OutLocation = PointData->SaveLocation;
+                OutRotation = PointData->SaveRotation;
+                return true;
+            }
+        }
+    }
+    return false;
 }
