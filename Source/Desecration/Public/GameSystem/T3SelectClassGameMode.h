@@ -4,7 +4,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "T3SelectClassGameMode.generated.h"
 
-enum class EPlayerClass;
+enum class ECharacterClass : uint8;
 class UT3GameInstance;
 
 UCLASS()
@@ -17,7 +17,7 @@ protected:
 	
 public:
 	//시작 데이터 생성하기
-	void MakeFirstGameData(const FString& PlayerName, const EPlayerClass SelectedPlayerClass);
+	void MakeFirstGameData(const FString& PlayerName, const ECharacterClass SelectedPlayerClass);
 	
 	//튜토리얼 시작
 	void TutorialStart();

@@ -14,7 +14,19 @@ public:
 	
 	virtual void OnUnsocketed_Implementation(AT3CharacterBase* OwnerChar) override;
 	
+	virtual void SetGrade(ET3RuneGrade InGrade) override;
+	
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Value")
-	float ValueByGrade = 10.0f;
+	float CloneAttackBonusPercentNormal = 10.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
+	float CloneAttackBonusPercentEpic = 20.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
+	float CloneAttackBonusPercentLegendary = 30.0f;
+	
+	int32 OriginalCloneCount = 0;
+	
+	uint8 bIsLegendary : 1 = false;
 };

@@ -107,8 +107,14 @@ public:
 public:
 	void SetPassiveHealBonus(float NewHealBonus);
 	
+	FORCEINLINE int32 GetTriggerAttackCount() const { return TriggerAttackCount; }
+	
+	void SetTriggerAttackCount(int32 NewCount);
+
 private:
 	float PassiveHealBonus = 0.0f;
 	
+	UPROPERTY(EditDefaultsOnly, Category = "Rune")
+	int32 TriggerAttackCount = 4;
 #pragma endregion
 };

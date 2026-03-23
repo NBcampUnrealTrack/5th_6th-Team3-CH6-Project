@@ -23,6 +23,10 @@ public:
 	
 	virtual bool CanUnsocket() const;
 	
+	virtual float GetCooldownRemaining() const;
+	
+	virtual void RestoreCooldown(float RemainingTime);
+
 protected:
 	float ValueByGrade = 0.0f;
 };

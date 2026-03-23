@@ -14,7 +14,18 @@ public:
 	
 	virtual void OnUnsocketed_Implementation(AT3CharacterBase* OwnerChar) override;
 	
+	virtual void SetGrade(ET3RuneGrade InGrade) override;
+	
 private:
+	UPROPERTY(EditDefaultsOnly, Category = "Value|Count")
+	int32 TriggerAttackCount = 3;
+	
 	UPROPERTY(EditDefaultsOnly, Category = "Value")
-	float ValueByGrade = 1.5f;
+	float AttackBonusDamagePercentNormal = 30.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
+	float AttackBonusDamagePercentEpic = 50.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Value")
+	float AttackBonusDamagePercentLegendary = 70.0f;
 };

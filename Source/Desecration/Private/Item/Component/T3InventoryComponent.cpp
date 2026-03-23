@@ -8,6 +8,7 @@ UT3InventoryComponent::UT3InventoryComponent()
 	:
 InventorySize(20),
 RuneInventorySize(20),
+EtcInventorySize(20),
 Money(0),
 NormalStoneCount(0),
 EpicStoneCount(0),
@@ -26,6 +27,7 @@ PotionRecoveryUpgradeLevel(0)
 	
 	Items.SetNum(InventorySize);
 	RuneItems.SetNum(RuneInventorySize);
+	EtcItems.SetNum(EtcInventorySize);
 }
 
 void UT3InventoryComponent::BeginPlay()
@@ -334,7 +336,7 @@ bool UT3InventoryComponent::RemoveItemByCount(const FName& ItemName, int32 Count
 		{
 			if (Item.ItemStack < Count)
 			{
-				UE_LOG(LogTemp, Error, TEXT("보유한 아이템 개수보다 파는 아이템이 많음"));
+				UE_LOG(LogTemp, Error, TEXT("보유한 아이템 개수보다 제거하는 소모품 아이템이 많음"));
 				return false;
 			}
 			
@@ -394,7 +396,7 @@ bool UT3InventoryComponent::RemoveRuneItemByCount(const FName& ItemName, int32 C
 		{
 			if (RuneItem.ItemStack < Count)
 			{
-				UE_LOG(LogTemp, Error, TEXT("보유한 아이템 개수보다 파는 아이템이 많음"));
+				UE_LOG(LogTemp, Error, TEXT("보유한 아이템 개수보다 제거하는 룬 아이템이 많음"));
 				return false;
 			}
 			
@@ -406,6 +408,61 @@ bool UT3InventoryComponent::RemoveRuneItemByCount(const FName& ItemName, int32 C
 				RuneItem.ItemStack = 0;
 			}
 			OnRuneInventoryUpdated.Broadcast();
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+void UT3InventoryComponent::AddEtcItemByCount(const FName& ItemName, int32 Count)
+{
+	for (FInventorySlot& EtcItem : EtcItems)
+	{
+		if (EtcItem.ItemID == ItemName)
+		{
+			EtcItem.ItemStack += Count;
+			
+			UE_LOG(LogTemp, Log, TEXT("[%s] %d개 추가됨"), *EtcItem.ItemID.ToString(), Count);
+			
+			OnEtcInventoryUpdated.Broadcast();
+			return;
+		}
+	}
+	
+	for (FInventorySlot& EtcItem : EtcItems)
+	{
+		if (EtcItem.ItemID == NAME_None)
+		{
+			EtcItem.ItemID = ItemName;
+			EtcItem.ItemStack = Count;
+			
+			OnEtcInventoryUpdated.Broadcast();
+			return;
+		}
+	}
+}
+
+bool UT3InventoryComponent::RemoveEtcItemByCount(const FName& ItemName, int32 Count)
+{
+	for (FInventorySlot& EtcItem : EtcItems)
+	{
+		if (EtcItem.ItemID == ItemName)
+		{
+			if (EtcItem.ItemStack < Count)
+			{
+				UE_LOG(LogTemp, Error, TEXT("보유한 아이템 개수보다 제거하는 기타 아이템이 많음"));
+				return false;
+			}
+			
+			EtcItem.ItemStack -= Count;
+			
+			if (EtcItem.ItemStack <= 0)
+			{
+				EtcItem.ItemID = NAME_None;
+				EtcItem.ItemStack = 0;
+			}
+			OnEtcInventoryUpdated.Broadcast();
 			return true;
 		}
 	}
