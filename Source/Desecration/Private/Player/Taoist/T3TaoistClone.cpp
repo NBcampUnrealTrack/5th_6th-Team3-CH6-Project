@@ -126,7 +126,7 @@ void AT3TaoistClone::InitializeClone(AT3CharacterBase* InOwner)
 
 }
 
-float AT3TaoistClone::GetAttackPower() const
+float AT3TaoistClone::GetAttackPower()
 {
     // 본체 공격력의 30% 반환
     return (OwnerCharacter->GetAttackPower() * 0.3f) + (OwnerCharacter->GetAttackPower() * CloneAttackBonus / 100.0f);

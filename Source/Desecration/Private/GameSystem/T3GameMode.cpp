@@ -8,6 +8,7 @@
 #include "Item/Component/T3InventoryComponent.h"
 #include "Player/T3CharacterBase.h"
 #include "Player/T3CombatComponent.h"
+#include "Player/T3PlayerController.h"
 #include "Player/T3SkillComponentBase.h"
 
 void AT3GameMode::BeginPlay()
@@ -57,8 +58,14 @@ void AT3GameMode::MakeLostMoneyActors()
 	}
 }
 
-EPlayerClass AT3GameMode::GetPlayerClass()
+ECharacterClass AT3GameMode::GetPlayerClass()
 {
+	if (!T3GameInstance)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : T3GameInstance가 NULL"), *GetNameSafe(this));
+		return ECharacterClass::Paladin;
+	}
+	
 	const TObjectPtr<UT3SaveGame> SaveGame = T3GameInstance->GetSavedGameData();
 	return SaveGame->PlayerClass;
 }
@@ -69,6 +76,7 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	const TObjectPtr<UT3SaveGame> SaveGame = T3GameInstance->GetSavedGameData();
 	if (!SaveGame)
 	{
+		UE_LOG(LogTemp, Error, TEXT("%s : SaveGame이 NULL"), *GetNameSafe(this));
 		return false;
 	}
 	//현재 위치
@@ -157,6 +165,7 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 {
 	if (!Character)
 	{
+		UE_LOG(LogTemp, Error, TEXT("%s : Character가 null"), *GetNameSafe(this));
 		return;
 	}
 
@@ -166,6 +175,7 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 		T3GameInstance = Cast<UT3GameInstance>(GetGameInstance());
 		if (!T3GameInstance)
 		{
+			UE_LOG(LogTemp, Error, TEXT("%s : GameInstance가 null"), *GetNameSafe(this));
 			return;
 		}
 	}
@@ -175,7 +185,7 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 
 	// 위치 설정 (타이머를 사용하여 지연 실행)
 	// 랜드스케이프가 렌더링/물리 데이터를 준비할 시간을 0.2초 정도 벌어줍니다.
-#ifdef IF_WITH_EDITOR
+#ifdef WITH_EDITOR
 	if (!T3GameInstance->bDoNotMoveCharacterBySavedData && SaveGame->bSetLocation)
 #else
 	if (SaveGame->bSetLocation)
@@ -292,4 +302,33 @@ bool AT3GameMode::YouHaveBeenCorrupted(const AT3CharacterBase* Character) const
 	T3GameInstance->OpenLevelBySavedData();
 	
 	return true;
+}
+
+void AT3GameMode::InstantSave()
+{
+#if WITH_EDITOR
+	if (!T3GameInstance)
+	{
+		return;
+	}
+	
+	TObjectPtr<AT3PlayerController> T3Controller = Cast<AT3PlayerController>(GetWorld()->GetFirstPlayerController());
+	if (!T3Controller)
+	{
+		return;
+	}
+	
+	TObjectPtr<AT3CharacterBase> Character = Cast<AT3CharacterBase>(T3Controller->GetPawn());
+	if (!Character)
+	{
+		return;
+	}
+	
+	if (SaveGame(Character, T3GameInstance->GetCurrentLevel(), false))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("즉시 저장 성공"));
+	}
+#else
+	return;
+#endif
 }

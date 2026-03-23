@@ -31,7 +31,7 @@ public:
     FORCEINLINE class AT3CharacterBase* GetOwnerCharacter() const { return OwnerCharacter; }
 
     // 공격력 보정 (본체의 30%)
-    virtual float GetAttackPower() const override;
+    virtual float GetAttackPower() override;
 protected:
     virtual void BeginPlay() override;
     virtual void Destroyed() override;
