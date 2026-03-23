@@ -83,6 +83,12 @@ protected:
 	virtual void Tick( float DeltaTime ) override;
 	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
 	
+	/**
+	 * CharacterData가 null이면 게임 인스턴스를 통해 할당한다.
+	 * @return 이미 할당된 상태 또는 할당에 성공시 true, 그 외에는 false
+	 */
+	bool CheckCharacterData();
+	
 	// 스탯 변경 시 내부적으로 델리게이트를 호출해주는 헬퍼 함수
 	void BroadcastStatChange(ET3StatType StatType);
 
@@ -229,7 +235,7 @@ public:
 
 	// Attack
 	UFUNCTION(BlueprintCallable, Category = "Stat")
-	virtual float GetAttackPower() const;
+	virtual float GetAttackPower();
 	FORCEINLINE void SetAttackPower(float NewPower) { AttackPower = NewPower; BroadcastStatChange(ET3StatType::Attack);}
 
 	// Defense
@@ -261,7 +267,8 @@ public:
 	void RestoreMP(float Amount);
 
 	// 클래스
-	FORCEINLINE ECharacterClass GetCurrentClass() const { return CurrentClass; }
+	UFUNCTION(BlueprintCallable)
+	ECharacterClass GetCurrentClass() const { return CurrentClass; }
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Class")
@@ -415,6 +422,9 @@ public:
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat|Equipment")
 		float WeaponLevel = 0;
 
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+		int32 CharacterLevel = 1;
+
 	public:
 
 		// --- Getters ---
@@ -424,9 +434,19 @@ public:
 		FORCEINLINE int32 GetStrength() const { return Strength; }
 		FORCEINLINE int32 GetIntelligence() const { return Intelligence; }
 
+		UFUNCTION(BlueprintCallable, Category = "Stat")
+		int32 GetCharacterLevel() const { return CharacterLevel; }
+
+		// 현재 스탯 총합을 기반으로 계산된 레벨
+		UFUNCTION(BlueprintPure, Category = "Stat|Logic")
+		int32 GetCalculatedLevel() const;
+
 		// 스탯 투자 시 호출할 함수
 		UFUNCTION(BlueprintCallable, Category = "Stat|Logic")
-		void UpgradeStat(ET3StatType StatType);
+		void UpgradeStat(ET3StatType StatType, int32 Amount);
+
+		UFUNCTION(BlueprintPure, Category = "Stat|Logic")
+		float GetStatIncreasePreview(ET3StatType StatType, int32 TargetStatValue) const;
 
 		UFUNCTION(BlueprintCallable, Category = "Stat|Logic")
 		void SetWeaponLevel(float CurrentWeaponLevel) { WeaponLevel = CurrentWeaponLevel; BroadcastStatChange(ET3StatType::Attack);}

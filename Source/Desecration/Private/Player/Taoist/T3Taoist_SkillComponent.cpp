@@ -616,9 +616,16 @@ void UT3Taoist_SkillComponent::SpawnCharmInternal(AActor* Spawner, const FSkillD
         float BaseRightOffset = 70.f; // 애니메이션이 왼쪽으로 치우쳐서 보정 값
         FVector SideOffset = Spawner->GetActorRightVector() * BaseRightOffset;
 
-        if (Count > 1)
+        if (Count == 2)
         {
+            // 기존 로직: 좌(-60), 우(60)
             SideOffset += Spawner->GetActorRightVector() * (i == 0 ? -60.f : 60.f);
+        }
+        else if (Count == 3)
+        {
+            // 전설 로직: 좌(-80), 중앙(0), 우(80)
+            float Multiplier = (i - 1); // i가 0, 1, 2일 때 결과값은 -1, 0, 1
+            SideOffset += Spawner->GetActorRightVector() * (Multiplier * 80.f);
         }
 
         FVector SpawnLocation = Spawner->GetActorLocation()
@@ -645,9 +652,16 @@ void UT3Taoist_SkillComponent::SpawnCharmInternal(AActor* Spawner, const FSkillD
 
             // [방향 조절] 분신술은 좌우로 벌어지게, 호랑이는 중앙으로
             FVector ThrowDir = Spawner->GetActorForwardVector() + Spawner->GetActorUpVector() * 0.5f;
-            if (Count > 1)
+            
+            if (Count == 2)
             {
                 ThrowDir += Spawner->GetActorRightVector() * (i == 0 ? -0.3f : 0.3f);
+            }
+            else if (Count == 3)
+            {
+                // 좌(-0.4), 중앙(0), 우(0.4) 순으로 퍼짐
+                float SpreadMultiplier = (i - 1) * 0.4f;
+                ThrowDir += Spawner->GetActorRightVector() * SpreadMultiplier;
             }
 
             Charm->LaunchCharm(ThrowDir.GetSafeNormal(), ThrowSpeed);

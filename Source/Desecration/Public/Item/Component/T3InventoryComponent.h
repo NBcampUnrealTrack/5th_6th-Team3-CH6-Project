@@ -10,6 +10,7 @@ class AT3CharacterBase;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryInitialized);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRuneInventoryUpdated);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEtcInventoryUpdated);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEquippedItemChanged);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnChangedBuffItemSlot);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBuffItemUsed);
@@ -91,28 +92,46 @@ public:
 	bool RemoveRuneItemByCount(const FName& ItemName, int32 Count = 1);
 	
 	UFUNCTION(BlueprintCallable)
+	void AddEtcItemByCount(const FName& ItemName, int32 Count = 1);
+	
+	UFUNCTION(BlueprintCallable)
+	bool RemoveEtcItemByCount(const FName& ItemName, int32 Count = 1);
+	
+	UFUNCTION(BlueprintCallable)
 	int32 GetRuneItemCountByRuneID(const FName& RuneID);
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory")
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory|Consumable")
 	TArray<FInventorySlot> Items;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory")
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory|Rune")
 	TArray<FInventorySlot> RuneItems;
 	
-	UPROPERTY(BlueprintReadOnly, Category = "Inventory")
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory|Etc")
+	TArray<FInventorySlot> EtcItems;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory|Consumable")
 	int32 InventorySize;
 	
-	UPROPERTY(BlueprintReadOnly, Category = "Rune")
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory|Rune")
 	int32 RuneInventorySize;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory|Etc")
+	int32 EtcInventorySize;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Data|Rune")
 	TObjectPtr<UDataTable> RuneTable;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Data|Etc")
+	TObjectPtr<UDataTable> EtcTable;
 	
 	UPROPERTY(BlueprintAssignable, Category = "Inventory")
 	FOnInventoryUpdated OnInventoryUpdated;
 	
 	UPROPERTY(BlueprintAssignable, Category = "Inventory")
 	FOnRuneInventoryUpdated OnRuneInventoryUpdated;
+	
+	UPROPERTY(BlueprintAssignable, Category = "Inventory")
+	FOnEtcInventoryUpdated OnEtcInventoryUpdated;
 	
 	UPROPERTY(BlueprintAssignable, Category = "Inventory")
 	FOnInventoryInitialized OnInventoryInitialized;
