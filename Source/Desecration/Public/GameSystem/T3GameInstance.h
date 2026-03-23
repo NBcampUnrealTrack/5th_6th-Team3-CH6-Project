@@ -96,7 +96,7 @@ private:
 	
 public:
 	//첫 게임 데이터 생성
-	TObjectPtr<UT3SaveGame> MakeFirstGameData();
+	TObjectPtr<UT3SaveGame> MakeFirstGameData(const ECharacterClass SelectedPlayerClass);
 	
 	//잃어버린 재화 데이터 생성
 	void MakeFirstLostMoneyData();

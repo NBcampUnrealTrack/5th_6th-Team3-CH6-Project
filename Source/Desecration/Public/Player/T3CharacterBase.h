@@ -397,6 +397,9 @@ public:
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "CameraShake")
 	void OnCameraShake();
+	
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void OnOpenBox();
 
 
 	// ==== 캐릭터 스탯
