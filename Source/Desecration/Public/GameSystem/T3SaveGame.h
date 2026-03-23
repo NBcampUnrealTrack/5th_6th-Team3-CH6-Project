@@ -116,6 +116,14 @@ public:
 	UPROPERTY()
 	TArray<FInventorySlot> Items;
 	
+	//인벤토리내 룬 목록
+	UPROPERTY()
+	TArray<FInventorySlot> RuneItems;
+	
+	//인벤토리내 기타 아이템 목록
+	UPROPERTY()
+	TArray<FInventorySlot> EtcItems;
+	
 	//보유 재화
 	UPROPERTY()
 	int32 Money;

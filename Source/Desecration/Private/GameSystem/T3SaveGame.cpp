@@ -39,11 +39,10 @@ void UT3SaveGame::ResetGameData()
 	Intelligence = 5;
 	
 	//인벤토리
-	//TODO : 인벤토리 크기 확인하기
-	for (int32 iNum = 0; iNum < 20; iNum++)
-	{
-		Items.Add(FInventorySlot());
-	}
+	constexpr int32 InvenSize = 20;
+	Items.SetNum(InvenSize);
+	RuneItems.SetNum(InvenSize);
+	EtcItems.SetNum(InvenSize);
 	Money = 0;
 	
 	//포션
