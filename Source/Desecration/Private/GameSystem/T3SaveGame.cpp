@@ -8,6 +8,8 @@
 
 void UT3SaveGame::ResetGameData()
 {
+	//참고 : 이하의 값 중 일부는 캐릭터 데이터 에셋 등으로 변경될 수 있음
+	
 	PlayerClass = ECharacterClass::Paladin;
 	PlayerName = TEXT("");
 	//캐릭터 위치
@@ -18,7 +20,7 @@ void UT3SaveGame::ResetGameData()
 	//물체 상태
 	LevelObjectStates.Empty();
 	
-	//스탯 : 이 값은 초기 생성용 임시 값
+	//스탯
 	MaxHP = 150.0f;
 	CurrentHP = MaxHP;
 	MaxMana = 100.0f;
@@ -59,4 +61,12 @@ void UT3SaveGame::ResetGameData()
 	ArmorSaveData.Type = ET3EquipmentType::Armor;
 	
 	//TODO : 스킬 초기화
+}
+
+void UT3SaveGame::SetStatByCharacterData(const TObjectPtr<UT3CharacterDataAsset> CharacterData)
+{
+	PlayerClass = CharacterData->CharacterClass;
+		
+	MaxHP = CharacterData->MaxHealth;
+	CurrentHP = MaxHP;
 }

@@ -6,6 +6,7 @@
 #include "GameSystem/GlobalEnums.h"
 #include "T3SaveGame.generated.h"
 
+class UT3CharacterDataAsset;
 struct FInventorySlot;
 struct FSkillData;
 enum class ECharacterClass : uint8;
@@ -18,6 +19,9 @@ class DESECRATION_API UT3SaveGame : public USaveGame
 public:
 	//게임 데이터 초기화
 	void ResetGameData();
+	
+	//지정한 캐릭터 데이터로 스탯 변경
+	void SetStatByCharacterData(TObjectPtr<UT3CharacterDataAsset> CharacterData);
 	
 	//플레이어의 클래스
 	UPROPERTY()
