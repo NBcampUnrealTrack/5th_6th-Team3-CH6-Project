@@ -140,9 +140,6 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	SaveGame->CurrentSkillSlot = SkillComponent->CurrentSkillSlot;
 	SaveGame->NextSkillSlot = SkillComponent->NextSkillSlot;
 	
-	//저장했던 적 상태 제거
-	SaveGame->EnemyStates.Empty();
-	
 	//임시 저장이라면 세이브 데이터를 가지고만 있고 직접 저장하지 않는다.
 	if (bTemporarySave)
 	{

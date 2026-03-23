@@ -47,10 +47,6 @@ public:
 	//모든 레벨의 물체 상태
 	UPROPERTY()
 	TMap<int32, int32> LevelObjectStates;
-	
-	//적들의 상태
-	UPROPERTY()
-	TMap<int32, int32> EnemyStates;
 #pragma endregion
 	
 #pragma region 캐릭터 스탯
