@@ -188,7 +188,7 @@ void AT3CorridorPuzzle::ActivatePuzzle()
 {
 	bPuzzleActive = true;
 
-	// 몬스터 리스폰은 RefreshStepVisuals에서 이미 처리 — 여기선 활성화만
+	// 몬스터 리스폰은 BP에서 RefreshStepVisuals → ActivatePuzzle 순서로 처리
 	UE_LOG(LogDesecration, Log, TEXT("T3_CorridorPuzzle: 퍼즐 활성화 — 트리거 판정 시작"));
 }
 
@@ -404,9 +404,12 @@ void AT3CorridorPuzzle::OnForwardTriggerOverlap(UPrimitiveComponent* OverlappedC
 	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
 	bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (IsValid(OtherActor) && Cast<ACharacter>(OtherActor))
+	if (const ACharacter* PlayerChar = Cast<ACharacter>(OtherActor))
 	{
-		OnPlayerMoved(ECorridorDirection::Forward);
+		if (PlayerChar->IsPlayerControlled())
+		{
+			OnPlayerMoved(ECorridorDirection::Forward);
+		}
 	}
 }
 
@@ -414,8 +417,11 @@ void AT3CorridorPuzzle::OnBackwardTriggerOverlap(UPrimitiveComponent* Overlapped
 	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
 	bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (IsValid(OtherActor) && Cast<ACharacter>(OtherActor))
+	if (const ACharacter* PlayerChar = Cast<ACharacter>(OtherActor))
 	{
-		OnPlayerMoved(ECorridorDirection::Backward);
+		if (PlayerChar->IsPlayerControlled())
+		{
+			OnPlayerMoved(ECorridorDirection::Backward);
+		}
 	}
 }
