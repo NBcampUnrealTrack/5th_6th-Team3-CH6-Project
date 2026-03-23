@@ -1,6 +1,7 @@
 // T3CorridorPuzzle.cpp
 
 #include "GameSystem/T3CorridorPuzzle.h"
+#include "GameSystem/T3PuzzleMonsterSpawner.h"
 #include "GameSystem/T3PuzzleProps.h"
 #include "Desecration.h"
 #include "Components/BoxComponent.h"
@@ -70,6 +71,15 @@ void AT3CorridorPuzzle::BeginPlay()
 	if (PuzzleSteps.Num() > 0)
 	{
 		ApplyStepChanges(0, true);
+	}
+
+	// 초기 몬스터 스폰 (숨겨지지 않은 스포너만)
+	for (AT3PuzzleMonsterSpawner* Spawner : MonsterSpawners)
+	{
+		if (IsValid(Spawner) && !Spawner->IsHidden())
+		{
+			Spawner->RespawnMonster();
+		}
 	}
 
 	UE_LOG(LogDesecration, Log, TEXT("T3_CorridorPuzzle: 시작 (총 %d단계)"), PuzzleSteps.Num());
@@ -178,6 +188,7 @@ void AT3CorridorPuzzle::ActivatePuzzle()
 {
 	bPuzzleActive = true;
 
+	// 몬스터 리스폰은 RefreshStepVisuals에서 이미 처리 — 여기선 활성화만
 	UE_LOG(LogDesecration, Log, TEXT("T3_CorridorPuzzle: 퍼즐 활성화 — 트리거 판정 시작"));
 }
 
@@ -187,6 +198,15 @@ void AT3CorridorPuzzle::ActivatePuzzle()
 
 void AT3CorridorPuzzle::RefreshStepVisuals()
 {
+	// 모든 스포너 몬스터 먼저 제거 (Show/Hide 변경 전)
+	for (AT3PuzzleMonsterSpawner* Spawner : MonsterSpawners)
+	{
+		if (IsValid(Spawner))
+		{
+			Spawner->DestroySpawnedMonster();
+		}
+	}
+
 	// 모든 변경 해제 후 현재 스텝만 적용
 	ClearAllStepChanges();
 
@@ -198,7 +218,16 @@ void AT3CorridorPuzzle::RefreshStepVisuals()
 
 	UpdateLights();
 
-	UE_LOG(LogDesecration, Log, TEXT("T3_CorridorPuzzle: 스텝 %d 시각 갱신"), CurrentStep);
+	// Show/Hide 적용 후 — 숨겨지지 않은 스포너만 리스폰
+	for (AT3PuzzleMonsterSpawner* Spawner : MonsterSpawners)
+	{
+		if (IsValid(Spawner) && !Spawner->IsHidden())
+		{
+			Spawner->RespawnMonster();
+		}
+	}
+
+	UE_LOG(LogDesecration, Log, TEXT("T3_CorridorPuzzle: 스텝 %d 시각 갱신 (몬스터 리스폰)"), CurrentStep);
 }
 
 // ============================================================
@@ -228,6 +257,19 @@ void AT3CorridorPuzzle::CompletePuzzle()
 
 	// 모든 라이트 ON
 	UpdateLights();
+
+	// 퍼즐 완료 — 기본 몬스터 리스폰 (숨겨지지 않은 스포너만)
+	for (AT3PuzzleMonsterSpawner* Spawner : MonsterSpawners)
+	{
+		if (IsValid(Spawner) && !Spawner->IsHidden())
+		{
+			Spawner->RespawnMonster();
+		}
+		else if (IsValid(Spawner))
+		{
+			Spawner->DestroySpawnedMonster();
+		}
+	}
 
 	// 이상현상 액터 정리
 	for (const FCorridorPuzzleStep& Step : PuzzleSteps)

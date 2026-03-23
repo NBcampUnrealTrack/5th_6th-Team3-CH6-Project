@@ -9,6 +9,7 @@
 
 class UBoxComponent;
 class USceneComponent;
+class AT3PuzzleMonsterSpawner;
 
 // ============================================================
 // Enum: 이동 방향
@@ -102,6 +103,10 @@ public:
 	// 통행 제한 액터 (완료 시 파괴 — 레벨에서 스포이드로 연결)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Puzzle|Barrier")
 	TArray<TObjectPtr<AActor>> BarrierActors;
+
+	// 몬스터 스포너 (스텝 전환 시 자동 리스폰 — 에디터에서 스포이드로 연결)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Puzzle|Monster")
+	TArray<TObjectPtr<AT3PuzzleMonsterSpawner>> MonsterSpawners;
 
 	// ============================================================
 	// 텔레포트 지점 (BP FogGate에서 참조 — 에디터에서 드래그 배치)
