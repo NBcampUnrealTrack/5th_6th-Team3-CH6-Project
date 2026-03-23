@@ -422,6 +422,9 @@ public:
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat|Equipment")
 		float WeaponLevel = 0;
 
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+		int32 CharacterLevel = 1;
+
 	public:
 
 		// --- Getters ---
@@ -431,9 +434,19 @@ public:
 		FORCEINLINE int32 GetStrength() const { return Strength; }
 		FORCEINLINE int32 GetIntelligence() const { return Intelligence; }
 
+		UFUNCTION(BlueprintCallable, Category = "Stat")
+		int32 GetCharacterLevel() const { return CharacterLevel; }
+
+		// 현재 스탯 총합을 기반으로 계산된 레벨
+		UFUNCTION(BlueprintPure, Category = "Stat|Logic")
+		int32 GetCalculatedLevel() const;
+
 		// 스탯 투자 시 호출할 함수
 		UFUNCTION(BlueprintCallable, Category = "Stat|Logic")
-		void UpgradeStat(ET3StatType StatType);
+		void UpgradeStat(ET3StatType StatType, int32 Amount);
+
+		UFUNCTION(BlueprintPure, Category = "Stat|Logic")
+		float GetStatIncreasePreview(ET3StatType StatType, int32 TargetStatValue) const;
 
 		UFUNCTION(BlueprintCallable, Category = "Stat|Logic")
 		void SetWeaponLevel(float CurrentWeaponLevel) { WeaponLevel = CurrentWeaponLevel; BroadcastStatChange(ET3StatType::Attack);}
