@@ -32,6 +32,12 @@ void UT3SaveGame::ResetGameData()
 	CriticalDamage = 1.5f;
 	MoveSpeed = 500.0f;
 	
+	Vigor = 10;
+	Endurance = 10;
+	Mind = 10;
+	Strength = 5;
+	Intelligence = 5;
+	
 	//인벤토리
 	//TODO : 인벤토리 크기 확인하기
 	for (int32 iNum = 0; iNum < 20; iNum++)

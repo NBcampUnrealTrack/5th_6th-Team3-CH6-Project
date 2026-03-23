@@ -89,6 +89,26 @@ public:
 	//이동 속도
 	UPROPERTY()
 	float MoveSpeed;
+	
+	//체력
+	UPROPERTY()
+	int32 Vigor;
+	
+	//기력
+	UPROPERTY()
+	int32 Endurance;
+
+	//정신력
+	UPROPERTY()
+	int32 Mind;
+	
+	//근력
+	UPROPERTY()
+	int32 Strength;
+
+	//지력
+	UPROPERTY()
+	int32 Intelligence;
 #pragma endregion
 	
 #pragma region 인벤토리
