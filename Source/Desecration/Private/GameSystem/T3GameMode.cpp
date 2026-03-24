@@ -93,6 +93,11 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	SaveGame->CriticalChance = Character->GetCriticalChance();
 	SaveGame->CriticalDamage = Character->GetCriticalDamage();
 	SaveGame->MoveSpeed = Character->GetMoveSpeed();
+	SaveGame->Vigor = Character->GetVigor();
+	SaveGame->Endurance = Character->GetEndurance();
+	SaveGame->Mind = Character->GetMind();
+	SaveGame->Strength = Character->GetStrength();
+	SaveGame->Intelligence = Character->GetIntelligence();
 	//인벤토리
 	TObjectPtr<UT3InventoryComponent> InventoryComponent = Character->InventoryComponent;
 	if (!InventoryComponent)
@@ -102,7 +107,7 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	}
 	//참고 : 인벤토리 공간은 T3InventoryComponent에서 정한 값을 따른다.
 	constexpr int32 InvenSize = 20;
-	for (int32 iNum = 0; iNum < 20; ++iNum)
+	for (int32 iNum = 0; iNum < InvenSize; ++iNum)
 	{
 		SaveGame->Items[iNum] = InventoryComponent->Items[iNum];
 		SaveGame->RuneItems[iNum] = InventoryComponent->RuneItems[iNum];
@@ -231,7 +236,7 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 	if (InventoryComponent)
 	{
 		constexpr int32 InvenSize = 20;
-		for (int32 iNum = 0; iNum < 20; ++iNum)
+		for (int32 iNum = 0; iNum < InvenSize; ++iNum)
 		{
 			InventoryComponent->Items[iNum] = SaveGame->Items[iNum];
 			InventoryComponent->RuneItems[iNum] = SaveGame->RuneItems[iNum];
