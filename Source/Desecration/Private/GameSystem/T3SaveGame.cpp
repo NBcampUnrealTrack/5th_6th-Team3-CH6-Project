@@ -15,10 +15,13 @@ void UT3SaveGame::ResetGameData()
 	//캐릭터 위치
 	SavedLevelName = ELevelName::Tutorial;
 	PlayerLocation = FVector(-80, 185, 102);
+	PlayerRotation = FRotator::ZeroRotator;
 	bSetLocation = true;
 	
 	//물체 상태
 	LevelObjectStates.Empty();
+	//현재 도달한 세이브 포인트(룬) 위치
+	LevelProgressMap.Empty();
 	
 	//스탯
 	MaxHP = 150.0f;

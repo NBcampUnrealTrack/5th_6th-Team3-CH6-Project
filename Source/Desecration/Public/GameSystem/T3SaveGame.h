@@ -3,9 +3,10 @@
 #include "CoreMinimal.h"
 #include "Equipment/T3EquipmentTypes.h"
 #include "GameFramework/SaveGame.h"
-#include "GameSystem/GlobalEnums.h"
+#include "GameSystem/T3GameInstance.h"
 #include "T3SaveGame.generated.h"
 
+struct FLevelProgressData;
 class UT3CharacterDataAsset;
 struct FInventorySlot;
 struct FSkillData;
@@ -31,17 +32,18 @@ public:
 	UPROPERTY()
 	FString PlayerName;
 	
-#pragma region 레벨(맵)
-	//저장한 곳의 맵 이름
-	UPROPERTY()
-	ELevelName SavedLevelName;
-	
 	//저장한 맵 내의 위치
 	UPROPERTY()
 	FVector PlayerLocation;
 	
+	//저장했을때의 캐릭터 방향
 	UPROPERTY()
 	FRotator PlayerRotation;
+	
+#pragma region 레벨(맵)
+	//저장한 곳의 맵 이름
+	UPROPERTY()
+	ELevelName SavedLevelName;
 
 	//위치 적용 여부 (이 값은 저장 목적이 아님)
 	UPROPERTY(Transient)
@@ -50,6 +52,10 @@ public:
 	//모든 레벨의 물체 상태
 	UPROPERTY()
 	TMap<int32, int32> LevelObjectStates;
+	
+	//현재 도달한 세이브 포인트(룬) 위치
+	UPROPERTY()
+	TMap<ELevelName, FLevelProgressData> LevelProgressMap;
 #pragma endregion
 	
 #pragma region 캐릭터 스탯
