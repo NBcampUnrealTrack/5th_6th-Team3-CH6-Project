@@ -39,6 +39,9 @@ public:
 	//저장한 맵 내의 위치
 	UPROPERTY()
 	FVector PlayerLocation;
+	
+	UPROPERTY()
+	FRotator PlayerRotation;
 
 	//위치 적용 여부 (이 값은 저장 목적이 아님)
 	UPROPERTY(Transient)
