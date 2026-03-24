@@ -62,13 +62,17 @@ void UT3GameInstance::MakeFirstSettings()
 	SaveUserSettings();
 }
 
-TObjectPtr<UT3SaveGame> UT3GameInstance::MakeFirstGameData()
+TObjectPtr<UT3SaveGame> UT3GameInstance::MakeFirstGameData(const ECharacterClass SelectedPlayerClass)
 {
 	if (!SavedGameData)
 	{
 		SavedGameData = NewObject<UT3SaveGame>();
 	}
 	SavedGameData->ResetGameData();
+	if (const int32 ArrayIndex = static_cast<int32>(SelectedPlayerClass); CharacterDataList.IsValidIndex(ArrayIndex))
+	{
+		SavedGameData->SetStatByCharacterData(CharacterDataList[ArrayIndex]);
+	}
 	
 	return SavedGameData;
 }
