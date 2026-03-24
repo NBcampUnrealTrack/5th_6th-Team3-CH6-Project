@@ -258,20 +258,16 @@ void AT3CorridorPuzzle::CompletePuzzle()
 	// 모든 라이트 ON
 	UpdateLights();
 
-	// 퍼즐 완료 — 기본 몬스터 리스폰 (숨겨지지 않은 스포너만)
+	// 모든 스포너 몬스터 제거 (이상현상 정리 전)
 	for (AT3PuzzleMonsterSpawner* Spawner : MonsterSpawners)
 	{
-		if (IsValid(Spawner) && !Spawner->IsHidden())
-		{
-			Spawner->RespawnMonster();
-		}
-		else if (IsValid(Spawner))
+		if (IsValid(Spawner))
 		{
 			Spawner->DestroySpawnedMonster();
 		}
 	}
 
-	// 이상현상 액터 정리
+	// 이상현상 액터 정리 (ActorsToShow 스포너 Destroy 포함)
 	for (const FCorridorPuzzleStep& Step : PuzzleSteps)
 	{
 		// 이상현상으로 추가된 액터 → 파괴
@@ -290,6 +286,15 @@ void AT3CorridorPuzzle::CompletePuzzle()
 				Actor->SetActorHiddenInGame(false);
 				Actor->SetActorEnableCollision(true);
 			}
+		}
+	}
+
+	// 이상현상 정리 후 — 살아남은(기본) 스포너만 리스폰
+	for (AT3PuzzleMonsterSpawner* Spawner : MonsterSpawners)
+	{
+		if (IsValid(Spawner) && !Spawner->IsHidden())
+		{
+			Spawner->RespawnMonster();
 		}
 	}
 
