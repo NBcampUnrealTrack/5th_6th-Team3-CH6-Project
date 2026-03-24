@@ -8,7 +8,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Components/AudioComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "Components/SphereComponent.h"
+
 #include "Components/TimelineComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -17,32 +17,21 @@
 // 활성화 트리거 (플레이어 접근 감지)
 // ============================================================
 
-void AT3MidBossMonster::OnActivationTriggerOverlap(
-	UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
-	bool bFromSweep, const FHitResult& SweepResult)
+void AT3MidBossMonster::OnExternalTriggerOverlap(AActor* OverlappedActor, AActor* OtherActor)
 {
 	if (bIsActivated || IsDead())
 	{
 		return;
 	}
 
-	// 오버랩 발생 액터 로그 (디버그)
-	const float Distance = FVector::Dist(GetActorLocation(), OtherActor->GetActorLocation());
-	UE_LOG(LogDesecration, Warning, TEXT("T3_MidBoss: 트리거 오버랩 발생 — Actor=%s, Class=%s, 거리=%.0f, Radius=%.0f"),
-		*OtherActor->GetName(), *OtherActor->GetClass()->GetName(), Distance, ActivationRadius);
-
 	// 플레이어 폰인지 확인
 	APawn* OtherPawn = Cast<APawn>(OtherActor);
 	if (!OtherPawn || !OtherPawn->IsPlayerControlled())
 	{
-		UE_LOG(LogDesecration, Warning, TEXT("T3_MidBoss: 트리거 무시 — 플레이어 아님 (IsPawn=%s, IsPlayerControlled=%s)"),
-			OtherPawn ? TEXT("Y") : TEXT("N"),
-			(OtherPawn && OtherPawn->IsPlayerControlled()) ? TEXT("Y") : TEXT("N"));
 		return;
 	}
 
-	UE_LOG(LogDesecration, Warning, TEXT("T3_MidBoss: ★ 활성화 트리거 통과 — %s, 거리=%.0f"), *OtherActor->GetName(), Distance);
+	UE_LOG(LogDesecration, Warning, TEXT("T3_MidBoss: ★ 외부 트리거 활성화 — %s"), *OtherActor->GetName());
 
 	ActivateBoss(OtherActor);
 }
@@ -67,10 +56,10 @@ void AT3MidBossMonster::ActivateBoss(AActor* Activator)
 	bIsActivated = true;
 	CombatTarget = Activator;
 
-	// 트리거 비활성화 (외부 호출 시에도 중복 방지)
-	if (ActivationTriggerSphere)
+	// 외부 트리거 비활성화 (중복 방지)
+	if (ExternalActivationTrigger)
 	{
-		ActivationTriggerSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		ExternalActivationTrigger->SetActorEnableCollision(false);
 	}
 
 	// BGM 재생 (2D — 공간 감쇠 없이 음악처럼 재생)
