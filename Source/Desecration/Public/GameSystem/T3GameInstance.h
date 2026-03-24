@@ -128,6 +128,26 @@ public:
 	//지정한 캐릭터 클래스에 해당되는 데이터 에셋
 	TObjectPtr<UT3CharacterDataAsset> GetCharacterDataAsset();
 
+	UPROPERTY(BlueprintReadWrite, Category = "Level Transition")
+    bool bPendingTeleport = false;
+
+    UPROPERTY(BlueprintReadWrite, Category = "Level Transition")
+    FVector TargetTeleportLocation;
+
+    UPROPERTY(BlueprintReadWrite, Category = "Level Transition")
+    FRotator TargetTeleportRotation;
+
+    // 추가된 목적지 레벨 변수 (로딩 맵에서 꺼내 쓸 용도)
+    UPROPERTY(BlueprintReadWrite, Category = "Level Transition")
+    ELevelName TargetLevelName;
+
+    /**
+     * 세이브포인트를 지정하여 로딩 맵으로 이동
+     */
+    UFUNCTION(BlueprintCallable, Category = "Level Transition")
+    void TravelToSavePoint(ELevelName LevelName, FName SavePointID);
+
+
 	/**
 	 * 레벨(맵) 이동하기
 	 * @param LevelName 이동할 레벨 (주의 : TitleLevel이나 SelectClassLevel로 지정하면 게임에서 벗어납니다.)

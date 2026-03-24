@@ -163,7 +163,6 @@ TObjectPtr<UT3CharacterDataAsset> UT3GameInstance::GetCharacterDataAsset()
 
 // T3GameInstance.cpp
 
-
 void UT3GameInstance::OpenLevel(const ELevelName LevelName)
 {	
     // 1. LevelMap에 해당 키가 있는지 확인
@@ -281,4 +280,36 @@ bool UT3GameInstance::GetSavePointTransform(ELevelName LevelName, FName SavePoin
         }
     }
     return false;
+}
+
+
+void UT3GameInstance::TravelToSavePoint(ELevelName LevelName, FName SavePointID)
+{
+    FVector Loc;
+    FRotator Rot;
+
+    // 1. 해당 세이브 포인트의 좌표 정보를 가져옴
+    if (GetSavePointTransform(LevelName, SavePointID, Loc, Rot))
+    {
+        // 2. 예약 정보 설정
+        bPendingTeleport = true;
+        TargetTeleportLocation = Loc;
+        TargetTeleportRotation = Rot;
+        TargetLevelName = LevelName; // 로딩 맵에서 "어디로 가야 하는지" 알기 위해 저장
+
+        // 3. 로딩 맵으로 이동
+        // 주의: ELevelName에 LoadingLevel 항목이 있다면 그걸 사용하시고, 
+        // 없다면 직접 FName(TEXT("T3LoadingLevel"))을 넣으셔도 됩니다.
+        // 여기서는 일반적인 OpenLevel 방식을 빌려 호출합니다.
+        UWorld* CurrentWorld = GetWorld();
+        if (CurrentWorld)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Moving to Loading Level..."));
+            UGameplayStatics::OpenLevel(CurrentWorld, TEXT("T3LoadingLevel"));
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("SavePoint %s in Level %d not found!"), *SavePointID.ToString(), (int32)LevelName);
+    }
 }
