@@ -65,13 +65,10 @@ public:
 	static FString GetStringFromTable(const FString& Namespace, const FString& Key);
 	
 	virtual void Init() override;
-	
-	UPROPERTY(BlueprintReadWrite)
-	TMap<ELevelName, FLevelProgressData> LevelProgressMap;
-	
+
 	// 레벨 해금
 	UFUNCTION(BlueprintCallable)
-	void UnlockLevel(ELevelName LevelName);
+	void UnlockLevel(const ELevelName LevelName);
 
 	// 세이브포인트 해금 (위치/회전 정보 포함 버전으로 업데이트)
 	UFUNCTION(BlueprintCallable)
@@ -88,8 +85,7 @@ public:
 	// 특정 세이브 포인트의 위치 정보 가져오기 (이동 구현용)
 	UFUNCTION(BlueprintPure)
 	bool GetSavePointTransform(ELevelName LevelName, FName SavePointID, FVector& OutLocation, FRotator& OutRotation);
-	
-	
+
 private:
 	//최초 설정값 생성
 	void MakeFirstSettings();
@@ -146,8 +142,7 @@ public:
      */
     UFUNCTION(BlueprintCallable, Category = "Level Transition")
     void TravelToSavePoint(ELevelName LevelName, FName SavePointID);
-
-
+	
 	/**
 	 * 레벨(맵) 이동하기
 	 * @param LevelName 이동할 레벨 (주의 : TitleLevel이나 SelectClassLevel로 지정하면 게임에서 벗어납니다.)

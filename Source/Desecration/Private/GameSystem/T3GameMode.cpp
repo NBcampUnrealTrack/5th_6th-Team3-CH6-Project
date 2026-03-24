@@ -100,10 +100,13 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 		UE_LOG(LogTemp, Error, TEXT("%s : InventoryComponent가 null"), *GetNameSafe(this));
 		return false;
 	}
-	SaveGame->Items.Empty();
-	for (FInventorySlot& Slot : InventoryComponent->Items)
+	//참고 : 인벤토리 공간은 T3InventoryComponent에서 정한 값을 따른다.
+	constexpr int32 InvenSize = 20;
+	for (int32 iNum = 0; iNum < 20; ++iNum)
 	{
-		SaveGame->Items.Add(Slot);
+		SaveGame->Items[iNum] = InventoryComponent->Items[iNum];
+		SaveGame->RuneItems[iNum] = InventoryComponent->RuneItems[iNum];
+		SaveGame->EtcItems[iNum] = InventoryComponent->EtcItems[iNum];
 	}
 	SaveGame->Money = InventoryComponent->GetMoney();
 	SaveGame->NormalStoneCount = InventoryComponent->GetNormalStoneCount();
@@ -227,13 +230,12 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 	TObjectPtr<UT3InventoryComponent> InventoryComponent = Character->InventoryComponent;
 	if (InventoryComponent)
 	{
-		const int32 SlotNums = SaveGame->Items.Num();
-		for (int32 iNum = 0; iNum < SlotNums; ++iNum)
+		constexpr int32 InvenSize = 20;
+		for (int32 iNum = 0; iNum < 20; ++iNum)
 		{
-			if (InventoryComponent->Items.IsValidIndex(iNum) && SaveGame->Items.IsValidIndex(iNum))
-			{
-				InventoryComponent->Items[iNum] = SaveGame->Items[iNum];
-			}
+			InventoryComponent->Items[iNum] = SaveGame->Items[iNum];
+			InventoryComponent->RuneItems[iNum] = SaveGame->RuneItems[iNum];
+			InventoryComponent->EtcItems[iNum] = SaveGame->EtcItems[iNum];
 		}
 		InventoryComponent->SetMoney(SaveGame->Money);
 		InventoryComponent->SetNormalStoneCount(SaveGame->NormalStoneCount);
