@@ -210,8 +210,16 @@ protected:
 public:
     void SetCloneAttackBonus(float NewAttackBonus);
     
+    FORCEINLINE int32 GetCloneCount() const { return CloneCount; }
+    
+    void SetCloneCount(int32 NewCount);
+    
+    void RemoveLastActiveClone();
+    
 private:
     float PendingCloneAttackBonus = 0.f;
     
+    int32 CloneCount = 2;
+
 #pragma endregion
 };

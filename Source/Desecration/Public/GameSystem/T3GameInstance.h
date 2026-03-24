@@ -5,10 +5,40 @@
 #include "GlobalEnums.h"
 #include "T3GameInstance.generated.h"
 
+enum class ECharacterClass : uint8;
 class UT3SaveLostMoney;
 class UT3SaveUserSettings;
 class UT3CharacterDataAsset;
 class UT3SaveGame;
+
+// 세이브 포인트의 상세 정보를 담는 구조체 추가
+USTRUCT(BlueprintType)
+struct FSavePointData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsUnlocked = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector SaveLocation = FVector::ZeroVector;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FRotator SaveRotation = FRotator::ZeroRotator;
+};
+
+USTRUCT(BlueprintType)
+struct FLevelProgressData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bLevelUnlocked = false;
+
+	// bool 대신 FSavePointData 구조체를 사용하도록 변경
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TMap<FName, FSavePointData> SavePoints;
+};
 
 UCLASS()
 class DESECRATION_API UT3GameInstance : public UGameInstance
@@ -35,14 +65,34 @@ public:
 	static FString GetStringFromTable(const FString& Namespace, const FString& Key);
 	
 	virtual void Init() override;
+
+	// 레벨 해금
+	UFUNCTION(BlueprintCallable)
+	void UnlockLevel(const ELevelName LevelName);
+
+	// 세이브포인트 해금 (위치/회전 정보 포함 버전으로 업데이트)
+	UFUNCTION(BlueprintCallable)
+	void UnlockSavePoint(ELevelName LevelName, FName SavePointID, FVector Location, FRotator Rotation);
+
+	// 레벨 해금 체크
+	UFUNCTION(BlueprintPure)
+	bool IsLevelUnlocked(ELevelName LevelName);
+
+	// 세이브포인트 해금 체크
+	UFUNCTION(BlueprintPure)
+	bool IsSavePointUnlocked(ELevelName LevelName, FName SavePointID);
 	
+	// 특정 세이브 포인트의 위치 정보 가져오기 (이동 구현용)
+	UFUNCTION(BlueprintPure)
+	bool GetSavePointTransform(ELevelName LevelName, FName SavePointID, FVector& OutLocation, FRotator& OutRotation);
+
 private:
 	//최초 설정값 생성
 	void MakeFirstSettings();
 	
 public:
 	//첫 게임 데이터 생성
-	TObjectPtr<UT3SaveGame> MakeFirstGameData();
+	TObjectPtr<UT3SaveGame> MakeFirstGameData(const ECharacterClass SelectedPlayerClass);
 	
 	//잃어버린 재화 데이터 생성
 	void MakeFirstLostMoneyData();
@@ -70,7 +120,29 @@ public:
 	
 	//잃어버린 재화 정보 불러오기
 	bool LoadLostMoney();
+	
+	//지정한 캐릭터 클래스에 해당되는 데이터 에셋
+	TObjectPtr<UT3CharacterDataAsset> GetCharacterDataAsset();
 
+	UPROPERTY(BlueprintReadWrite, Category = "Level Transition")
+    bool bPendingTeleport = false;
+
+    UPROPERTY(BlueprintReadWrite, Category = "Level Transition")
+    FVector TargetTeleportLocation;
+
+    UPROPERTY(BlueprintReadWrite, Category = "Level Transition")
+    FRotator TargetTeleportRotation;
+
+    // 추가된 목적지 레벨 변수 (로딩 맵에서 꺼내 쓸 용도)
+    UPROPERTY(BlueprintReadWrite, Category = "Level Transition")
+    ELevelName TargetLevelName;
+
+    /**
+     * 세이브포인트를 지정하여 로딩 맵으로 이동
+     */
+    UFUNCTION(BlueprintCallable, Category = "Level Transition")
+    void TravelToSavePoint(ELevelName LevelName, FName SavePointID);
+	
 	/**
 	 * 레벨(맵) 이동하기
 	 * @param LevelName 이동할 레벨 (주의 : TitleLevel이나 SelectClassLevel로 지정하면 게임에서 벗어납니다.)
@@ -93,9 +165,6 @@ public:
 	
 	//잃어버린 재화
 	FORCEINLINE TObjectPtr<UT3SaveLostMoney> GetLostMoneyData() { return LostMoneyData; }
-	
-	//캐릭터 데이터
-	FORCEINLINE TObjectPtr<UT3CharacterDataAsset> GetCharacterData() { return CharacterData; }
 	
 	//배경음 사운드 클래스
 	FORCEINLINE TObjectPtr<USoundClass> GetSoundClassBGM() { return SoundClassBGM; }
@@ -128,9 +197,13 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Sound Class", meta = (AllowPrivateAccess = true))
 	TObjectPtr<USoundClass> SoundClassBGM;
 	
-	//캐릭터 데이터
+
+	/**
+	 * 캐릭터 데이터
+	 * @note 할당 순서는 T3PlayerInputState.h에서 ECharacterClass를 참조
+	 */
 	UPROPERTY(EditDefaultsOnly, Category = "Character Data", meta = (AllowPrivateAccess = true))
-	TObjectPtr<UT3CharacterDataAsset> CharacterData;
+	TArray<TObjectPtr<UT3CharacterDataAsset>> CharacterDataList;
 
 	// T3GameInstance.h
 	UPROPERTY(EditAnywhere, Category = "Level Settings")

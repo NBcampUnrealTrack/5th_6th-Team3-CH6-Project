@@ -40,16 +40,40 @@ protected:
 
 	void ReportTouchStimulus(AActor* OtherActor, const FVector& TouchLocation);
 
-
-
-protected:
 	// 록온 위젯을 담을 컴포넌트
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
 	class UWidgetComponent* LockOnWidgetComponent;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
+	float BaseDamage = 20.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
+	float DamageMultiplier = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
+	float LevelMultiplier = 1.0f;
+
 public:
 	virtual void SetLockOnWidgetVisible(bool bVisible) override;
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Monster")
+	void HalfHpSuperArmor();
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	virtual float GetCurrentAttackDamage() const;
+
+	// 몬스터 스포너에게 인자를 전달받아 몬스터의 패트롤 루트를 설정하는 함수
+	UFUNCTION(BlueprintImplementableEvent, Category = "Spawner")
+	void ReceivePatrolRoute(AActor* InPatrolRoute);
+
+	// 몬스터 스포너에게 인자를 전달받아 석상 몬스터의 트리거 박스를 설정하는 함수
+	UFUNCTION(BlueprintImplementableEvent, Category = "Spawner")
+	void ReceiveStatueTrigger(AActor* InStatueTrigger);
 	
+	// 스포너에게 삭제 요청을 받아 몬스터를 강제로 제거하는 함수
+	UFUNCTION(BlueprintImplementableEvent, Category = "Spawner")
+	void CleanupBeforeDestroy();
+
 #pragma region ExecuteRune
 public:
 	virtual float GetHPPercent() const override;

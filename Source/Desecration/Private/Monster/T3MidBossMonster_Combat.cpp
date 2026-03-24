@@ -96,8 +96,8 @@ void AT3MidBossMonster::ApplyDamageToMidBoss(float DamageAmount, float StunAmoun
 		UE_LOG(LogDesecration, Warning, TEXT("T3_MidBoss: HitCameraShakeClass가 할당되지 않음!"));
 	}
 
-	// 히트 리액션 — 슈퍼아머 + 비기절 + 비공격 + 생존 시에만 재생
-	if (HasSuperArmor() && !IsStunned() && !IsExecutingPattern() && MidBossStats.CurrentHP > 0.f)
+	// 히트 리액션 — 슈퍼아머 + 비기절 + 비공격 + 비이탈 + 생존 시에만 재생
+	if (HasSuperArmor() && !IsStunned() && !IsExecutingPattern() && !IsDisengaging() && MidBossStats.CurrentHP > 0.f)
 	{
 		PlayAdditiveHitReaction(DamageCauser);
 	}
@@ -341,12 +341,12 @@ void AT3MidBossMonster::ExecuteAoEDamage(float Radius, float DamageAmount, EHitI
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 			this, AoEEffect, AoECenter, GetActorRotation(), ScaleVec);
 	}
-	else
-	{
-		// Niagara 없을 때 임시 범위 표시
-		DrawDebugSphere(GetWorld(), AoECenter, Radius, 24,
-			FColor::Red, false, 1.5f, 0, 3.f);
-	}
+
+#if WITH_EDITOR
+	// 디버그 범위 표시 (빨간색) — 이펙트 유무와 무관하게 항상 표시
+	DrawDebugSphere(GetWorld(), AoECenter, Radius, 24,
+		FColor::Red, false, 1.5f, 0, 3.f);
+#endif
 
 	// AoE 사운드
 	if (AoESound)
@@ -409,6 +409,36 @@ void AT3MidBossMonster::OnWeaponHit(AActor* HitActor)
 bool AT3MidBossMonster::IsParryWindowActive() const
 {
 	return HasStateTag(TAG_Boss_State_ParryWindow);
+}
+
+// ============================================================
+// 플레이어 패링 반응 (플레이어가 보스 공격을 패링 성공 시)
+// ============================================================
+
+bool AT3MidBossMonster::IsPlayerParryable() const
+{
+	return HasStateTag(TAG_Boss_State_PlayerParryable);
+}
+
+void AT3MidBossMonster::NotifyParriedByPlayer()
+{
+	// PlayerParryable 윈도우가 아니면 무시
+	if (!IsPlayerParryable())
+	{
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 패링 시도 — PlayerParryable 윈도우 아님, 무시"));
+		return;
+	}
+
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 플레이어 패링 성공! 히트리액션 재생"));
+
+	// 현재 패턴 캔슬 → 히트리액션 재생 → BattleLoop 복귀
+	CancelCurrentPattern();
+
+	// 정면 히트리액션 재생 (플레이어는 항상 전방이므로 DamageCauser 없이 호출)
+	PlayAdditiveHitReaction(CombatTarget);
+
+	// 외부 알림 (플레이어팀 등 바인딩 가능)
+	OnParriedByPlayer.Broadcast();
 }
 
 void AT3MidBossMonster::OpenParryWindow()

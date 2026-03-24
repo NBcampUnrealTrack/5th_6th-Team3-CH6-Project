@@ -14,9 +14,24 @@ public:
 	
 	virtual void OnUnsocketed_Implementation(AT3CharacterBase* OwnerChar) override;
 	
-private:	
-	float OriginalHolyGaugeChargeAmount = 0.f;
+	virtual void SetGrade(ET3RuneGrade InGrade) override;
+	
+private:
+	float OriginalHolyGaugeChargeAmount = 0.0f;
+	
+	float OriginalHolyModeAttackSpeedMultiplier = 1.0f;
 	
 	UPROPERTY(EditDefaultsOnly, Category="Value")
-	float ValueByGrade = 1.0f;
+	float HolyGaugeChargeBonusPercentNormal = 20.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category="Value")
+	float HolyGaugeChargeBonusPercentEpic = 35.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category="Value")
+	float HolyGaugeChargeBonusPercentLegendary = 50.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category="Value|Legendary")
+	float LegendaryAttackSpeedBonusPercent = 50.0f;
+	
+	uint8 bIsLegendary : 1 = false;
 };

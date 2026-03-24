@@ -17,11 +17,10 @@ void AT3SelectClassGameMode::BeginPlay()
 	}
 }
 
-void AT3SelectClassGameMode::MakeFirstGameData(const FString& PlayerName, const EPlayerClass SelectedPlayerClass)
+void AT3SelectClassGameMode::MakeFirstGameData(const FString& PlayerName, const ECharacterClass SelectedPlayerClass)
 {
 	//첫 게임 데이터 생성
-	const TObjectPtr<UT3SaveGame> FirstGameData = T3GameInstance->MakeFirstGameData();
-	FirstGameData->PlayerClass = SelectedPlayerClass;
+	const TObjectPtr<UT3SaveGame> FirstGameData = T3GameInstance->MakeFirstGameData(SelectedPlayerClass);
 	FirstGameData->PlayerName = PlayerName;
 	T3GameInstance->MakeFirstLostMoneyData();
 	

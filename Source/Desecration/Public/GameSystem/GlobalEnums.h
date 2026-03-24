@@ -11,14 +11,16 @@ enum class ELevelName : uint8
 	Tutorial UMETA(DisplayName = "T3_TutrorialMaps"),
 	Town UMETA(DisplayName = "T3Town"),
 	Castle_1 UMETA(DisplayName = "T3Castle_1"),
+	Mountain UMETA(DisplayName = "T3MF"),
+	Cathedral UMETA(DisplayName = "T3_CathedralMaps2"),
+	Dragon UMETA(DisplayName = "T3_DragonMap")
 };
 
-//플레이어의 클래스
-UENUM()
-enum class EPlayerClass
+//현재 열려있는 인벤토리 위젯의 타입
+UENUM(BlueprintType)
+enum class ET3InventoryContext : uint8
 {
-	None,
-	Warrior,
-	Taoist,
-	Valkyrie
+	MainInventory    UMETA(DisplayName = "메인 인벤토리"),
+	Shop             UMETA(DisplayName = "상점"),
+	UpgradeStation   UMETA(DisplayName = "강화소")
 };

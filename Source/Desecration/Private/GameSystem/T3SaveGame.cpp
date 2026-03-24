@@ -8,27 +8,22 @@
 
 void UT3SaveGame::ResetGameData()
 {
-	//스탯 초기화를 위한 게임 인스턴스
-	// TObjectPtr<UT3GameInstance> T3GameInstance = Cast<UT3GameInstance>(GetWorld()->GetGameInstance());
-	// if (!T3GameInstance)
-	// {
-	// 	UE_LOG(LogTemp, Error, TEXT("%s : T3GameInstance is NULL"), *GetNameSafe(this));
-	// 	return;
-	// }
+	//참고 : 이하의 값 중 일부는 캐릭터 데이터 에셋 등으로 변경될 수 있음
 	
-	PlayerClass = EPlayerClass::None;
+	PlayerClass = ECharacterClass::Paladin;
 	PlayerName = TEXT("");
 	//캐릭터 위치
 	SavedLevelName = ELevelName::Tutorial;
 	PlayerLocation = FVector(-80, 185, 102);
+	PlayerRotation = FRotator::ZeroRotator;
 	bSetLocation = true;
 	
 	//물체 상태
 	LevelObjectStates.Empty();
+	//현재 도달한 세이브 포인트(룬) 위치
+	LevelProgressMap.Empty();
 	
 	//스탯
-	//TODO : 하드코딩된 초기 스탯 수정하기
-	//const TObjectPtr<UT3CharacterDataAsset> CharacterData = T3GameInstance->GetCharacterData();
 	MaxHP = 150.0f;
 	CurrentHP = MaxHP;
 	MaxMana = 100.0f;
@@ -40,12 +35,17 @@ void UT3SaveGame::ResetGameData()
 	CriticalDamage = 1.5f;
 	MoveSpeed = 500.0f;
 	
+	Vigor = 10;
+	Endurance = 10;
+	Mind = 10;
+	Strength = 5;
+	Intelligence = 5;
+	
 	//인벤토리
-	//TODO : 인벤토리 크기 확인하기
-	for (int32 iNum = 0; iNum < 20; iNum++)
-	{
-		Items.Add(FInventorySlot());
-	}
+	constexpr int32 InvenSize = 20;
+	Items.SetNum(InvenSize);
+	RuneItems.SetNum(InvenSize);
+	EtcItems.SetNum(InvenSize);
 	Money = 0;
 	
 	//포션
@@ -68,5 +68,16 @@ void UT3SaveGame::ResetGameData()
 	ArmorSaveData.Level = 0;
 	ArmorSaveData.Type = ET3EquipmentType::Armor;
 	
-	//TODO : 스킬 초기화
+	//스킬
+	SkillUnlockStates.Empty();
+	CurrentSkillSlot = 1;
+	NextSkillSlot = 0;
+}
+
+void UT3SaveGame::SetStatByCharacterData(const TObjectPtr<UT3CharacterDataAsset> CharacterData)
+{
+	PlayerClass = CharacterData->CharacterClass;
+		
+	MaxHP = CharacterData->MaxHealth;
+	CurrentHP = MaxHP;
 }

@@ -23,14 +23,27 @@ class UT3CharacterDataAsset;
 UENUM(BlueprintType)
 enum class ET3StatType : uint8
 {
-	HP,
-	MP,
-	Stamina,
-	Attack,
-	Defense,
-	CriticalChance,
-	CriticalDamage,
-	MoveSpeed
+	// --- 기존 기본 타입 ---
+	HP              UMETA(DisplayName = "HP"),
+	MP              UMETA(DisplayName = "MP"),
+	Stamina         UMETA(DisplayName = "Stamina"),
+	Attack          UMETA(DisplayName = "Attack"),
+	Defense         UMETA(DisplayName = "Defense"),
+	CriticalChance  UMETA(DisplayName = "Critical Chance"),
+	CriticalDamage  UMETA(DisplayName = "Critical Damage"),
+	MoveSpeed       UMETA(DisplayName = "Move Speed"),
+
+	// --- 핵심 스탯 ---
+	// 체력 스탯 (HP량 결정)
+	Vigor           UMETA(DisplayName = "Vigor"),       
+	// 기력 스탯 (스테미나량 결정)
+	Endurance       UMETA(DisplayName = "Endurance"),    
+	// 정신력 스탯 (MP량 결정)
+	Mind            UMETA(DisplayName = "Mind"),      
+	// 근력 스탯 (물리공격력 결정)
+	Strength        UMETA(DisplayName = "Strength"),     
+	// 지력 스탯 (마법공격력 결정)
+	Intelligence    UMETA(DisplayName = "Intelligence")  
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnStatChangedDelegate, ET3StatType, StatType, float, CurrentValue, float, MaxValue);
@@ -70,9 +83,17 @@ protected:
 	virtual void Tick( float DeltaTime ) override;
 	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
 	
+	/**
+	 * CharacterData가 null이면 게임 인스턴스를 통해 할당한다.
+	 * @return 이미 할당된 상태 또는 할당에 성공시 true, 그 외에는 false
+	 */
+	bool CheckCharacterData();
+	
 	// 스탯 변경 시 내부적으로 델리게이트를 호출해주는 헬퍼 함수
 	void BroadcastStatChange(ET3StatType StatType);
 
+	//캐릭터 데이터
+	//평소 플레이시 이 값을 비워 게임 인스턴스를 참조하도록 만고 테스트시에만 할당
 	UPROPERTY(EditAnywhere, Category = "Character Data")
 	TObjectPtr<class UT3CharacterDataAsset> CharacterData;
 
@@ -144,10 +165,9 @@ public:
 	TObjectPtr<UT3PlayerEquipmentComponent> EquipComp;
 
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
-	void OnEquipmentStatsUpdated(float Atk, float Def);
+	void OnEquipmentStatsUpdated(float Atk, float Def, float WeaponLevel);
 
 
-	// Stat 관련
 
 protected:
 	// 캐릭터 스탯 (고정값)
@@ -215,7 +235,7 @@ public:
 
 	// Attack
 	UFUNCTION(BlueprintCallable, Category = "Stat")
-	virtual float GetAttackPower() const { return AttackPower + CachedRuneAttackBonus; }
+	virtual float GetAttackPower();
 	FORCEINLINE void SetAttackPower(float NewPower) { AttackPower = NewPower; BroadcastStatChange(ET3StatType::Attack);}
 
 	// Defense
@@ -247,10 +267,11 @@ public:
 	void RestoreMP(float Amount);
 
 	// 클래스
-	FORCEINLINE ECharacterClass GetCurrentClass() const { return CurrentClass; }
+	UFUNCTION(BlueprintCallable)
+	ECharacterClass GetCurrentClass() const { return CurrentClass; }
 
 protected:
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Class")
 	ECharacterClass CurrentClass;
 
 	// 스태미나 자연 회복
@@ -376,4 +397,71 @@ public:
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "CameraShake")
 	void OnCameraShake();
+	
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void OnOpenBox();
+
+
+	// ==== 캐릭터 스탯
+
+	protected:
+		// --- 5대 핵심 스탯 ---
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat|Core")
+		int32 Vigor = 10;         // 체력 스탯
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat|Core")
+		int32 Endurance = 10;     // 기력 스탯
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat|Core")
+		int32 Mind = 10;          // 정신력 스탯
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat|Core")
+		int32 Strength = 5;       // 근력 스탯
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat|Core")
+		int32 Intelligence = 5;   // 지력 스탯
+
+		// 장비 강화 수치 (지력/근력 반영용)
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat|Equipment")
+		float WeaponLevel = 0;
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+		int32 CharacterLevel = 1;
+
+	public:
+
+		// --- Getters ---
+		FORCEINLINE int32 GetVigor() const { return Vigor; }
+		FORCEINLINE int32 GetEndurance() const { return Endurance; }
+		FORCEINLINE int32 GetMind() const { return Mind; }
+		FORCEINLINE int32 GetStrength() const { return Strength; }
+		FORCEINLINE int32 GetIntelligence() const { return Intelligence; }
+
+		UFUNCTION(BlueprintCallable, Category = "Stat")
+		int32 GetCharacterLevel() const { return CharacterLevel; }
+
+		// 현재 스탯 총합을 기반으로 계산된 레벨
+		UFUNCTION(BlueprintPure, Category = "Stat|Logic")
+		int32 GetCalculatedLevel() const;
+
+		// 스탯 투자 시 호출할 함수
+		UFUNCTION(BlueprintCallable, Category = "Stat|Logic")
+		void UpgradeStat(ET3StatType StatType, int32 Amount);
+
+		UFUNCTION(BlueprintPure, Category = "Stat|Logic")
+		float GetStatIncreasePreview(ET3StatType StatType, int32 TargetStatValue) const;
+
+		UFUNCTION(BlueprintCallable, Category = "Stat|Logic")
+		void SetWeaponLevel(float CurrentWeaponLevel) { WeaponLevel = CurrentWeaponLevel; BroadcastStatChange(ET3StatType::Attack);}
+
+
+		// === 낙사 관련 로직
+		protected:
+			// 땅에 착지했을 때 호출되는 엔진 오버라이드 함수
+			virtual void Landed(const FHitResult& Hit) override;
+
+			// 사망에 이르는 최소 하강 속도 (마이너스 값)
+			UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+			float MinDeathVelocity = -1500.f;
+
 };

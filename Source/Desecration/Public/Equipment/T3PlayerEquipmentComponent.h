@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -14,7 +14,7 @@ class AT3CharacterBase;
 
 // 장비 스탯 변경 시 발송되는 델리게이트
 // 캐릭터팀에서 바인딩하여 공격력/방어력을 동기화
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEquipmentStatsChanged, float, NewAttackPower, float, NewDefensePower);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnEquipmentStatsChanged, float, NewAttackPower, float, NewDefensePower, float, NewWeaponLevel);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRuneSocketChanged);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -87,9 +87,7 @@ public:
 
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UT3RuneBase>> ArmorActiveRunes;
-
-	UPROPERTY(BlueprintAssignable)
-	FOnRuneSocketChanged OnRuneSocketChanged;
+	
 	// ==========================================================
 	// 기능
 	// ==========================================================
@@ -108,15 +106,6 @@ public:
 	// 현재 장비 상태를 세이브 데이터로 반환 (세이브팀에서 호출)
 	UFUNCTION(BlueprintCallable, Category = "Equipment|Save")
 	void GetEquipmentSaveData(FT3ItemSaveData& OutWeaponData, FT3ItemSaveData& OutArmorData) const;
-
-	UFUNCTION(BlueprintCallable, Category = "Rune")
-	bool SocketRune(FName RuneID, ET3EquipmentType TargetEquipment);
-
-	UFUNCTION(BlueprintCallable, Category = "Rune")
-	bool UnsocketRune(FName RuneID, ET3EquipmentType TargetEquipment);
-
-	UFUNCTION(BlueprintCallable, Category = "Rune")
-	bool SocketRuneAuto(FName RuneID);
 	
 	// [통합] 강화 함수
 	UFUNCTION(BlueprintCallable, Category = "Upgrade")
@@ -153,4 +142,22 @@ private:
 
 	void RestoreRunes(const TArray<FName>& RuneIDs, TArray<TObjectPtr<UT3RuneBase>>& OutActiveRunes);
 
+#pragma region Rune
+public:
+	UPROPERTY(BlueprintAssignable)
+	FOnRuneSocketChanged OnRuneSocketChanged;
+	
+	UFUNCTION(BlueprintCallable, Category = "Rune")
+	bool SocketRune(FName RuneID, ET3EquipmentType TargetEquipment);
+
+	UFUNCTION(BlueprintCallable, Category = "Rune")
+	bool UnsocketRune(FName RuneID, ET3EquipmentType TargetEquipment);
+
+	UFUNCTION(BlueprintCallable, Category = "Rune")
+	bool SocketRuneAuto(FName RuneID);
+	
+private:
+	TMap<TSubclassOf<UT3RuneBase>, float> RuneCooldownEndTimeMap;
+	
+#pragma endregion
 };

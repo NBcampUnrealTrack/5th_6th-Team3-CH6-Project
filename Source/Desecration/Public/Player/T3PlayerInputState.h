@@ -24,7 +24,8 @@ enum class ECharacterClass : uint8
 {
 	Paladin,
 	Taoist,
-	Valkyrie
+	Valkyrie,
+	None
 };
 
 UENUM(BlueprintType)

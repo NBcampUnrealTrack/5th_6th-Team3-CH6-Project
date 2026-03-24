@@ -3,11 +3,14 @@
 #include "CoreMinimal.h"
 #include "Equipment/T3EquipmentTypes.h"
 #include "GameFramework/SaveGame.h"
-#include "GameSystem/GlobalEnums.h"
+#include "GameSystem/T3GameInstance.h"
 #include "T3SaveGame.generated.h"
 
+struct FLevelProgressData;
+class UT3CharacterDataAsset;
 struct FInventorySlot;
 struct FSkillData;
+enum class ECharacterClass : uint8;
 
 UCLASS()
 class DESECRATION_API UT3SaveGame : public USaveGame
@@ -18,22 +21,29 @@ public:
 	//게임 데이터 초기화
 	void ResetGameData();
 	
+	//지정한 캐릭터 데이터로 스탯 변경
+	void SetStatByCharacterData(TObjectPtr<UT3CharacterDataAsset> CharacterData);
+	
 	//플레이어의 클래스
 	UPROPERTY()
-	EPlayerClass PlayerClass;
+	ECharacterClass PlayerClass;
 	
 	//플레이어 이름
 	UPROPERTY()
 	FString PlayerName;
 	
+	//저장한 맵 내의 위치
+	UPROPERTY()
+	FVector PlayerLocation;
+	
+	//저장했을때의 캐릭터 방향
+	UPROPERTY()
+	FRotator PlayerRotation;
+	
 #pragma region 레벨(맵)
 	//저장한 곳의 맵 이름
 	UPROPERTY()
 	ELevelName SavedLevelName;
-	
-	//저장한 맵 내의 위치
-	UPROPERTY()
-	FVector PlayerLocation;
 
 	//위치 적용 여부 (이 값은 저장 목적이 아님)
 	UPROPERTY(Transient)
@@ -43,9 +53,9 @@ public:
 	UPROPERTY()
 	TMap<int32, int32> LevelObjectStates;
 	
-	//적들의 상태
+	//현재 도달한 세이브 포인트(룬) 위치
 	UPROPERTY()
-	TMap<int32, int32> EnemyStates;
+	TMap<ELevelName, FLevelProgressData> LevelProgressMap;
 #pragma endregion
 	
 #pragma region 캐릭터 스탯
@@ -88,12 +98,40 @@ public:
 	//이동 속도
 	UPROPERTY()
 	float MoveSpeed;
+	
+	//체력
+	UPROPERTY()
+	int32 Vigor;
+	
+	//기력
+	UPROPERTY()
+	int32 Endurance;
+
+	//정신력
+	UPROPERTY()
+	int32 Mind;
+	
+	//근력
+	UPROPERTY()
+	int32 Strength;
+
+	//지력
+	UPROPERTY()
+	int32 Intelligence;
 #pragma endregion
 	
 #pragma region 인벤토리
 	//인벤토리내 아이템 목록
 	UPROPERTY()
 	TArray<FInventorySlot> Items;
+	
+	//인벤토리내 룬 목록
+	UPROPERTY()
+	TArray<FInventorySlot> RuneItems;
+	
+	//인벤토리내 기타 아이템 목록
+	UPROPERTY()
+	TArray<FInventorySlot> EtcItems;
 	
 	//보유 재화
 	UPROPERTY()
@@ -139,13 +177,16 @@ public:
 #pragma endregion
 
 #pragma region 스킬
-	//TODO : 스킬 타입 및 이름에 맞게 변경하기
-	//보유 스킬
+	//보유중인 스킬 정보
 	UPROPERTY()
-	TArray<int32> OwnedSkills;
+	TMap<int32, bool> SkillUnlockStates;
 	
-	//스킬 슬롯
+	//현재 스킬
 	UPROPERTY()
-	TArray<int32> EquippedSkills;
+	int32 CurrentSkillSlot;
+	
+	//다음 스킬
+	UPROPERTY()
+	int32 NextSkillSlot;
 #pragma endregion
 };

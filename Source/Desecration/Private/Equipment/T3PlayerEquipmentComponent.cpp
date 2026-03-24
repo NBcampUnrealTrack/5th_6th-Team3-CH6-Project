@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Equipment/T3PlayerEquipmentComponent.h"
@@ -281,7 +281,7 @@ void UT3PlayerEquipmentComponent::RefreshStats()
     CurrentAttackPower = CalculateWeaponPower();
     CurrentDefensePower = CalculateArmorPower();
 
-    OnEquipmentStatsChanged.Broadcast(CurrentAttackPower, CurrentDefensePower);
+    OnEquipmentStatsChanged.Broadcast(CurrentAttackPower, CurrentDefensePower, WeaponInstance->CurrentLevel);
 }
 
 bool UT3PlayerEquipmentComponent::TryUpgrade(ET3EquipmentType TargetType, int32 MaxAllowedLevel)
@@ -397,8 +397,11 @@ bool UT3PlayerEquipmentComponent::SocketRune(FName RuneID, ET3EquipmentType Targ
 		return false;
 	}
 
-	TArray<FName>& SocketedIDs = (TargetEquipment == ET3EquipmentType::Weapon) ? WeaponSocketedRuneIDs : ArmorSocketedRuneIDs;
-	TArray<TObjectPtr<UT3RuneBase>>& ActiveRunes = (TargetEquipment == ET3EquipmentType::Weapon) ? WeaponActiveRunes : ArmorActiveRunes;
+	TArray<FName>& SocketedIDs =
+		(TargetEquipment == ET3EquipmentType::Weapon) ? WeaponSocketedRuneIDs : ArmorSocketedRuneIDs;
+	
+	TArray<TObjectPtr<UT3RuneBase>>& ActiveRunes =
+		(TargetEquipment == ET3EquipmentType::Weapon) ? WeaponActiveRunes : ArmorActiveRunes;
 
 	if (SocketedIDs.Num() >= MaxRuneSockets)
 	{
@@ -416,7 +419,7 @@ bool UT3PlayerEquipmentComponent::SocketRune(FName RuneID, ET3EquipmentType Targ
 
 	if (!RuneRow || !RuneRow->RuneLogicClass)
 	{
-		UE_LOG(LogTemp, Error, TEXT("데이터가 뭔가 이상함"));
+		UE_LOG(LogTemp, Error, TEXT("데이터가 이상함"));
 		return false;
 	}
 
@@ -429,11 +432,23 @@ bool UT3PlayerEquipmentComponent::SocketRune(FName RuneID, ET3EquipmentType Targ
 	Inventory->RemoveRuneItemByCount(RuneID);
 
 	UT3RuneBase* NewRune = NewObject<UT3RuneBase>(this, RuneRow->RuneLogicClass);
+	
+	NewRune->SetGrade(RuneRow->RuneGrade);
+	
 	SocketedIDs.Add(RuneID);
 	ActiveRunes.Add(NewRune);
-
+	
 	NewRune->OnSocketed(OwnerCharacter);
 
+	if (float* EndTime = RuneCooldownEndTimeMap.Find(RuneRow->RuneLogicClass))
+	{
+		float Remaining = *EndTime - GetWorld()->GetTimeSeconds();
+		
+		NewRune->RestoreCooldown(Remaining);
+		
+		RuneCooldownEndTimeMap.Remove(RuneRow->RuneLogicClass);
+	}
+	
 	OnRuneSocketChanged.Broadcast();
 	
 	return true;
@@ -441,8 +456,11 @@ bool UT3PlayerEquipmentComponent::SocketRune(FName RuneID, ET3EquipmentType Targ
 
 bool UT3PlayerEquipmentComponent::UnsocketRune(FName RuneID, ET3EquipmentType TargetEquipment)
 {
-	TArray<FName>& SocketedIDs = (TargetEquipment == ET3EquipmentType::Weapon) ? WeaponSocketedRuneIDs : ArmorSocketedRuneIDs;
-	TArray<TObjectPtr<UT3RuneBase>>& ActiveRunes = (TargetEquipment == ET3EquipmentType::Weapon) ? WeaponActiveRunes : ArmorActiveRunes;
+	TArray<FName>& SocketedIDs =
+		(TargetEquipment ==	ET3EquipmentType::Weapon) ? WeaponSocketedRuneIDs : ArmorSocketedRuneIDs;
+	
+	TArray<TObjectPtr<UT3RuneBase>>& ActiveRunes =
+		(TargetEquipment == ET3EquipmentType::Weapon) ? WeaponActiveRunes : ArmorActiveRunes;
 
 	int32 Index = SocketedIDs.Find(RuneID);
 
@@ -454,6 +472,20 @@ bool UT3PlayerEquipmentComponent::UnsocketRune(FName RuneID, ET3EquipmentType Ta
 	if (!ActiveRunes[Index]) 
 	{
 		return false;
+	}
+	
+	if (!ActiveRunes[Index]->CanUnsocket())
+	{
+		return false;
+	}
+	
+	float Remaining = ActiveRunes[Index]->GetCooldownRemaining();
+	
+	UE_LOG(LogItem, Error, TEXT("룬의 남은 쿨타임 : %.1f"), Remaining);
+	
+	if (Remaining > 0.f)
+	{
+		RuneCooldownEndTimeMap.Add(ActiveRunes[Index]->GetClass(), GetWorld()->GetTimeSeconds() + Remaining);
 	}
 	
 	ActiveRunes[Index]->OnUnsocketed(OwnerCharacter);
@@ -471,7 +503,6 @@ bool UT3PlayerEquipmentComponent::UnsocketRune(FName RuneID, ET3EquipmentType Ta
 	OnRuneSocketChanged.Broadcast();
 	
 	return true;
-	
 }
 
 bool UT3PlayerEquipmentComponent::SocketRuneAuto(FName RuneID)
