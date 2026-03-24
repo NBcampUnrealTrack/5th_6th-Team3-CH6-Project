@@ -20,7 +20,7 @@ class UT3MidBossHPBarWidget;
 class UCurveFloat;
 class UAudioComponent;
 class UWidgetComponent;
-class USphereComponent;
+
 class UNiagaraSystem;
 class AT3BossProjectile;
 
@@ -365,12 +365,10 @@ public:
 	// ============================================================
 #pragma region Flow
 
-	// --- 활성화 트리거 ---
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MidBoss|Activation")
-	TObjectPtr<USphereComponent> ActivationTriggerSphere;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Activation")
-	float ActivationRadius = 1500.f;
+	// --- 활성화 트리거 (외부 액터) ---
+	// 레벨에 배치한 TriggerBox/TriggerSphere를 스포이드로 지정
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "MidBoss|Activation")
+	TObjectPtr<AActor> ExternalActivationTrigger;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Activation")
 	TObjectPtr<UAnimMontage> IntroMontage;
@@ -496,8 +494,7 @@ private:
 	void FinishDeathSequence();
 
 	UFUNCTION()
-	void OnActivationTriggerOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void OnExternalTriggerOverlap(AActor* OverlappedActor, AActor* OtherActor);
 
 	UFUNCTION()
 	void OnIntroMontageEnded(UAnimMontage* Montage, bool bInterrupted);
