@@ -2,10 +2,12 @@
 
 #include "Monster/T3BossProjectile.h"
 #include "Desecration.h"
+#include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/DamageEvents.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "NiagaraComponent.h"
 
 AT3BossProjectile::AT3BossProjectile()
@@ -35,7 +37,6 @@ AT3BossProjectile::AT3BossProjectile()
 	DebugMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DebugMesh"));
 	DebugMesh->SetupAttachment(RootComponent);
 	DebugMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	DebugMesh->SetRelativeScale3D(FVector(0.6f, 1.6f, 0.8f));
 
 	// 기본 큐브 메시 로드
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeMesh(
@@ -61,19 +62,51 @@ void AT3BossProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// BP에서 변경된 CollisionExtent 반영 — 콜리전 + 디버그 메시 동기화
 	if (CollisionBox)
 	{
+		CollisionBox->SetBoxExtent(CollisionExtent);
 		CollisionBox->OnComponentBeginOverlap.AddDynamic(this, &AT3BossProjectile::OnProjectileOverlap);
 	}
 
-	// Niagara 에셋이 설정되어 있으면 디버그 메시 숨김
+	if (DebugMesh)
+	{
+		// 기본 큐브 = 100x100x100, CollisionExtent는 반크기 → Scale = Extent * 2 / 100
+		DebugMesh->SetRelativeScale3D(CollisionExtent * 2.f / 100.f);
+	}
+
+	// Niagara 에셋이 설정되어 있으면 디버그 메시 숨김 (에디터에서는 항상 표시)
 	if (ProjectileEffect && ProjectileEffect->GetAsset())
 	{
+#if !WITH_EDITOR
 		if (DebugMesh)
 		{
 			DebugMesh->SetVisibility(false);
 		}
+#endif
 	}
+
+	// 비행 루프 사운드 — 투사체에 붙어서 3D 위치 추적
+	if (LoopSound)
+	{
+		LoopAudioComponent = UGameplayStatics::SpawnSoundAttached(
+			LoopSound, RootComponent, NAME_None,
+			FVector::ZeroVector, EAttachLocation::KeepRelativeOffset,
+			true,  // bStopWhenAttachedToDestroyed — 투사체 소멸 시 사운드 정지
+			LoopVolumeMultiplier, 1.f, 0.f,
+			SoundAttenuation);  // 3D 거리 감쇠
+	}
+}
+
+void AT3BossProjectile::Destroyed()
+{
+	// 안전장치 — 어떤 경로로든 소멸 시 루프 사운드 정지
+	if (LoopAudioComponent && LoopAudioComponent->IsPlaying())
+	{
+		LoopAudioComponent->Stop();
+	}
+
+	Super::Destroyed();
 }
 
 void AT3BossProjectile::InitializeProjectile(float InDamage, float InSpeed,
@@ -126,6 +159,21 @@ void AT3BossProjectile::OnProjectileOverlap(UPrimitiveComponent* OverlappedCompo
 
 	UE_LOG(LogDesecration, Log, TEXT("T3_BossProjectile: %s에게 TakeDamage (데미지:%.0f, 강도:%s)"),
 		*OtherActor->GetName(), Damage, *UEnum::GetValueAsString(HitIntensity));
+
+	// 충돌 사운드 재생
+	if (ImpactSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this, ImpactSound, GetActorLocation(),
+			ImpactVolumeMultiplier, 1.f, 0.f,
+			SoundAttenuation);
+	}
+
+	// 비행 루프 사운드 정지
+	if (LoopAudioComponent)
+	{
+		LoopAudioComponent->Stop();
+	}
 
 	// 히트 후 콜리전 비활성화 + 지연 소멸
 	if (CollisionBox)

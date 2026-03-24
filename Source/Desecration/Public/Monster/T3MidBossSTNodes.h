@@ -587,3 +587,38 @@ struct DESECRATION_API FT3Consideration_PatternAvailableAtStage : public FStateT
 protected:
 	virtual float GetScore(FStateTreeExecutionContext& Context) const override;
 };
+
+// ============================================================
+// Consideration: FT3Consideration_ConsecutiveDisengagePenalty
+// 연속 Disengage 시 점수 감쇄 — PenaltyPerCount ^ ConsecutiveDisengageCount
+// (0회=1.0, 1회=0.5, 2회=0.25 ...)
+// ============================================================
+
+USTRUCT()
+struct FT3Consideration_ConsecutiveDisengagePenaltyInstanceData
+{
+	GENERATED_BODY()
+
+	// 연속 1회당 곱해지는 배율 (0.5 = 매회 절반)
+	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float PenaltyPerCount = 0.5f;
+
+	UPROPERTY(EditAnywhere, Category = "Context")
+	TObjectPtr<AT3MidBossMonster> Boss = nullptr;
+};
+
+USTRUCT(meta = (DisplayName = "Consecutive Disengage Penalty (Consideration)"))
+struct DESECRATION_API FT3Consideration_ConsecutiveDisengagePenalty : public FStateTreeConsiderationCommonBase
+{
+	GENERATED_BODY()
+
+	using FInstanceDataType = FT3Consideration_ConsecutiveDisengagePenaltyInstanceData;
+
+	virtual const UStruct* GetInstanceDataType() const override
+	{
+		return FT3Consideration_ConsecutiveDisengagePenaltyInstanceData::StaticStruct();
+	}
+
+protected:
+	virtual float GetScore(FStateTreeExecutionContext& Context) const override;
+};
