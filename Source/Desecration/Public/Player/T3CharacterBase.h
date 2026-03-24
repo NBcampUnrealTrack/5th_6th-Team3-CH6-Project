@@ -437,6 +437,16 @@ public:
 		UFUNCTION(BlueprintCallable, Category = "Stat")
 		int32 GetCharacterLevel() const { return CharacterLevel; }
 
+
+		// --- Setters ---
+		FORCEINLINE void SetVigor(int32 NewVigor) {  Vigor = NewVigor; }
+		FORCEINLINE void SetEndurance(int32 NewEndurance) {  Endurance = NewEndurance; }
+		FORCEINLINE void SetMind(int32 NewMind) {  Mind = NewMind; }
+		FORCEINLINE void SetStrength(int32 NewStrength) {  Strength = NewStrength; }
+		FORCEINLINE void SetIntelligence(int32 NewIntelligence) {  Intelligence = NewIntelligence; }
+		FORCEINLINE void SetCharacterLevel(int32 NewCharacterLevel) {  CharacterLevel = NewCharacterLevel; }
+
+
 		// 현재 스탯 총합을 기반으로 계산된 레벨
 		UFUNCTION(BlueprintPure, Category = "Stat|Logic")
 		int32 GetCalculatedLevel() const;
@@ -446,7 +456,10 @@ public:
 		void UpgradeStat(ET3StatType StatType, int32 Amount);
 
 		UFUNCTION(BlueprintPure, Category = "Stat|Logic")
-		float GetStatIncreasePreview(ET3StatType StatType, int32 TargetStatValue) const;
+		float GetStatIncreasePreview(ET3StatType StatType, int32 CurrentStatValue, int32 Amount) const;
+
+		UFUNCTION(BlueprintPure, Category = "Stat|Logic")
+		float GetAttackPowerPreview(ET3StatType StatType, int32 TargetStatValue);
 
 		UFUNCTION(BlueprintCallable, Category = "Stat|Logic")
 		void SetWeaponLevel(float CurrentWeaponLevel) { WeaponLevel = CurrentWeaponLevel; BroadcastStatChange(ET3StatType::Attack);}
