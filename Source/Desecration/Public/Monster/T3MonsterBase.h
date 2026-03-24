@@ -70,6 +70,10 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Spawner")
 	void ReceiveStatueTrigger(AActor* InStatueTrigger);
 	
+	// 스포너에게 삭제 요청을 받아 몬스터를 강제로 제거하는 함수
+	UFUNCTION(BlueprintImplementableEvent, Category = "Spawner")
+	void CleanupBeforeDestroy();
+
 #pragma region ExecuteRune
 public:
 	virtual float GetHPPercent() const override;
