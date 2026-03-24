@@ -206,29 +206,41 @@ void UT3GameInstance::OpenLevelBySavedData()
 }
 
 // ===== 레벨 해금 =====
-void UT3GameInstance::UnlockLevel(ELevelName LevelName)
+void UT3GameInstance::UnlockLevel(const ELevelName LevelName)
 {
-	if (!LevelProgressMap.Contains(LevelName))
+	if (!SavedGameData)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : 저장된 게임 데이터가 없음"), *GetNameSafe(this));
+		return;
+	}
+	
+	if (!SavedGameData->LevelProgressMap.Contains(LevelName))
 	{
 		FLevelProgressData NewData;
 		NewData.bLevelUnlocked = true;
-		LevelProgressMap.Add(LevelName, NewData);
+		SavedGameData->LevelProgressMap.Add(LevelName, NewData);
 	}
 	else
 	{
-		LevelProgressMap[LevelName].bLevelUnlocked = true;
+		SavedGameData->LevelProgressMap[LevelName].bLevelUnlocked = true;
 	}
 }
 
 // ===== 세이브포인트 해금 =====
 void UT3GameInstance::UnlockSavePoint(ELevelName LevelName, FName SavePointID, FVector Location, FRotator Rotation)
 {
+	if (!SavedGameData)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : 저장된 게임 데이터가 없음"), *GetNameSafe(this));
+		return;
+	}
+	
     // 1. 해당 레벨 데이터가 없으면 새로 생성
-	if (!LevelProgressMap.Contains(LevelName))
+	if (!SavedGameData->LevelProgressMap.Contains(LevelName))
 	{
 		FLevelProgressData NewLevelData;
 		NewLevelData.bLevelUnlocked = true;
-		LevelProgressMap.Add(LevelName, NewLevelData);
+		SavedGameData->LevelProgressMap.Add(LevelName, NewLevelData);
 	}
 
     // 2. 세이브 포인트 데이터 구성
@@ -238,15 +250,21 @@ void UT3GameInstance::UnlockSavePoint(ELevelName LevelName, FName SavePointID, F
     PointData.SaveRotation = Rotation;
 
     // 3. 맵에 추가 또는 갱신
-	LevelProgressMap[LevelName].SavePoints.Add(SavePointID, PointData);
+	SavedGameData->LevelProgressMap[LevelName].SavePoints.Add(SavePointID, PointData);
 }
 
 // ===== 레벨 해금 여부 =====
 bool UT3GameInstance::IsLevelUnlocked(ELevelName LevelName)
 {
-	if (LevelProgressMap.Contains(LevelName))
+	if (!SavedGameData)
 	{
-		return LevelProgressMap[LevelName].bLevelUnlocked;
+		UE_LOG(LogTemp, Error, TEXT("%s : 저장된 게임 데이터가 없음"), *GetNameSafe(this));
+		return false;
+	}
+	
+	if (SavedGameData->LevelProgressMap.Contains(LevelName))
+	{
+		return SavedGameData->LevelProgressMap[LevelName].bLevelUnlocked;
 	}
 	return false;
 }
@@ -254,9 +272,15 @@ bool UT3GameInstance::IsLevelUnlocked(ELevelName LevelName)
 // ===== 세이브포인트 해금 여부 =====
 bool UT3GameInstance::IsSavePointUnlocked(ELevelName LevelName, FName SavePointID)
 {
-	if (LevelProgressMap.Contains(LevelName))
+	if (!SavedGameData)
 	{
-		if (const FSavePointData* PointData = LevelProgressMap[LevelName].SavePoints.Find(SavePointID))
+		UE_LOG(LogTemp, Error, TEXT("%s : 저장된 게임 데이터가 없음"), *GetNameSafe(this));
+		return false;
+	}
+	
+	if (SavedGameData->LevelProgressMap.Contains(LevelName))
+	{
+		if (const FSavePointData* PointData = SavedGameData->LevelProgressMap[LevelName].SavePoints.Find(SavePointID))
 		{
 			return PointData->bIsUnlocked;
 		}
@@ -267,9 +291,15 @@ bool UT3GameInstance::IsSavePointUnlocked(ELevelName LevelName, FName SavePointI
 // ===== 특정 세이브 포인트 위치 정보 가져오기 (추가) =====
 bool UT3GameInstance::GetSavePointTransform(ELevelName LevelName, FName SavePointID, FVector& OutLocation, FRotator& OutRotation)
 {
-    if (LevelProgressMap.Contains(LevelName))
+	if (!SavedGameData)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : 저장된 게임 데이터가 없음"), *GetNameSafe(this));
+		return false;
+	}
+	
+    if (SavedGameData->LevelProgressMap.Contains(LevelName))
     {
-        if (const FSavePointData* PointData = LevelProgressMap[LevelName].SavePoints.Find(SavePointID))
+        if (const FSavePointData* PointData = SavedGameData->LevelProgressMap[LevelName].SavePoints.Find(SavePointID))
         {
             if (PointData->bIsUnlocked)
             {
