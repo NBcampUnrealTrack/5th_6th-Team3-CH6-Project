@@ -411,6 +411,36 @@ bool AT3MidBossMonster::IsParryWindowActive() const
 	return HasStateTag(TAG_Boss_State_ParryWindow);
 }
 
+// ============================================================
+// 플레이어 패링 반응 (플레이어가 보스 공격을 패링 성공 시)
+// ============================================================
+
+bool AT3MidBossMonster::IsPlayerParryable() const
+{
+	return HasStateTag(TAG_Boss_State_PlayerParryable);
+}
+
+void AT3MidBossMonster::NotifyParriedByPlayer()
+{
+	// PlayerParryable 윈도우가 아니면 무시
+	if (!IsPlayerParryable())
+	{
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 패링 시도 — PlayerParryable 윈도우 아님, 무시"));
+		return;
+	}
+
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 플레이어 패링 성공! 히트리액션 재생"));
+
+	// 현재 패턴 캔슬 → 히트리액션 재생 → BattleLoop 복귀
+	CancelCurrentPattern();
+
+	// 정면 히트리액션 재생 (플레이어는 항상 전방이므로 DamageCauser 없이 호출)
+	PlayAdditiveHitReaction(CombatTarget);
+
+	// 외부 알림 (플레이어팀 등 바인딩 가능)
+	OnParriedByPlayer.Broadcast();
+}
+
 void AT3MidBossMonster::OpenParryWindow()
 {
 	AddStateTag(TAG_Boss_State_ParryWindow);
