@@ -122,20 +122,23 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	}
 	
 	//스킬
-	// TObjectPtr<UT3SkillComponentBase> SkillComponent;
-	// if (const TObjectPtr<UT3CombatComponent> CombatComponent = Character->GetCombatComponent(); !CombatComponent || !CombatComponent->GetSkillComponent())
-	// {
-	// 	UE_LOG(LogTemp, Error, TEXT("%s : SkillComponent 접근 불가"), *GetNameSafe(this));
-	// 	return false;
-	// }
-	// else
-	// {
-	// 	SkillComponent = CombatComponent->GetSkillComponent();
-	// }
-	//SkillComponent->;
-	
-	//저장했던 적 상태 제거
-	SaveGame->EnemyStates.Empty();
+	TObjectPtr<UT3SkillComponentBase> SkillComponent;
+	if (const TObjectPtr<UT3CombatComponent> CombatComponent = Character->GetCombatComponent(); !CombatComponent || !CombatComponent->GetSkillComponent())
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : SkillComponent 접근 불가"), *GetNameSafe(this));
+		return false;
+	}
+	else
+	{
+		SkillComponent = CombatComponent->GetSkillComponent();
+	}
+	for (TTuple<int32, bool> UnlockState : SkillComponent->SkillUnlockStates)
+	{
+		bool& State = SaveGame->SkillUnlockStates.FindOrAdd(UnlockState.Key);
+		State = UnlockState.Value;
+	}
+	SaveGame->CurrentSkillSlot = SkillComponent->CurrentSkillSlot;
+	SaveGame->NextSkillSlot = SkillComponent->NextSkillSlot;
 	
 	//임시 저장이라면 세이브 데이터를 가지고만 있고 직접 저장하지 않는다.
 	if (bTemporarySave)
@@ -250,6 +253,25 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 	{
 		EquipComp->LoadEquipmentFromSave(SaveGame->WeaponSaveData, SaveGame->ArmorSaveData);
 	}
+	
+	//스킬
+	TObjectPtr<UT3SkillComponentBase> SkillComponent;
+	if (const TObjectPtr<UT3CombatComponent> CombatComponent = Character->GetCombatComponent(); !CombatComponent || !CombatComponent->GetSkillComponent())
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : SkillComponent 접근 불가"), *GetNameSafe(this));
+		return;
+	}
+	else
+	{
+		SkillComponent = CombatComponent->GetSkillComponent();
+	}
+	for (TTuple<int32, bool> SavedState : SaveGame->SkillUnlockStates)
+	{
+		bool& State = SkillComponent->SkillUnlockStates.FindOrAdd(SavedState.Key);
+		State = SavedState.Value;
+	}
+	SkillComponent->CurrentSkillSlot = SaveGame->CurrentSkillSlot;
+	SkillComponent->NextSkillSlot = SaveGame->NextSkillSlot;
 }
 
 void AT3GameMode::RegainLostMoney(const int32 LostMoneyID) const

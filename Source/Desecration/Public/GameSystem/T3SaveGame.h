@@ -6,6 +6,7 @@
 #include "GameSystem/GlobalEnums.h"
 #include "T3SaveGame.generated.h"
 
+class UT3CharacterDataAsset;
 struct FInventorySlot;
 struct FSkillData;
 enum class ECharacterClass : uint8;
@@ -18,6 +19,9 @@ class DESECRATION_API UT3SaveGame : public USaveGame
 public:
 	//게임 데이터 초기화
 	void ResetGameData();
+	
+	//지정한 캐릭터 데이터로 스탯 변경
+	void SetStatByCharacterData(TObjectPtr<UT3CharacterDataAsset> CharacterData);
 	
 	//플레이어의 클래스
 	UPROPERTY()
@@ -43,10 +47,6 @@ public:
 	//모든 레벨의 물체 상태
 	UPROPERTY()
 	TMap<int32, int32> LevelObjectStates;
-	
-	//적들의 상태
-	UPROPERTY()
-	TMap<int32, int32> EnemyStates;
 #pragma endregion
 	
 #pragma region 캐릭터 스탯
@@ -140,13 +140,16 @@ public:
 #pragma endregion
 
 #pragma region 스킬
-	//TODO : 스킬 타입 및 이름에 맞게 변경하기
-	//보유 스킬
+	//보유중인 스킬 정보
 	UPROPERTY()
-	TArray<int32> OwnedSkills;
+	TMap<int32, bool> SkillUnlockStates;
 	
-	//스킬 슬롯
+	//현재 스킬
 	UPROPERTY()
-	TArray<int32> EquippedSkills;
+	int32 CurrentSkillSlot;
+	
+	//다음 스킬
+	UPROPERTY()
+	int32 NextSkillSlot;
 #pragma endregion
 };
