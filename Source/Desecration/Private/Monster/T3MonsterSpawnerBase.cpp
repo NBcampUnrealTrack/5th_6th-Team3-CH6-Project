@@ -40,6 +40,10 @@ void AT3MonsterSpawnerBase::SpawnMonster()
 
 	if (IsValid(CurrentMonster))
 	{
+		// 몬스터 제거 전에 정리 작업(무기 액터 제거 등)
+		CurrentMonster->CleanupBeforeDestroy();
+
+		// 몬스터 제거
 		CurrentMonster->Destroy();
 		CurrentMonster = nullptr;
 	}
