@@ -17,6 +17,7 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_State_Stunned, "Boss.State.Stunned");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_State_ExecutingPattern, "Boss.State.ExecutingPattern");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_State_SuperArmor, "Boss.State.SuperArmor");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_State_ParryWindow, "Boss.State.ParryWindow");
+UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_State_Disengaging, "Boss.State.Disengaging");
 
 // Gameplay Tag 네이티브 정의 — StateTree 전용 이벤트 태그 (대응 State 없음)
 UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_Event_StunRecovered, "Boss.Event.StunRecovered");
@@ -108,6 +109,11 @@ bool AT3MidBossMonster::IsExecutingPattern() const
 bool AT3MidBossMonster::HasSuperArmor() const
 {
 	return ActiveGameplayTags.HasTag(TAG_Boss_State_SuperArmor);
+}
+
+bool AT3MidBossMonster::IsDisengaging() const
+{
+	return ActiveGameplayTags.HasTag(TAG_Boss_State_Disengaging);
 }
 
 // ============================================================

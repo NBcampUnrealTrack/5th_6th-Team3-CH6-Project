@@ -3,6 +3,10 @@
 #include "Monster/T3MidBossMonster.h"
 #include "Monster/T3BossWeaponComponent.h"
 #include "Desecration.h"
+#include "Kismet/GameplayStatics.h"
+#include "NiagaraFunctionLibrary.h"
+#include "Components/CapsuleComponent.h"
+#include "DrawDebugHelpers.h"
 
 // ============================================================
 // 패턴 실행
@@ -57,6 +61,7 @@ bool AT3MidBossMonster::ExecutePattern(FName PatternName)
 	// 패턴 실행 시작
 	CurrentPatternName = PatternName;
 	CurrentChainIndex = 0;
+	ConsecutiveDisengageCount = 0;
 	AddStateTag(TAG_Boss_State_ExecutingPattern);
 
 	// 보정기에 패턴 사용 횟수 기록
@@ -293,6 +298,33 @@ void AT3MidBossMonster::HandlePatternNotify(FName NotifyName)
 			// 일반 검기 패턴 — 투사체 발사
 			SpawnBossProjectile();
 		}
+	}
+	// --- AoE 프리뷰 (범위 표시만, 데미지 없음) ---
+	else if (Name.Equals(TEXT("GroundSlamPreview")))
+	{
+		const FVector AoECenter = GetActorLocation() - FVector(0.0, 0.0, static_cast<double>(GetCapsuleComponent()->GetScaledCapsuleHalfHeight()));
+
+		if (AoEPreviewEffect)
+		{
+			const FVector ScaleVec = FVector(AoEEffectScale);
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+				this, AoEPreviewEffect, AoECenter, GetActorRotation(), ScaleVec);
+		}
+
+#if WITH_EDITOR
+		// 디버그 범위 표시 (노란색) — 이펙트 유무와 무관하게 항상 표시
+		DrawDebugSphere(GetWorld(), AoECenter, AoERadius, 24,
+			FColor::Yellow, false, 1.5f, 0, 3.f);
+#endif
+
+		// 프리뷰 경고 사운드
+		if (AoEPreviewSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				this, AoEPreviewSound, AoECenter, SoundVolume * AoEPreviewVolumeMultiplier);
+		}
+
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: GroundSlamPreview — 범위 표시 (반경:%.0f)"), AoERadius);
 	}
 	// --- AoE 장판기 발동 ---
 	else if (Name.Equals(TEXT("GroundSlam")))

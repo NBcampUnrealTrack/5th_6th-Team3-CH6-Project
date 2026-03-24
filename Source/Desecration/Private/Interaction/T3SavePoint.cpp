@@ -43,9 +43,4 @@ void AT3SavePoint::OnActorOverlap(UPrimitiveComponent* OverlappedComp, AActor* O
 		return;
 	}
 	
-	//저장하기
-	if (const TObjectPtr<AT3CharacterBase> Character = Cast<AT3CharacterBase>(OtherActor))
-	{
-		T3GameMode->SaveGame(Character, LevelName, false);
-	}
 }
