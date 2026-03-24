@@ -18,6 +18,7 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_State_ExecutingPattern, "Boss.State.ExecutingPat
 UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_State_SuperArmor, "Boss.State.SuperArmor");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_State_ParryWindow, "Boss.State.ParryWindow");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_State_Disengaging, "Boss.State.Disengaging");
+UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_State_PlayerParryable, "Boss.State.PlayerParryable");
 
 // Gameplay Tag 네이티브 정의 — StateTree 전용 이벤트 태그 (대응 State 없음)
 UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_Event_StunRecovered, "Boss.Event.StunRecovered");
