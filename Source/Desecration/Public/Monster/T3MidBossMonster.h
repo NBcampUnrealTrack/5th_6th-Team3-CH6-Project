@@ -31,6 +31,10 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_ExecutingPattern);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_SuperArmor);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_ParryWindow);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_Disengaging);
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_PlayerParryable);
+
+// 플레이어가 보스 공격을 패링 성공했을 때 외부 알림
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnParriedByPlayer);
 
 // StateTree 이벤트 태그 (extern — STNodes에서 참조)
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_Event_StunRecovered);
@@ -297,7 +301,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Projectile")
 	float ProjectileSpawnOffset = 100.f;
 
-	// --- 패링 카운터 ---
+	// --- 플레이어 패링 반응 ---
+	// 플레이어의 CombatComponent에서 패링 성공 시 호출하는 진입점
+	UFUNCTION(BlueprintCallable, Category = "MidBoss|Combat")
+	void NotifyParriedByPlayer();
+
+	UPROPERTY(BlueprintAssignable, Category = "MidBoss|Combat")
+	FOnParriedByPlayer OnParriedByPlayer;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "MidBoss|Combat")
+	bool IsPlayerParryable() const;
+
+	// --- 패링 카운터 (보스 → 플레이어) ---
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "MidBoss|Combat")
 	bool IsParryWindowActive() const;
 

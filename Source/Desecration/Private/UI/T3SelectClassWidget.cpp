@@ -46,13 +46,10 @@ void UT3SelectClassWidget::NativeConstruct()
 		
 		++TempClassValue;
 	}
-	
-	//선택 버튼은 비활성화 상태로 시작
-	SetActiveInputNamePanel(false);
-	
+
 	//이름 입력 패널 초기화
+	SetActiveInputNamePanel(false);
 	InputNamePanel->SelectClassWidget = this;
-	InputNamePanelParent->SetVisibility(ESlateVisibility::Collapsed);
 	
 	//그외 나머지 초기화
 	SelectedPlayerClass = ECharacterClass::Paladin;
