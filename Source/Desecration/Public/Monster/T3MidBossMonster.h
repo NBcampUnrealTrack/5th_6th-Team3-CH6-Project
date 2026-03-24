@@ -20,7 +20,7 @@ class UT3MidBossHPBarWidget;
 class UCurveFloat;
 class UAudioComponent;
 class UWidgetComponent;
-class USphereComponent;
+
 class UNiagaraSystem;
 class AT3BossProjectile;
 
@@ -30,6 +30,11 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_Stunned);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_ExecutingPattern);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_SuperArmor);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_ParryWindow);
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_Disengaging);
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_PlayerParryable);
+
+// 플레이어가 보스 공격을 패링 성공했을 때 외부 알림
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnParriedByPlayer);
 
 // StateTree 이벤트 태그 (extern — STNodes에서 참조)
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_Event_StunRecovered);
@@ -84,6 +89,9 @@ public:
 	// [0]=Stage1, [1]=Stage2, [2]=Stage3
 	int32 StagePatternCounts[3] = {0, 0, 0};
 
+	// 연속 Disengage 횟수 (패턴 실행 시 리셋, ConsecutiveDisengagePenalty Consideration용)
+	int32 ConsecutiveDisengageCount = 0;
+
 	// --- 상태 태그 ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|State")
 	FGameplayTagContainer ActiveGameplayTags;
@@ -108,6 +116,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "MidBoss|State")
 	bool HasSuperArmor() const;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "MidBoss|State")
+	bool IsDisengaging() const;
 
 	// --- 보스 정보 & 스탯 ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Info")
@@ -249,14 +260,25 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Skill")
 	TObjectPtr<UNiagaraSystem> AoEEffect;
 
+	// AoE 프리뷰 이펙트 (범위 표시용 — 데미지 없이 시각적 경고만)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Skill")
+	TObjectPtr<UNiagaraSystem> AoEPreviewEffect;
+
 	// AoE 이펙트 스케일 (BP에서 눈으로 보고 조절)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Skill", meta = (ClampMin = "0.1"))
 	float AoEEffectScale = 1.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Skill")
+	// AoE 프리뷰 사운드 (범위 경고음)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound")
+	TObjectPtr<USoundBase> AoEPreviewSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound")
+	float AoEPreviewVolumeMultiplier = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound")
 	TObjectPtr<USoundBase> AoESound;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Skill")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound")
 	float AoEVolumeMultiplier = 1.5f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Skill")
@@ -279,17 +301,28 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Projectile")
 	float ProjectileSpawnOffset = 100.f;
 
-	// --- 패링 카운터 ---
+	// --- 플레이어 패링 반응 ---
+	// 플레이어의 CombatComponent에서 패링 성공 시 호출하는 진입점
+	UFUNCTION(BlueprintCallable, Category = "MidBoss|Combat")
+	void NotifyParriedByPlayer();
+
+	UPROPERTY(BlueprintAssignable, Category = "MidBoss|Combat")
+	FOnParriedByPlayer OnParriedByPlayer;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "MidBoss|Combat")
+	bool IsPlayerParryable() const;
+
+	// --- 패링 카운터 (보스 → 플레이어) ---
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "MidBoss|Combat")
 	bool IsParryWindowActive() const;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Parry")
 	float ParryWindowDuration = 1.5f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Parry")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound")
 	TObjectPtr<USoundBase> ParrySound;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Parry")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound")
 	float ParryVolumeMultiplier = 2.0f;
 
 	// --- 카메라 쉐이크 ---
@@ -332,12 +365,10 @@ public:
 	// ============================================================
 #pragma region Flow
 
-	// --- 활성화 트리거 ---
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MidBoss|Activation")
-	TObjectPtr<USphereComponent> ActivationTriggerSphere;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Activation")
-	float ActivationRadius = 1500.f;
+	// --- 활성화 트리거 (외부 액터) ---
+	// 레벨에 배치한 TriggerBox/TriggerSphere를 스포이드로 지정
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "MidBoss|Activation")
+	TObjectPtr<AActor> ExternalActivationTrigger;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Activation")
 	TObjectPtr<UAnimMontage> IntroMontage;
@@ -371,7 +402,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Dissolve", meta = (EditCondition = "bEnableDissolve"))
 	FName DissolveParameterName = TEXT("Dissolve");
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Dissolve", meta = (EditCondition = "bEnableDissolve"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound", meta = (EditCondition = "bEnableDissolve"))
 	TObjectPtr<USoundBase> DissolveSound;
 
 	UFUNCTION(BlueprintCallable, Category = "MidBoss|Dissolve")
@@ -463,8 +494,7 @@ private:
 	void FinishDeathSequence();
 
 	UFUNCTION()
-	void OnActivationTriggerOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void OnExternalTriggerOverlap(AActor* OverlappedActor, AActor* OtherActor);
 
 	UFUNCTION()
 	void OnIntroMontageEnded(UAnimMontage* Montage, bool bInterrupted);

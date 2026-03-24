@@ -112,6 +112,36 @@ public:
 
     virtual FSkillData* GetSkillDataByID(int32 SkillID) { return nullptr; }
     
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Skill")
+    FText GetSkillNameByID(int32 SkillID)
+    {
+        FSkillData* Data = GetSkillDataByID(SkillID);
+        
+        if (Data)
+        {
+            return Data->SkillName;
+        }
+        else
+        {
+            return FText::GetEmpty();
+        }
+    }
+    
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Skill")
+    FText GetSkillInfoByID(int32 SkillID)
+    {
+        FSkillData* Data = GetSkillDataByID(SkillID);
+        
+        if (Data)
+        {
+            return Data->Description;
+        }
+        else
+        {
+            return FText::GetEmpty();
+        }
+    }
+    
     UFUNCTION(BlueprintCallable, Category = "Skill")
     virtual void CancelCurrentSkill();
 
@@ -221,8 +251,7 @@ public:
         // 위젯 바인딩 후 호출 - 현재 모든 스킬 해금 상태를 브로드캐스트
         UFUNCTION(BlueprintCallable, Category = "Skill")
         void BroadcastCurrentUnlockStates();
-
-protected:
+    
     // 스킬 ID와 해금 여부를 매핑
     UPROPERTY(EditAnywhere, Category = "Skill | Data")
     TMap<int32, bool> SkillUnlockStates;
