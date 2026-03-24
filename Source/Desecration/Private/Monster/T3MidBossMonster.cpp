@@ -4,7 +4,7 @@
 #include "Monster/T3BossWeaponComponent.h"
 #include "Desecration.h"
 #include "AIController.h"
-#include "Components/SphereComponent.h"
+
 #include "Components/TimelineComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Curves/CurveFloat.h"
@@ -61,16 +61,7 @@ AT3MidBossMonster::AT3MidBossMonster()
 	LockOnWidgetComponent->SetVisibility(false);
 	LockOnWidgetComponent->SetRelativeLocation(FVector::ZeroVector);
 
-	// 활성화 트리거 (플레이어 접근 감지 — Level BP TriggerBox 대체)
-	ActivationTriggerSphere = CreateDefaultSubobject<USphereComponent>(TEXT("ActivationTrigger"));
-	ActivationTriggerSphere->SetupAttachment(RootComponent);
-	ActivationTriggerSphere->SetSphereRadius(ActivationRadius);
-	ActivationTriggerSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	ActivationTriggerSphere->SetCollisionObjectType(ECC_WorldDynamic);
-	ActivationTriggerSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
-	ActivationTriggerSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-	ActivationTriggerSphere->SetGenerateOverlapEvents(true);
-	ActivationTriggerSphere->SetCanEverAffectNavigation(false);
+	// 활성화 트리거: 외부 액터 레퍼런스 방식 (ExternalActivationTrigger를 에디터에서 지정)
 }
 
 // ============================================================
@@ -204,21 +195,25 @@ void AT3MidBossMonster::BeginPlay()
 		}
 	}
 
-	// 활성화 트리거 반지름 동기화 (에디터에서 변경된 값 적용) + 오버랩 바인딩
-	if (ActivationTriggerSphere)
+	// 외부 활성화 트리거 바인딩 (OnActorBeginOverlap — TriggerVolume/TriggerBox 모두 대응)
+	if (ExternalActivationTrigger)
 	{
-		ActivationTriggerSphere->SetSphereRadius(ActivationRadius);
-		ActivationTriggerSphere->OnComponentBeginOverlap.AddDynamic(
-			this, &AT3MidBossMonster::OnActivationTriggerOverlap);
+		ExternalActivationTrigger->OnActorBeginOverlap.AddDynamic(
+			this, &AT3MidBossMonster::OnExternalTriggerOverlap);
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 외부 활성화 트리거 바인딩 완료 — %s"), *ExternalActivationTrigger->GetName());
+	}
+	else
+	{
+		UE_LOG(LogDesecration, Warning, TEXT("T3_MidBoss: ExternalActivationTrigger 미지정 — 에디터에서 스포이드로 트리거 액터를 연결하세요"));
 	}
 
 	OnMidBossSpawned.Broadcast();
 
-	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 스폰 완료 (HP: %.0f, Stage: %d, 등록 패턴: %d개, Modifier: %s, Dissolve: %s, TriggerRadius: %.0f)"),
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 스폰 완료 (HP: %.0f, Stage: %d, 등록 패턴: %d개, Modifier: %s, Dissolve: %s, ExtTrigger: %s)"),
 		*BossName, MidBossStats.MaxHP, BossStage, AttackPatterns.Num(),
 		ModifierDataAsset ? TEXT("O") : TEXT("X"),
 		bEnableDissolve ? TEXT("O") : TEXT("X"),
-		ActivationRadius);
+		ExternalActivationTrigger ? *ExternalActivationTrigger->GetName() : TEXT("없음"));
 }
 
 void AT3MidBossMonster::Tick(float DeltaTime)
