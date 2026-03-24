@@ -112,6 +112,36 @@ public:
 
     virtual FSkillData* GetSkillDataByID(int32 SkillID) { return nullptr; }
     
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Skill")
+    FText GetSkillNameByID(int32 SkillID)
+    {
+        FSkillData* Data = GetSkillDataByID(SkillID);
+        
+        if (Data)
+        {
+            return Data->SkillName;
+        }
+        else
+        {
+            return FText::GetEmpty();
+        }
+    }
+    
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Skill")
+    FText GetSkillInfoByID(int32 SkillID)
+    {
+        FSkillData* Data = GetSkillDataByID(SkillID);
+        
+        if (Data)
+        {
+            return Data->Description;
+        }
+        else
+        {
+            return FText::GetEmpty();
+        }
+    }
+    
     UFUNCTION(BlueprintCallable, Category = "Skill")
     virtual void CancelCurrentSkill();
 
