@@ -65,7 +65,7 @@ void UT3TitleLevelWidget::OnClickLoadButton()
 void UT3TitleLevelWidget::OnClickSettingsButton()
 {
 	SettingsPanel->OpenSettingsPanel();
-	TitleButtonsBox->SetVisibility(ESlateVisibility::Hidden);
+	TitleButtonsBox->SetVisibility(ESlateVisibility::Collapsed);
 }
 
 void UT3TitleLevelWidget::OnClickQuitButton()

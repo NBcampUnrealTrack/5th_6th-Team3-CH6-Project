@@ -70,7 +70,7 @@ ECharacterClass AT3GameMode::GetPlayerClass()
 	return SaveGame->PlayerClass;
 }
 
-bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName LevelName, const bool bTemporarySave)
+bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName LevelName, const bool bTemporarySave, const FVector TargetLocation, const FRotator TargetRotation)
 {
 	//캐릭터 정보를 저장된 게임 데이터에 저장한다.
 	const TObjectPtr<UT3SaveGame> SaveGame = T3GameInstance->GetSavedGameData();
@@ -81,7 +81,8 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	}
 	//현재 위치
 	SaveGame->SavedLevelName = LevelName;
-	SaveGame->PlayerLocation = Character->GetActorLocation();
+	SaveGame->PlayerLocation = TargetLocation;
+	SaveGame->PlayerRotation = TargetRotation;
 	//스탯
 	SaveGame->MaxHP = Character->GetMaxHP();
 	SaveGame->CurrentHP = Character->GetCurrentHP();
@@ -122,20 +123,23 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	}
 	
 	//스킬
-	// TObjectPtr<UT3SkillComponentBase> SkillComponent;
-	// if (const TObjectPtr<UT3CombatComponent> CombatComponent = Character->GetCombatComponent(); !CombatComponent || !CombatComponent->GetSkillComponent())
-	// {
-	// 	UE_LOG(LogTemp, Error, TEXT("%s : SkillComponent 접근 불가"), *GetNameSafe(this));
-	// 	return false;
-	// }
-	// else
-	// {
-	// 	SkillComponent = CombatComponent->GetSkillComponent();
-	// }
-	//SkillComponent->;
-	
-	//저장했던 적 상태 제거
-	SaveGame->EnemyStates.Empty();
+	TObjectPtr<UT3SkillComponentBase> SkillComponent;
+	if (const TObjectPtr<UT3CombatComponent> CombatComponent = Character->GetCombatComponent(); !CombatComponent || !CombatComponent->GetSkillComponent())
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : SkillComponent 접근 불가"), *GetNameSafe(this));
+		return false;
+	}
+	else
+	{
+		SkillComponent = CombatComponent->GetSkillComponent();
+	}
+	for (TTuple<int32, bool> UnlockState : SkillComponent->SkillUnlockStates)
+	{
+		bool& State = SaveGame->SkillUnlockStates.FindOrAdd(UnlockState.Key);
+		State = UnlockState.Value;
+	}
+	SaveGame->CurrentSkillSlot = SkillComponent->CurrentSkillSlot;
+	SaveGame->NextSkillSlot = SkillComponent->NextSkillSlot;
 	
 	//임시 저장이라면 세이브 데이터를 가지고만 있고 직접 저장하지 않는다.
 	if (bTemporarySave)
@@ -194,15 +198,16 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 		SaveGame->bSetLocation = false; // 플래그 초기화
 
 		FVector TargetLocation = SaveGame->PlayerLocation;
+		FRotator TargetRotation = SaveGame->PlayerRotation;
 
 		FTimerHandle LocationTimerHandle;
 		// [람다 캡처] Character와 TargetLocation 등을 안전하게 전달합니다.
-		GetWorldTimerManager().SetTimer(LocationTimerHandle, [Character, TargetLocation]()
+		GetWorldTimerManager().SetTimer(LocationTimerHandle, [Character, TargetLocation, TargetRotation]()
 			{
 				if (Character && Character->IsValidLowLevel())
 				{
 					// ETeleportType::TeleportPhysics를 사용하여 물리 엔진에 순간이동임을 알립니다.
-					Character->SetActorLocation(TargetLocation);
+					Character->SetActorLocationAndRotation(TargetLocation, TargetRotation, false, nullptr, ETeleportType::TeleportPhysics);
 
 					UE_LOG(LogTemp, Log, TEXT("Delayed Location Set Success for: %s"), *Character->GetName());
 				}
@@ -250,6 +255,25 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 	{
 		EquipComp->LoadEquipmentFromSave(SaveGame->WeaponSaveData, SaveGame->ArmorSaveData);
 	}
+	
+	//스킬
+	TObjectPtr<UT3SkillComponentBase> SkillComponent;
+	if (const TObjectPtr<UT3CombatComponent> CombatComponent = Character->GetCombatComponent(); !CombatComponent || !CombatComponent->GetSkillComponent())
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : SkillComponent 접근 불가"), *GetNameSafe(this));
+		return;
+	}
+	else
+	{
+		SkillComponent = CombatComponent->GetSkillComponent();
+	}
+	for (TTuple<int32, bool> SavedState : SaveGame->SkillUnlockStates)
+	{
+		bool& State = SkillComponent->SkillUnlockStates.FindOrAdd(SavedState.Key);
+		State = SavedState.Value;
+	}
+	SkillComponent->CurrentSkillSlot = SaveGame->CurrentSkillSlot;
+	SkillComponent->NextSkillSlot = SaveGame->NextSkillSlot;
 }
 
 void AT3GameMode::RegainLostMoney(const int32 LostMoneyID) const
@@ -324,10 +348,6 @@ void AT3GameMode::InstantSave()
 		return;
 	}
 	
-	if (SaveGame(Character, T3GameInstance->GetCurrentLevel(), false))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("즉시 저장 성공"));
-	}
 #else
 	return;
 #endif
