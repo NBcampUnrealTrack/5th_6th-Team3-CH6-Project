@@ -12,6 +12,7 @@ class UBoxComponent;
 class UProjectileMovementComponent;
 class UNiagaraComponent;
 class UStaticMeshComponent;
+class UAudioComponent;
 
 UCLASS()
 class DESECRATION_API AT3BossProjectile : public AActor
@@ -23,6 +24,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void Destroyed() override;
 
 public:
 	// 데미지/속도/강도 초기화
@@ -49,7 +51,28 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
 	FVector CollisionExtent = FVector(30.f, 80.f, 40.f);
 
+	// --- 사운드 ---
+	// 비행 루프 사운드 (투사체에 붙어서 이동)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile|Sound")
+	TObjectPtr<USoundBase> LoopSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile|Sound")
+	float LoopVolumeMultiplier = 1.0f;
+
+	// 충돌 시 재생되는 사운드
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile|Sound")
+	TObjectPtr<USoundBase> ImpactSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile|Sound")
+	float ImpactVolumeMultiplier = 1.5f;
+
+	// 3D 거리 감쇠 설정 (미설정 시 기본 감쇠 자동 생성)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile|Sound")
+	TObjectPtr<USoundAttenuation> SoundAttenuation;
+
 private:
+	UPROPERTY()
+	TObjectPtr<UAudioComponent> LoopAudioComponent;
 	float Damage = 0.f;
 	EHitIntensity HitIntensity = EHitIntensity::Light;
 	TSubclassOf<UT3DamageType_Base> DamageTypeClass;

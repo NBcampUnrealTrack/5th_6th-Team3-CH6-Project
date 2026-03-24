@@ -70,7 +70,7 @@ ECharacterClass AT3GameMode::GetPlayerClass()
 	return SaveGame->PlayerClass;
 }
 
-bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName LevelName, const bool bTemporarySave)
+bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName LevelName, const bool bTemporarySave, const FVector TargetLocation, const FRotator TargetRotation)
 {
 	//캐릭터 정보를 저장된 게임 데이터에 저장한다.
 	const TObjectPtr<UT3SaveGame> SaveGame = T3GameInstance->GetSavedGameData();
@@ -81,7 +81,8 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	}
 	//현재 위치
 	SaveGame->SavedLevelName = LevelName;
-	SaveGame->PlayerLocation = Character->GetActorLocation();
+	SaveGame->PlayerLocation = TargetLocation;
+	SaveGame->PlayerRotation = TargetRotation;
 	//스탯
 	SaveGame->MaxHP = Character->GetMaxHP();
 	SaveGame->CurrentHP = Character->GetCurrentHP();
@@ -99,10 +100,13 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 		UE_LOG(LogTemp, Error, TEXT("%s : InventoryComponent가 null"), *GetNameSafe(this));
 		return false;
 	}
-	SaveGame->Items.Empty();
-	for (FInventorySlot& Slot : InventoryComponent->Items)
+	//참고 : 인벤토리 공간은 T3InventoryComponent에서 정한 값을 따른다.
+	constexpr int32 InvenSize = 20;
+	for (int32 iNum = 0; iNum < 20; ++iNum)
 	{
-		SaveGame->Items.Add(Slot);
+		SaveGame->Items[iNum] = InventoryComponent->Items[iNum];
+		SaveGame->RuneItems[iNum] = InventoryComponent->RuneItems[iNum];
+		SaveGame->EtcItems[iNum] = InventoryComponent->EtcItems[iNum];
 	}
 	SaveGame->Money = InventoryComponent->GetMoney();
 	SaveGame->NormalStoneCount = InventoryComponent->GetNormalStoneCount();
@@ -197,15 +201,16 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 		SaveGame->bSetLocation = false; // 플래그 초기화
 
 		FVector TargetLocation = SaveGame->PlayerLocation;
+		FRotator TargetRotation = SaveGame->PlayerRotation;
 
 		FTimerHandle LocationTimerHandle;
 		// [람다 캡처] Character와 TargetLocation 등을 안전하게 전달합니다.
-		GetWorldTimerManager().SetTimer(LocationTimerHandle, [Character, TargetLocation]()
+		GetWorldTimerManager().SetTimer(LocationTimerHandle, [Character, TargetLocation, TargetRotation]()
 			{
 				if (Character && Character->IsValidLowLevel())
 				{
 					// ETeleportType::TeleportPhysics를 사용하여 물리 엔진에 순간이동임을 알립니다.
-					Character->SetActorLocation(TargetLocation);
+					Character->SetActorLocationAndRotation(TargetLocation, TargetRotation, false, nullptr, ETeleportType::TeleportPhysics);
 
 					UE_LOG(LogTemp, Log, TEXT("Delayed Location Set Success for: %s"), *Character->GetName());
 				}
@@ -225,13 +230,12 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 	TObjectPtr<UT3InventoryComponent> InventoryComponent = Character->InventoryComponent;
 	if (InventoryComponent)
 	{
-		const int32 SlotNums = SaveGame->Items.Num();
-		for (int32 iNum = 0; iNum < SlotNums; ++iNum)
+		constexpr int32 InvenSize = 20;
+		for (int32 iNum = 0; iNum < 20; ++iNum)
 		{
-			if (InventoryComponent->Items.IsValidIndex(iNum) && SaveGame->Items.IsValidIndex(iNum))
-			{
-				InventoryComponent->Items[iNum] = SaveGame->Items[iNum];
-			}
+			InventoryComponent->Items[iNum] = SaveGame->Items[iNum];
+			InventoryComponent->RuneItems[iNum] = SaveGame->RuneItems[iNum];
+			InventoryComponent->EtcItems[iNum] = SaveGame->EtcItems[iNum];
 		}
 		InventoryComponent->SetMoney(SaveGame->Money);
 		InventoryComponent->SetNormalStoneCount(SaveGame->NormalStoneCount);
@@ -346,10 +350,6 @@ void AT3GameMode::InstantSave()
 		return;
 	}
 	
-	if (SaveGame(Character, T3GameInstance->GetCurrentLevel(), false))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("즉시 저장 성공"));
-	}
 #else
 	return;
 #endif
