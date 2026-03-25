@@ -120,6 +120,36 @@ float AT3MonsterBase::GetCurrentAttackDamage() const
 	return BaseDamage * DamageMultiplier * LevelMultiplier;
 }
 
+// 자신의 헬스 컴포넌트의 최대 체력을 현재 스테이지에 맞게 조정하는 함수
+void AT3MonsterBase::UpdateByStage()
+{
+	if(!HealthComponent)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("T3MonsterBase: HealthComponent is null when updating by stage."));
+		return;
+	}
+
+	float StageMultiplier = 1.0f;
+
+	switch (CurrentStage)
+	{
+	case 0:
+			StageMultiplier = 1.0f;
+			break;
+	case 1:
+			StageMultiplier = 1.3f;
+			break;
+	case 2:
+			StageMultiplier = 1.6f;
+			break;
+	case 3:
+			StageMultiplier = 2.0f;	
+			break;
+	}
+	HealthComponent->MaxHP = HealthComponent->BaseHP * StageMultiplier;
+	HealthComponent->ResetCurrentHP();
+}
+
 float AT3MonsterBase::GetHPPercent() const
 {
 	if (!HealthComponent || HealthComponent->MaxHP <= 0.f)
