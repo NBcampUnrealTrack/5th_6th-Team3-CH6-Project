@@ -30,6 +30,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	bool bIsDead;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
+	int CurrentStage;
+
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	class UT3HealthComponent* HealthComponent;
@@ -73,6 +76,10 @@ public:
 	// 스포너에게 삭제 요청을 받아 몬스터를 강제로 제거하는 함수
 	UFUNCTION(BlueprintImplementableEvent, Category = "Spawner")
 	void CleanupBeforeDestroy();
+
+	// 스포너에서 현재 스테이지 정보를 받아 몬스터의 배율을 조정하는 함수
+	UFUNCTION(BlueprintCallable, Category = "Spawner")
+	void UpdateByStage();
 
 #pragma region ExecuteRune
 public:

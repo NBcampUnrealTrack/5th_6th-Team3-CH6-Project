@@ -99,6 +99,12 @@ protected:
 	
 	UPROPERTY(BlueprintReadOnly, Category = "UI")
 	TObjectPtr<UT3ShopWidget> ShopWidget;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> LevelUpWidgetClass;
+
+	UPROPERTY(BlueprintReadOnly, Category = "UI")
+	TObjectPtr<UUserWidget> LevelUpWidget;
 	
 public:
 	UPROPERTY(BlueprintReadOnly, Category = "UI")
