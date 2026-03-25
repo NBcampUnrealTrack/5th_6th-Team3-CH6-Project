@@ -30,6 +30,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	bool bIsDead;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
+	int CurrentStage;
+
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	class UT3HealthComponent* HealthComponent;
