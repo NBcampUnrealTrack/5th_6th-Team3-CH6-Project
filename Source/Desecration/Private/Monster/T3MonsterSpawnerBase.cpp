@@ -64,5 +64,7 @@ void AT3MonsterSpawnerBase::SpawnMonster()
 	CurrentMonster = SpawnedMonster;
 	CurrentMonster->ReceivePatrolRoute(PatrolRouteRef);
 	CurrentMonster->ReceiveStatueTrigger(StatueTriggerRef);
+	CurrentMonster->CurrentStage = CurrentStage;
+	CurrentMonster->UpdateByStage();
 }
 

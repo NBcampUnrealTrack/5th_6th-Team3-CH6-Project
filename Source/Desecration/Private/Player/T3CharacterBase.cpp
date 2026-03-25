@@ -453,7 +453,7 @@ void AT3CharacterBase::Roll(const FInputActionValue& Value)
 		// 팔라딘의 경우 신의 심판 시전 중 구르면 스킬 캔슬
 		if (GetCurrentClass() == ECharacterClass::Paladin)
 		{
-				Combat->GetSkillComponent()->CancelCurrentSkill();
+  				Combat->GetSkillComponent()->CancelCurrentSkill();
 		}
 	}
 }
@@ -505,6 +505,15 @@ void AT3CharacterBase::BroadcastStatChange(ET3StatType StatType)
 
 
 // 회복 함수
+void AT3CharacterBase::MakeFullCondition()
+{
+	CurrentHP = MaxHP;
+	CurrentMana = MaxMana;
+	CurrentStamina = MaxStamina;
+	OnStatChanged.Broadcast(ET3StatType::HP, CurrentHP, MaxHP);
+	OnStatChanged.Broadcast(ET3StatType::MP, CurrentMana, MaxMana);
+	OnStatChanged.Broadcast(ET3StatType::Stamina, CurrentStamina, MaxStamina);
+}
 
 // 스테미너 자연 회복
 void AT3CharacterBase::RegenerateStamina()
