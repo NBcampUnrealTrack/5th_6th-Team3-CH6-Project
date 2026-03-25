@@ -274,6 +274,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Class")
 	ECharacterClass CurrentClass;
 
+
 	// 스태미나 자연 회복
 	void RegenerateStamina();
 	// 스테미나 회복 주기
@@ -326,6 +327,9 @@ public:
 
 	void UpdateForcedMovement(float DeltaTime);
 	void UpdateForcedRotation(float DeltaTime);
+
+	UFUNCTION(BlueprintCallable)
+	void MakeFullCondition();
 
 	//스킬 사용 불가 변수
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ForceMove")
