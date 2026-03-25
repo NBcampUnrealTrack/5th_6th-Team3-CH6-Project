@@ -579,8 +579,8 @@ void AT3CharacterBase::ConsumeMana(float Amount)
 		float NewMana = CurrentMana - Amount;
 		SetCurrentMana(NewMana);
 		
-		//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
-		//FString::Printf(TEXT("Remaining Mana: %.1f"), CurrentMana));
+		UE_LOG(LogTemp, Display, TEXT("ConsumeMana: %.1f, Remaining Mana: %.1f"), Amount, CurrentMana);
+
 	}
 }
 
@@ -789,16 +789,19 @@ float AT3CharacterBase::GetStatIncreasePreview(ET3StatType StatType, int32 Curre
 		{
 		case ET3StatType::Vigor:
 			StepIncrease = 15.f + (TempStatValue * 0.7f);
+			StepIncrease /= 3.f;
 			if (TempStatValue >= 30) StepIncrease /= 3.f;
 			break;
 
 		case ET3StatType::Endurance:
 			StepIncrease = 10.f + (TempStatValue * 0.5f);
+			StepIncrease /= 2.f;
 			if (TempStatValue >= 30) StepIncrease /= 3.f;
 			break;
 
 		case ET3StatType::Mind:
 			StepIncrease = 10.f + (TempStatValue * 0.7f);
+			StepIncrease /= 2.f;
 			if (TempStatValue >= 30) StepIncrease /= 3.f;
 			break;
 
@@ -823,7 +826,7 @@ float AT3CharacterBase::GetAttackPowerPreview(ET3StatType StatType, int32 Target
 		return 0.0f;
 	}
 
-	float AdditionalAttack = 0.f;
+	PreAdditionalAttack = 0.f;
 
 	// 1. 현재 변경하려는 스탯이 캐릭터의 주 공격 스탯인지 확인
 	bool bIsPrimaryStat = false;
@@ -841,18 +844,23 @@ float AT3CharacterBase::GetAttackPowerPreview(ET3StatType StatType, int32 Target
 
 	if (StatToCalculate <= 30)
 	{
-		AdditionalAttack = StatToCalculate * (1.0f + WeaponLevel);
+		PreAdditionalAttack = StatToCalculate * (1.0f + WeaponLevel);
 	}
 	else
 	{
-		AdditionalAttack = (30.f * (1.0f + WeaponLevel)) + ((StatToCalculate - 30) * 5.f);
+		PreAdditionalAttack = (30.f * (1.0f + WeaponLevel)) + ((StatToCalculate - 30) * 5.f);
 	}
 
-	AdditionalAttack = FMath::CeilToFloat(AdditionalAttack);
+	PreAdditionalAttack = FMath::CeilToFloat(PreAdditionalAttack);
 
-	return AttackPower + AdditionalAttack + CachedRuneAttackBonus;
+	return AttackPower + PreAdditionalAttack + CachedRuneAttackBonus;
 }
 
+void AT3CharacterBase::SetWeaponLevel(float CurrentWeaponLevel)
+{
+	 WeaponLevel = CurrentWeaponLevel; 
+	 BroadcastStatChange(ET3StatType::Attack); 
+}
 
 int32 AT3CharacterBase::GetCalculatedLevel() const
 {
@@ -866,43 +874,7 @@ int32 AT3CharacterBase::GetCalculatedLevel() const
 
 float AT3CharacterBase::GetAttackPower()
 {
-	float AdditionalAttack = 0.f;
-	
-	if (!CheckCharacterData())
-	{
-		return 0.0f;
-	}
-
-	// 물리 캐릭터인 경우 근력 반영
-	if (CharacterData->PrimaryDamageType == EDamageType::Physical)
-	{
-		if (Strength <= 30)
-		{
-			AdditionalAttack = Strength * (1.0f + WeaponLevel);
-			AdditionalAttack = FMath::CeilToFloat(AdditionalAttack);
-		}
-		else
-		{
-			// 30까지는 정상 반영 + 30 초과분은 스탯당 5씩
-			AdditionalAttack = (30.f * (1.0f + WeaponLevel)) + ((Strength - 30) * 5.f);
-			AdditionalAttack = FMath::CeilToFloat(AdditionalAttack);
-		}
-	}
-	// 마법 캐릭터인 경우 지력 반영
-	else
-	{
-		if (Intelligence <= 30)
-		{
-			AdditionalAttack = Intelligence * (1.0f + WeaponLevel);
-			AdditionalAttack = FMath::CeilToFloat(AdditionalAttack);
-		}
-		else
-		{
-			AdditionalAttack = (30.f * (1.0f + WeaponLevel)) + ((Intelligence - 30) * 5.f);
-			AdditionalAttack = FMath::CeilToFloat(AdditionalAttack);
-		}
-	}
-	UE_LOG(LogTemp, Display, TEXT("AdditionalAttack : %.1f"), AdditionalAttack);
+	UE_LOG(LogTemp, Display, TEXT("BaseAtk : %.1f, AddAtk : %.1f, RuneAtk : %.1f"), AttackPower, AdditionalAttack, CachedRuneAttackBonus);
 	return AttackPower + AdditionalAttack + CachedRuneAttackBonus;
 }
 
