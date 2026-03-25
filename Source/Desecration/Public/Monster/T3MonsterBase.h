@@ -77,6 +77,10 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Spawner")
 	void CleanupBeforeDestroy();
 
+	// 스포너에서 현재 스테이지 정보를 받아 몬스터의 배율을 조정하는 함수
+	UFUNCTION(BlueprintCallable, Category = "Spawner")
+	void UpdateByStage();
+
 #pragma region ExecuteRune
 public:
 	virtual float GetHPPercent() const override;

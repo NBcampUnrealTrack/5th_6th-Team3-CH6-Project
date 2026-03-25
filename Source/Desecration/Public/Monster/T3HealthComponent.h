@@ -26,8 +26,11 @@ class DESECRATION_API UT3HealthComponent : public UActorComponent
 public:
 	UT3HealthComponent();
 
+	UPROPERTY(EditDefaultsOnly, Category = "Health")
+	float BaseHP = 120.f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
-	float MaxHP = 120;
+	float MaxHP = BaseHP;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health")
 	float CurrentHP;
