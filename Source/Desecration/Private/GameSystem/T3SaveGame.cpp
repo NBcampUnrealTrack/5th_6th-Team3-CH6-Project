@@ -40,6 +40,8 @@ void UT3SaveGame::ResetGameData()
 	Mind = 10;
 	Strength = 5;
 	Intelligence = 5;
+	WeaponLevel = 0;
+	CharacterLevel = 1;
 	
 	//인벤토리
 	constexpr int32 InvenSize = 20;
