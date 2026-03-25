@@ -109,6 +109,14 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	constexpr int32 InvenSize = 20;
 	for (int32 iNum = 0; iNum < InvenSize; ++iNum)
 	{
+		//유효 인덱스 검사
+		if (!(SaveGame->Items.IsValidIndex(iNum) && InventoryComponent->Items.IsValidIndex(iNum) &&
+			SaveGame->RuneItems.IsValidIndex(iNum) && InventoryComponent->RuneItems.IsValidIndex(iNum) &&
+			SaveGame->EtcItems.IsValidIndex(iNum) && InventoryComponent->EtcItems.IsValidIndex(iNum)))
+		{
+			break;
+		}
+		
 		SaveGame->Items[iNum] = InventoryComponent->Items[iNum];
 		SaveGame->RuneItems[iNum] = InventoryComponent->RuneItems[iNum];
 		SaveGame->EtcItems[iNum] = InventoryComponent->EtcItems[iNum];
@@ -230,6 +238,11 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 	Character->SetCriticalChance(SaveGame->CriticalChance);
 	Character->SetCriticalDamage(SaveGame->CriticalDamage);
 	Character->SetMoveSpeed(SaveGame->MoveSpeed);
+	Character->SetVigor(SaveGame->Vigor);
+	Character->SetEndurance(SaveGame->Endurance);
+	Character->SetMind(SaveGame->Mind);
+	Character->SetStrength(SaveGame->Strength);
+	Character->SetIntelligence(SaveGame->Intelligence);
 
 	//인벤토리 컴포넌트 유효성 검사
 	TObjectPtr<UT3InventoryComponent> InventoryComponent = Character->InventoryComponent;
@@ -238,6 +251,13 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 		constexpr int32 InvenSize = 20;
 		for (int32 iNum = 0; iNum < InvenSize; ++iNum)
 		{
+			//유효 인덱스 검사
+			if (!(SaveGame->Items.IsValidIndex(iNum) && InventoryComponent->Items.IsValidIndex(iNum) &&
+				SaveGame->RuneItems.IsValidIndex(iNum) && InventoryComponent->RuneItems.IsValidIndex(iNum) &&
+				SaveGame->EtcItems.IsValidIndex(iNum) && InventoryComponent->EtcItems.IsValidIndex(iNum)))
+			{
+				break;
+			}
 			InventoryComponent->Items[iNum] = SaveGame->Items[iNum];
 			InventoryComponent->RuneItems[iNum] = SaveGame->RuneItems[iNum];
 			InventoryComponent->EtcItems[iNum] = SaveGame->EtcItems[iNum];

@@ -80,6 +80,16 @@ void AT3PlayerController::BeginPlay()
 		}
 	}
 
+	if (IsValid(LevelUpWidgetClass))
+	{
+		LevelUpWidget = CreateWidget<UUserWidget>(this, LevelUpWidgetClass);
+		if (LevelUpWidget)
+		{
+			LevelUpWidget->AddToViewport(99);
+			LevelUpWidget->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
+
 	// 팔라딘일 때만 신성게이지 위젯 생성
 	if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
 	{
