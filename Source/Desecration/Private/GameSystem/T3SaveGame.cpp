@@ -8,7 +8,7 @@
 
 void UT3SaveGame::ResetGameData()
 {
-	//참고 : 이하의 값 중 일부는 캐릭터 데이터 에셋 등으로 변경될 수 있음
+	//참고 : 이하의 값 중 일부는 시작부터 다른 값으로 변경될 수 있으니 변경이 필요하면 사용 위치를 추적하는 것을 권장
 	
 	PlayerClass = ECharacterClass::Paladin;
 	PlayerName = TEXT("");
