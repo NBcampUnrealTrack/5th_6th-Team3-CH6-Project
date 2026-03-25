@@ -1,4 +1,4 @@
-#include "GameSystem/T3SaveGame.h"
+﻿#include "GameSystem/T3SaveGame.h"
 
 #include "Equipment/T3EquipmentTypes.h"
 #include "Equipment/T3PlayerEquipmentComponent.h" 
@@ -30,7 +30,7 @@ void UT3SaveGame::ResetGameData()
 	CurrentMana = MaxMana;
 	MaxStamina = 100.0f;
 	CurrentStamina = MaxStamina;
-	AttackPower = 50.0f;
+	AttackPower = 45.0f;
 	CriticalChance = 0.1f;
 	CriticalDamage = 1.5f;
 	MoveSpeed = 500.0f;
