@@ -31,14 +31,13 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_ExecutingPattern);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_SuperArmor);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_ParryWindow);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_Disengaging);
-UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_PlayerParryable);
-
 // 플레이어가 보스 공격을 패링 성공했을 때 외부 알림
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnParriedByPlayer);
 
 // StateTree 이벤트 태그 (extern — STNodes에서 참조)
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_Event_StunRecovered);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_Event_ActionCountDepleted);
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_Event_ParriedByPlayer);
 
 // ============================================================
 // AT3MidBossMonster
@@ -309,8 +308,12 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "MidBoss|Combat")
 	FOnParriedByPlayer OnParriedByPlayer;
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "MidBoss|Combat")
-	bool IsPlayerParryable() const;
+	// 패링 히트리액션 재생 중 플래그 — 몽타주 종료 시 StateTree 이벤트 전송용
+	bool bParryHitReactionPlaying = false;
+
+	// 패링 히트리액션 몽타주 종료 콜백
+	UFUNCTION()
+	void OnParryHitReactionEnded(UAnimMontage* Montage, bool bInterrupted);
 
 	// --- 패링 카운터 (보스 → 플레이어) ---
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "MidBoss|Combat")
