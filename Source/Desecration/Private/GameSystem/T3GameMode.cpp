@@ -98,7 +98,7 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	SaveGame->Mind = Character->GetMind();
 	SaveGame->Strength = Character->GetStrength();
 	SaveGame->Intelligence = Character->GetIntelligence();
-	//SaveGame->WeaponLevel = Character->GetWeaponLevel();
+	SaveGame->WeaponLevel = Character->GetWeaponLevel();
 	SaveGame->CharacterLevel = Character->GetCharacterLevel();
 	//인벤토리
 	TObjectPtr<UT3InventoryComponent> InventoryComponent = Character->InventoryComponent;
