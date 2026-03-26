@@ -129,17 +129,25 @@ public:
 	UPROPERTY()
 	FT3ItemSaveData ArmorSaveData;
 	
-	// 하급 강화석 보유량
+	// 무기 강화석 보유량
 	UPROPERTY()
-	int32 NormalStoneCount;
+	int32 WeaponNormalStoneCount;
 
-	// 중급 강화석 보유량
 	UPROPERTY()
-	int32 EpicStoneCount;
+	int32 WeaponEpicStoneCount;
 
-	// 상급 강화석 보유량
 	UPROPERTY()
-	int32 LegendaryStoneCount;
+	int32 WeaponLegendaryStoneCount;
+
+	// 방어구 강화석 보유량
+	UPROPERTY()
+	int32 ArmorNormalStoneCount;
+
+	UPROPERTY()
+	int32 ArmorEpicStoneCount;
+
+	UPROPERTY()
+	int32 ArmorLegendaryStoneCount;
 #pragma endregion
 
 #pragma region 스킬

@@ -105,16 +105,25 @@ protected:
 	int32 MaxUpgradeLevel = 10;
 
 	// ========================================================================
-	// 강화석 아이콘 (에디터에서 설정)
+	// 강화석 아이콘 (에디터에서 설정) — 무기/방어구 × 3등급 = 6종
 	// ========================================================================
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade|StoneIcons")
-	TObjectPtr<UTexture2D> NormalStoneIcon;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade|StoneIcons|Weapon")
+	TObjectPtr<UTexture2D> WeaponNormalStoneIcon;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade|StoneIcons")
-	TObjectPtr<UTexture2D> EpicStoneIcon;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade|StoneIcons|Weapon")
+	TObjectPtr<UTexture2D> WeaponEpicStoneIcon;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade|StoneIcons")
-	TObjectPtr<UTexture2D> LegendaryStoneIcon;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade|StoneIcons|Weapon")
+	TObjectPtr<UTexture2D> WeaponLegendaryStoneIcon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade|StoneIcons|Armor")
+	TObjectPtr<UTexture2D> ArmorNormalStoneIcon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade|StoneIcons|Armor")
+	TObjectPtr<UTexture2D> ArmorEpicStoneIcon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade|StoneIcons|Armor")
+	TObjectPtr<UTexture2D> ArmorLegendaryStoneIcon;
 
 	// ========================================================================
 	// 상태
@@ -181,17 +190,17 @@ public:
 	// UIData가 아닌 UpgradeStation 레퍼런스에서 직접 접근
 	// ========================================================================
 
-	// 특정 등급 강화석 보유량 조회
+	// 특정 장비 타입 + 등급 강화석 보유량 조회
 	UFUNCTION(BlueprintPure, Category = "Upgrade|Currency")
-	int32 GetStoneCount(ET3UpgradeStoneGrade Grade) const;
+	int32 GetStoneCount(ET3EquipmentType EquipmentType, ET3UpgradeStoneGrade Grade) const;
 
-	// 특정 등급 강화석 아이콘 조회
+	// 특정 장비 타입 + 등급 강화석 아이콘 조회
 	UFUNCTION(BlueprintPure, Category = "Upgrade|Currency")
-	UTexture2D* GetStoneIcon(ET3UpgradeStoneGrade Grade) const;
+	UTexture2D* GetStoneIcon(ET3EquipmentType EquipmentType, ET3UpgradeStoneGrade Grade) const;
 
 	// 현재 장비 레벨에 사용 가능한 강화석 등급 목록 조회
 	UFUNCTION(BlueprintCallable, Category = "Upgrade|Currency")
-	TArray<ET3UpgradeStoneGrade> GetAvailableStones(int32 CurrentEquipmentLevel) const;
+	TArray<ET3UpgradeStoneGrade> GetAvailableStones(ET3EquipmentType EquipmentType, int32 CurrentEquipmentLevel) const;
 
 	// 특정 등급 강화석이 해당 레벨에 사용 가능한지
 	UFUNCTION(BlueprintPure, Category = "Upgrade|Currency")
@@ -201,10 +210,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Upgrade|Currency")
 	static int32 GetMaxLevelForStone(ET3UpgradeStoneGrade Grade);
 
-	// 현재 장비 레벨에서 자동 선택될 강화석 등급 조회 (UI 표시용)
-	// 사용 가능한 강화석이 없으면 false 반환
+	// 현재 장비 타입/레벨에서 자동 선택될 강화석 등급 조회 (UI 표시용)
 	UFUNCTION(BlueprintPure, Category = "Upgrade|Currency")
-	bool GetNextStoneGrade(int32 CurrentEquipmentLevel, ET3UpgradeStoneGrade& OutGrade) const;
+	bool GetNextStoneGrade(ET3EquipmentType EquipmentType, int32 CurrentEquipmentLevel, ET3UpgradeStoneGrade& OutGrade) const;
 
 	// ========================================================================
 	// 강화 실행 (Core - Widget Blueprint에서 호출)
@@ -224,11 +232,10 @@ public:
 
 private:
 	// 현재 레벨에서 사용 가능한 최하급 강화석 자동 선택
-	// 사용 가능한 등급이 없으면 false 반환
-	bool SelectLowestAvailableStone(int32 CurrentEquipmentLevel, ET3UpgradeStoneGrade& OutGrade) const;
+	bool SelectLowestAvailableStone(ET3EquipmentType EquipmentType, int32 CurrentEquipmentLevel, ET3UpgradeStoneGrade& OutGrade) const;
 
 	// 강화석 1개 차감
-	void ConsumeStone(ET3UpgradeStoneGrade Grade);
+	void ConsumeStone(ET3EquipmentType EquipmentType, ET3UpgradeStoneGrade Grade);
 
 public:
 
