@@ -124,9 +124,12 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 		SaveGame->EtcItems[iNum] = InventoryComponent->EtcItems[iNum];
 	}
 	SaveGame->Money = InventoryComponent->GetMoney();
-	SaveGame->NormalStoneCount = InventoryComponent->GetNormalStoneCount();
-	SaveGame->EpicStoneCount = InventoryComponent->GetEpicStoneCount();
-	SaveGame->LegendaryStoneCount = InventoryComponent->GetLegendaryStoneCount();
+	SaveGame->WeaponNormalStoneCount = InventoryComponent->GetWeaponNormalStoneCount();
+	SaveGame->WeaponEpicStoneCount = InventoryComponent->GetWeaponEpicStoneCount();
+	SaveGame->WeaponLegendaryStoneCount = InventoryComponent->GetWeaponLegendaryStoneCount();
+	SaveGame->ArmorNormalStoneCount = InventoryComponent->GetArmorNormalStoneCount();
+	SaveGame->ArmorEpicStoneCount = InventoryComponent->GetArmorEpicStoneCount();
+	SaveGame->ArmorLegendaryStoneCount = InventoryComponent->GetArmorLegendaryStoneCount();
 	//포션
 	SaveGame->HPPotionCount = InventoryComponent->GetHPPotionCount();
 	SaveGame->MPPotionCount = InventoryComponent->GetMPPotionCount();
@@ -267,9 +270,12 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 			InventoryComponent->EtcItems[iNum] = SaveGame->EtcItems[iNum];
 		}
 		InventoryComponent->SetMoney(SaveGame->Money);
-		InventoryComponent->SetNormalStoneCount(SaveGame->NormalStoneCount);
-		InventoryComponent->SetEpicStoneCount(SaveGame->EpicStoneCount);
-		InventoryComponent->SetLegendaryStoneCount(SaveGame->LegendaryStoneCount);
+		InventoryComponent->SetWeaponNormalStoneCount(SaveGame->WeaponNormalStoneCount);
+		InventoryComponent->SetWeaponEpicStoneCount(SaveGame->WeaponEpicStoneCount);
+		InventoryComponent->SetWeaponLegendaryStoneCount(SaveGame->WeaponLegendaryStoneCount);
+		InventoryComponent->SetArmorNormalStoneCount(SaveGame->ArmorNormalStoneCount);
+		InventoryComponent->SetArmorEpicStoneCount(SaveGame->ArmorEpicStoneCount);
+		InventoryComponent->SetArmorLegendaryStoneCount(SaveGame->ArmorLegendaryStoneCount);
 		
 		//포션
 		InventoryComponent->SetHPPotionCount(SaveGame->HPPotionCount);
