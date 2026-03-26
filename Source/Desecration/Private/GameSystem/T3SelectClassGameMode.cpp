@@ -31,12 +31,14 @@ void AT3SelectClassGameMode::MakeFirstGameData(const FString& PlayerName, const 
 		}
 	}
 	
-	//잃어버린 돈 생성
+	//그 외 SaveGame기반 클래스 초기화
 	T3GameInstance->MakeFirstLostMoneyData();
+	T3GameInstance->MakeFirstObjectStateData();
 	
-	//게임 데이터 저장
+	//모든 게임 데이터 저장
 	T3GameInstance->SaveGame();
 	T3GameInstance->SaveLostMoney();
+	T3GameInstance->SaveObjectState();
 }
 
 void AT3SelectClassGameMode::TutorialStart()

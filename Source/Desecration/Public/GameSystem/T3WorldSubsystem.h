@@ -4,7 +4,7 @@
 #include "Subsystems/WorldSubsystem.h"
 #include "T3WorldSubsystem.generated.h"
 
-class UT3SaveGame;
+class UT3SaveObjectState;
 
 UCLASS()
 class DESECRATION_API UT3WorldSubsystem : public UWorldSubsystem
@@ -31,7 +31,7 @@ public:
 	void SetOrAddObjectState(const int32 ObjectID, const int32 NewState) const;
 	
 private:
-	//몬스터, 물체 상태 확인을 위한 저장된 게임 참조
+	//몬스터, 물체 상태 확인을 위한 저장된 물체 상태 참조
 	UPROPERTY()
-	TObjectPtr<UT3SaveGame> T3SaveGame;
+	TObjectPtr<UT3SaveObjectState> ObjectStateData;
 };

@@ -49,10 +49,6 @@ public:
 	UPROPERTY(Transient)
 	bool bSetLocation;
 	
-	//모든 레벨의 물체 상태
-	UPROPERTY()
-	TMap<int32, int32> LevelObjectStates;
-	
 	//현재 도달한 세이브 포인트(룬) 위치
 	UPROPERTY()
 	TMap<ELevelName, FLevelProgressData> LevelProgressMap;

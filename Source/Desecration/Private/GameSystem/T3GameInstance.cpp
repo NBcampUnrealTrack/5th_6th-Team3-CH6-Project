@@ -3,6 +3,7 @@
 #include "GameFramework/GameUserSettings.h"
 #include "GameSystem/T3SaveGame.h"
 #include "GameSystem/T3SaveLostMoney.h"
+#include "GameSystem/T3SaveObjectState.h"
 #include "GameSystem/T3SaveUserSettings.h"
 #include "Kismet/GameplayStatics.h"
 #include "Player/T3CharacterDataAsset.h"
@@ -28,10 +29,19 @@ void UT3GameInstance::Init()
 	LoadGame();
 	
 	//잃어버린 재화
-	LoadLostMoney();
+	if (LoadLostMoney())
+	{
+		MakeFirstLostMoneyData();
+	}
+	
+	//물체 상태
+	if (LoadObjectState())
+	{
+		MakeFirstObjectStateData();
+	}
 	
 	//설정
-	if (!LoadUSerSettings())
+	if (!LoadUserSettings())
 	{
 		MakeFirstSettings();
 	}
@@ -86,6 +96,15 @@ void UT3GameInstance::MakeFirstLostMoneyData()
 	LostMoneyData->ResetGameData();
 }
 
+void UT3GameInstance::MakeFirstObjectStateData()
+{
+	if (!ObjectStateData)
+	{
+		ObjectStateData = NewObject<UT3SaveObjectState>();
+	}
+	ObjectStateData->ResetGameData();
+}
+
 bool UT3GameInstance::SaveGame()
 {
 	return UGameplayStatics::SaveGameToSlot(SavedGameData, SAVE_GAME_NAME, 0);
@@ -109,7 +128,7 @@ bool UT3GameInstance::SaveUserSettings()
 	return UGameplayStatics::SaveGameToSlot(CurrentSettings, SAVE_USER_SETTINGS_NAME, 0);
 }
 
-bool UT3GameInstance::LoadUSerSettings()
+bool UT3GameInstance::LoadUserSettings()
 {
 	TObjectPtr<UT3SaveUserSettings> T3UserSettings = Cast<UT3SaveUserSettings>(UGameplayStatics::LoadGameFromSlot(SAVE_USER_SETTINGS_NAME, 0));
 	if (!T3UserSettings)
@@ -135,6 +154,23 @@ bool UT3GameInstance::LoadLostMoney()
 	}
 	
 	LostMoneyData = T3LostMoney;
+	return true;
+}
+
+bool UT3GameInstance::SaveObjectState()
+{
+	return UGameplayStatics::SaveGameToSlot(ObjectStateData, SAVE_OBJECT_STATE_NAME, 0);
+}
+
+bool UT3GameInstance::LoadObjectState()
+{
+	TObjectPtr<UT3SaveObjectState> T3ObjectState = Cast<UT3SaveObjectState>(UGameplayStatics::LoadGameFromSlot(SAVE_LOST_MONEY_NAME, 0));
+	if (!T3ObjectState)
+	{
+		return false;
+	}
+	
+	ObjectStateData = T3ObjectState;
 	return true;
 }
 
