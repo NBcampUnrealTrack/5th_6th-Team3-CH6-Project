@@ -168,33 +168,33 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory|Stone")
 	int32 GetWeaponNormalStoneCount() const;
 	UFUNCTION(BlueprintCallable, Category = "Inventory|Stone")
-	int32 SetWeaponNormalStoneCount(int32 NewCount);
+	void SetWeaponNormalStoneCount(int32 NewCount);
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory|Stone")
 	int32 GetWeaponEpicStoneCount() const;
 	UFUNCTION(BlueprintCallable, Category = "Inventory|Stone")
-	int32 SetWeaponEpicStoneCount(int32 NewCount);
+	void SetWeaponEpicStoneCount(int32 NewCount);
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory|Stone")
 	int32 GetWeaponLegendaryStoneCount() const;
 	UFUNCTION(BlueprintCallable, Category = "Inventory|Stone")
-	int32 SetWeaponLegendaryStoneCount(int32 NewCount);
+	void SetWeaponLegendaryStoneCount(int32 NewCount);
 
 	// 방어구 강화석
 	UFUNCTION(BlueprintCallable, Category = "Inventory|Stone")
 	int32 GetArmorNormalStoneCount() const;
 	UFUNCTION(BlueprintCallable, Category = "Inventory|Stone")
-	int32 SetArmorNormalStoneCount(int32 NewCount);
+	void SetArmorNormalStoneCount(int32 NewCount);
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory|Stone")
 	int32 GetArmorEpicStoneCount() const;
 	UFUNCTION(BlueprintCallable, Category = "Inventory|Stone")
-	int32 SetArmorEpicStoneCount(int32 NewCount);
+	void SetArmorEpicStoneCount(int32 NewCount);
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory|Stone")
 	int32 GetArmorLegendaryStoneCount() const;
 	UFUNCTION(BlueprintCallable, Category = "Inventory|Stone")
-	int32 SetArmorLegendaryStoneCount(int32 NewCount);
+	void SetArmorLegendaryStoneCount(int32 NewCount);
 #pragma endregion
 private:
 	UPROPERTY()
