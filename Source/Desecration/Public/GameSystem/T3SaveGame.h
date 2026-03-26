@@ -1,8 +1,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "T3SaveGameParent.h"
 #include "Equipment/T3EquipmentTypes.h"
-#include "GameFramework/SaveGame.h"
 #include "GameSystem/T3GameInstance.h"
 #include "T3SaveGame.generated.h"
 
@@ -13,13 +13,13 @@ struct FSkillData;
 enum class ECharacterClass : uint8;
 
 UCLASS()
-class DESECRATION_API UT3SaveGame : public USaveGame
+class DESECRATION_API UT3SaveGame : public UT3SaveGameParent
 {
 	GENERATED_BODY()
 	
 public:
 	//게임 데이터 초기화
-	void ResetGameData();
+	virtual void ResetGameData() override;
 	
 	//지정한 캐릭터 데이터로 스탯 변경
 	void SetStatByCharacterData(TObjectPtr<UT3CharacterDataAsset> CharacterData);
@@ -48,10 +48,6 @@ public:
 	//위치 적용 여부 (이 값은 저장 목적이 아님)
 	UPROPERTY(Transient)
 	bool bSetLocation;
-	
-	//모든 레벨의 물체 상태
-	UPROPERTY()
-	TMap<int32, int32> LevelObjectStates;
 	
 	//현재 도달한 세이브 포인트(룬) 위치
 	UPROPERTY()
