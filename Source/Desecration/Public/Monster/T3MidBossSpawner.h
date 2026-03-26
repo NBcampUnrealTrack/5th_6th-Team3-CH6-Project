@@ -9,6 +9,7 @@
 
 class AT3MidBossMonster;
 class UArrowComponent;
+class UBoxComponent;
 class UStaticMeshComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMidBossSpawnerBossSpawned, AT3MidBossMonster*, SpawnedBoss);
@@ -52,6 +53,22 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MidBossSpawner|Config")
 	TObjectPtr<UStaticMeshComponent> PreviewMesh;
 
+	/** 내장 활성화 트리거 (보스 스폰 후 BindExternalTrigger에 자기 자신 전달) */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MidBossSpawner|Config")
+	TObjectPtr<UBoxComponent> ActivationTriggerBox;
+
+	// ============================================================
+	// 월드 상태 저장 (T3WorldSubsystem 연동)
+	// ============================================================
+
+	/** WorldSubsystem에서 사용할 고유 오브젝트 ID (0 = 저장 안 함) */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MidBossSpawner|Save")
+	int32 ObjectID = 0;
+
+	/** 이미 처치된 보스인지 (BeginPlay에서 판정) */
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "MidBossSpawner|Save")
+	bool bBossAlreadyDefeated = false;
+
 	// ============================================================
 	// 스테이지 & 스탯 주입
 	// ============================================================
@@ -63,14 +80,6 @@ public:
 	/** 스테이지별 스탯 오버라이드 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBossSpawner|Stage")
 	FMidBossStats StatsOverride;
-
-	// ============================================================
-	// 외부 참조 (에디터 스포이드)
-	// ============================================================
-
-	/** 보스 활성화 트리거 (TriggerBox/TriggerVolume 등) */
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "MidBossSpawner|References")
-	TObjectPtr<AActor> ActivationTrigger;
 
 	// ============================================================
 	// 델리게이트 (BossRoomLock 등 외부 시스템용)
@@ -92,8 +101,14 @@ public:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "MidBossSpawner|Runtime")
 	TObjectPtr<AT3MidBossMonster> SpawnedBoss;
 
+protected:
+	virtual void BeginPlay() override;
+
 private:
 	/** 보스 사망 시 중계 핸들러 */
 	UFUNCTION()
 	void HandleBossDeath();
+
+	/** WorldSubsystem에 보스 처치 상태 저장 */
+	void SaveBossDefeatedState();
 };
