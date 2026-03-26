@@ -8,7 +8,7 @@ void UT3WorldSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 	Super::OnWorldBeginPlay(InWorld);
 
 	//게임 인스턴스
-	const TObjectPtr<UT3GameInstance> T3GameInstance = Cast<UT3GameInstance>(GetWorld()->GetGameInstance());
+	T3GameInstance = Cast<UT3GameInstance>(GetWorld()->GetGameInstance());
 	if (!T3GameInstance)
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s : T3GameInstance가 null"), *GetNameSafe(this));
@@ -57,4 +57,10 @@ void UT3WorldSubsystem::SetOrAddObjectState(const int32 ObjectID, const int32 Ne
 	}
 	
 	ObjectStateData->LevelObjectStates.Emplace(ObjectID, NewState);
+	
+	//저장
+	if (!T3GameInstance->SaveObjectState())
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : 물체 상태 저장 실패"), *GetNameSafe(this));
+	}
 }
