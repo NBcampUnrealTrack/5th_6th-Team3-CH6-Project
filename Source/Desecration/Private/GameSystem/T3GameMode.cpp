@@ -227,6 +227,48 @@ bool AT3GameMode::SaveInventoryAndPotionLevel(const AT3CharacterBase* Character)
 	return true;
 }
 
+bool AT3GameMode::SaveOnlySkill(const AT3CharacterBase* Character)
+{
+	if (!Character)
+	{
+		UE_LOG(LogTemp, Error, TEXT("SaveOnlySkill : Character가 null"));
+		return false;
+	}
+	
+	//마지막 저장 시점
+	TObjectPtr<UT3SaveGame> SaveGame;
+	if (T3GameInstance->LoadGame(false))
+	{
+		SaveGame = T3GameInstance->GetSavedGameData();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SaveOnlySkill : 저장된 게임을 불러올 수 없음"));
+		return false;
+	}
+	
+	//스킬
+	TObjectPtr<UT3SkillComponentBase> SkillComponent;
+	if (const TObjectPtr<UT3CombatComponent> CombatComponent = Character->GetCombatComponent(); !CombatComponent || !CombatComponent->GetSkillComponent())
+	{
+		UE_LOG(LogTemp, Error, TEXT("SaveOnlySkill : SkillComponent 접근 불가"));
+		return false;
+	}
+	else
+	{
+		SkillComponent = CombatComponent->GetSkillComponent();
+	}
+	for (TTuple<int32, bool> UnlockState : SkillComponent->SkillUnlockStates)
+	{
+		bool& State = SaveGame->SkillUnlockStates.FindOrAdd(UnlockState.Key);
+		State = UnlockState.Value;
+	}
+	SaveGame->CurrentSkillSlot = SkillComponent->CurrentSkillSlot;
+	SaveGame->NextSkillSlot = SkillComponent->NextSkillSlot;
+	
+	return true;
+}
+
 void AT3GameMode::LoadGame()
 {
 	//저장된 게임을 불러오는데 성공하면 그 맵으로 이동
