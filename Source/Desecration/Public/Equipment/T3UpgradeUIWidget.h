@@ -12,6 +12,7 @@ class UTextBlock;
 class UButton;
 class UImage;
 class UBorder;
+class UT3SynthesisSlotWidget;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnChangedTap, bool, IsRuneTabActive);
 
@@ -136,13 +137,13 @@ protected:
 	TObjectPtr<UButton> Btn_RuneTab;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UImage> Img_SynthesisSlot_0;
+	TObjectPtr<UT3SynthesisSlotWidget> SynthesisSlot_0;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UImage> Img_SynthesisSlot_1;
+	TObjectPtr<UT3SynthesisSlotWidget> SynthesisSlot_1;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UImage> Img_SynthesisSlot_2;
+	TObjectPtr<UT3SynthesisSlotWidget> SynthesisSlot_2;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> Btn_Synthesize;

@@ -7,6 +7,7 @@
 
 class UItemSlotWidget;
 class UT3PlayerEquipmentComponent;
+class UT3SynthesisSlotWidget;
 
 UCLASS()
 class DESECRATION_API UItemDragDropOperation : public UDragDropOperation
@@ -36,6 +37,12 @@ public:
 	
 	bool bDropHandledBySameSocket = false;
 
+	UPROPERTY()
+	bool bIsFromSynthesisSlot = false;
+
+	UPROPERTY()
+	TObjectPtr<UT3SynthesisSlotWidget> SourceSynthesisSlotWidget = nullptr;
+	
 protected:
 	virtual void Drop_Implementation(const FPointerEvent& PointerEvent) override;
 
