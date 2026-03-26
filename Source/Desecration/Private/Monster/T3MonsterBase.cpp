@@ -43,6 +43,7 @@ void AT3MonsterBase::BeginPlay()
 		Capsule->OnComponentBeginOverlap.AddDynamic(this, &AT3MonsterBase::OnCapsuleBeginOverlap);
 	}
 
+	/*
 	if (LockOnWidgetComponent && GetMesh())
 	{
 		// 이미 부착되어 있더라도 안전하게 다시 부착 (KeepRelativeTransform 사용)
@@ -53,6 +54,7 @@ void AT3MonsterBase::BeginPlay()
 
 		UE_LOG(LogTemp, Log, TEXT("[Confirmed] LockOnWidget forced to Socket: %s"), *LockOnWidgetComponent->GetAttachSocketName().ToString());
 	}
+	*/
 }
 
 void AT3MonsterBase::Tick(float DeltaTime)
