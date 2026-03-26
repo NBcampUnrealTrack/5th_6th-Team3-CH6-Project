@@ -98,6 +98,8 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	SaveGame->Mind = Character->GetMind();
 	SaveGame->Strength = Character->GetStrength();
 	SaveGame->Intelligence = Character->GetIntelligence();
+	SaveGame->WeaponLevel = Character->GetWeaponLevel();
+	SaveGame->CharacterLevel = Character->GetCharacterLevel();
 	//인벤토리
 	TObjectPtr<UT3InventoryComponent> InventoryComponent = Character->InventoryComponent;
 	if (!InventoryComponent)
@@ -243,6 +245,8 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 	Character->SetMind(SaveGame->Mind);
 	Character->SetStrength(SaveGame->Strength);
 	Character->SetIntelligence(SaveGame->Intelligence);
+	Character->SetWeaponLevel(SaveGame->WeaponLevel);
+	Character->SetCharacterLevel(SaveGame->CharacterLevel);
 
 	//인벤토리 컴포넌트 유효성 검사
 	TObjectPtr<UT3InventoryComponent> InventoryComponent = Character->InventoryComponent;

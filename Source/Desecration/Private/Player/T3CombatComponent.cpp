@@ -863,9 +863,8 @@ void UT3CombatComponent::ConsumeStamina(float Amount)
 	{
 		float NewStamina = OwnerChar->GetCurrentStamina() - Amount;
 		OwnerChar->SetCurrentStamina(NewStamina);
+		UE_LOG(LogTemp, Display, TEXT("Consume Stamina: %.1f, Remaining Stamina: %.1f"), Amount,OwnerChar->GetCurrentStamina());
 
-		/*GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
-			FString::Printf(TEXT("Remaining Stamina: %.1f"), OwnerChar->GetCurrentStamina()));*/
 	}
 }
 

@@ -118,6 +118,14 @@ public:
 	//지력
 	UPROPERTY()
 	int32 Intelligence;
+	
+	//장비 강화 레벨
+	UPROPERTY()
+	float WeaponLevel;
+	
+	//캐릭터 레벨
+	UPROPERTY()
+	int32 CharacterLevel;
 #pragma endregion
 	
 #pragma region 인벤토리

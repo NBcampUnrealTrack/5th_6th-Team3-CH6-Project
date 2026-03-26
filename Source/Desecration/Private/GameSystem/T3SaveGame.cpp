@@ -1,4 +1,4 @@
-#include "GameSystem/T3SaveGame.h"
+﻿#include "GameSystem/T3SaveGame.h"
 
 #include "Equipment/T3EquipmentTypes.h"
 #include "Equipment/T3PlayerEquipmentComponent.h" 
@@ -8,7 +8,7 @@
 
 void UT3SaveGame::ResetGameData()
 {
-	//참고 : 이하의 값 중 일부는 캐릭터 데이터 에셋 등으로 변경될 수 있음
+	//참고 : 이하의 값 중 일부는 시작부터 다른 값으로 변경될 수 있으니 변경이 필요하면 사용 위치를 추적하는 것을 권장
 	
 	PlayerClass = ECharacterClass::Paladin;
 	PlayerName = TEXT("");
@@ -30,7 +30,7 @@ void UT3SaveGame::ResetGameData()
 	CurrentMana = MaxMana;
 	MaxStamina = 100.0f;
 	CurrentStamina = MaxStamina;
-	AttackPower = 50.0f;
+	AttackPower = 45.0f;
 	CriticalChance = 0.1f;
 	CriticalDamage = 1.5f;
 	MoveSpeed = 500.0f;
@@ -40,6 +40,8 @@ void UT3SaveGame::ResetGameData()
 	Mind = 10;
 	Strength = 5;
 	Intelligence = 5;
+	WeaponLevel = 0;
+	CharacterLevel = 1;
 	
 	//인벤토리
 	constexpr int32 InvenSize = 20;
