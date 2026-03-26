@@ -110,7 +110,7 @@ bool UT3GameInstance::SaveGame()
 	return UGameplayStatics::SaveGameToSlot(SavedGameData, SAVE_GAME_NAME, 0);
 }
 
-bool UT3GameInstance::LoadGame()
+bool UT3GameInstance::LoadGame(const bool bSetLocationAfterLoad)
 {
 	TObjectPtr<UT3SaveGame> SavedData = Cast<UT3SaveGame>(UGameplayStatics::LoadGameFromSlot(SAVE_GAME_NAME, 0));
 	if (!SavedData)
@@ -119,7 +119,7 @@ bool UT3GameInstance::LoadGame()
 	}
 	
 	SavedGameData = SavedData;
-	SavedGameData->bSetLocation = true;
+	SavedGameData->bSetLocation = bSetLocationAfterLoad;
 	return true;
 }
 

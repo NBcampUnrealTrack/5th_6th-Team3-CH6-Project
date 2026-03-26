@@ -111,7 +111,7 @@ public:
 	 * 저장된 게임 불러오기
 	 * @return true : 불러오기 성공
 	 */
-	bool LoadGame();
+	bool LoadGame(bool bSetLocationAfterLoad = true);
 	
 	//유저 세팅 저장하기
 	bool SaveUserSettings();
