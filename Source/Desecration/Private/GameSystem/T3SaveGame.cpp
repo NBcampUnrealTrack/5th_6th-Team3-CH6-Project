@@ -55,9 +55,12 @@ void UT3SaveGame::ResetGameData()
 	PotionRecoveryUpgradeLevel = 0;
 	
 	//강화석
-	NormalStoneCount = 0;
-	EpicStoneCount = 0;
-	LegendaryStoneCount = 0;
+	WeaponNormalStoneCount = 0;
+	WeaponEpicStoneCount = 0;
+	WeaponLegendaryStoneCount = 0;
+	ArmorNormalStoneCount = 0;
+	ArmorEpicStoneCount = 0;
+	ArmorLegendaryStoneCount = 0;
 	
 	//장비
 	WeaponSaveData.ItemID = NAME_None;
