@@ -54,7 +54,7 @@ void UT3GameInstance::MakeFirstSettings()
 	{
 		CurrentSettings = NewObject<UT3SaveUserSettings>();
 	}
-	CurrentSettings->ResetUserSettings();
+	CurrentSettings->ResetGameData();
 
 	//회전 감도는 1을 기본으로
 	CurrentSettings->CameraSpeed = 1.0f;

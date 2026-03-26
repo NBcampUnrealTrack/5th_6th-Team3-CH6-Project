@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/SaveGame.h"
+#include "T3SaveGameParent.h"
 #include "GameSystem/GlobalEnums.h"
 #include "T3SaveLostMoney.generated.h"
 
@@ -39,13 +39,13 @@ struct FLostMoney
 };
 
 UCLASS()
-class DESECRATION_API UT3SaveLostMoney : public USaveGame
+class DESECRATION_API UT3SaveLostMoney : public UT3SaveGameParent
 {
 	GENERATED_BODY()
 	
 public:
 	//데이터 초기화
-	void ResetGameData();
+	virtual void ResetGameData() override;
 	
 	//잃어버린 재화 추가
 	void AddLostMoney(FLostMoney NewLostMoney);
