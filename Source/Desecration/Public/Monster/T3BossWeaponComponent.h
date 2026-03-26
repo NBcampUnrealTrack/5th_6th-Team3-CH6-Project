@@ -42,11 +42,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TObjectPtr<UStaticMeshComponent> WeaponMeshComponent;
 
-	// 무기 판정 박스 (WeaponMeshComponent의 자식)
+	// 무기 판정 박스 — AttachToSocket()에서 WeaponMesh에 런타임 부착
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TObjectPtr<UBoxComponent> WeaponHitBox;
 
-	// 넓은 판정 박스 — 대쉬 내려찍기 등 특수 공격용 (WeaponMeshComponent의 자식)
+	// 넓은 판정 박스 — 대쉬 내려찍기 등 특수 공격용 (런타임 부착)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TObjectPtr<UBoxComponent> WeaponHitBoxWide;
 
