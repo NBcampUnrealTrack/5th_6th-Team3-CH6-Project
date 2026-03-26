@@ -236,7 +236,7 @@ void UT3Taoist_SkillComponent::SpawnTalisman()
             PlaySkillEffectSound(AttackVoice);
 
             // 스태미나 10 소모
-            OwnerChar->GetCombatComponent()->ConsumeStamina(10.f);
+            OwnerChar->GetCombatComponent()->ConsumeStamina(30.f);
         }
     }
 }
