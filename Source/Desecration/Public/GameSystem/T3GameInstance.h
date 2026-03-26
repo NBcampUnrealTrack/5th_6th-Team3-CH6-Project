@@ -114,19 +114,19 @@ public:
 	bool LoadGame();
 	
 	//유저 세팅 저장하기
-	bool SaveUserSettings() const;
+	bool SaveUserSettings();
 	
 	//저장된 유저 세팅 불러오기
 	bool LoadUserSettings();
 	
 	//잃어버린 재화 정보 저장
-	bool SaveLostMoney() const;
+	bool SaveLostMoney();
 	
 	//잃어버린 재화 정보 불러오기
 	bool LoadLostMoney();
 	
 	//물체 상태 저장
-	bool SaveObjectState() const;
+	bool SaveObjectState();
 	
 	//물체 상태 불러오기
 	bool LoadObjectState();

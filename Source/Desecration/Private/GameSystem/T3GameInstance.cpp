@@ -123,7 +123,7 @@ bool UT3GameInstance::LoadGame()
 	return true;
 }
 
-bool UT3GameInstance::SaveUserSettings() const
+bool UT3GameInstance::SaveUserSettings()
 {
 	return UGameplayStatics::SaveGameToSlot(CurrentSettings, SAVE_USER_SETTINGS_NAME, 0);
 }
@@ -140,7 +140,7 @@ bool UT3GameInstance::LoadUserSettings()
 	return true;
 }
 
-bool UT3GameInstance::SaveLostMoney() const
+bool UT3GameInstance::SaveLostMoney()
 {
 	return UGameplayStatics::SaveGameToSlot(LostMoneyData, SAVE_LOST_MONEY_NAME, 0);
 }
@@ -157,7 +157,7 @@ bool UT3GameInstance::LoadLostMoney()
 	return true;
 }
 
-bool UT3GameInstance::SaveObjectState() const
+bool UT3GameInstance::SaveObjectState()
 {
 	return UGameplayStatics::SaveGameToSlot(ObjectStateData, SAVE_OBJECT_STATE_NAME, 0);
 }
