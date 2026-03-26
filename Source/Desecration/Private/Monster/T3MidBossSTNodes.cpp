@@ -404,6 +404,9 @@ EStateTreeRunStatus FT3STT_Disengage::EnterState(
 		Data.Boss->SetAnimRootMotionTranslationScale(Data.RootMotionScale);
 	}
 
+	// 진입 전 잔여 몽타주 정리 (히트리액션 등이 남아있으면 백스텝과 겹침)
+	Data.Boss->StopAnimMontage();
+
 	// 백스텝 몽타주 재생
 	if (Data.bBackStep && Data.BackStepMontage)
 	{
