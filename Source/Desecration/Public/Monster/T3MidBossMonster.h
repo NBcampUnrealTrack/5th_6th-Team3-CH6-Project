@@ -379,6 +379,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "MidBoss|Flow")
 	void ActivateBoss(AActor* Activator);
 
+	/** 외부 활성화 트리거 바인딩 (스포너 등 런타임 세팅용) */
+	UFUNCTION(BlueprintCallable, Category = "MidBoss|Flow")
+	void BindExternalTrigger(AActor* Trigger);
+
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "MidBoss|Flow")
 	bool IsActivated() const { return bIsActivated; }
 

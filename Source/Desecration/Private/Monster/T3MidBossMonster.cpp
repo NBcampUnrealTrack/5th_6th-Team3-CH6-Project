@@ -194,16 +194,14 @@ void AT3MidBossMonster::BeginPlay()
 		}
 	}
 
-	// 외부 활성화 트리거 바인딩 (OnActorBeginOverlap — TriggerVolume/TriggerBox 모두 대응)
+	// 외부 활성화 트리거 바인딩 (에디터 직접 배치 시)
 	if (ExternalActivationTrigger)
 	{
-		ExternalActivationTrigger->OnActorBeginOverlap.AddDynamic(
-			this, &AT3MidBossMonster::OnExternalTriggerOverlap);
-		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 외부 활성화 트리거 바인딩 완료 — %s"), *ExternalActivationTrigger->GetName());
+		BindExternalTrigger(ExternalActivationTrigger);
 	}
 	else
 	{
-		UE_LOG(LogDesecration, Warning, TEXT("T3_MidBoss: ExternalActivationTrigger 미지정 — 에디터에서 스포이드로 트리거 액터를 연결하세요"));
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: ExternalActivationTrigger 미지정 — 스포너에서 런타임 연결 대기"));
 	}
 
 	OnMidBossSpawned.Broadcast();
