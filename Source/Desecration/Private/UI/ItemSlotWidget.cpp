@@ -2,8 +2,10 @@
 
 #include "Components/Image.h"
 #include "Components/Border.h"
+#include "Equipment/T3UpgradeStation.h"
 #include "UI/ItemDragDropOperation.h"
 #include "Item/Component/T3InventoryComponent.h"
+#include "UI/Rune/T3SynthesisSlotWidget.h"
 
 void UItemSlotWidget::SetSelected(bool bSelected)
 {
@@ -157,6 +159,15 @@ bool UItemSlotWidget::NativeOnDrop(const FGeometry& InGeometry, const FDragDropE
 	
 	if (ItemDragOp->bIsFromRuneSocket)
 	{
+		return true;
+	}
+	
+	if (ItemDragOp->bIsFromSynthesisSlot)
+	{
+		if (IsValid(ItemDragOp->SourceSynthesisSlotWidget))
+		{
+			ItemDragOp->SourceSynthesisSlotWidget->UpgradeStation->RemoveRuneFromSynthesisSlot(ItemDragOp->SourceSynthesisSlotWidget->SlotIndex);
+		}
 		return true;
 	}
 	

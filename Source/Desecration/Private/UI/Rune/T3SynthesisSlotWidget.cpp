@@ -35,6 +35,19 @@ FReply UT3SynthesisSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeomet
 		return FReply::Handled();
 	}
 
+	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
+	{
+		if (UpgradeStation && UpgradeStation->SynthesisSlots.IsValidIndex(SlotIndex)
+			&& UpgradeStation->SynthesisSlots[SlotIndex] != NAME_None)
+		{
+			if (TSharedPtr<SWidget> SlateWidget = GetCachedWidget())
+			{
+				return FReply::Handled().DetectDrag(SlateWidget.ToSharedRef(), EKeys::LeftMouseButton);
+			}
+		}
+		return FReply::Handled();
+	}
+
 	return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 }
 
@@ -49,10 +62,37 @@ bool UT3SynthesisSlotWidget::NativeOnDragOver(const FGeometry& InGeometry, const
 	return true;
 }
 
+void UT3SynthesisSlotWidget::NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent,
+	UDragDropOperation*& OutOperation)
+{
+	if (!UpgradeStation || !UpgradeStation->SynthesisSlots.IsValidIndex(SlotIndex))
+	{
+		return;
+	}
+
+	FName RuneID = UpgradeStation->SynthesisSlots[SlotIndex];
+	
+	if (RuneID == NAME_None)
+	{
+		return;
+	}
+
+	UItemDragDropOperation* DragOp = NewObject<UItemDragDropOperation>();
+	
+	DragOp->DraggedItemID = RuneID;
+	DragOp->bIsFromSynthesisSlot = true;
+	DragOp->SourceSynthesisSlotWidget = this;
+	DragOp->DefaultDragVisual = Img_RuneIcon;
+	DragOp->Pivot = EDragPivot::MouseDown;
+
+	OutOperation = DragOp;
+}
+
 bool UT3SynthesisSlotWidget::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
 {
 	UItemDragDropOperation* ItemDragOp = Cast<UItemDragDropOperation>(InOperation);
-	if (!IsValid(ItemDragOp) || ItemDragOp->bIsFromRuneSocket)
+	
+	if (!IsValid(ItemDragOp) || ItemDragOp->bIsFromRuneSocket || ItemDragOp->bIsFromSynthesisSlot)
 	{
 		return false;
 	}
