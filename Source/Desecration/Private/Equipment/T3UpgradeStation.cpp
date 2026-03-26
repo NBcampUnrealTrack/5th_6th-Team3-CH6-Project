@@ -214,7 +214,7 @@ FT3UpgradeUIData AT3UpgradeStation::GetEquipmentUIData(ET3EquipmentType Equipmen
 
 	// 사용 가능한 강화석이 없으면 강화 불가
 	ET3UpgradeStoneGrade TempGrade;
-	if (!SelectLowestAvailableStone(UIData.CurrentLevel, TempGrade))
+	if (!SelectLowestAvailableStone(EquipmentType, UIData.CurrentLevel, TempGrade))
 	{
 		UIData.bCanUpgrade = false;
 	}
@@ -226,44 +226,70 @@ FT3UpgradeUIData AT3UpgradeStation::GetEquipmentUIData(ET3EquipmentType Equipmen
 // 강화석 조회 (Core)
 // ============================================================================
 
-int32 AT3UpgradeStation::GetStoneCount(ET3UpgradeStoneGrade Grade) const
+int32 AT3UpgradeStation::GetStoneCount(ET3EquipmentType EquipmentType, ET3UpgradeStoneGrade Grade) const
 {
 	UT3InventoryComponent* InvComp = GetPlayerInventoryComponent();
 	if (!InvComp) return 0;
 
-	switch (Grade)
+	if (EquipmentType == ET3EquipmentType::Weapon)
 	{
-	case ET3UpgradeStoneGrade::Normal:    return InvComp->GetNormalStoneCount();
-	case ET3UpgradeStoneGrade::Epic:      return InvComp->GetEpicStoneCount();
-	case ET3UpgradeStoneGrade::Legendary: return InvComp->GetLegendaryStoneCount();
-	default: return 0;
+		switch (Grade)
+		{
+		case ET3UpgradeStoneGrade::Normal:    return InvComp->GetWeaponNormalStoneCount();
+		case ET3UpgradeStoneGrade::Epic:      return InvComp->GetWeaponEpicStoneCount();
+		case ET3UpgradeStoneGrade::Legendary: return InvComp->GetWeaponLegendaryStoneCount();
+		default: return 0;
+		}
+	}
+	else
+	{
+		switch (Grade)
+		{
+		case ET3UpgradeStoneGrade::Normal:    return InvComp->GetArmorNormalStoneCount();
+		case ET3UpgradeStoneGrade::Epic:      return InvComp->GetArmorEpicStoneCount();
+		case ET3UpgradeStoneGrade::Legendary: return InvComp->GetArmorLegendaryStoneCount();
+		default: return 0;
+		}
 	}
 }
 
-UTexture2D* AT3UpgradeStation::GetStoneIcon(ET3UpgradeStoneGrade Grade) const
+UTexture2D* AT3UpgradeStation::GetStoneIcon(ET3EquipmentType EquipmentType, ET3UpgradeStoneGrade Grade) const
 {
-	switch (Grade)
+	if (EquipmentType == ET3EquipmentType::Weapon)
 	{
-	case ET3UpgradeStoneGrade::Normal:    return NormalStoneIcon;
-	case ET3UpgradeStoneGrade::Epic:      return EpicStoneIcon;
-	case ET3UpgradeStoneGrade::Legendary: return LegendaryStoneIcon;
-	default: return nullptr;
+		switch (Grade)
+		{
+		case ET3UpgradeStoneGrade::Normal:    return WeaponNormalStoneIcon;
+		case ET3UpgradeStoneGrade::Epic:      return WeaponEpicStoneIcon;
+		case ET3UpgradeStoneGrade::Legendary: return WeaponLegendaryStoneIcon;
+		default: return nullptr;
+		}
+	}
+	else
+	{
+		switch (Grade)
+		{
+		case ET3UpgradeStoneGrade::Normal:    return ArmorNormalStoneIcon;
+		case ET3UpgradeStoneGrade::Epic:      return ArmorEpicStoneIcon;
+		case ET3UpgradeStoneGrade::Legendary: return ArmorLegendaryStoneIcon;
+		default: return nullptr;
+		}
 	}
 }
 
-TArray<ET3UpgradeStoneGrade> AT3UpgradeStation::GetAvailableStones(int32 CurrentEquipmentLevel) const
+TArray<ET3UpgradeStoneGrade> AT3UpgradeStation::GetAvailableStones(ET3EquipmentType EquipmentType, int32 CurrentEquipmentLevel) const
 {
 	TArray<ET3UpgradeStoneGrade> AvailableStones;
 
-	if (CanUseStone(ET3UpgradeStoneGrade::Normal, CurrentEquipmentLevel) && GetStoneCount(ET3UpgradeStoneGrade::Normal) > 0)
+	if (CanUseStone(ET3UpgradeStoneGrade::Normal, CurrentEquipmentLevel) && GetStoneCount(EquipmentType, ET3UpgradeStoneGrade::Normal) > 0)
 	{
 		AvailableStones.Add(ET3UpgradeStoneGrade::Normal);
 	}
-	if (CanUseStone(ET3UpgradeStoneGrade::Epic, CurrentEquipmentLevel) && GetStoneCount(ET3UpgradeStoneGrade::Epic) > 0)
+	if (CanUseStone(ET3UpgradeStoneGrade::Epic, CurrentEquipmentLevel) && GetStoneCount(EquipmentType, ET3UpgradeStoneGrade::Epic) > 0)
 	{
 		AvailableStones.Add(ET3UpgradeStoneGrade::Epic);
 	}
-	if (CanUseStone(ET3UpgradeStoneGrade::Legendary, CurrentEquipmentLevel) && GetStoneCount(ET3UpgradeStoneGrade::Legendary) > 0)
+	if (CanUseStone(ET3UpgradeStoneGrade::Legendary, CurrentEquipmentLevel) && GetStoneCount(EquipmentType, ET3UpgradeStoneGrade::Legendary) > 0)
 	{
 		AvailableStones.Add(ET3UpgradeStoneGrade::Legendary);
 	}
@@ -324,7 +350,7 @@ bool AT3UpgradeStation::UpgradeEquipment(ET3EquipmentType EquipmentType)
 
 	// 사용 가능한 최하급 강화석 자동 선택
 	ET3UpgradeStoneGrade SelectedGrade;
-	if (!SelectLowestAvailableStone(ItemInstance->CurrentLevel, SelectedGrade))
+	if (!SelectLowestAvailableStone(EquipmentType, ItemInstance->CurrentLevel, SelectedGrade))
 	{
 		OnUpgradeFailed.Broadcast(FText::FromString(TEXT("사용 가능한 강화석이 없습니다.")));
 		UE_LOG(LogDesecration, Warning, TEXT("[UpgradeStation] 강화 실패 - 사용 가능한 강화석 없음 (레벨: %d)"),
@@ -339,7 +365,7 @@ bool AT3UpgradeStation::UpgradeEquipment(ET3EquipmentType EquipmentType)
 	if (bSuccess)
 	{
 		// 강화석 1개 차감
-		ConsumeStone(SelectedGrade);
+		ConsumeStone(EquipmentType, SelectedGrade);
 
 		// 성공 델리게이트 발송
 		OnUpgradeSuccess.Broadcast(EquipmentType);
@@ -350,7 +376,7 @@ bool AT3UpgradeStation::UpgradeEquipment(ET3EquipmentType EquipmentType)
 			: EquipComp->GetCurrentDefensePower();
 
 		UE_LOG(LogDesecration, Log, TEXT("[UpgradeStation] %s 강화 성공! 새 스탯: %.1f (사용 강화석: %d등급, 남은 수량: %d)"),
-			*TypeName, NewStat, static_cast<uint8>(SelectedGrade), GetStoneCount(SelectedGrade));
+			*TypeName, NewStat, static_cast<uint8>(SelectedGrade), GetStoneCount(EquipmentType, SelectedGrade));
 	}
 	else
 	{
@@ -363,15 +389,14 @@ bool AT3UpgradeStation::UpgradeEquipment(ET3EquipmentType EquipmentType)
 	return bSuccess;
 }
 
-bool AT3UpgradeStation::GetNextStoneGrade(int32 CurrentEquipmentLevel, ET3UpgradeStoneGrade& OutGrade) const
+bool AT3UpgradeStation::GetNextStoneGrade(ET3EquipmentType EquipmentType, int32 CurrentEquipmentLevel, ET3UpgradeStoneGrade& OutGrade) const
 {
-	return SelectLowestAvailableStone(CurrentEquipmentLevel, OutGrade);
+	return SelectLowestAvailableStone(EquipmentType, CurrentEquipmentLevel, OutGrade);
 }
 
-bool AT3UpgradeStation::SelectLowestAvailableStone(int32 CurrentEquipmentLevel, ET3UpgradeStoneGrade& OutGrade) const
+bool AT3UpgradeStation::SelectLowestAvailableStone(ET3EquipmentType EquipmentType, int32 CurrentEquipmentLevel, ET3UpgradeStoneGrade& OutGrade) const
 {
 	// 낮은 등급부터 순회하여 사용 가능한 첫 번째 강화석 선택
-	// Normal → Epic → Legendary 순서
 	const ET3UpgradeStoneGrade Priority[] = {
 		ET3UpgradeStoneGrade::Normal,
 		ET3UpgradeStoneGrade::Epic,
@@ -380,7 +405,7 @@ bool AT3UpgradeStation::SelectLowestAvailableStone(int32 CurrentEquipmentLevel, 
 
 	for (ET3UpgradeStoneGrade Grade : Priority)
 	{
-		if (CanUseStone(Grade, CurrentEquipmentLevel) && GetStoneCount(Grade) > 0)
+		if (CanUseStone(Grade, CurrentEquipmentLevel) && GetStoneCount(EquipmentType, Grade) > 0)
 		{
 			OutGrade = Grade;
 			return true;
@@ -390,22 +415,30 @@ bool AT3UpgradeStation::SelectLowestAvailableStone(int32 CurrentEquipmentLevel, 
 	return false;
 }
 
-void AT3UpgradeStation::ConsumeStone(ET3UpgradeStoneGrade Grade)
+void AT3UpgradeStation::ConsumeStone(ET3EquipmentType EquipmentType, ET3UpgradeStoneGrade Grade)
 {
 	UT3InventoryComponent* InvComp = GetPlayerInventoryComponent();
 	if (!InvComp) return;
 
-	switch (Grade)
+	const int32 Current = GetStoneCount(EquipmentType, Grade);
+
+	if (EquipmentType == ET3EquipmentType::Weapon)
 	{
-	case ET3UpgradeStoneGrade::Normal:
-		InvComp->SetNormalStoneCount(InvComp->GetNormalStoneCount() - 1);
-		break;
-	case ET3UpgradeStoneGrade::Epic:
-		InvComp->SetEpicStoneCount(InvComp->GetEpicStoneCount() - 1);
-		break;
-	case ET3UpgradeStoneGrade::Legendary:
-		InvComp->SetLegendaryStoneCount(InvComp->GetLegendaryStoneCount() - 1);
-		break;
+		switch (Grade)
+		{
+		case ET3UpgradeStoneGrade::Normal:    InvComp->SetWeaponNormalStoneCount(Current - 1); break;
+		case ET3UpgradeStoneGrade::Epic:      InvComp->SetWeaponEpicStoneCount(Current - 1); break;
+		case ET3UpgradeStoneGrade::Legendary: InvComp->SetWeaponLegendaryStoneCount(Current - 1); break;
+		}
+	}
+	else
+	{
+		switch (Grade)
+		{
+		case ET3UpgradeStoneGrade::Normal:    InvComp->SetArmorNormalStoneCount(Current - 1); break;
+		case ET3UpgradeStoneGrade::Epic:      InvComp->SetArmorEpicStoneCount(Current - 1); break;
+		case ET3UpgradeStoneGrade::Legendary: InvComp->SetArmorLegendaryStoneCount(Current - 1); break;
+		}
 	}
 }
 
