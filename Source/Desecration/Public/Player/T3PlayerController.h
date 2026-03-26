@@ -117,6 +117,8 @@ public:
 	
 	bool GetIsUpgradeUIOpen() const;
 	void SetIsUpgradeUIOpen(bool bIsOpen);
+	//팝업 메뉴 닫기
+	void ClosePopupMenu();
 	
 protected:
 	UPROPERTY(EditAnywhere, Category = "Input")

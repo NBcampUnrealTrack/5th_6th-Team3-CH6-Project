@@ -408,6 +408,12 @@ void AT3PlayerController::Input_PopupMenu(const FInputActionValue& Value)
 		return;
 	}
 	
+	//플레이어 사망시 무시
+	if (!OwnerChar || OwnerChar->bIsDead)
+	{
+		return;
+	}
+	
 	PopUpMenu->SetActivePopUpMenu(!PopUpMenu->IsActivePopUpMenu());
 }
 
@@ -467,4 +473,12 @@ bool AT3PlayerController::GetIsUpgradeUIOpen() const
 void AT3PlayerController::SetIsUpgradeUIOpen(bool bIsOpen)
 {
 	bIsUpgradeUIOpen = bIsOpen;
+}
+
+void AT3PlayerController::ClosePopupMenu()
+{
+	if (PopUpMenu)
+	{
+		PopUpMenu->SetActivePopUpMenu(false);
+	}
 }
