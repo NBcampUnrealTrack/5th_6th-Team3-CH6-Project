@@ -63,6 +63,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void SwapRuneSlots(int32 SourceSlotIndex, int32 TargetSlotIndex);
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void SwapEtcSlots(int32 SourceSlotIndex, int32 TargetSlotIndex);
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	float GetCooldownProgressByItemID(const FName& ItemName);
