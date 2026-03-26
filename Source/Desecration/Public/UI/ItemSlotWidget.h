@@ -31,9 +31,15 @@ public:
 	
 	UFUNCTION(BlueprintPure)
 	bool GetIsRuneSlot() const;
-	
+
 	UFUNCTION(BlueprintCallable)
 	bool SetIsRuneSlot(bool IsRuneSlot);
+
+	UFUNCTION(BlueprintPure)
+	bool GetIsEtcSlot() const;
+
+	UFUNCTION(BlueprintCallable)
+	bool SetIsEtcSlot(bool IsEtcSlot);
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnInventorySlotClicked OnSlotClicked;
@@ -47,12 +53,19 @@ protected:
 	
 	UPROPERTY(BlueprintReadWrite)
 	uint8 bIsRuneSlot : 1 = false;
+
+	UPROPERTY(BlueprintReadWrite)
+	uint8 bIsEtcSlot : 1 = false;
+
+	uint8 bDragDetected : 1 = false;
 	
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
-    
+
+	virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+
 	virtual void NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation) override;
-    
+
 	virtual bool NativeOnDragOver(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
-    
+
 	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
 };

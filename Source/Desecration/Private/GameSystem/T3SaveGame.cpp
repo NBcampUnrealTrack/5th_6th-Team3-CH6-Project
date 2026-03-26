@@ -18,8 +18,6 @@ void UT3SaveGame::ResetGameData()
 	PlayerRotation = FRotator::ZeroRotator;
 	bSetLocation = true;
 	
-	//물체 상태
-	LevelObjectStates.Empty();
 	//현재 도달한 세이브 포인트(룬) 위치
 	LevelProgressMap.Empty();
 	

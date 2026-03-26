@@ -1,17 +1,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/SaveGame.h"
+#include "T3SaveGameParent.h"
 #include "T3SaveUserSettings.generated.h"
 
 UCLASS()
-class DESECRATION_API UT3SaveUserSettings : public USaveGame
+class DESECRATION_API UT3SaveUserSettings : public UT3SaveGameParent
 {
 	GENERATED_BODY()
 	
 public:
 	//초기 설정
-	void ResetUserSettings();
+	virtual void ResetGameData() override;
 	
 	//게임에 사용할 컨트롤러 값
 	UPROPERTY()

@@ -5,6 +5,7 @@
 #include "GlobalEnums.h"
 #include "T3GameInstance.generated.h"
 
+class UT3SaveObjectState;
 enum class ECharacterClass : uint8;
 class UT3SaveLostMoney;
 class UT3SaveUserSettings;
@@ -97,6 +98,9 @@ public:
 	//잃어버린 재화 데이터 생성
 	void MakeFirstLostMoneyData();
 	
+	//물체 상태 데이터 생성
+	void MakeFirstObjectStateData();
+	
 	/**
 	 * 게임 저장하기
 	 * @return true : 저장 성공
@@ -107,19 +111,25 @@ public:
 	 * 저장된 게임 불러오기
 	 * @return true : 불러오기 성공
 	 */
-	bool LoadGame();
+	bool LoadGame(bool bSetLocationAfterLoad = true);
 	
 	//유저 세팅 저장하기
 	bool SaveUserSettings();
 	
 	//저장된 유저 세팅 불러오기
-	bool LoadUSerSettings();
+	bool LoadUserSettings();
 	
 	//잃어버린 재화 정보 저장
 	bool SaveLostMoney();
 	
 	//잃어버린 재화 정보 불러오기
 	bool LoadLostMoney();
+	
+	//물체 상태 저장
+	bool SaveObjectState();
+	
+	//물체 상태 불러오기
+	bool LoadObjectState();
 	
 	//지정한 캐릭터 클래스에 해당되는 데이터 에셋
 	TObjectPtr<UT3CharacterDataAsset> GetCharacterDataAsset();
@@ -166,6 +176,9 @@ public:
 	//잃어버린 재화
 	FORCEINLINE TObjectPtr<UT3SaveLostMoney> GetLostMoneyData() { return LostMoneyData; }
 	
+	//물체 상태
+	FORCEINLINE TObjectPtr<UT3SaveObjectState> GetObjectStateData() { return ObjectStateData; }
+	
 	//배경음 사운드 클래스
 	FORCEINLINE TObjectPtr<USoundClass> GetSoundClassBGM() { return SoundClassBGM; }
 	
@@ -187,7 +200,11 @@ private:
 	
 	//잃어버린 재화
 	UPROPERTY()
-	TObjectPtr<UT3SaveLostMoney> LostMoneyData; 
+	TObjectPtr<UT3SaveLostMoney> LostMoneyData;
+	
+	//물체 상태
+	UPROPERTY()
+	TObjectPtr<UT3SaveObjectState> ObjectStateData;
 	
 	//효과음
 	UPROPERTY(EditDefaultsOnly, Category = "Sound Class", meta = (AllowPrivateAccess = true))
@@ -216,4 +233,5 @@ private:
 	const FString SAVE_GAME_NAME = TEXT("SaveSlot1");
 	const FString SAVE_USER_SETTINGS_NAME = TEXT("UserSettings");
 	const FString SAVE_LOST_MONEY_NAME = TEXT("LostMoney");
+	const FString SAVE_OBJECT_STATE_NAME = TEXT("ObjectState");
 };

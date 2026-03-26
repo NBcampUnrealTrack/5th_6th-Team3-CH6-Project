@@ -28,7 +28,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
 	ECharacterClass GetPlayerClass();
 	
-	//게임 저장하기 (true : 저장 성공)
+	/**
+	 * 게임 저장하기 
+	 * @return true : 저장 성공
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
 	bool SaveGame(
 		const AT3CharacterBase* Character, 
@@ -37,6 +40,21 @@ public:
 		const FVector TargetLocation,    // 추가된 위치 정보
 		const FRotator TargetRotation    // 추가된 회전 정보
 	);
+	
+	/**
+	 * 인벤토리 및 물약 강화 상태만 저장하기
+	 * @return true : 저장 성공
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
+	bool SaveInventoryAndPotionLevel(const AT3CharacterBase* Character);
+	
+	/**
+	 * 스킬만 저장하기
+	 * @return true : 저장 성공
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
+	bool SaveOnlySkill(const AT3CharacterBase* Character);
+	
 	
 	//게임 불러오기 : 마지막으로 저장한 데이터를 다시 불러오고 그 데이터에 기록된 맵으로 이동
 	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
