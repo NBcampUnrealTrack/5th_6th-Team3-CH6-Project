@@ -463,10 +463,13 @@ bool UT3InventoryComponent::RemoveEtcItemByCount(const FName& ItemName, int32 Co
 				EtcItem.ItemStack = 0;
 			}
 			OnEtcInventoryUpdated.Broadcast();
+			
+			UE_LOG(LogTemp, Error, TEXT("[%s] 제거 완료"), *EtcItem.ItemID.ToString());
 			return true;
 		}
 	}
 	
+	UE_LOG(LogTemp, Error, TEXT("제거 할 아이템이 없음"));
 	return false;
 }
 
@@ -780,11 +783,13 @@ void UT3InventoryComponent::InitializePotionIDs()
 void UT3InventoryComponent::SetHPPotionCount(int32 Count)
 {
 	HPPotionCount = FMath::Clamp(Count, 0, GetMaxHPPotionCount());
+	OnRecoverItemUsed.Broadcast();
 }
 
 void UT3InventoryComponent::SetMPPotionCount(int32 Count)
 {
 	MPPotionCount = FMath::Clamp(Count, 0, GetMaxMPPotionCount());
+	OnRecoverItemUsed.Broadcast();
 }
 
 void UT3InventoryComponent::UseCurrentPotion()
