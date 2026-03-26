@@ -154,31 +154,46 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Money")
 	int32 Money;
 	
-#pragma region Stone // 강화석
-	int32 NormalStoneCount;
-	
-	int32 EpicStoneCount;
-	
-	int32 LegendaryStoneCount;
-	
+#pragma region Stone // 강화석 (무기/방어구 × 3등급 = 6종)
+	int32 WeaponNormalStoneCount;
+	int32 WeaponEpicStoneCount;
+	int32 WeaponLegendaryStoneCount;
+	int32 ArmorNormalStoneCount;
+	int32 ArmorEpicStoneCount;
+	int32 ArmorLegendaryStoneCount;
+
 public:
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	int32 GetNormalStoneCount() const;
-	
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	int32 GetEpicStoneCount() const;
-	
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	int32 GetLegendaryStoneCount() const;
-	
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	int32 SetNormalStoneCount(int32 NewCount);
-	
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	int32 SetEpicStoneCount(int32 NewCount);
-	
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	int32 SetLegendaryStoneCount(int32 NewCount);
+	// 무기 강화석
+	UFUNCTION(BlueprintCallable, Category = "Inventory|Stone")
+	int32 GetWeaponNormalStoneCount() const;
+	UFUNCTION(BlueprintCallable, Category = "Inventory|Stone")
+	int32 SetWeaponNormalStoneCount(int32 NewCount);
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory|Stone")
+	int32 GetWeaponEpicStoneCount() const;
+	UFUNCTION(BlueprintCallable, Category = "Inventory|Stone")
+	int32 SetWeaponEpicStoneCount(int32 NewCount);
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory|Stone")
+	int32 GetWeaponLegendaryStoneCount() const;
+	UFUNCTION(BlueprintCallable, Category = "Inventory|Stone")
+	int32 SetWeaponLegendaryStoneCount(int32 NewCount);
+
+	// 방어구 강화석
+	UFUNCTION(BlueprintCallable, Category = "Inventory|Stone")
+	int32 GetArmorNormalStoneCount() const;
+	UFUNCTION(BlueprintCallable, Category = "Inventory|Stone")
+	int32 SetArmorNormalStoneCount(int32 NewCount);
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory|Stone")
+	int32 GetArmorEpicStoneCount() const;
+	UFUNCTION(BlueprintCallable, Category = "Inventory|Stone")
+	int32 SetArmorEpicStoneCount(int32 NewCount);
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory|Stone")
+	int32 GetArmorLegendaryStoneCount() const;
+	UFUNCTION(BlueprintCallable, Category = "Inventory|Stone")
+	int32 SetArmorLegendaryStoneCount(int32 NewCount);
 #pragma endregion
 private:
 	UPROPERTY()
