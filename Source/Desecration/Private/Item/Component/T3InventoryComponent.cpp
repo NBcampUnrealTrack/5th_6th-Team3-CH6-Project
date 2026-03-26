@@ -10,9 +10,12 @@ InventorySize(20),
 RuneInventorySize(20),
 EtcInventorySize(20),
 Money(0),
-NormalStoneCount(0),
-EpicStoneCount(0),
-LegendaryStoneCount(0),
+WeaponNormalStoneCount(0),
+WeaponEpicStoneCount(0),
+WeaponLegendaryStoneCount(0),
+ArmorNormalStoneCount(0),
+ArmorEpicStoneCount(0),
+ArmorLegendaryStoneCount(0),
 InitialHPPotionAmount(3),
 InitialMPPotionAmount(3),
 HPPotionCount(0),
@@ -485,34 +488,60 @@ int32 UT3InventoryComponent::GetRuneItemCountByRuneID(const FName& RuneID)
 	return 0;
 }
 
+// 무기 강화석
 int32 UT3InventoryComponent::GetWeaponNormalStoneCount() const
 {
-	return NormalStoneCount;
+	return WeaponNormalStoneCount;
+}
+void UT3InventoryComponent::SetWeaponNormalStoneCount(int32 NewCount)
+{
+	WeaponNormalStoneCount = NewCount;
 }
 
 int32 UT3InventoryComponent::GetWeaponEpicStoneCount() const
 {
-	return EpicStoneCount;
+	return WeaponEpicStoneCount;
+}
+void UT3InventoryComponent::SetWeaponEpicStoneCount(int32 NewCount)
+{
+	WeaponEpicStoneCount = NewCount;
 }
 
 int32 UT3InventoryComponent::GetWeaponLegendaryStoneCount() const
 {
-	return LegendaryStoneCount;
+	return WeaponLegendaryStoneCount;
 }
-
-void UT3InventoryComponent::SetWeaponNormalStoneCount(int32 NewCount)
-{
-	NormalStoneCount = NewCount;
-}
-
-void UT3InventoryComponent::SetWeaponEpicStoneCount(int32 NewCount)
-{
-	EpicStoneCount = NewCount;
-}
-
 void UT3InventoryComponent::SetWeaponLegendaryStoneCount(int32 NewCount)
 {
-	LegendaryStoneCount = NewCount;
+	WeaponLegendaryStoneCount = NewCount;
+}
+
+// 방어구 강화석
+int32 UT3InventoryComponent::GetArmorNormalStoneCount() const
+{
+	return ArmorNormalStoneCount;
+}
+void UT3InventoryComponent::SetArmorNormalStoneCount(int32 NewCount)
+{
+	ArmorNormalStoneCount = NewCount;
+}
+
+int32 UT3InventoryComponent::GetArmorEpicStoneCount() const
+{
+	return ArmorEpicStoneCount;
+}
+void UT3InventoryComponent::SetArmorEpicStoneCount(int32 NewCount)
+{
+	ArmorEpicStoneCount = NewCount;
+}
+
+int32 UT3InventoryComponent::GetArmorLegendaryStoneCount() const
+{
+	return ArmorLegendaryStoneCount;
+}
+void UT3InventoryComponent::SetArmorLegendaryStoneCount(int32 NewCount)
+{
+	ArmorLegendaryStoneCount = NewCount;
 }
 
 void UT3InventoryComponent::UpdateCooldowns()

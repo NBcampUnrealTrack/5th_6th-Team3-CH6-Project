@@ -563,6 +563,11 @@ void AT3CharacterBase::OnDeath()
 	bMoveLock = true;
 	OnDeathAnimation();
 	
+	if (const TObjectPtr<AT3PlayerController> PC = GetController<AT3PlayerController>())
+	{
+		PC->ClosePopupMenu();
+	}
+	
 	//GetWorld()->GetTimerManager().SetTimer(AfterDeathTimerHandle, FTimerDelegate::CreateLambda([&]()
 	//{
 	//	if (const TObjectPtr<AT3GameMode> T3GameMode = Cast<AT3GameMode>(GetWorld()->GetAuthGameMode()))

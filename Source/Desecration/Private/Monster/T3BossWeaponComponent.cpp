@@ -18,9 +18,9 @@ UT3BossWeaponComponent::UT3BossWeaponComponent()
 	WeaponMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	WeaponMeshComponent->SetCanEverAffectNavigation(false);
 
-	// 무기 판정 박스 (WeaponMesh 자식)
+	// 무기 판정 박스 — AttachToSocket()에서 WeaponMesh에 런타임 부착
+	// (생성자 SetupAttachment는 UActorComponent 서브오브젝트에서 템플릿 불일치 유발)
 	WeaponHitBox = CreateDefaultSubobject<UBoxComponent>(TEXT("WeaponHitBox"));
-	WeaponHitBox->SetupAttachment(WeaponMeshComponent);
 	WeaponHitBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	WeaponHitBox->SetCollisionObjectType(ECC_WorldDynamic);
 	WeaponHitBox->SetCollisionResponseToAllChannels(ECR_Ignore);
@@ -34,9 +34,8 @@ UT3BossWeaponComponent::UT3BossWeaponComponent()
 	WeaponHitBox->ShapeColor = FColor::Red;
 	WeaponHitBox->SetHiddenInGame(true);
 
-	// 넓은 판정 박스 — 대쉬 내려찍기 등 특수 공격용
+	// 넓은 판정 박스 — 대쉬 내려찍기 등 특수 공격용 (런타임 부착)
 	WeaponHitBoxWide = CreateDefaultSubobject<UBoxComponent>(TEXT("WeaponHitBoxWide"));
-	WeaponHitBoxWide->SetupAttachment(WeaponMeshComponent);
 	WeaponHitBoxWide->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	WeaponHitBoxWide->SetCollisionObjectType(ECC_WorldDynamic);
 	WeaponHitBoxWide->SetCollisionResponseToAllChannels(ECR_Ignore);
@@ -49,9 +48,8 @@ UT3BossWeaponComponent::UT3BossWeaponComponent()
 	WeaponHitBoxWide->ShapeColor = FColor::Orange;
 	WeaponHitBoxWide->SetHiddenInGame(true);
 
-	// 무기 오라 이펙트 — WeaponMesh 자식 (소켓 전환과 무관하게 무기 추적)
+	// 무기 오라 이펙트 (런타임 부착)
 	WeaponAuraEffect = CreateDefaultSubobject<UNiagaraComponent>(TEXT("WeaponAuraEffect"));
-	WeaponAuraEffect->SetupAttachment(WeaponMeshComponent);
 	WeaponAuraEffect->SetAutoActivate(false);
 
 	// 팔 공격 판정 구체 — AttachToSocket에서 캐릭터 메시 본에 부착

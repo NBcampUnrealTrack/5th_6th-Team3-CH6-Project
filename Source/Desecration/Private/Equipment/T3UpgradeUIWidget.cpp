@@ -42,31 +42,7 @@ void UT3UpgradeUIWidget::NativeConstruct()
 		}
 	}
 
-	// 강화석 아이콘 설정 (고정 이미지, 한 번만 설정)
-	if (UpgradeStation)
-	{
-		if (Img_NormalStone)
-		{
-			if (UTexture2D* Icon = UpgradeStation->GetStoneIcon(ET3UpgradeStoneGrade::Normal))
-			{
-				Img_NormalStone->SetBrushFromTexture(Icon);
-			}
-		}
-		if (Img_EpicStone)
-		{
-			if (UTexture2D* Icon = UpgradeStation->GetStoneIcon(ET3UpgradeStoneGrade::Epic))
-			{
-				Img_EpicStone->SetBrushFromTexture(Icon);
-			}
-		}
-		if (Img_LegendaryStone)
-		{
-			if (UTexture2D* Icon = UpgradeStation->GetStoneIcon(ET3UpgradeStoneGrade::Legendary))
-			{
-				Img_LegendaryStone->SetBrushFromTexture(Icon);
-			}
-		}
-	}
+	// 강화석 아이콘은 탭 전환 시 RefreshUI에서 동적 설정
 
 	if (Btn_RuneTab)
 	{
@@ -236,6 +212,29 @@ void UT3UpgradeUIWidget::RefreshUI()
 		Txt_NextStat->SetText(FText::FromString(FString::Printf(TEXT("%.0f"), UIData.NextLevelStat)));
 	}
 	
+	// 강화석 아이콘 설정 (탭 전환 시 무기/방어구 아이콘 교체)
+	if (Img_NormalStone)
+	{
+		if (UTexture2D* Icon = UpgradeStation->GetStoneIcon(CurrentTab, ET3UpgradeStoneGrade::Normal))
+		{
+			Img_NormalStone->SetBrushFromTexture(Icon);
+		}
+	}
+	if (Img_EpicStone)
+	{
+		if (UTexture2D* Icon = UpgradeStation->GetStoneIcon(CurrentTab, ET3UpgradeStoneGrade::Epic))
+		{
+			Img_EpicStone->SetBrushFromTexture(Icon);
+		}
+	}
+	if (Img_LegendaryStone)
+	{
+		if (UTexture2D* Icon = UpgradeStation->GetStoneIcon(CurrentTab, ET3UpgradeStoneGrade::Legendary))
+		{
+			Img_LegendaryStone->SetBrushFromTexture(Icon);
+		}
+	}
+
 	// 강화석 아이콘 색상 처리 (사용 가능: 원래 색상 / 사용 불가: 어둡게)
 	const FLinearColor ActiveColor = FLinearColor::White;
 	const FLinearColor InactiveColor = FLinearColor(0.3f, 0.3f, 0.3f, 0.5f);
@@ -243,28 +242,28 @@ void UT3UpgradeUIWidget::RefreshUI()
 	if (Img_NormalStone)
 	{
 		bool bCanUse = UpgradeStation->CanUseStone(ET3UpgradeStoneGrade::Normal, UIData.CurrentLevel)
-			&& UpgradeStation->GetStoneCount(ET3UpgradeStoneGrade::Normal) > 0;
+			&& UpgradeStation->GetStoneCount(CurrentTab, ET3UpgradeStoneGrade::Normal) > 0;
 		Img_NormalStone->SetColorAndOpacity(bCanUse ? ActiveColor : InactiveColor);
 	}
 	if (Img_EpicStone)
 	{
 		bool bCanUse = UpgradeStation->CanUseStone(ET3UpgradeStoneGrade::Epic, UIData.CurrentLevel)
-			&& UpgradeStation->GetStoneCount(ET3UpgradeStoneGrade::Epic) > 0;
+			&& UpgradeStation->GetStoneCount(CurrentTab, ET3UpgradeStoneGrade::Epic) > 0;
 		Img_EpicStone->SetColorAndOpacity(bCanUse ? ActiveColor : InactiveColor);
 	}
 	if (Img_LegendaryStone)
 	{
 		bool bCanUse = UpgradeStation->CanUseStone(ET3UpgradeStoneGrade::Legendary, UIData.CurrentLevel)
-			&& UpgradeStation->GetStoneCount(ET3UpgradeStoneGrade::Legendary) > 0;
+			&& UpgradeStation->GetStoneCount(CurrentTab, ET3UpgradeStoneGrade::Legendary) > 0;
 		Img_LegendaryStone->SetColorAndOpacity(bCanUse ? ActiveColor : InactiveColor);
 	}
 
-	// 소모 예정 강화석 Border 강조 (배경색으로 표시, 이미지에 영향 없음)
-	const FLinearColor SelectedBorderColor = FLinearColor(1.0f, 0.85f, 0.0f, 1.0f);  // 노란 배경 (불투명)
+	// 소모 예정 강화석 Border 강조
+	const FLinearColor SelectedBorderColor = FLinearColor(1.0f, 0.85f, 0.0f, 1.0f);
 	const FLinearColor DefaultBorderColor = FLinearColor::Transparent;
 
 	ET3UpgradeStoneGrade NextGrade;
-	bool bHasNextStone = UpgradeStation->GetNextStoneGrade(UIData.CurrentLevel, NextGrade);
+	bool bHasNextStone = UpgradeStation->GetNextStoneGrade(CurrentTab, UIData.CurrentLevel, NextGrade);
 
 	if (Border_NormalStoneFocus)
 	{
@@ -282,18 +281,18 @@ void UT3UpgradeUIWidget::RefreshUI()
 		Border_LegendaryStoneFocus->SetBrushColor(bIsSelected ? SelectedBorderColor : DefaultBorderColor);
 	}
 
-	// 강화석 보유량 표시
+	// 강화석 보유량 표시 (현재 탭의 장비 타입 기준)
 	if (Txt_NormalStoneCount)
 	{
-		Txt_NormalStoneCount->SetText(FText::Format(FText::FromString(TEXT("보유량 : {0}")), FText::AsNumber(UpgradeStation->GetStoneCount(ET3UpgradeStoneGrade::Normal))));
+		Txt_NormalStoneCount->SetText(FText::Format(FText::FromString(TEXT("보유량 : {0}")), FText::AsNumber(UpgradeStation->GetStoneCount(CurrentTab, ET3UpgradeStoneGrade::Normal))));
 	}
 	if (Txt_EpicStoneCount)
 	{
-		Txt_EpicStoneCount->SetText(FText::Format(FText::FromString(TEXT("보유량 : {0}")), FText::AsNumber(UpgradeStation->GetStoneCount(ET3UpgradeStoneGrade::Epic))));
+		Txt_EpicStoneCount->SetText(FText::Format(FText::FromString(TEXT("보유량 : {0}")), FText::AsNumber(UpgradeStation->GetStoneCount(CurrentTab, ET3UpgradeStoneGrade::Epic))));
 	}
 	if (Txt_LegendaryStoneCount)
 	{
-		Txt_LegendaryStoneCount->SetText(FText::Format(FText::FromString(TEXT("보유량 : {0}")), FText::AsNumber(UpgradeStation->GetStoneCount(ET3UpgradeStoneGrade::Legendary))));
+		Txt_LegendaryStoneCount->SetText(FText::Format(FText::FromString(TEXT("보유량 : {0}")), FText::AsNumber(UpgradeStation->GetStoneCount(CurrentTab, ET3UpgradeStoneGrade::Legendary))));
 	}
 
 	// 강화 버튼 활성화/비활성화
