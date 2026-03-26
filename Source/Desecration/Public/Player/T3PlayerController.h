@@ -131,6 +131,8 @@ protected:
 	TObjectPtr<UInputAction> ActivePotionSlotAction;
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> ActiveConsumableSlotAction;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> PopupMenuAction;
 
 	UPROPERTY()
 	TObjectPtr<class AT3CharacterBase> OwnerChar;
@@ -167,6 +169,9 @@ private:
 	void Input_ActiveSkillSlot_Completed(const FInputActionValue& Value);
 	void Input_ActivePotionSlot(const FInputActionValue& Value);
 	void Input_ActiveConsumableSlot(const FInputActionValue& Value);
+	
+	//팝업 메뉴 열기
+	void Input_PopupMenu(const FInputActionValue& Value);
 
 	uint8 bIsUpgradeUIOpen : 1 = false;
 	

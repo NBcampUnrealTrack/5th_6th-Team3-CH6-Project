@@ -152,6 +152,8 @@ void AT3PlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(ActivePotionSlotAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_ActivePotionSlot);
 		EnhancedInputComponent->BindAction(ActiveConsumableSlotAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_ActiveConsumableSlot);
 
+		//팝업 메뉴
+		EnhancedInputComponent->BindAction(PopupMenuAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_PopupMenu);
 	}
 }
 
@@ -397,6 +399,16 @@ void AT3PlayerController::Input_ActiveConsumableSlot(const FInputActionValue& Va
 		OwnerChar->InventoryComponent->	ConsumableItemType = EConsumableItemType::Buff;
 		OwnerChar->OnActivatePotion();
 	}
+}
+
+void AT3PlayerController::Input_PopupMenu(const FInputActionValue& Value)
+{
+	if (!PopUpMenu)
+	{
+		return;
+	}
+	
+	PopUpMenu->SetActivePopUpMenu(!PopUpMenu->IsActivePopUpMenu());
 }
 
 void AT3PlayerController::SetInventoryOpen(bool bIsOpen)
