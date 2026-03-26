@@ -28,7 +28,10 @@ void AT3PlayerController::BeginPlay()
 
 	APawn* NewPawn = GetPawn();
 	OwnerChar = Cast<AT3CharacterBase>(NewPawn);
+	if (IsValid(OwnerChar))
+	{ 
 	Combat = OwnerChar->GetCombatComponent();
+	}
 
 
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
