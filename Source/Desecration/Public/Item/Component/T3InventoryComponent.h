@@ -163,22 +163,22 @@ protected:
 	
 public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	int32 GetNormalStoneCount() const;
+	int32 GetWeaponNormalStoneCount() const;
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	int32 GetEpicStoneCount() const;
+	int32 GetWeaponEpicStoneCount() const;
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	int32 GetLegendaryStoneCount() const;
+	int32 GetWeaponLegendaryStoneCount() const;
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	int32 SetNormalStoneCount(int32 NewCount);
+	void SetWeaponNormalStoneCount(int32 NewCount);
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	int32 SetEpicStoneCount(int32 NewCount);
+	void SetWeaponEpicStoneCount(int32 NewCount);
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	int32 SetLegendaryStoneCount(int32 NewCount);
+	void SetWeaponLegendaryStoneCount(int32 NewCount);
 #pragma endregion
 private:
 	UPROPERTY()

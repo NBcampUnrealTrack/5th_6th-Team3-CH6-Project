@@ -485,37 +485,34 @@ int32 UT3InventoryComponent::GetRuneItemCountByRuneID(const FName& RuneID)
 	return 0;
 }
 
-int32 UT3InventoryComponent::GetNormalStoneCount() const
+int32 UT3InventoryComponent::GetWeaponNormalStoneCount() const
 {
 	return NormalStoneCount;
 }
 
-int32 UT3InventoryComponent::GetEpicStoneCount() const
+int32 UT3InventoryComponent::GetWeaponEpicStoneCount() const
 {
 	return EpicStoneCount;
 }
 
-int32 UT3InventoryComponent::GetLegendaryStoneCount() const
+int32 UT3InventoryComponent::GetWeaponLegendaryStoneCount() const
 {
 	return LegendaryStoneCount;
 }
 
-int32 UT3InventoryComponent::SetNormalStoneCount(int32 NewCount)
+void UT3InventoryComponent::SetWeaponNormalStoneCount(int32 NewCount)
 {
 	NormalStoneCount = NewCount;
-	return NormalStoneCount;
 }
 
-int32 UT3InventoryComponent::SetEpicStoneCount(int32 NewCount)
+void UT3InventoryComponent::SetWeaponEpicStoneCount(int32 NewCount)
 {
 	EpicStoneCount = NewCount;
-	return EpicStoneCount;
 }
 
-int32 UT3InventoryComponent::SetLegendaryStoneCount(int32 NewCount)
+void UT3InventoryComponent::SetWeaponLegendaryStoneCount(int32 NewCount)
 {
 	LegendaryStoneCount = NewCount;
-	return LegendaryStoneCount;
 }
 
 void UT3InventoryComponent::UpdateCooldowns()

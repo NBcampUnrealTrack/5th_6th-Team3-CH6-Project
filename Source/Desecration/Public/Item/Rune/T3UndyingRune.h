@@ -27,7 +27,6 @@ private:
 	
 	uint8 bIsCooldown : 1 = false;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Value")
 	float CooldownByGrade = 0.0f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Value")
