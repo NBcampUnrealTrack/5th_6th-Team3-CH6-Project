@@ -811,9 +811,6 @@ void AT3MidBossMonster::ResetPatternState()
 		RemoveStateTag(TAG_Boss_State_ParryWindow);
 	}
 
-	// 플레이어 패링 가능 윈도우 정리
-	RemoveStateTag(TAG_Boss_State_PlayerParryable);
-
 	RemoveStateTag(TAG_Boss_State_ExecutingPattern);
 	if (MotionWarpingComponent) { MotionWarpingComponent->RemoveWarpTarget(MotionWarpTargetName); MotionWarpingComponent->RemoveWarpTarget(MotionWarpTargetRotationName); }
 

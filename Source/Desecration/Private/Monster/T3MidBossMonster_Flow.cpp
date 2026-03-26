@@ -37,6 +37,24 @@ void AT3MidBossMonster::OnExternalTriggerOverlap(AActor* OverlappedActor, AActor
 }
 
 // ============================================================
+// 외부 활성화 트리거 바인딩 (에디터 직접 배치 / 스포너 런타임 모두 대응)
+// ============================================================
+
+void AT3MidBossMonster::BindExternalTrigger(AActor* Trigger)
+{
+	if (!Trigger)
+	{
+		UE_LOG(LogDesecration, Warning, TEXT("T3_MidBoss: BindExternalTrigger — Trigger가 nullptr"));
+		return;
+	}
+
+	ExternalActivationTrigger = Trigger;
+	Trigger->OnActorBeginOverlap.AddDynamic(this, &AT3MidBossMonster::OnExternalTriggerOverlap);
+
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 외부 활성화 트리거 바인딩 완료 — %s"), *Trigger->GetName());
+}
+
+// ============================================================
 // 입장 (Entry) — 외부 트리거에서 호출
 // ============================================================
 
