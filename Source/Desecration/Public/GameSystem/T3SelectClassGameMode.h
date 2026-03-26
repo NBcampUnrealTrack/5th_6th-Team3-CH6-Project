@@ -26,6 +26,14 @@ public:
 	void ReturnToTitleLevel();
 	
 private:
+	//무기 공격력 테이블 (기본 공격력 확인용)
+	UPROPERTY(EditDefaultsOnly, Category = "Data", meta = (AllowPrivateAccess = true))
+	TObjectPtr<UDataTable> WeaponTable;
+	
+	//WeaponTable에서 찾을 행 이름
+	UPROPERTY(EditDefaultsOnly, Category = "Data", meta = (AllowPrivateAccess = true))
+	FName RowNameInWeaponTable;
+	
 	//게임 인스턴스
 	UPROPERTY()
 	TObjectPtr<UT3GameInstance> T3GameInstance;
