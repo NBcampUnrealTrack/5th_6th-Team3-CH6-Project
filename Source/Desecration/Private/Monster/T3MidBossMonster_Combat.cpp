@@ -415,30 +415,60 @@ bool AT3MidBossMonster::IsParryWindowActive() const
 // 플레이어 패링 반응 (플레이어가 보스 공격을 패링 성공 시)
 // ============================================================
 
-bool AT3MidBossMonster::IsPlayerParryable() const
-{
-	return HasStateTag(TAG_Boss_State_PlayerParryable);
-}
-
 void AT3MidBossMonster::NotifyParriedByPlayer()
 {
-	// PlayerParryable 윈도우가 아니면 무시
-	if (!IsPlayerParryable())
-	{
-		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 패링 시도 — PlayerParryable 윈도우 아님, 무시"));
-		return;
-	}
-
+	// DamageType에서 이미 패링 가능 여부를 판정 완료
+	// → 이 함수가 호출됐다 = 패링 성공 확정
 	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 플레이어 패링 성공! 히트리액션 재생"));
 
-	// 현재 패턴 캔슬 → 히트리액션 재생 → BattleLoop 복귀
+	// 현재 패턴 캔슬
 	CancelCurrentPattern();
 
-	// 정면 히트리액션 재생 (플레이어는 항상 전방이므로 DamageCauser 없이 호출)
-	PlayAdditiveHitReaction(CombatTarget);
+	// 정면 히트리액션 재생 + 종료 델리게이트 바인딩
+	UAnimMontage* HitReactMontage = GetDirectionalHitReactMontage(CombatTarget);
+	if (HitReactMontage)
+	{
+		PlayAnimMontage(HitReactMontage);
+		bParryHitReactionPlaying = true;
+
+		// 몽타주 종료 시 콜백 바인딩
+		if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+		{
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &AT3MidBossMonster::OnParryHitReactionEnded);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, HitReactMontage);
+		}
+	}
 
 	// 외부 알림 (플레이어팀 등 바인딩 가능)
 	OnParriedByPlayer.Broadcast();
+}
+
+void AT3MidBossMonster::OnParryHitReactionEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (!bParryHitReactionPlaying)
+	{
+		return;
+	}
+	bParryHitReactionPlaying = false;
+
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 패링 히트리액션 종료 (중단:%s) → StateTree 이벤트 전송"),
+		bInterrupted ? TEXT("Y") : TEXT("N"));
+
+	// StateTree 이벤트 전송 — AC 잔량에 따라 분기
+	if (StateTreeComponent)
+	{
+		if (ActionCount <= 0)
+		{
+			StateTreeComponent->SendStateTreeEvent(TAG_Boss_Event_ActionCountDepleted);
+			UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 패링 + AC 소진 → ActionCountDepleted 이벤트 전송"));
+		}
+		else
+		{
+			StateTreeComponent->SendStateTreeEvent(TAG_Boss_Event_ParriedByPlayer);
+			UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: ParriedByPlayer 이벤트 전송 (AC:%d)"), ActionCount);
+		}
+	}
 }
 
 void AT3MidBossMonster::OpenParryWindow()
