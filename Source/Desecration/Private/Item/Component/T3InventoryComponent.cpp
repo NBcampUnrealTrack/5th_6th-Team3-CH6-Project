@@ -194,6 +194,25 @@ void UT3InventoryComponent::SwapSlots(int32 SourceSlotIndex, int32 TargetSlotInd
 	OnInventoryUpdated.Broadcast();
 }
 
+void UT3InventoryComponent::SwapEtcSlots(int32 SourceSlotIndex, int32 TargetSlotIndex)
+{
+	if (!EtcItems.IsValidIndex(SourceSlotIndex) || !EtcItems.IsValidIndex(TargetSlotIndex))
+	{
+		return;
+	}
+
+	if (SourceSlotIndex == TargetSlotIndex)
+	{
+		return;
+	}
+
+	FInventorySlot TempSlot = EtcItems[SourceSlotIndex];
+	EtcItems[SourceSlotIndex] = EtcItems[TargetSlotIndex];
+	EtcItems[TargetSlotIndex] = TempSlot;
+
+	OnEtcInventoryUpdated.Broadcast();
+}
+
 void UT3InventoryComponent::SwapRuneSlots(int32 SourceSlotIndex, int32 TargetSlotIndex)
 {
 	if (!RuneItems.IsValidIndex(SourceSlotIndex) || !RuneItems.IsValidIndex(TargetSlotIndex))
