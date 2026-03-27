@@ -181,12 +181,8 @@ bool AT3GameMode::SaveInventoryAndPotionLevel(const AT3CharacterBase* Character)
 	}
 	
 	//마지막 저장 시점
-	TObjectPtr<UT3SaveGame> SaveGame;
-	if (T3GameInstance->LoadGame(false))
-	{
-		SaveGame = T3GameInstance->GetSavedGameData();
-	}
-	else
+	TObjectPtr<UT3SaveGame> SaveGame = T3GameInstance->GetSavedGameData();
+	if (!SaveGame)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("SaveInventoryAndPotionLevel : 저장된 게임을 불러올 수 없음"));
 		return false;
