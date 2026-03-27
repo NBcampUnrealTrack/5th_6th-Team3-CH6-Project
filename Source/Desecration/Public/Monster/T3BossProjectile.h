@@ -11,7 +11,6 @@
 class UBoxComponent;
 class UProjectileMovementComponent;
 class UNiagaraComponent;
-class UStaticMeshComponent;
 class UAudioComponent;
 
 UCLASS()
@@ -39,13 +38,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
 	TObjectPtr<UProjectileMovementComponent> MovementComp;
 
-	// Niagara 이펙트 (에디터에서 설정, 없으면 임시 메시 표시)
+	// Niagara 이펙트 (에디터에서 설정)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile|Effect")
 	TObjectPtr<UNiagaraComponent> ProjectileEffect;
-
-	// 임시 시각 메시 (Niagara 없을 때 디버그용)
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile|Debug")
-	TObjectPtr<UStaticMeshComponent> DebugMesh;
 
 	// --- 콜리전 크기 (에디터 조절) ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")

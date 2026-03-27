@@ -41,9 +41,9 @@ void AT3SelectClassGameMode::MakeFirstGameData(const FString& PlayerName, const 
 	T3GameInstance->SaveObjectState();
 }
 
-void AT3SelectClassGameMode::TutorialStart()
+void AT3SelectClassGameMode::TutorialStart_Implementation()
 {
-	T3GameInstance->OpenLevel(ELevelName::Tutorial);
+	//T3GameInstance->OpenLevel(ELevelName::Tutorial);
 }
 
 void AT3SelectClassGameMode::ReturnToTitleLevel()
