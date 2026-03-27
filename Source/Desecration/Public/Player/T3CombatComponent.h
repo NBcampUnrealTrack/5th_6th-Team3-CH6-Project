@@ -109,6 +109,8 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Combat")
 	FORCEINLINE ECharacterCombatState GetCurrentState() const { return CurrentState; }
 
+	FORCEINLINE bool IsBasicAttacking() const { return bIsBasicAttacking; }
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EHitDirection HitDirection;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -155,7 +157,7 @@ public:
 
 	// 공격 함수
 	UFUNCTION(BlueprintCallable)
-	void RequestAttackDamage(AActor* TargetActor, float DamageAmount, EHitIntensity Intensity = EHitIntensity::Light, float DamageMultiflier = 1.0f , TSubclassOf<class UT3DamageType_Base> DamageTypeClass = nullptr, float InStunAmount = 0.f);
+	void RequestAttackDamage(AActor* TargetActor, float DamageAmount, EHitIntensity Intensity = EHitIntensity::Light, float DamageMultiflier = 1.0f , TSubclassOf<class UT3DamageType_Base> DamageTypeClass = nullptr, float InStunAmount = 0.f, bool bIsBasicAttack = false);
 
 	// 스태미너 소모 함수
 	void ConsumeStamina(float Amount);
@@ -229,6 +231,9 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<class AController> AIPC;
+
+	// 일반공격/스킬 구분
+	bool bIsBasicAttacking = false;
 
 	// 록온 변수
 	bool bIsLockOn = false;
