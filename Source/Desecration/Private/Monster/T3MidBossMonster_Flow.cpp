@@ -433,17 +433,24 @@ void AT3MidBossMonster::OnDissolveFinished()
 	if (WeaponComponent && WeaponComponent->WeaponMeshComponent)
 	{
 		FTimerHandle WeaponDissolveTimer;
-		GetWorldTimerManager().SetTimer(WeaponDissolveTimer, [this]()
+		TWeakObjectPtr<AT3MidBossMonster> WeakThis(this);
+		GetWorldTimerManager().SetTimer(WeaponDissolveTimer, [WeakThis]()
 		{
-			if (WeaponComponent)
+			if (!WeakThis.IsValid())
 			{
-				WeaponComponent->StartWeaponDissolve(
-					WeaponComponent->WeaponDissolveDuration,
-					WeaponComponent->WeaponDissolveParameterName);
+				return;
+			}
+
+			AT3MidBossMonster* Self = WeakThis.Get();
+			if (Self->WeaponComponent)
+			{
+				Self->WeaponComponent->StartWeaponDissolve(
+					Self->WeaponComponent->WeaponDissolveDuration,
+					Self->WeaponComponent->WeaponDissolveParameterName);
 			}
 
 			// 무기 디졸브 완료 후 액터 제거
-			SetLifeSpan(WeaponComponent ? WeaponComponent->WeaponDissolveDuration + 0.5f : 3.f);
+			Self->SetLifeSpan(Self->WeaponComponent ? Self->WeaponComponent->WeaponDissolveDuration + 0.5f : 3.f);
 
 		}, 1.f, false);
 

@@ -21,14 +21,24 @@
 void AT3PlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	bShowMouseCursor = false;
 	const FInputModeGameOnly InputModeGameOnly;
 	SetInputMode(InputModeGameOnly);
 
+	// 카메라 상하 각도 제한
+	if (PlayerCameraManager)
+	{
+		PlayerCameraManager->ViewPitchMin = -50.0f;
+		PlayerCameraManager->ViewPitchMax = 50.0f;
+	}
+	
 	APawn* NewPawn = GetPawn();
 	OwnerChar = Cast<AT3CharacterBase>(NewPawn);
+	if (IsValid(OwnerChar))
+	{ 
 	Combat = OwnerChar->GetCombatComponent();
+	}
 
 
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
@@ -156,6 +166,7 @@ void AT3PlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(PopupMenuAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_PopupMenu);
 	}
 }
+
 
 void AT3PlayerController::Input_Move(const FInputActionValue& Value)
 {
