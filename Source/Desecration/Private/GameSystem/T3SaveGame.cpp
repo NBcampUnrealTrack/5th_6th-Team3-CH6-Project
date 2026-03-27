@@ -16,7 +16,6 @@ void UT3SaveGame::ResetGameData()
 	SavedLevelName = ELevelName::Tutorial;
 	PlayerLocation = FVector(-80, 185, 102);
 	PlayerRotation = FRotator::ZeroRotator;
-	bSetLocation = true;
 	
 	//현재 도달한 세이브 포인트(룬) 위치
 	LevelProgressMap.Empty();

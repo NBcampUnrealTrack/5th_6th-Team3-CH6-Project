@@ -44,10 +44,6 @@ public:
 	//저장한 곳의 맵 이름
 	UPROPERTY()
 	ELevelName SavedLevelName;
-
-	//위치 적용 여부 (이 값은 저장 목적이 아님)
-	UPROPERTY(Transient)
-	bool bSetLocation;
 	
 	//현재 도달한 세이브 포인트(룬) 위치
 	UPROPERTY()
