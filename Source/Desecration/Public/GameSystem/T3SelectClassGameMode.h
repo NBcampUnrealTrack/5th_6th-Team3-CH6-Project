@@ -20,12 +20,22 @@ public:
 	void MakeFirstGameData(const FString& PlayerName, const ECharacterClass SelectedPlayerClass);
 	
 	//튜토리얼 시작
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "GameMode")
 	void TutorialStart();
+	virtual void TutorialStart_Implementation();
 	
 	//타이틀 레벨로 돌아가기
 	void ReturnToTitleLevel();
 	
 private:
+	//무기 공격력 테이블 (기본 공격력 확인용)
+	UPROPERTY(EditDefaultsOnly, Category = "Data", meta = (AllowPrivateAccess = true))
+	TObjectPtr<UDataTable> WeaponTable;
+	
+	//WeaponTable에서 찾을 행 이름
+	UPROPERTY(EditDefaultsOnly, Category = "Data", meta = (AllowPrivateAccess = true))
+	FName RowNameInWeaponTable;
+	
 	//게임 인스턴스
 	UPROPERTY()
 	TObjectPtr<UT3GameInstance> T3GameInstance;

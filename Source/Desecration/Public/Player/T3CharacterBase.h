@@ -94,7 +94,7 @@ protected:
 
 	//캐릭터 데이터
 	//평소 플레이시 이 값을 비워 게임 인스턴스를 참조하도록 만고 테스트시에만 할당
-	UPROPERTY(EditAnywhere, Category = "Character Data")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Data")
 	TObjectPtr<class UT3CharacterDataAsset> CharacterData;
 
 protected:
@@ -178,7 +178,7 @@ protected:
 	float CurrentHP;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
-	float AttackPower = 50.f; // 장비 착용하면 변경
+	float AttackPower = 45.f; // 장비 착용하면 변경
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float Defense = 0.1f; // 장비 착용하면 변경
@@ -274,6 +274,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Class")
 	ECharacterClass CurrentClass;
 
+
 	// 스태미나 자연 회복
 	void RegenerateStamina();
 	// 스테미나 회복 주기
@@ -326,6 +327,9 @@ public:
 
 	void UpdateForcedMovement(float DeltaTime);
 	void UpdateForcedRotation(float DeltaTime);
+
+	UFUNCTION(BlueprintCallable)
+	void MakeFullCondition();
 
 	//스킬 사용 불가 변수
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ForceMove")
@@ -428,6 +432,14 @@ public:
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 		int32 CharacterLevel = 1;
 
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+		float PreAdditionalAttack = 0.f;
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+		float AdditionalAttack = 5.f;
+
+
+
 	public:
 
 		// --- Getters ---
@@ -440,6 +452,18 @@ public:
 		UFUNCTION(BlueprintCallable, Category = "Stat")
 		int32 GetCharacterLevel() const { return CharacterLevel; }
 
+		FORCEINLINE int32 GetWeaponLevel() const { return WeaponLevel; }
+
+
+		// --- Setters ---
+		FORCEINLINE void SetVigor(int32 NewVigor) {  Vigor = NewVigor; }
+		FORCEINLINE void SetEndurance(int32 NewEndurance) {  Endurance = NewEndurance; }
+		FORCEINLINE void SetMind(int32 NewMind) {  Mind = NewMind; }
+		FORCEINLINE void SetStrength(int32 NewStrength) {  Strength = NewStrength; }
+		FORCEINLINE void SetIntelligence(int32 NewIntelligence) {  Intelligence = NewIntelligence; }
+		FORCEINLINE void SetCharacterLevel(int32 NewCharacterLevel) {  CharacterLevel = NewCharacterLevel; }
+
+
 		// 현재 스탯 총합을 기반으로 계산된 레벨
 		UFUNCTION(BlueprintPure, Category = "Stat|Logic")
 		int32 GetCalculatedLevel() const;
@@ -449,10 +473,14 @@ public:
 		void UpgradeStat(ET3StatType StatType, int32 Amount);
 
 		UFUNCTION(BlueprintPure, Category = "Stat|Logic")
-		float GetStatIncreasePreview(ET3StatType StatType, int32 TargetStatValue) const;
+		float GetStatIncreasePreview(ET3StatType StatType, int32 CurrentStatValue, int32 Amount) const;
+
+		UFUNCTION(BlueprintPure, Category = "Stat|Logic")
+		float GetAttackPowerPreview(ET3StatType StatType, int32 TargetStatValue);
 
 		UFUNCTION(BlueprintCallable, Category = "Stat|Logic")
-		void SetWeaponLevel(float CurrentWeaponLevel) { WeaponLevel = CurrentWeaponLevel; BroadcastStatChange(ET3StatType::Attack);}
+		void SetWeaponLevel(float CurrentWeaponLevel);
+		
 
 
 		// === 낙사 관련 로직

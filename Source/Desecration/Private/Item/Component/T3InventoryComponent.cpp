@@ -194,6 +194,25 @@ void UT3InventoryComponent::SwapSlots(int32 SourceSlotIndex, int32 TargetSlotInd
 	OnInventoryUpdated.Broadcast();
 }
 
+void UT3InventoryComponent::SwapEtcSlots(int32 SourceSlotIndex, int32 TargetSlotIndex)
+{
+	if (!EtcItems.IsValidIndex(SourceSlotIndex) || !EtcItems.IsValidIndex(TargetSlotIndex))
+	{
+		return;
+	}
+
+	if (SourceSlotIndex == TargetSlotIndex)
+	{
+		return;
+	}
+
+	FInventorySlot TempSlot = EtcItems[SourceSlotIndex];
+	EtcItems[SourceSlotIndex] = EtcItems[TargetSlotIndex];
+	EtcItems[TargetSlotIndex] = TempSlot;
+
+	OnEtcInventoryUpdated.Broadcast();
+}
+
 void UT3InventoryComponent::SwapRuneSlots(int32 SourceSlotIndex, int32 TargetSlotIndex)
 {
 	if (!RuneItems.IsValidIndex(SourceSlotIndex) || !RuneItems.IsValidIndex(TargetSlotIndex))
@@ -466,10 +485,13 @@ bool UT3InventoryComponent::RemoveEtcItemByCount(const FName& ItemName, int32 Co
 				EtcItem.ItemStack = 0;
 			}
 			OnEtcInventoryUpdated.Broadcast();
+			
+			UE_LOG(LogTemp, Error, TEXT("[%s] 제거 완료"), *EtcItem.ItemID.ToString());
 			return true;
 		}
 	}
 	
+	UE_LOG(LogTemp, Error, TEXT("제거 할 아이템이 없음"));
 	return false;
 }
 
@@ -486,24 +508,60 @@ int32 UT3InventoryComponent::GetRuneItemCountByRuneID(const FName& RuneID)
 }
 
 // 무기 강화석
-int32 UT3InventoryComponent::GetWeaponNormalStoneCount() const { return WeaponNormalStoneCount; }
-int32 UT3InventoryComponent::SetWeaponNormalStoneCount(int32 NewCount) { WeaponNormalStoneCount = NewCount; return WeaponNormalStoneCount; }
+int32 UT3InventoryComponent::GetWeaponNormalStoneCount() const
+{
+	return WeaponNormalStoneCount;
+}
+void UT3InventoryComponent::SetWeaponNormalStoneCount(int32 NewCount)
+{
+	WeaponNormalStoneCount = NewCount;
+}
 
-int32 UT3InventoryComponent::GetWeaponEpicStoneCount() const { return WeaponEpicStoneCount; }
-int32 UT3InventoryComponent::SetWeaponEpicStoneCount(int32 NewCount) { WeaponEpicStoneCount = NewCount; return WeaponEpicStoneCount; }
+int32 UT3InventoryComponent::GetWeaponEpicStoneCount() const
+{
+	return WeaponEpicStoneCount;
+}
+void UT3InventoryComponent::SetWeaponEpicStoneCount(int32 NewCount)
+{
+	WeaponEpicStoneCount = NewCount;
+}
 
-int32 UT3InventoryComponent::GetWeaponLegendaryStoneCount() const { return WeaponLegendaryStoneCount; }
-int32 UT3InventoryComponent::SetWeaponLegendaryStoneCount(int32 NewCount) { WeaponLegendaryStoneCount = NewCount; return WeaponLegendaryStoneCount; }
+int32 UT3InventoryComponent::GetWeaponLegendaryStoneCount() const
+{
+	return WeaponLegendaryStoneCount;
+}
+void UT3InventoryComponent::SetWeaponLegendaryStoneCount(int32 NewCount)
+{
+	WeaponLegendaryStoneCount = NewCount;
+}
 
 // 방어구 강화석
-int32 UT3InventoryComponent::GetArmorNormalStoneCount() const { return ArmorNormalStoneCount; }
-int32 UT3InventoryComponent::SetArmorNormalStoneCount(int32 NewCount) { ArmorNormalStoneCount = NewCount; return ArmorNormalStoneCount; }
+int32 UT3InventoryComponent::GetArmorNormalStoneCount() const
+{
+	return ArmorNormalStoneCount;
+}
+void UT3InventoryComponent::SetArmorNormalStoneCount(int32 NewCount)
+{
+	ArmorNormalStoneCount = NewCount;
+}
 
-int32 UT3InventoryComponent::GetArmorEpicStoneCount() const { return ArmorEpicStoneCount; }
-int32 UT3InventoryComponent::SetArmorEpicStoneCount(int32 NewCount) { ArmorEpicStoneCount = NewCount; return ArmorEpicStoneCount; }
+int32 UT3InventoryComponent::GetArmorEpicStoneCount() const
+{
+	return ArmorEpicStoneCount;
+}
+void UT3InventoryComponent::SetArmorEpicStoneCount(int32 NewCount)
+{
+	ArmorEpicStoneCount = NewCount;
+}
 
-int32 UT3InventoryComponent::GetArmorLegendaryStoneCount() const { return ArmorLegendaryStoneCount; }
-int32 UT3InventoryComponent::SetArmorLegendaryStoneCount(int32 NewCount) { ArmorLegendaryStoneCount = NewCount; return ArmorLegendaryStoneCount; }
+int32 UT3InventoryComponent::GetArmorLegendaryStoneCount() const
+{
+	return ArmorLegendaryStoneCount;
+}
+void UT3InventoryComponent::SetArmorLegendaryStoneCount(int32 NewCount)
+{
+	ArmorLegendaryStoneCount = NewCount;
+}
 
 void UT3InventoryComponent::UpdateCooldowns()
 {
@@ -770,11 +828,13 @@ void UT3InventoryComponent::InitializePotionIDs()
 void UT3InventoryComponent::SetHPPotionCount(int32 Count)
 {
 	HPPotionCount = FMath::Clamp(Count, 0, GetMaxHPPotionCount());
+	OnRecoverItemUsed.Broadcast();
 }
 
 void UT3InventoryComponent::SetMPPotionCount(int32 Count)
 {
 	MPPotionCount = FMath::Clamp(Count, 0, GetMaxMPPotionCount());
+	OnRecoverItemUsed.Broadcast();
 }
 
 void UT3InventoryComponent::UseCurrentPotion()

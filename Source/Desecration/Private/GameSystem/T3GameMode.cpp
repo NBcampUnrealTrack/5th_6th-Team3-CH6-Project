@@ -93,6 +93,13 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	SaveGame->CriticalChance = Character->GetCriticalChance();
 	SaveGame->CriticalDamage = Character->GetCriticalDamage();
 	SaveGame->MoveSpeed = Character->GetMoveSpeed();
+	SaveGame->Vigor = Character->GetVigor();
+	SaveGame->Endurance = Character->GetEndurance();
+	SaveGame->Mind = Character->GetMind();
+	SaveGame->Strength = Character->GetStrength();
+	SaveGame->Intelligence = Character->GetIntelligence();
+	SaveGame->WeaponLevel = Character->GetWeaponLevel();
+	SaveGame->CharacterLevel = Character->GetCharacterLevel();
 	//인벤토리
 	TObjectPtr<UT3InventoryComponent> InventoryComponent = Character->InventoryComponent;
 	if (!InventoryComponent)
@@ -100,10 +107,21 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 		UE_LOG(LogTemp, Error, TEXT("%s : InventoryComponent가 null"), *GetNameSafe(this));
 		return false;
 	}
-	SaveGame->Items.Empty();
-	for (FInventorySlot& Slot : InventoryComponent->Items)
+	//참고 : 인벤토리 공간은 T3InventoryComponent에서 정한 값을 따른다.
+	constexpr int32 InvenSize = 20;
+	for (int32 iNum = 0; iNum < InvenSize; ++iNum)
 	{
-		SaveGame->Items.Add(Slot);
+		//유효 인덱스 검사
+		if (!(SaveGame->Items.IsValidIndex(iNum) && InventoryComponent->Items.IsValidIndex(iNum) &&
+			SaveGame->RuneItems.IsValidIndex(iNum) && InventoryComponent->RuneItems.IsValidIndex(iNum) &&
+			SaveGame->EtcItems.IsValidIndex(iNum) && InventoryComponent->EtcItems.IsValidIndex(iNum)))
+		{
+			break;
+		}
+		
+		SaveGame->Items[iNum] = InventoryComponent->Items[iNum];
+		SaveGame->RuneItems[iNum] = InventoryComponent->RuneItems[iNum];
+		SaveGame->EtcItems[iNum] = InventoryComponent->EtcItems[iNum];
 	}
 	SaveGame->Money = InventoryComponent->GetMoney();
 	SaveGame->WeaponNormalStoneCount = InventoryComponent->GetWeaponNormalStoneCount();
@@ -152,6 +170,132 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	
 	//저장
 	return T3GameInstance->SaveGame();
+}
+
+bool AT3GameMode::SaveInventoryAndPotionLevel(const AT3CharacterBase* Character)
+{
+	if (!Character)
+	{
+		UE_LOG(LogTemp, Error, TEXT("SaveInventoryAndPotionLevel : Character가 null"));
+		return false;
+	}
+	
+	//마지막 저장 시점
+	TObjectPtr<UT3SaveGame> SaveGame;
+	if (T3GameInstance->LoadGame(false))
+	{
+		SaveGame = T3GameInstance->GetSavedGameData();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SaveInventoryAndPotionLevel : 저장된 게임을 불러올 수 없음"));
+		return false;
+	}
+	
+	//인벤토리
+	TObjectPtr<UT3InventoryComponent> InventoryComponent = Character->InventoryComponent;
+	if (!InventoryComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("SaveInventoryAndPotionLevel : 인벤토리 접근 불가"));
+		return false;
+	}
+	constexpr int32 InvenSize = 20;
+	for (int32 iNum = 0; iNum < InvenSize; ++iNum)
+	{
+		//유효 인덱스 검사
+		if (!(SaveGame->Items.IsValidIndex(iNum) && InventoryComponent->Items.IsValidIndex(iNum) &&
+			SaveGame->RuneItems.IsValidIndex(iNum) && InventoryComponent->RuneItems.IsValidIndex(iNum) &&
+			SaveGame->EtcItems.IsValidIndex(iNum) && InventoryComponent->EtcItems.IsValidIndex(iNum)))
+		{
+			break;
+		}
+		InventoryComponent->Items[iNum] = SaveGame->Items[iNum];
+		InventoryComponent->RuneItems[iNum] = SaveGame->RuneItems[iNum];
+		InventoryComponent->EtcItems[iNum] = SaveGame->EtcItems[iNum];
+	}
+	//포션 강화
+	SaveGame->PotionAmountUpgradeLevel = InventoryComponent->GetPotionAmountUpgradeLevel();
+	SaveGame->PotionRecoveryUpgradeLevel = InventoryComponent->GetPotionRecoveryUpgradeLevel();
+	
+	//저장
+	if (!T3GameInstance->SaveGame())
+	{
+		UE_LOG(LogTemp, Error, TEXT("SaveInventoryAndPotionLevel : 저장 실패"));
+		return false;
+	}
+	
+	return true;
+}
+
+/*
+bool AT3GameMode::SaveOnlySkill(const AT3CharacterBase* Character)
+{
+	if (!Character)
+	{
+		UE_LOG(LogTemp, Error, TEXT("SaveOnlySkill : Character가 null"));
+		return false;
+	}
+	
+	//마지막 저장 시점
+	TObjectPtr<UT3SaveGame> SaveGame;
+	if (T3GameInstance->LoadGame(false))
+	{
+		SaveGame = T3GameInstance->GetSavedGameData();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SaveOnlySkill : 저장된 게임을 불러올 수 없음"));
+		return false;
+	}
+	
+	//스킬
+	TObjectPtr<UT3SkillComponentBase> SkillComponent;
+	if (const TObjectPtr<UT3CombatComponent> CombatComponent = Character->GetCombatComponent(); !CombatComponent || !CombatComponent->GetSkillComponent())
+	{
+		UE_LOG(LogTemp, Error, TEXT("SaveOnlySkill : SkillComponent 접근 불가"));
+		return false;
+	}
+	else
+	{
+		SkillComponent = CombatComponent->GetSkillComponent();
+	}
+	for (TTuple<int32, bool> UnlockState : SkillComponent->SkillUnlockStates)
+	{
+		bool& State = SaveGame->SkillUnlockStates.FindOrAdd(UnlockState.Key);
+		State = UnlockState.Value;
+	}
+	SaveGame->CurrentSkillSlot = SkillComponent->CurrentSkillSlot;
+	SaveGame->NextSkillSlot = SkillComponent->NextSkillSlot;
+	
+	return true;
+}
+*/
+
+bool AT3GameMode::SaveOnlySkill(const AT3CharacterBase* Character)
+{
+    if (!Character || !T3GameInstance) return false;
+    
+    TObjectPtr<UT3SaveGame> SaveGame = T3GameInstance->GetSavedGameData();
+    if (!SaveGame) return false;
+
+    // --- 핵심: 위치 정보를 보존하기 위해 아무것도 건드리지 않습니다 ---
+    // SaveGame->PlayerLocation = ... (이 코드가 없어야 함)
+
+    // 1. 스킬 정보 업데이트
+    if (const TObjectPtr<UT3CombatComponent> CombatComponent = Character->GetCombatComponent())
+    {
+        if (auto* SkillComp = CombatComponent->GetSkillComponent())
+        {
+            for (auto& UnlockState : SkillComp->SkillUnlockStates)
+            {
+                SaveGame->SkillUnlockStates.FindOrAdd(UnlockState.Key) = UnlockState.Value;
+            }
+            SaveGame->CurrentSkillSlot = SkillComp->CurrentSkillSlot;
+        }
+    }
+
+    // 2. 저장 (이때 파일에는 '기존에 저장되어 있던 위치'와 '새로운 스킬'이 함께 써집니다)
+    return T3GameInstance->SaveGame();
 }
 
 void AT3GameMode::LoadGame()
@@ -225,18 +369,31 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 	Character->SetCriticalChance(SaveGame->CriticalChance);
 	Character->SetCriticalDamage(SaveGame->CriticalDamage);
 	Character->SetMoveSpeed(SaveGame->MoveSpeed);
+	Character->SetVigor(SaveGame->Vigor);
+	Character->SetEndurance(SaveGame->Endurance);
+	Character->SetMind(SaveGame->Mind);
+	Character->SetStrength(SaveGame->Strength);
+	Character->SetIntelligence(SaveGame->Intelligence);
+	Character->SetWeaponLevel(SaveGame->WeaponLevel);
+	Character->SetCharacterLevel(SaveGame->CharacterLevel);
 
 	//인벤토리 컴포넌트 유효성 검사
 	TObjectPtr<UT3InventoryComponent> InventoryComponent = Character->InventoryComponent;
 	if (InventoryComponent)
 	{
-		const int32 SlotNums = SaveGame->Items.Num();
-		for (int32 iNum = 0; iNum < SlotNums; ++iNum)
+		constexpr int32 InvenSize = 20;
+		for (int32 iNum = 0; iNum < InvenSize; ++iNum)
 		{
-			if (InventoryComponent->Items.IsValidIndex(iNum) && SaveGame->Items.IsValidIndex(iNum))
+			//유효 인덱스 검사
+			if (!(SaveGame->Items.IsValidIndex(iNum) && InventoryComponent->Items.IsValidIndex(iNum) &&
+				SaveGame->RuneItems.IsValidIndex(iNum) && InventoryComponent->RuneItems.IsValidIndex(iNum) &&
+				SaveGame->EtcItems.IsValidIndex(iNum) && InventoryComponent->EtcItems.IsValidIndex(iNum)))
 			{
-				InventoryComponent->Items[iNum] = SaveGame->Items[iNum];
+				break;
 			}
+			InventoryComponent->Items[iNum] = SaveGame->Items[iNum];
+			InventoryComponent->RuneItems[iNum] = SaveGame->RuneItems[iNum];
+			InventoryComponent->EtcItems[iNum] = SaveGame->EtcItems[iNum];
 		}
 		InventoryComponent->SetMoney(SaveGame->Money);
 		InventoryComponent->SetWeaponNormalStoneCount(SaveGame->WeaponNormalStoneCount);

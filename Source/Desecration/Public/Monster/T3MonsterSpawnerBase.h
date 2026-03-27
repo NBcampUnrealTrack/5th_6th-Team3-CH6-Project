@@ -19,6 +19,9 @@ class DESECRATION_API AT3MonsterSpawnerBase : public AActor
 public:
     AT3MonsterSpawnerBase();
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawner")
+    int CurrentStage;
+
 public:
     /** 몬스터를 스폰 (이미 있으면 제거 후 다시 생성) */
     UFUNCTION(BlueprintCallable, Category = "Spawner")

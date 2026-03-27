@@ -80,6 +80,16 @@ void AT3PlayerController::BeginPlay()
 		}
 	}
 
+	if (IsValid(LevelUpWidgetClass))
+	{
+		LevelUpWidget = CreateWidget<UUserWidget>(this, LevelUpWidgetClass);
+		if (LevelUpWidget)
+		{
+			LevelUpWidget->AddToViewport(99);
+			LevelUpWidget->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
+
 	// 팔라딘일 때만 신성게이지 위젯 생성
 	if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
 	{
@@ -142,6 +152,8 @@ void AT3PlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(ActivePotionSlotAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_ActivePotionSlot);
 		EnhancedInputComponent->BindAction(ActiveConsumableSlotAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_ActiveConsumableSlot);
 
+		//팝업 메뉴
+		EnhancedInputComponent->BindAction(PopupMenuAction, ETriggerEvent::Started, this, &AT3PlayerController::Input_PopupMenu);
 	}
 }
 
@@ -389,6 +401,22 @@ void AT3PlayerController::Input_ActiveConsumableSlot(const FInputActionValue& Va
 	}
 }
 
+void AT3PlayerController::Input_PopupMenu(const FInputActionValue& Value)
+{
+	if (!PopUpMenu)
+	{
+		return;
+	}
+	
+	//플레이어 사망시 무시
+	if (!OwnerChar || OwnerChar->bIsDead)
+	{
+		return;
+	}
+	
+	PopUpMenu->SetActivePopUpMenu(!PopUpMenu->IsActivePopUpMenu());
+}
+
 void AT3PlayerController::SetInventoryOpen(bool bIsOpen)
 {
 	bIsInventoryOpen = bIsOpen;
@@ -445,4 +473,12 @@ bool AT3PlayerController::GetIsUpgradeUIOpen() const
 void AT3PlayerController::SetIsUpgradeUIOpen(bool bIsOpen)
 {
 	bIsUpgradeUIOpen = bIsOpen;
+}
+
+void AT3PlayerController::ClosePopupMenu()
+{
+	if (PopUpMenu)
+	{
+		PopUpMenu->SetActivePopUpMenu(false);
+	}
 }

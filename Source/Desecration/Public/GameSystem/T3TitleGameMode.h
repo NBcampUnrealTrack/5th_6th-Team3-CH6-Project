@@ -19,7 +19,9 @@ public:
 	void MoveToSelectClassLevel();
 	
 	//마지막 저장 장소에서 계속하기 (저장된 게임 데이터 적용)
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "GameMode")
 	void MoveToLastSavedLevel();
+	virtual void MoveToLastSavedLevel_Implementation();
 	
 	//게임 종료
 	void QuitGame();

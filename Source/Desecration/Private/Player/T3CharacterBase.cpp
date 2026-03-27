@@ -453,7 +453,7 @@ void AT3CharacterBase::Roll(const FInputActionValue& Value)
 		// 팔라딘의 경우 신의 심판 시전 중 구르면 스킬 캔슬
 		if (GetCurrentClass() == ECharacterClass::Paladin)
 		{
-				Combat->GetSkillComponent()->CancelCurrentSkill();
+  				Combat->GetSkillComponent()->CancelCurrentSkill();
 		}
 	}
 }
@@ -505,6 +505,15 @@ void AT3CharacterBase::BroadcastStatChange(ET3StatType StatType)
 
 
 // 회복 함수
+void AT3CharacterBase::MakeFullCondition()
+{
+	CurrentHP = MaxHP;
+	CurrentMana = MaxMana;
+	CurrentStamina = MaxStamina;
+	OnStatChanged.Broadcast(ET3StatType::HP, CurrentHP, MaxHP);
+	OnStatChanged.Broadcast(ET3StatType::MP, CurrentMana, MaxMana);
+	OnStatChanged.Broadcast(ET3StatType::Stamina, CurrentStamina, MaxStamina);
+}
 
 // 스테미너 자연 회복
 void AT3CharacterBase::RegenerateStamina()
@@ -554,6 +563,11 @@ void AT3CharacterBase::OnDeath()
 	bMoveLock = true;
 	OnDeathAnimation();
 	
+	if (const TObjectPtr<AT3PlayerController> PC = GetController<AT3PlayerController>())
+	{
+		PC->ClosePopupMenu();
+	}
+	
 	//GetWorld()->GetTimerManager().SetTimer(AfterDeathTimerHandle, FTimerDelegate::CreateLambda([&]()
 	//{
 	//	if (const TObjectPtr<AT3GameMode> T3GameMode = Cast<AT3GameMode>(GetWorld()->GetAuthGameMode()))
@@ -570,8 +584,8 @@ void AT3CharacterBase::ConsumeMana(float Amount)
 		float NewMana = CurrentMana - Amount;
 		SetCurrentMana(NewMana);
 		
-		//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
-		//FString::Printf(TEXT("Remaining Mana: %.1f"), CurrentMana));
+		UE_LOG(LogTemp, Display, TEXT("ConsumeMana: %.1f, Remaining Mana: %.1f"), Amount, CurrentMana);
+
 	}
 }
 
@@ -716,6 +730,8 @@ void AT3CharacterBase::UpgradeStat(ET3StatType StatType, int32 Amount)
 			float Increase = 15.f + (Vigor * 0.7f);
 			if (Vigor >= 30) Increase /= 3.f;
 
+			Increase = FMath::CeilToFloat(Increase);
+
 			Vigor++; // 이제 스탯 증가
 			MaxHP += Increase;
 			CurrentHP += Increase;
@@ -726,6 +742,8 @@ void AT3CharacterBase::UpgradeStat(ET3StatType StatType, int32 Amount)
 			float Increase = 10.f + (Endurance * 0.5f);
 			if (Endurance >= 30) Increase /= 3.f;
 
+			Increase = FMath::CeilToFloat(Increase);
+
 			Endurance++;
 			MaxStamina += Increase;
 			CurrentStamina += Increase;
@@ -735,6 +753,8 @@ void AT3CharacterBase::UpgradeStat(ET3StatType StatType, int32 Amount)
 		{
 			float Increase = 10.f + (Mind * 0.7f);
 			if (Mind >= 30) Increase /= 3.f;
+
+			Increase = FMath::CeilToFloat(Increase);
 
 			Mind++;
 			MaxMana += Increase;
@@ -759,32 +779,92 @@ void AT3CharacterBase::UpgradeStat(ET3StatType StatType, int32 Amount)
 	}
 }
 
-float AT3CharacterBase::GetStatIncreasePreview(ET3StatType StatType, int32 TargetStatValue) const
+float AT3CharacterBase::GetStatIncreasePreview(ET3StatType StatType, int32 CurrentStatValue, int32 Amount) const
 {
-	float Increase = 0.f;
-	switch (StatType)
+	if (Amount <= 0) return 0.f;
+
+	float TotalIncrease = 0.f;
+	int32 TempStatValue = CurrentStatValue; // 계산을 위한 임시 스탯 값
+
+	for (int32 i = 0; i < Amount; ++i)
 	{
-	case ET3StatType::Vigor:
-		Increase = 15.f + (TargetStatValue * 0.7f);
-		if (TargetStatValue >= 30) Increase /= 3.f;
-		break;
+		float StepIncrease = 0.f;
 
-	case ET3StatType::Endurance:
-		Increase = 10.f + (TargetStatValue * 0.5f);
-		if (TargetStatValue >= 30) Increase /= 3.f;
-		break;
+		switch (StatType)
+		{
+		case ET3StatType::Vigor:
+			StepIncrease = 15.f + (TempStatValue * 0.7f);
+			StepIncrease /= 3.f;
+			if (TempStatValue >= 30) StepIncrease /= 3.f;
+			break;
 
-	case ET3StatType::Mind:
-		Increase = 10.f + (TargetStatValue * 0.7f);
-		if (TargetStatValue >= 30) Increase /= 3.f;
-		break;
+		case ET3StatType::Endurance:
+			StepIncrease = 10.f + (TempStatValue * 0.5f);
+			StepIncrease /= 2.f;
+			if (TempStatValue >= 30) StepIncrease /= 3.f;
+			break;
 
-		// Strength나 Intelligence는 단순 수치 증가가 아니라 
-		// 무기 보정치 계산이 들어가니 일단 0이나 기본값 반환 후 별도 처리
-	default:
-		break;
+		case ET3StatType::Mind:
+			StepIncrease = 10.f + (TempStatValue * 0.7f);
+			StepIncrease /= 2.f;
+			if (TempStatValue >= 30) StepIncrease /= 3.f;
+			break;
+
+		default:
+			break;
+		}
+
+		StepIncrease = FMath::CeilToFloat(StepIncrease);
+		TotalIncrease = StepIncrease;
+
+		// 중요: 다음 루프 계산을 위해 스탯 값을 1 증가시킴 (UpgradeStat 로직과 동일하게)
+		TempStatValue++;
 	}
-	return Increase;
+
+	return TotalIncrease;
+}
+
+float AT3CharacterBase::GetAttackPowerPreview(ET3StatType StatType, int32 TargetStatValue)
+{
+	if (!CheckCharacterData())
+	{
+		return 0.0f;
+	}
+
+	PreAdditionalAttack = 0.f;
+
+	// 1. 현재 변경하려는 스탯이 캐릭터의 주 공격 스탯인지 확인
+	bool bIsPrimaryStat = false;
+	if (CharacterData->PrimaryDamageType == EDamageType::Physical && StatType == ET3StatType::Strength)
+	{
+		bIsPrimaryStat = true;
+	}
+	else if (CharacterData->PrimaryDamageType == EDamageType::Magical && StatType == ET3StatType::Intelligence)
+	{
+		bIsPrimaryStat = true;
+	}
+
+	// 2. 주 스탯이 맞다면 인자로 받은 TargetStatValue로 계산, 아니면 현재 스탯 유지
+	int32 StatToCalculate = bIsPrimaryStat ? TargetStatValue : (CharacterData->PrimaryDamageType == EDamageType::Physical ? Strength : Intelligence);
+
+	if (StatToCalculate <= 30)
+	{
+		PreAdditionalAttack = StatToCalculate * (1.0f + WeaponLevel);
+	}
+	else
+	{
+		PreAdditionalAttack = (30.f * (1.0f + WeaponLevel)) + ((StatToCalculate - 30) * 5.f);
+	}
+
+	PreAdditionalAttack = FMath::CeilToFloat(PreAdditionalAttack);
+
+	return AttackPower + PreAdditionalAttack + CachedRuneAttackBonus;
+}
+
+void AT3CharacterBase::SetWeaponLevel(float CurrentWeaponLevel)
+{
+	 WeaponLevel = CurrentWeaponLevel; 
+	 BroadcastStatChange(ET3StatType::Attack); 
 }
 
 int32 AT3CharacterBase::GetCalculatedLevel() const
@@ -799,39 +879,7 @@ int32 AT3CharacterBase::GetCalculatedLevel() const
 
 float AT3CharacterBase::GetAttackPower()
 {
-	float AdditionalAttack = 0.f;
-	
-	if (!CheckCharacterData())
-	{
-		return 0.0f;
-	}
-
-	// 물리 캐릭터인 경우 근력 반영
-	if (CharacterData->PrimaryDamageType == EDamageType::Physical)
-	{
-		if (Strength <= 30)
-		{
-			AdditionalAttack = Strength * (1.0f + WeaponLevel);
-		}
-		else
-		{
-			// 30까지는 정상 반영 + 30 초과분은 스탯당 5씩
-			AdditionalAttack = (30.f * (1.0f + WeaponLevel)) + ((Strength - 30) * 5.f);
-		}
-	}
-	// 마법 캐릭터인 경우 지력 반영
-	else
-	{
-		if (Intelligence <= 30)
-		{
-			AdditionalAttack = Intelligence * (1.0f + WeaponLevel);
-		}
-		else
-		{
-			AdditionalAttack = (30.f * (1.0f + WeaponLevel)) + ((Intelligence - 30) * 5.f);
-		}
-	}
-	UE_LOG(LogTemp, Display, TEXT("AdditionalAttack : %.1f"), AdditionalAttack);
+	UE_LOG(LogTemp, Display, TEXT("BaseAtk : %.1f, AddAtk : %.1f, RuneAtk : %.1f"), AttackPower, AdditionalAttack, CachedRuneAttackBonus);
 	return AttackPower + AdditionalAttack + CachedRuneAttackBonus;
 }
 
@@ -847,6 +895,6 @@ void AT3CharacterBase::Landed(const FHitResult& Hit)
 	if (FallVelocityZ <= MinDeathVelocity)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("High Fall Detected: %f. Character Dies."), FallVelocityZ);
-		AddHP(-9999.f);
+		CombatComponent->RequestAttackDamage(this, 9999.f);
 	}
 }

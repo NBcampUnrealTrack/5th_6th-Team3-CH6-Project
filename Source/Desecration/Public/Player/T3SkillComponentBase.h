@@ -14,6 +14,12 @@ struct FSkillData
     GENERATED_BODY()
 
     // --- 공통 데이터 ---
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Common")
+    FText SkillName = FText::GetEmpty();
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Common")
+    FText Description = FText::GetEmpty();
+    
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
     UTexture2D* SkillIcon = nullptr;
 
@@ -105,6 +111,36 @@ public:
     int32 GetSkillIDBySlotIndex(int32 Index) const;
 
     virtual FSkillData* GetSkillDataByID(int32 SkillID) { return nullptr; }
+    
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Skill")
+    FText GetSkillNameByID(int32 SkillID)
+    {
+        FSkillData* Data = GetSkillDataByID(SkillID);
+        
+        if (Data)
+        {
+            return Data->SkillName;
+        }
+        else
+        {
+            return FText::GetEmpty();
+        }
+    }
+    
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Skill")
+    FText GetSkillInfoByID(int32 SkillID)
+    {
+        FSkillData* Data = GetSkillDataByID(SkillID);
+        
+        if (Data)
+        {
+            return Data->Description;
+        }
+        else
+        {
+            return FText::GetEmpty();
+        }
+    }
     
     UFUNCTION(BlueprintCallable, Category = "Skill")
     virtual void CancelCurrentSkill();

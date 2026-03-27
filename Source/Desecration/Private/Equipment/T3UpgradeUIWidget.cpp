@@ -9,6 +9,7 @@
 #include "Item/Component/T3InventoryComponent.h"
 #include "Item/Data/T3RuneItemData.h"
 #include "Kismet/GameplayStatics.h"
+#include "UI/Rune/T3SynthesisSlotWidget.h"
 
 void UT3UpgradeUIWidget::NativeConstruct()
 {
@@ -39,6 +40,17 @@ void UT3UpgradeUIWidget::NativeConstruct()
 			{
 				UpgradeStation = Cast<AT3UpgradeStation>(FoundActors[0]);
 			}
+		}
+	}
+	
+	UT3SynthesisSlotWidget* SlotWidgets[3] = { SynthesisSlot_0, SynthesisSlot_1, SynthesisSlot_2 };
+	
+	for (int32 i = 0; i < 3; i++)
+	{
+		if (SlotWidgets[i])
+		{
+			SlotWidgets[i]->SlotIndex = i;
+			SlotWidgets[i]->UpgradeStation = UpgradeStation;
 		}
 	}
 
@@ -314,32 +326,28 @@ void UT3UpgradeUIWidget::RefreshSynthesisUI()
 	
 	const TArray<FName>& Slots = UpgradeStation->SynthesisSlots;
 
-	TObjectPtr<UImage> SlotImages[3] = { Img_SynthesisSlot_0, Img_SynthesisSlot_1, Img_SynthesisSlot_2 };
+	UT3SynthesisSlotWidget* SlotWidgets[3] = { SynthesisSlot_0, SynthesisSlot_1, SynthesisSlot_2 };
 
 	for (int32 i = 0; i < 3; i++)
 	{
-		if (!SlotImages[i]) continue;
+		if (!SlotWidgets[i]) continue;
 
 		if (Slots[i] == NAME_None)
 		{
-			SlotImages[i]->SetVisibility(ESlateVisibility::Collapsed);
+			SlotWidgets[i]->ClearRuneIcon();
 			continue;
 		}
 
-		// 룬 아이콘 표시
 		if (Inventory && Inventory->RuneTable)
 		{
 			const FT3RuneItemData* RuneRow = Inventory->RuneTable->FindRow<FT3RuneItemData>(Slots[i], TEXT("RefreshSynthesisUI"));
-			
 			if (RuneRow && RuneRow->ItemData.Icon)
 			{
-				SlotImages[i]->SetBrushFromTexture(RuneRow->ItemData.Icon);
-				SlotImages[i]->SetVisibility(ESlateVisibility::Visible);
+				SlotWidgets[i]->SetRuneIcon(RuneRow->ItemData.Icon);
 			}
 		}
 	}
 
-	// 합성 버튼 활성화
 	if (Btn_Synthesize)
 	{
 		Btn_Synthesize->SetIsEnabled(UpgradeStation->CanSynthesize());

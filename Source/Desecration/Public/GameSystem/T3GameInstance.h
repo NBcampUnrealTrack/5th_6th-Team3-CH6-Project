@@ -3,8 +3,11 @@
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
 #include "GlobalEnums.h"
+#include "Blueprint/UserWidget.h"
 #include "T3GameInstance.generated.h"
 
+
+class UT3SaveObjectState;
 enum class ECharacterClass : uint8;
 class UT3SaveLostMoney;
 class UT3SaveUserSettings;
@@ -46,6 +49,24 @@ class DESECRATION_API UT3GameInstance : public UGameInstance
 	GENERATED_BODY()
 	
 public:
+
+	// 에디터에서 커스텀 로딩 UI 블루프린트를 할당하세요.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+    TSubclassOf<UUserWidget> LoadingWidgetClass;
+
+    // 생성된 위젯 인스턴스를 보관 (GC 보호)
+    UPROPERTY()
+    TObjectPtr<UUserWidget> LoadingWidgetInstance;
+
+    // 로딩 UI 시작 (레벨 이동 전 호출)
+    UFUNCTION(BlueprintCallable, Category = "Loading")
+    void StartCustomLoading();
+
+    // 로딩 UI 종료 (새 레벨 BeginPlay에서 호출)
+    UFUNCTION(BlueprintCallable, Category = "Loading")
+    void EndCustomLoading();
+
+
 	/** 
 	 * 지정한 키를 번역하기
 	 * @param Namespace 텍스트를 찾을 테이블의 네임스페이스
@@ -65,13 +86,10 @@ public:
 	static FString GetStringFromTable(const FString& Namespace, const FString& Key);
 	
 	virtual void Init() override;
-	
-	UPROPERTY(BlueprintReadWrite)
-	TMap<ELevelName, FLevelProgressData> LevelProgressMap;
-	
+
 	// 레벨 해금
 	UFUNCTION(BlueprintCallable)
-	void UnlockLevel(ELevelName LevelName);
+	void UnlockLevel(const ELevelName LevelName);
 
 	// 세이브포인트 해금 (위치/회전 정보 포함 버전으로 업데이트)
 	UFUNCTION(BlueprintCallable)
@@ -88,8 +106,7 @@ public:
 	// 특정 세이브 포인트의 위치 정보 가져오기 (이동 구현용)
 	UFUNCTION(BlueprintPure)
 	bool GetSavePointTransform(ELevelName LevelName, FName SavePointID, FVector& OutLocation, FRotator& OutRotation);
-	
-	
+
 private:
 	//최초 설정값 생성
 	void MakeFirstSettings();
@@ -101,6 +118,9 @@ public:
 	//잃어버린 재화 데이터 생성
 	void MakeFirstLostMoneyData();
 	
+	//물체 상태 데이터 생성
+	void MakeFirstObjectStateData();
+	
 	/**
 	 * 게임 저장하기
 	 * @return true : 저장 성공
@@ -111,19 +131,25 @@ public:
 	 * 저장된 게임 불러오기
 	 * @return true : 불러오기 성공
 	 */
-	bool LoadGame();
+	bool LoadGame(bool bSetLocationAfterLoad = true);
 	
 	//유저 세팅 저장하기
 	bool SaveUserSettings();
 	
 	//저장된 유저 세팅 불러오기
-	bool LoadUSerSettings();
+	bool LoadUserSettings();
 	
 	//잃어버린 재화 정보 저장
 	bool SaveLostMoney();
 	
 	//잃어버린 재화 정보 불러오기
 	bool LoadLostMoney();
+	
+	//물체 상태 저장
+	bool SaveObjectState();
+	
+	//물체 상태 불러오기
+	bool LoadObjectState();
 	
 	//지정한 캐릭터 클래스에 해당되는 데이터 에셋
 	TObjectPtr<UT3CharacterDataAsset> GetCharacterDataAsset();
@@ -146,8 +172,7 @@ public:
      */
     UFUNCTION(BlueprintCallable, Category = "Level Transition")
     void TravelToSavePoint(ELevelName LevelName, FName SavePointID);
-
-
+	
 	/**
 	 * 레벨(맵) 이동하기
 	 * @param LevelName 이동할 레벨 (주의 : TitleLevel이나 SelectClassLevel로 지정하면 게임에서 벗어납니다.)
@@ -156,6 +181,7 @@ public:
 	void OpenLevel(UPARAM() ELevelName LevelName);
 	
 	//저장된 데이터를 기준으로 레벨(맵) 이동
+	UFUNCTION(BlueprintCallable)
 	void OpenLevelBySavedData();
 	
 	//현재 레벨
@@ -170,6 +196,9 @@ public:
 	
 	//잃어버린 재화
 	FORCEINLINE TObjectPtr<UT3SaveLostMoney> GetLostMoneyData() { return LostMoneyData; }
+	
+	//물체 상태
+	FORCEINLINE TObjectPtr<UT3SaveObjectState> GetObjectStateData() { return ObjectStateData; }
 	
 	//배경음 사운드 클래스
 	FORCEINLINE TObjectPtr<USoundClass> GetSoundClassBGM() { return SoundClassBGM; }
@@ -192,7 +221,11 @@ private:
 	
 	//잃어버린 재화
 	UPROPERTY()
-	TObjectPtr<UT3SaveLostMoney> LostMoneyData; 
+	TObjectPtr<UT3SaveLostMoney> LostMoneyData;
+	
+	//물체 상태
+	UPROPERTY()
+	TObjectPtr<UT3SaveObjectState> ObjectStateData;
 	
 	//효과음
 	UPROPERTY(EditDefaultsOnly, Category = "Sound Class", meta = (AllowPrivateAccess = true))
@@ -221,4 +254,5 @@ private:
 	const FString SAVE_GAME_NAME = TEXT("SaveSlot1");
 	const FString SAVE_USER_SETTINGS_NAME = TEXT("UserSettings");
 	const FString SAVE_LOST_MONEY_NAME = TEXT("LostMoney");
+	const FString SAVE_OBJECT_STATE_NAME = TEXT("ObjectState");
 };
