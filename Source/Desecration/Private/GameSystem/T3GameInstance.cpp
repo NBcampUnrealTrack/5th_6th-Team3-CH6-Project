@@ -66,13 +66,13 @@ void UT3GameInstance::Init()
 	LoadGame();
 	
 	//잃어버린 재화
-	if (LoadLostMoney())
+	if (!LoadLostMoney())
 	{
 		MakeFirstLostMoneyData();
 	}
 	
 	//물체 상태
-	if (LoadObjectState())
+	if (!LoadObjectState())
 	{
 		MakeFirstObjectStateData();
 	}
