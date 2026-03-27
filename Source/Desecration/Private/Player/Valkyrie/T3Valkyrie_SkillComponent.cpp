@@ -13,9 +13,9 @@ FSkillData* UT3Valkyrie_SkillComponent::GetSkillDataByID(int32 SkillID)
     switch (SkillID)
     {
     case 1: return &PowerStrikeSkillData;
-    case 2: return &LunarSlashSkillData;
-    case 3: return &EnduranceSkillData;
-    case 4: return &LunarSwordSkillData;
+    case 2: return &EnduranceSkillData;
+    case 3: return &LunarSwordSkillData;
+    case 4: return &LunarSlashSkillData;
     default: return nullptr;
     }
 }
