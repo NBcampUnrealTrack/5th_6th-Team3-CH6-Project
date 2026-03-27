@@ -46,6 +46,11 @@ void UT3SaveGame::ResetGameData()
 	Items.SetNum(InvenSize);
 	RuneItems.SetNum(InvenSize);
 	EtcItems.SetNum(InvenSize);
+	for (int iNum = 0; iNum < InvenSize; iNum++)
+	{
+		Items[iNum].ItemID = RuneItems[iNum].ItemID = EtcItems[iNum].ItemID = NAME_None;
+		Items[iNum].ItemStack = RuneItems[iNum].ItemStack = EtcItems[iNum].ItemStack = 0;
+	}
 	Money = 0;
 	
 	//포션

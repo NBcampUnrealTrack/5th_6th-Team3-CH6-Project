@@ -129,6 +129,7 @@ public:
 	
 	/**
 	 * 저장된 게임 불러오기
+	 * @param bSetLocationAfterLoad 게임 모드의 LoadGame동작시 현재 위치로 이동하도록 하려면 true, 이전 저장 위치로 이동하려면 false
 	 * @return true : 불러오기 성공
 	 */
 	bool LoadGame(bool bSetLocationAfterLoad = true);

@@ -156,7 +156,10 @@ bool UT3GameInstance::LoadGame(const bool bSetLocationAfterLoad)
 	}
 	
 	SavedGameData = SavedData;
-	SavedGameData->bSetLocation = bSetLocationAfterLoad;
+	if (bSetLocationAfterLoad)
+	{
+		SavedGameData->bSetLocation = true;
+	}
 	return true;
 }
 
