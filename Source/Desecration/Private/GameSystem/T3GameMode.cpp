@@ -181,12 +181,8 @@ bool AT3GameMode::SaveInventoryAndPotionLevel(const AT3CharacterBase* Character)
 	}
 	
 	//마지막 저장 시점
-	TObjectPtr<UT3SaveGame> SaveGame;
-	if (T3GameInstance->LoadGame(false))
-	{
-		SaveGame = T3GameInstance->GetSavedGameData();
-	}
-	else
+	TObjectPtr<UT3SaveGame> SaveGame = T3GameInstance->GetSavedGameData();
+	if (!SaveGame)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("SaveInventoryAndPotionLevel : 저장된 게임을 불러올 수 없음"));
 		return false;
@@ -337,13 +333,11 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 	// 위치 설정 (타이머를 사용하여 지연 실행)
 	// 랜드스케이프가 렌더링/물리 데이터를 준비할 시간을 0.2초 정도 벌어줍니다.
 #ifdef WITH_EDITOR
-	if (!T3GameInstance->bDoNotMoveCharacterBySavedData && SaveGame->bSetLocation)
+	if (!T3GameInstance->bDoNotMoveCharacterBySavedData)
 #else
-	if (SaveGame->bSetLocation)
+	if (true)
 #endif
 	{
-		SaveGame->bSetLocation = false; // 플래그 초기화
-
 		FVector TargetLocation = SaveGame->PlayerLocation;
 		FRotator TargetRotation = SaveGame->PlayerRotation;
 
@@ -432,11 +426,16 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 	}
 	for (TTuple<int32, bool> SavedState : SaveGame->SkillUnlockStates)
 	{
-		bool& State = SkillComponent->SkillUnlockStates.FindOrAdd(SavedState.Key);
-		State = SavedState.Value;
+		SkillComponent->SetSkillUnlockState(SavedState.Key, SavedState.Value);
 	}
-	SkillComponent->CurrentSkillSlot = SaveGame->CurrentSkillSlot;
-	SkillComponent->NextSkillSlot = SaveGame->NextSkillSlot;
+	if (SaveGame->CurrentSkillSlot != 0)
+	{
+		SkillComponent->SetSkillSlot(SaveGame->CurrentSkillSlot, true);
+	}
+	if (SaveGame->NextSkillSlot != 0)
+	{
+		SkillComponent->SetSkillSlot(SaveGame->NextSkillSlot, true);
+	}
 }
 
 void AT3GameMode::RegainLostMoney(const int32 LostMoneyID) const

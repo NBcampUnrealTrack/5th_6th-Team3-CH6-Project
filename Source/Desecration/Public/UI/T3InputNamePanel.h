@@ -18,7 +18,11 @@ class DESECRATION_API UT3InputNamePanel : public UUserWidget
 protected:
 	virtual void NativeOnInitialized() override;
 	
-private:	
+private:
+	//이름 입력칸의 변화
+	UFUNCTION()
+	void OnTextCommitted(const FText& Text, ETextCommit::Type CommitMethod);
+	
 	//확인 버튼
 	UFUNCTION()
 	void OnClickConfirmButton();

@@ -68,16 +68,19 @@ void UT3ANS_Combat::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBas
     // 장비를 장착한 위치 반환
     AT3WeaponBase* TargetWeapon = Combat->GetWeaponBySlot(TargetSlot);
 
-            switch (StatusType)
-            {
-            case ECombatWindowType::Parry:
-                Combat->SetParryingEnabled(false);
-                break;
-            case ECombatWindowType::Dodge:
-                Combat->SetDodgingEnabled(false);
-                break;
-            case ECombatWindowType::Attack:
-                TargetWeapon->SetWeaponCollisionEnabled(false);
+    switch (StatusType)
+    {
+    case ECombatWindowType::Parry:
+        Combat->SetParryingEnabled(false);
+        break;
+    case ECombatWindowType::Dodge:
+        Combat->SetDodgingEnabled(false);
+        break;
+    case ECombatWindowType::Attack:
+        if (TargetWeapon)
+        {
+        TargetWeapon->SetWeaponCollisionEnabled(false);
+    }
                 break;
             case ECombatWindowType::PrevenRegen:
                 Char->bCanRegenStamina = true;

@@ -111,6 +111,8 @@ void UT3PlayerEquipmentComponent::LoadEquipmentFromSave(const FT3ItemSaveData& W
 
 	RestoreRunes(WeaponSocketedRuneIDs, WeaponActiveRunes);
 	RestoreRunes(ArmorSocketedRuneIDs, ArmorActiveRunes);
+	
+	OnRuneSocketChanged.Broadcast();
 }
 
 void UT3PlayerEquipmentComponent::GetEquipmentSaveData(FT3ItemSaveData& OutWeaponData, FT3ItemSaveData& OutArmorData) const

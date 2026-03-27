@@ -212,7 +212,8 @@ void UT3Taoist_SkillComponent::SpawnTalisman()
                 SetEmpowermentState(false); // 강화 소모
             }
 
-            Talisman->SetDamage(InitialDamage); // 부적 클래스에 SetDamage 함수가 정의되어 있어야 합니다.
+            Talisman->SetDamage(InitialDamage);
+            Talisman->SetIsBasicAttack(true);
 
             // 물리적 충돌 무시 (본체와 부딪히지 않게)
              // 부적의 RootComponent(CollisionBox)를 가져와서 설정
