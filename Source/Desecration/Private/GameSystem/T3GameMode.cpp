@@ -227,6 +227,7 @@ bool AT3GameMode::SaveInventoryAndPotionLevel(const AT3CharacterBase* Character)
 	return true;
 }
 
+/*
 bool AT3GameMode::SaveOnlySkill(const AT3CharacterBase* Character)
 {
 	if (!Character)
@@ -267,6 +268,34 @@ bool AT3GameMode::SaveOnlySkill(const AT3CharacterBase* Character)
 	SaveGame->NextSkillSlot = SkillComponent->NextSkillSlot;
 	
 	return true;
+}
+*/
+
+bool AT3GameMode::SaveOnlySkill(const AT3CharacterBase* Character)
+{
+    if (!Character || !T3GameInstance) return false;
+    
+    TObjectPtr<UT3SaveGame> SaveGame = T3GameInstance->GetSavedGameData();
+    if (!SaveGame) return false;
+
+    // --- 핵심: 위치 정보를 보존하기 위해 아무것도 건드리지 않습니다 ---
+    // SaveGame->PlayerLocation = ... (이 코드가 없어야 함)
+
+    // 1. 스킬 정보 업데이트
+    if (const TObjectPtr<UT3CombatComponent> CombatComponent = Character->GetCombatComponent())
+    {
+        if (auto* SkillComp = CombatComponent->GetSkillComponent())
+        {
+            for (auto& UnlockState : SkillComp->SkillUnlockStates)
+            {
+                SaveGame->SkillUnlockStates.FindOrAdd(UnlockState.Key) = UnlockState.Value;
+            }
+            SaveGame->CurrentSkillSlot = SkillComp->CurrentSkillSlot;
+        }
+    }
+
+    // 2. 저장 (이때 파일에는 '기존에 저장되어 있던 위치'와 '새로운 스킬'이 함께 써집니다)
+    return T3GameInstance->SaveGame();
 }
 
 void AT3GameMode::LoadGame()
