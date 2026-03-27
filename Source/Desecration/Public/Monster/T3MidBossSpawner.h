@@ -98,7 +98,7 @@ public:
 	// ============================================================
 
 	/** 현재 스폰된 보스 */
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "MidBossSpawner|Runtime")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MidBossSpawner|Runtime")
 	TObjectPtr<AT3MidBossMonster> SpawnedBoss;
 
 protected:

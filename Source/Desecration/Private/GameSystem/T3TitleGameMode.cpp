@@ -23,9 +23,9 @@ void AT3TitleGameMode::MoveToSelectClassLevel()
 	T3GameInstance->OpenLevel(ELevelName::SelectClass);
 }
 
-void AT3TitleGameMode::MoveToLastSavedLevel()
+void AT3TitleGameMode::MoveToLastSavedLevel_Implementation()
 {
-	T3GameInstance->OpenLevelBySavedData();
+	//T3GameInstance->OpenLevelBySavedData();
 }
 
 void AT3TitleGameMode::QuitGame()

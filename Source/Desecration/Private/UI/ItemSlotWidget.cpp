@@ -20,8 +20,20 @@ bool UItemSlotWidget::GetIsRuneSlot() const
 bool UItemSlotWidget::SetIsRuneSlot(bool IsRuneSlot)
 {
 	bIsRuneSlot = IsRuneSlot;
-	
+
 	return bIsRuneSlot;
+}
+
+bool UItemSlotWidget::GetIsEtcSlot() const
+{
+	return bIsEtcSlot;
+}
+
+bool UItemSlotWidget::SetIsEtcSlot(bool IsEtcSlot)
+{
+	bIsEtcSlot = IsEtcSlot;
+
+	return bIsEtcSlot;
 }
 
 bool UItemSlotWidget::GetSlotData_Implementation(FInventorySlot& OutSlotData) const
@@ -49,25 +61,15 @@ FReply UItemSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, con
 		{
 			return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 		}
-		
-		// 드래그 감지를 먼저 활성화 (Super 호출 전에)
+
 		if (TSharedPtr<SWidget> SlateWidget = GetCachedWidget())
 		{
 			UE_LOG(LogTemp, Log, TEXT("[ItemSlotWidget] 마우스 클릭 감지 - 슬롯 %d, 드래그 감지 시작"), SlotIndex);
-			
-			// OnSlotClicked 브로드캐스트는 드래그 감지 후에 호출
-			// 이렇게 하면 드래그가 우선적으로 처리됨
-			OnSlotClicked.Broadcast(this, false);
-			
+
+			bDragDetected = false;
 			return FReply::Handled().DetectDrag(SlateWidget.ToSharedRef(), EKeys::LeftMouseButton);
 		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("[ItemSlotWidget] SlateWidget이 유효하지 않음 - 슬롯 %d"), SlotIndex);
-		}
-		
-		// SlateWidget이 없으면 기본 동작
-		OnSlotClicked.Broadcast(this, false);
+
 		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 	}
 	
@@ -75,9 +77,24 @@ FReply UItemSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, con
 	return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 }
 
+FReply UItemSlotWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton && !bDragDetected)
+	{
+		FInventorySlot SlotData;
+		if (IsValid(InventoryComponent) && GetSlotData(SlotData) && SlotData.ItemID != NAME_None)
+		{
+			OnSlotClicked.Broadcast(this, false);
+		}
+	}
+
+	return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+}
+
 void UItemSlotWidget::NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation)
 {
 	UE_LOG(LogTemp, Log, TEXT("[ItemSlotWidget] NativeOnDragDetected 호출됨 - 슬롯 %d"), SlotIndex);
+	bDragDetected = true;
 	
 	FInventorySlot SlotData;
 	if (!IsValid(InventoryComponent) || !GetSlotData(SlotData) || SlotData.ItemID == NAME_None)
@@ -184,6 +201,10 @@ bool UItemSlotWidget::NativeOnDrop(const FGeometry& InGeometry, const FDragDropE
 	if (bIsRuneSlot)
 	{
 		InventoryComponent->SwapRuneSlots(ItemDragOp->SourceSlotIndex, SlotIndex);
+	}
+	else if (bIsEtcSlot)
+	{
+		InventoryComponent->SwapEtcSlots(ItemDragOp->SourceSlotIndex, SlotIndex);
 	}
 	else
 	{

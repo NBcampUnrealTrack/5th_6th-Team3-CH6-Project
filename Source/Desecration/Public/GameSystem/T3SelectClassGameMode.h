@@ -20,7 +20,9 @@ public:
 	void MakeFirstGameData(const FString& PlayerName, const ECharacterClass SelectedPlayerClass);
 	
 	//튜토리얼 시작
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "GameMode")
 	void TutorialStart();
+	virtual void TutorialStart_Implementation();
 	
 	//타이틀 레벨로 돌아가기
 	void ReturnToTitleLevel();
