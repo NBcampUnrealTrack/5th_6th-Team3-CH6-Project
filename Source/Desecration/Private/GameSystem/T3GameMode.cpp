@@ -426,11 +426,16 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 	}
 	for (TTuple<int32, bool> SavedState : SaveGame->SkillUnlockStates)
 	{
-		bool& State = SkillComponent->SkillUnlockStates.FindOrAdd(SavedState.Key);
-		State = SavedState.Value;
+		SkillComponent->SetSkillUnlockState(SavedState.Key, SavedState.Value);
 	}
-	SkillComponent->CurrentSkillSlot = SaveGame->CurrentSkillSlot;
-	SkillComponent->NextSkillSlot = SaveGame->NextSkillSlot;
+	if (SaveGame->CurrentSkillSlot != 0)
+	{
+		SkillComponent->SetSkillSlot(SaveGame->CurrentSkillSlot, true);
+	}
+	if (SaveGame->NextSkillSlot != 0)
+	{
+		SkillComponent->SetSkillSlot(SaveGame->NextSkillSlot, true);
+	}
 }
 
 void AT3GameMode::RegainLostMoney(const int32 LostMoneyID) const
