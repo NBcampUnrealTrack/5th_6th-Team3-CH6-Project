@@ -153,7 +153,7 @@ bool UT3SkillComponentBase::CanExecuteSkill(FSkillData& Data)
         }
     }
 
-    // 1. 입력 상태 체크 (OwnerChar가 확실히 있을 때만 접근)
+    // 입력 상태 체크 (OwnerChar가 확실히 있을 때만 접근)
     if (bUsingSkill || !OwnerChar->PlayerInputState.bCanAttack) return false;
     
     // 1. 마나 체크
@@ -241,13 +241,16 @@ void UT3SkillComponentBase::SwapSkills()
     CurrentSkillSlot = NextSkillSlot;
     NextSkillSlot = TempID;
 
+    FSkillData* Data2 = GetSkillDataByID(NextSkillSlot);
+    FSkillData SafeData2 = Data2 ? *Data2 : FSkillData();
+
     UE_LOG(LogTemp, Log, TEXT("Skills Swapped! Current: %d, Next: %d"), CurrentSkillSlot, NextSkillSlot);
 
     // UI팀에게 알림: 전체 슬롯 정보 브로드캐스트
     if (OnSkillSlotUpdated.IsBound())
     {
         OnSkillSlotUpdated.Broadcast(1, CurrentSkillSlot, *GetSkillDataByID(CurrentSkillSlot));
-        OnSkillSlotUpdated.Broadcast(2, NextSkillSlot, *GetSkillDataByID(NextSkillSlot));
+        OnSkillSlotUpdated.Broadcast(2, NextSkillSlot, SafeData2);
     }
 }
 
