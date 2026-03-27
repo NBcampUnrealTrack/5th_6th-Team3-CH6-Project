@@ -88,7 +88,7 @@ void UT3PopUpMenu::OnClickResumeButton()
 
 void UT3PopUpMenu::OnClickLoadButton()
 {
-	T3GameMode->LoadGame();
+	//T3GameMode->LoadGame();
 }
 
 void UT3PopUpMenu::OnClickSettingsButton()
