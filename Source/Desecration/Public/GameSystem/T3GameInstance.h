@@ -3,7 +3,9 @@
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
 #include "GlobalEnums.h"
+#include "Blueprint/UserWidget.h"
 #include "T3GameInstance.generated.h"
+
 
 class UT3SaveObjectState;
 enum class ECharacterClass : uint8;
@@ -47,6 +49,24 @@ class DESECRATION_API UT3GameInstance : public UGameInstance
 	GENERATED_BODY()
 	
 public:
+
+	// 에디터에서 커스텀 로딩 UI 블루프린트를 할당하세요.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+    TSubclassOf<UUserWidget> LoadingWidgetClass;
+
+    // 생성된 위젯 인스턴스를 보관 (GC 보호)
+    UPROPERTY()
+    TObjectPtr<UUserWidget> LoadingWidgetInstance;
+
+    // 로딩 UI 시작 (레벨 이동 전 호출)
+    UFUNCTION(BlueprintCallable, Category = "Loading")
+    void StartCustomLoading();
+
+    // 로딩 UI 종료 (새 레벨 BeginPlay에서 호출)
+    UFUNCTION(BlueprintCallable, Category = "Loading")
+    void EndCustomLoading();
+
+
 	/** 
 	 * 지정한 키를 번역하기
 	 * @param Namespace 텍스트를 찾을 테이블의 네임스페이스
@@ -161,6 +181,7 @@ public:
 	void OpenLevel(UPARAM() ELevelName LevelName);
 	
 	//저장된 데이터를 기준으로 레벨(맵) 이동
+	UFUNCTION(BlueprintCallable)
 	void OpenLevelBySavedData();
 	
 	//현재 레벨

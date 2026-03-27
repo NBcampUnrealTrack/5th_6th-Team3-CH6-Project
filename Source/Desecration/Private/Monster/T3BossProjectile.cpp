@@ -4,7 +4,6 @@
 #include "Desecration.h"
 #include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
-#include "Components/StaticMeshComponent.h"
 #include "Engine/DamageEvents.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -33,27 +32,6 @@ AT3BossProjectile::AT3BossProjectile()
 	ProjectileEffect->SetupAttachment(RootComponent);
 	ProjectileEffect->SetAutoActivate(true);
 
-	// 임시 디버그 메시 (큐브)
-	DebugMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DebugMesh"));
-	DebugMesh->SetupAttachment(RootComponent);
-	DebugMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-	// 기본 큐브 메시 로드
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeMesh(
-		TEXT("/Engine/BasicShapes/Cube.Cube"));
-	if (CubeMesh.Succeeded())
-	{
-		DebugMesh->SetStaticMesh(CubeMesh.Object);
-	}
-
-	// 기본 머티리얼 — 반투명 붉은색
-	static ConstructorHelpers::FObjectFinder<UMaterial> DefaultMat(
-		TEXT("/Engine/EngineMaterials/DefaultMaterial.DefaultMaterial"));
-	if (DefaultMat.Succeeded())
-	{
-		DebugMesh->SetMaterial(0, DefaultMat.Object);
-	}
-
 	// 자동 소멸
 	InitialLifeSpan = 3.0f;
 }
@@ -62,28 +40,11 @@ void AT3BossProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// BP에서 변경된 CollisionExtent 반영 — 콜리전 + 디버그 메시 동기화
+	// BP에서 변경된 CollisionExtent 반영
 	if (CollisionBox)
 	{
 		CollisionBox->SetBoxExtent(CollisionExtent);
 		CollisionBox->OnComponentBeginOverlap.AddDynamic(this, &AT3BossProjectile::OnProjectileOverlap);
-	}
-
-	if (DebugMesh)
-	{
-		// 기본 큐브 = 100x100x100, CollisionExtent는 반크기 → Scale = Extent * 2 / 100
-		DebugMesh->SetRelativeScale3D(CollisionExtent * 2.f / 100.f);
-	}
-
-	// Niagara 에셋이 설정되어 있으면 디버그 메시 숨김 (에디터에서는 항상 표시)
-	if (ProjectileEffect && ProjectileEffect->GetAsset())
-	{
-#if !WITH_EDITOR
-		if (DebugMesh)
-		{
-			DebugMesh->SetVisibility(false);
-		}
-#endif
 	}
 
 	// 비행 루프 사운드 — 투사체에 붙어서 3D 위치 추적
