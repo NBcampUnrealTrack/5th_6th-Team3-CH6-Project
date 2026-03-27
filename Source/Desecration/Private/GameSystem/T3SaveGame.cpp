@@ -71,10 +71,12 @@ void UT3SaveGame::ResetGameData()
 	WeaponSaveData.ItemID = NAME_None;
 	WeaponSaveData.Level = 0;
 	WeaponSaveData.Type = ET3EquipmentType::Weapon;
+	WeaponSaveData.SocketedRuneIDs.Empty();
 
 	ArmorSaveData.ItemID = NAME_None;
 	ArmorSaveData.Level = 0;
 	ArmorSaveData.Type = ET3EquipmentType::Armor;
+	ArmorSaveData.SocketedRuneIDs.Empty();
 	
 	//스킬
 	SkillUnlockStates.Empty();
