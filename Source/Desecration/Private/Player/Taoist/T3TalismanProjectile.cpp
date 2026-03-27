@@ -108,7 +108,7 @@ void AT3TalismanProjectile::OnTalismanOverlap(UPrimitiveComponent* OverlappedCom
     // 3. 데미지 전달 
     
     {
-        Combat->RequestAttackDamage(OtherActor, Damage*DamageMultiflier);
+        Combat->RequestAttackDamage(OtherActor, Damage * DamageMultiflier, EHitIntensity::Light, 1.f, nullptr, 0.f, bIsBasicAttack);
     }
 
     UE_LOG(LogTemp, Log, TEXT("[Talisman] Hit: %s, Damage: %f"), *OtherActor->GetName(), Damage);

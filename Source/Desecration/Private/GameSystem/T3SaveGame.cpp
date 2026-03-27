@@ -16,7 +16,6 @@ void UT3SaveGame::ResetGameData()
 	SavedLevelName = ELevelName::Tutorial;
 	PlayerLocation = FVector(-80, 185, 102);
 	PlayerRotation = FRotator::ZeroRotator;
-	bSetLocation = true;
 	
 	//현재 도달한 세이브 포인트(룬) 위치
 	LevelProgressMap.Empty();
@@ -46,6 +45,11 @@ void UT3SaveGame::ResetGameData()
 	Items.SetNum(InvenSize);
 	RuneItems.SetNum(InvenSize);
 	EtcItems.SetNum(InvenSize);
+	for (int iNum = 0; iNum < InvenSize; iNum++)
+	{
+		Items[iNum].ItemID = RuneItems[iNum].ItemID = EtcItems[iNum].ItemID = NAME_None;
+		Items[iNum].ItemStack = RuneItems[iNum].ItemStack = EtcItems[iNum].ItemStack = 0;
+	}
 	Money = 0;
 	
 	//포션
@@ -66,10 +70,12 @@ void UT3SaveGame::ResetGameData()
 	WeaponSaveData.ItemID = NAME_None;
 	WeaponSaveData.Level = 0;
 	WeaponSaveData.Type = ET3EquipmentType::Weapon;
+	WeaponSaveData.SocketedRuneIDs.Empty();
 
 	ArmorSaveData.ItemID = NAME_None;
 	ArmorSaveData.Level = 0;
 	ArmorSaveData.Type = ET3EquipmentType::Armor;
+	ArmorSaveData.SocketedRuneIDs.Empty();
 	
 	//스킬
 	SkillUnlockStates.Empty();

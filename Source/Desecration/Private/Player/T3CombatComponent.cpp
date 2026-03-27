@@ -198,6 +198,7 @@ void UT3CombatComponent::Attack()
 	if (OwnerChar->GetCurrentStamina() > 10.f) // 스태미나 10 이하면 공격 불가
 		// 공격 시 스태미너 10 소모
 	{
+		bIsBasicAttacking = true;
 		OwnerChar->OnAttack();
 		UE_LOG(LogTemp, Warning, TEXT("attack"));
 	}
@@ -772,7 +773,7 @@ EHitDirection UT3CombatComponent::CalculateHitDirection(const FVector& HitLocati
 
 // 공격 로직
 
-void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAmount, EHitIntensity Intensity, float DamageMultiflier, TSubclassOf<UT3DamageType_Base> DamageTypeClass, float InStunAmount)
+void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAmount, EHitIntensity Intensity, float DamageMultiflier, TSubclassOf<UT3DamageType_Base> DamageTypeClass, float InStunAmount, bool bIsBasicAttack)
 {
 	if (!TargetActor) { UE_LOG(LogTemp, Warning, TEXT("Target Missing!")); return; }
 	if (!OwnerChar && !AIChar) { UE_LOG(LogTemp, Warning, TEXT("Owner Missing!")); return; }
@@ -794,21 +795,26 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 		// HitBoss->Damage(CurrentAttackDamage, StunAmount);
 		
 		float ActualDamage = DamageAmount;
-		
-		if (OwnerChar->GetSmiteThreshold() > 0 && OwnerChar->GetSmiteCounter() >= OwnerChar->GetSmiteThreshold())
+
+		if (bIsBasicAttack)
 		{
-			ActualDamage = DamageAmount * OwnerChar->GetSmiteMultiplier();
-			
-			OwnerChar->SetSmiteCounter(0);
-		}
-		else
-		{
-			OwnerChar->IncrementSmiteCounter();
+			if (OwnerChar->GetSmiteThreshold() > 0 && OwnerChar->GetSmiteCounter() >= OwnerChar->GetSmiteThreshold())
+			{
+				ActualDamage = DamageAmount * OwnerChar->GetSmiteMultiplier();
+
+				OwnerChar->SetSmiteCounter(0);
+			}
+			else
+			{
+				OwnerChar->IncrementSmiteCounter();
+			}
 		}
 
 		HitBoss->Damage(ActualDamage, InStunAmount);
 		
 		OwnerChar->OnDamageDealt.Broadcast(TargetActor, DamageAmount);
+		
+		UE_LOG(LogItem, Warning, TEXT("현재 공격 횟수 : %d, 입힌 데미지 : %.1f"), OwnerChar->GetSmiteCounter(), ActualDamage);
 	}
 	
 	// TakeDamage 호출 시 커스텀 이벤트 구조체를 전달
@@ -816,17 +822,20 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 	{
 		float ActualDamage = DamageAmount;
 
-		if (OwnerChar->GetSmiteThreshold() > 0 && OwnerChar->GetSmiteCounter() >= OwnerChar->GetSmiteThreshold())
+		if (bIsBasicAttack)
 		{
-			ActualDamage = DamageAmount * OwnerChar->GetSmiteMultiplier();
-			
-			OwnerChar->SetSmiteCounter(0);
+			if (OwnerChar->GetSmiteThreshold() > 0 && OwnerChar->GetSmiteCounter() >= OwnerChar->GetSmiteThreshold())
+			{
+				ActualDamage = DamageAmount * OwnerChar->GetSmiteMultiplier();
+
+				OwnerChar->SetSmiteCounter(0);
+			}
+			else
+			{
+				OwnerChar->IncrementSmiteCounter();
+			}
 		}
-		else
-		{
-			OwnerChar->IncrementSmiteCounter();
-		}
-		
+
 		TargetActor->TakeDamage(ActualDamage, T3DamageEvent, OwnerPC, OwnerChar);
 		
 		OwnerChar->OnDamageDealt.Broadcast(TargetActor, ActualDamage);
@@ -894,6 +903,7 @@ void UT3CombatComponent::ExecuteCurrentSlotAction(ESlotType Type)
 	switch (Type)
 	{
 	case ESlotType::Skill:
+		bIsBasicAttacking = false;
 		if (SkillComp) SkillComp->ExecuteSkill(CurrentSkillSlot);
 		break;
 	case ESlotType::Consumable:

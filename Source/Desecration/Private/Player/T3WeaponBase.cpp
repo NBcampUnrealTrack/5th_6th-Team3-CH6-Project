@@ -88,7 +88,7 @@ void AT3WeaponBase::OnWeaponOverlap(UPrimitiveComponent* OverlappedComponent, AA
 
         if (IsValid(Combat))
         {
-            Combat->RequestAttackDamage(OtherActor, CurrentAttackDamage, CurrentIntensity, 1.f, CurrentDamageType, StunAmount);
+            Combat->RequestAttackDamage(OtherActor, CurrentAttackDamage, CurrentIntensity, 1.f, CurrentDamageType, StunAmount, Combat->IsBasicAttacking());
             UE_LOG(LogTemp, Warning, TEXT("Hit Monster! Damage: %.1f"), CurrentAttackDamage);
         }
         UE_LOG(LogTemp, Log, TEXT("Hit: %s"), *OtherActor->GetName());
