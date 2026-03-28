@@ -165,6 +165,7 @@ void AT3CharacterBase::BeginPlay()
 	// GameMode 참조 안전하게 수정
 	if (AT3GameMode* T3GameMode = Cast<AT3GameMode>(World->GetAuthGameMode()))
 	{
+		UE_LOG(LogTemp, Display, TEXT("게임모드가 정상적으로 캐스팅되어서 세이브데이터가 셋됩니다"));
 		T3GameMode->SetCharacterBySavedData(this);
 	}
 

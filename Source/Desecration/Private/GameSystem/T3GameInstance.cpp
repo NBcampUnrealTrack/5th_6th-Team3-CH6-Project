@@ -154,6 +154,7 @@ bool UT3GameInstance::LoadGame()
 	{
 		return false;
 	}
+	UE_LOG(LogTemp, Error, TEXT("세이브에 저장된 현재 위치는 : %s"), *SavedData->PlayerLocation.ToString());
 	
 	SavedGameData = SavedData;
 	return true;

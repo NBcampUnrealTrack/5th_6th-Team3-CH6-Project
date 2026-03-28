@@ -82,6 +82,9 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	//현재 위치
 	SaveGame->SavedLevelName = LevelName;
 	SaveGame->PlayerLocation = TargetLocation;
+	
+	UE_LOG(LogTemp, Error, TEXT("%s : 로케이션 위치"), *SaveGame->PlayerLocation.ToString());
+	
 	SaveGame->PlayerRotation = TargetRotation;
 	//스탯
 	SaveGame->MaxHP = Character->GetMaxHP();
@@ -347,6 +350,8 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 			{
 				if (Character && Character->IsValidLowLevel())
 				{
+					UE_LOG(LogTemp, Error, TEXT("이 위치로 텔레포트합니다. : %s"), *TargetLocation.ToString());
+					
 					// ETeleportType::TeleportPhysics를 사용하여 물리 엔진에 순간이동임을 알립니다.
 					Character->SetActorLocationAndRotation(TargetLocation, TargetRotation, false, nullptr, ETeleportType::TeleportPhysics);
 
