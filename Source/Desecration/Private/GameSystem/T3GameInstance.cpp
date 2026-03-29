@@ -201,7 +201,8 @@ bool UT3GameInstance::SaveObjectState()
 
 bool UT3GameInstance::LoadObjectState()
 {
-	TObjectPtr<UT3SaveObjectState> T3ObjectState = Cast<UT3SaveObjectState>(UGameplayStatics::LoadGameFromSlot(SAVE_LOST_MONEY_NAME, 0));
+	//TObjectPtr<UT3SaveObjectState> T3ObjectState = Cast<UT3SaveObjectState>(UGameplayStatics::LoadGameFromSlot(SAVE_LOST_MONEY_NAME, 0));
+	TObjectPtr<UT3SaveObjectState> T3ObjectState = Cast<UT3SaveObjectState>(UGameplayStatics::LoadGameFromSlot(SAVE_OBJECT_STATE_NAME, 0));
 	if (!T3ObjectState)
 	{
 		return false;
