@@ -14,7 +14,7 @@ void UT3SaveGame::ResetGameData()
 	PlayerName = TEXT("");
 	//캐릭터 위치
 	SavedLevelName = ELevelName::Tutorial;
-	PlayerLocation = FVector(-80, 185, 102);
+	PlayerLocation = FVector(-80, 185, 2860);
 	PlayerRotation = FRotator::ZeroRotator;
 	
 	//현재 도달한 세이브 포인트(룬) 위치

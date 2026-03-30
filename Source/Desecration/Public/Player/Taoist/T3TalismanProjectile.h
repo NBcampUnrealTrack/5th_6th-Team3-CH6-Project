@@ -15,8 +15,8 @@ public:
 
 	AT3TalismanProjectile();
     void SetDamage(float InDamage) { Damage = InDamage; }
-
     void SetIsBasicAttack(bool bValue) { bIsBasicAttack = bValue; }
+    void SetHomingTarget(AActor* Target);
     virtual void Tick(float DeltaTime) override;
 
 protected:
@@ -33,6 +33,10 @@ protected:
     // 충돌 처리
     UPROPERTY(VisibleAnywhere, Category = "Collision")
     class UBoxComponent* CollisionBox;
+
+    // --- 호밍 설정 ---
+    UPROPERTY(EditAnywhere, Category = "Movement|Homing")
+    float HomingAcceleration = 2500.f;
 
     // --- 부적 흔들림 설정 ---
     UPROPERTY(EditAnywhere, Category = "Movement|SinWave")

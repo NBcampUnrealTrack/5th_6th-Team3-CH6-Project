@@ -215,6 +215,17 @@ void UT3Taoist_SkillComponent::SpawnTalisman()
             Talisman->SetDamage(InitialDamage);
             Talisman->SetIsBasicAttack(true);
 
+            // 록온 대상이 있으면 호밍 활성화
+            UT3CombatComponent* TaoistCombat = OwnerChar->GetCombatComponent();
+            if (TaoistCombat)
+            {
+                AActor* LockOnTarget = TaoistCombat->GetCurrentTarget();
+                if (LockOnTarget)
+                {
+                    Talisman->SetHomingTarget(LockOnTarget);
+                }
+            }
+
             // 물리적 충돌 무시 (본체와 부딪히지 않게)
              // 부적의 RootComponent(CollisionBox)를 가져와서 설정
             if (UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(Talisman->GetRootComponent()))

@@ -65,7 +65,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MidBossSpawner|Save")
 	int32 ObjectID = 0;
 
-	/** 이미 처치된 보스인지 (BeginPlay에서 판정) */
+	/** 이미 처치된 보스인지 (PostInitializeComponents에서 판정 — BeginPlay 순서 무관) */
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "MidBossSpawner|Save")
 	bool bBossAlreadyDefeated = false;
 
@@ -102,6 +102,7 @@ public:
 	TObjectPtr<AT3MidBossMonster> SpawnedBoss;
 
 protected:
+	virtual void PostInitializeComponents() override;
 	virtual void BeginPlay() override;
 
 private:

@@ -17,6 +17,7 @@ AT3LunarSlash::AT3LunarSlash()
 	PrimaryActorTick.bCanEverTick = false;
 	bIsAlreadyExploded = false;
 	
+	OwnerChar = Cast<AT3CharacterBase>(GetOwner());
 	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
 	SphereComponent->InitSphereRadius(500.0f);
 	SphereComponent->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
@@ -71,19 +72,15 @@ void AT3LunarSlash::OnLunarOverlap(UPrimitiveComponent* OverlappedComponent, AAc
 
 void AT3LunarSlash::ExplodeLunarSlash(int32 ChargeLevel)
 {
-	float FinalDamage = ExplosionDamage * FMath::Max(1, ChargeLevel);
+	float CurrentAttackPower = OwnerChar->GetAttackPower();
+	float FinalDamage = CurrentAttackPower * (ExplosionDamage * FMath::Max(1, ChargeLevel));
 	
 	int32 ActualCharge = FMath::Max(1, ChargeLevel);
-	UE_LOG(LogTemp, Warning, TEXT("=================================================="));
-	UE_LOG(LogTemp, Warning, TEXT("💥 [달 폭발 시작] 차징 레벨: %d 단계!"), ActualCharge);
-	UE_LOG(LogTemp, Warning, TEXT("💥 [데미지 계산] 기본(%.1f) x 차징(%d) = 최종 광역 데미지: %.1f"), ExplosionDamage, ActualCharge, FinalDamage);
-	UE_LOG(LogTemp, Warning, TEXT("=================================================="));
 	
 	TArray<AActor*> OverlappedActors;
 	SphereComponent->GetOverlappingActors(OverlappedActors);
 	bIsAlreadyExploded = true;
-	
-	AT3CharacterBase* OwnerChar = Cast<AT3CharacterBase>(GetOwner());
+
 	if (OwnerChar)
 	{
 		UT3CombatComponent* Combat = OwnerChar->GetCombatComponent();
@@ -95,7 +92,6 @@ void AT3LunarSlash::ExplodeLunarSlash(int32 ChargeLevel)
 					if (Actor->IsA<AT3CharacterBase>()) continue;
 					if (Actor && Actor != OwnerChar)
 					{
-						UE_LOG(LogTemp, Warning, TEXT("   -> 피격 대상: [%s] 에게 %.1f 데미지 전달 요청!"), *Actor->GetName(), FinalDamage);
 						Combat->RequestAttackDamage(Actor, FinalDamage);
 					}
 				}
@@ -144,7 +140,6 @@ void AT3LunarSlash::ApplyDamage()
 	TArray<AActor*> OverlappedActors;
 	SphereComponent->GetOverlappingActors(OverlappedActors);
 	
-	TObjectPtr<AT3CharacterBase> OwnerChar = Cast<AT3CharacterBase>(GetOwner());
 	if (OwnerChar)
 	{
 		TObjectPtr<UT3CombatComponent> Combat = OwnerChar->GetCombatComponent();
@@ -153,7 +148,8 @@ void AT3LunarSlash::ApplyDamage()
 		{
 			if (Actor && Actor != OwnerChar)
 			{
-				Combat->RequestAttackDamage(Actor, DamageRate);
+				float CurrentAttackPower = OwnerChar->GetAttackPower();
+				Combat->RequestAttackDamage(Actor, (CurrentAttackPower * DamageRate));
 				OnDoTAttack();
 			}
 		}

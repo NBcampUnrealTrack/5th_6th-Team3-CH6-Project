@@ -10,6 +10,7 @@
 #include "Sound/SoundClass.h"
 #include "Blueprint/UserWidget.h"
 #include "Framework/Application/SlateApplication.h" // Slate 관련
+#include "Kismet/KismetInternationalizationLibrary.h"
 
 void UT3GameInstance::StartCustomLoading()
 {
@@ -95,6 +96,11 @@ void UT3GameInstance::MakeFirstSettings()
 		GEngine->GetGameUserSettings()->SetOverallScalabilityLevel(2);
 		GEngine->GetGameUserSettings()->ApplySettings(true);
 	}
+	
+#if !WITH_EDITOR
+	//한국어를 기본으로 (에디터가 아니면)
+	UKismetInternationalizationLibrary::SetCurrentCulture("ko");
+#endif
 	
 	//CurrentSettings를 사용하는 구간
 	if (!CurrentSettings)

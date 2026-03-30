@@ -297,6 +297,49 @@ bool AT3GameMode::SaveOnlySkill(const AT3CharacterBase* Character)
     return T3GameInstance->SaveGame();
 }
 
+bool AT3GameMode::SaveOnlyStat(const AT3CharacterBase* Character)
+{
+	if (!Character)
+	{
+		UE_LOG(LogTemp, Error, TEXT("SaveOnlyStat : Character가 null"));
+		return false;
+	}
+	
+	//마지막 저장 시점
+	TObjectPtr<UT3SaveGame> SaveGame = T3GameInstance->GetSavedGameData();
+	if (!SaveGame)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SaveOnlyStat : 저장된 게임을 불러올 수 없음"));
+		return false;
+	}
+	
+	//스탯
+	SaveGame->MaxHP = Character->GetMaxHP();
+	SaveGame->CurrentHP = Character->GetCurrentHP();
+	SaveGame->MaxMana = Character->GetMaxMana();
+	SaveGame->CurrentMana = Character->GetCurrentMana();
+	SaveGame->MaxStamina = Character->GetMaxStamina();
+	SaveGame->CurrentStamina = Character->GetCurrentStamina();
+	SaveGame->CriticalChance = Character->GetCriticalChance();
+	SaveGame->CriticalDamage = Character->GetCriticalDamage();
+	SaveGame->MoveSpeed = Character->GetMoveSpeed();
+	SaveGame->Vigor = Character->GetVigor();
+	SaveGame->Endurance = Character->GetEndurance();
+	SaveGame->Mind = Character->GetMind();
+	SaveGame->Strength = Character->GetStrength();
+	SaveGame->Intelligence = Character->GetIntelligence();
+	SaveGame->WeaponLevel = Character->GetWeaponLevel();
+	SaveGame->CharacterLevel = Character->GetCharacterLevel();
+	//공격력 저장을 위해 PlayerEquipmentComponent를 사용
+	if (const UT3PlayerEquipmentComponent* EquipComp = Character->FindComponentByClass<UT3PlayerEquipmentComponent>())
+	{
+		SaveGame->AttackPower = EquipComp->GetCurrentAttackPower();
+	}
+	
+	//저장
+	return T3GameInstance->SaveGame();
+}
+
 void AT3GameMode::LoadGame()
 {
 	//저장된 게임을 불러오는데 성공하면 그 맵으로 이동
@@ -361,8 +404,11 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 	}
 
 	//스탯 적용 (스탯은 즉시 적용해도 안전합니다)
+	Character->SetMaxHP(SaveGame->MaxHP);
 	Character->SetCurrentHP(SaveGame->CurrentHP);
+	Character->SetMaxMana(SaveGame->MaxMana);
 	Character->SetCurrentMana(SaveGame->CurrentMana);
+	Character->SetMaxStamina(SaveGame->MaxStamina);
 	Character->SetCurrentStamina(SaveGame->CurrentStamina);
 	Character->SetAttackPower(SaveGame->AttackPower);
 	Character->SetCriticalChance(SaveGame->CriticalChance);
@@ -467,12 +513,7 @@ bool AT3GameMode::YouHaveBeenCorrupted(const AT3CharacterBase* Character) const
 		return false;
 	}
 	
-	//잃어버린 재화 내용을 마지막 저장 데이터에 반영
-	if (!T3GameInstance->LoadGame())
-	{
-		UE_LOG(LogTemp, Error, TEXT("%s : 게임 오버 처리 실패 - 저장된 게임 데이터 없음"), *GetNameSafe(this));
-		return false;
-	}
+	//잃어버린 재화 내용을 저장 데이터에 반영
 	T3GameInstance->GetSavedGameData()->Money = 0;
 	
 	//잃어버린 재화 정보
