@@ -147,16 +147,16 @@ bool UT3GameInstance::SaveGame()
 	return UGameplayStatics::SaveGameToSlot(SavedGameData, SAVE_GAME_NAME, 0);
 }
 
-bool UT3GameInstance::LoadGame(const bool bSetLocationAfterLoad)
+bool UT3GameInstance::LoadGame()
 {
 	TObjectPtr<UT3SaveGame> SavedData = Cast<UT3SaveGame>(UGameplayStatics::LoadGameFromSlot(SAVE_GAME_NAME, 0));
 	if (!SavedData)
 	{
 		return false;
 	}
+	UE_LOG(LogTemp, Error, TEXT("세이브에 저장된 현재 위치는 : %s"), *SavedData->PlayerLocation.ToString());
 	
 	SavedGameData = SavedData;
-	SavedGameData->bSetLocation = bSetLocationAfterLoad;
 	return true;
 }
 
@@ -201,7 +201,8 @@ bool UT3GameInstance::SaveObjectState()
 
 bool UT3GameInstance::LoadObjectState()
 {
-	TObjectPtr<UT3SaveObjectState> T3ObjectState = Cast<UT3SaveObjectState>(UGameplayStatics::LoadGameFromSlot(SAVE_LOST_MONEY_NAME, 0));
+	//TObjectPtr<UT3SaveObjectState> T3ObjectState = Cast<UT3SaveObjectState>(UGameplayStatics::LoadGameFromSlot(SAVE_LOST_MONEY_NAME, 0));
+	TObjectPtr<UT3SaveObjectState> T3ObjectState = Cast<UT3SaveObjectState>(UGameplayStatics::LoadGameFromSlot(SAVE_OBJECT_STATE_NAME, 0));
 	if (!T3ObjectState)
 	{
 		return false;

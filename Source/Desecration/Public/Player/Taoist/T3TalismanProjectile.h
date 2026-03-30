@@ -15,6 +15,8 @@ public:
 
 	AT3TalismanProjectile();
     void SetDamage(float InDamage) { Damage = InDamage; }
+
+    void SetIsBasicAttack(bool bValue) { bIsBasicAttack = bValue; }
     virtual void Tick(float DeltaTime) override;
 
 protected:
@@ -58,4 +60,6 @@ protected:
 
     // 중복 히트 방지 리스트
     TArray<AActor*> HitActors;
+
+    bool bIsBasicAttack = false;
 };
