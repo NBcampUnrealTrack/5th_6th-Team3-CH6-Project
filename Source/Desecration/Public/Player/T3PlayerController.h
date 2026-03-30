@@ -120,6 +120,10 @@ public:
 	//팝업 메뉴 닫기
 	void ClosePopupMenu();
 	
+	//게임 모드를 통해 포션과 인벤토리를 저장한다.
+	UFUNCTION(BlueprintCallable)
+	void SaveInventoryAndPotionLevel();
+	
 protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> ChangeSkillSlotAction;

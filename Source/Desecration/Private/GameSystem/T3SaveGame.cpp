@@ -27,7 +27,9 @@ void UT3SaveGame::ResetGameData()
 	CurrentMana = MaxMana;
 	MaxStamina = 100.0f;
 	CurrentStamina = MaxStamina;
-	AttackPower = 45.0f;
+	StatAttackPower = 5.0f;
+	WeaponAttackPower = 45.0f;
+	RuneAttackPower = 0.0f;
 	CriticalChance = 0.1f;
 	CriticalDamage = 1.5f;
 	MoveSpeed = 500.0f;
@@ -53,8 +55,8 @@ void UT3SaveGame::ResetGameData()
 	Money = 0;
 	
 	//포션
-	HPPotionCount = 3;
-	MPPotionCount = 3;
+	HPPotionMaxCount = 3;
+	MPPotionMaxCount = 3;
 	PotionAmountUpgradeLevel = 0;
 	PotionRecoveryUpgradeLevel = 0;
 	

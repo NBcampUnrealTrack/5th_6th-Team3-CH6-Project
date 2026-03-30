@@ -27,7 +27,7 @@ void AT3SelectClassGameMode::MakeFirstGameData(const FString& PlayerName, const 
 	{
 		if (const FT3WeaponDataRow* WeaponRow = WeaponTable->FindRow<FT3WeaponDataRow>(RowNameInWeaponTable, TEXT("Calc")))
 		{
-			FirstGameData->AttackPower = WeaponRow->BaseAttackPower;
+			FirstGameData->WeaponAttackPower = WeaponRow->BaseAttackPower;
 		}
 	}
 	

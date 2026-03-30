@@ -75,9 +75,17 @@ public:
 	UPROPERTY()
 	float CurrentStamina;
 	
-	//공격력
+	//스탯 공격력
 	UPROPERTY()
-	float AttackPower;
+	float StatAttackPower;
+	
+	//무기 공격력
+	UPROPERTY()
+	float WeaponAttackPower;
+	
+	//룬 공격력
+	UPROPERTY()
+	float RuneAttackPower;
 	
 	//크리티컬 확률
 	UPROPERTY()
@@ -139,11 +147,11 @@ public:
 	
 	//HP포션 개수
 	UPROPERTY()
-	int32 HPPotionCount;
+	int32 HPPotionMaxCount;
 	
 	//MP포션 개수
 	UPROPERTY()
-	int32 MPPotionCount;
+	int32 MPPotionMaxCount;
 	
 	//포션 개수 강화 단계
 	UPROPERTY()

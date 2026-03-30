@@ -513,3 +513,11 @@ void AT3PlayerController::ClosePopupMenu()
 		PopUpMenu->SetActivePopUpMenu(false);
 	}
 }
+
+void AT3PlayerController::SaveInventoryAndPotionLevel()
+{
+	if (T3GameMode)
+	{
+		T3GameMode->SaveInventoryAndPotionLevel(OwnerChar);
+	}
+}

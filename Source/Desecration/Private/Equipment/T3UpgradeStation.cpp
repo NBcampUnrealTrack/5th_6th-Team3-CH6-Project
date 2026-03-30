@@ -98,6 +98,9 @@ void AT3UpgradeStation::CloseUpgradeUI(AT3PlayerController* T3PC)
 	T3PC->SetIsUpgradeUIOpen(false);
 	
 	OnUpgradeUIClosed.Broadcast();
+	
+	//인벤토리 저장하기
+	T3PC->SaveInventoryAndPotionLevel();
 
 	UE_LOG(LogDesecration, Log, TEXT("[UpgradeStation] UI 닫힘"));
 }
