@@ -75,9 +75,17 @@ public:
 	UPROPERTY()
 	float CurrentStamina;
 	
-	//공격력
+	//스탯 공격력
 	UPROPERTY()
-	float AttackPower;
+	float StatAttackPower;
+	
+	//무기 공격력
+	UPROPERTY()
+	float WeaponAttackPower;
+	
+	//룬 공격력
+	UPROPERTY()
+	float RuneAttackPower;
 	
 	//크리티컬 확률
 	UPROPERTY()

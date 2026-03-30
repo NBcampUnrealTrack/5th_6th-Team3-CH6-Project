@@ -457,9 +457,9 @@ public:
 
 		FORCEINLINE int32 GetWeaponLevel() const { return WeaponLevel; }
 
-		FORCEINLINE float GetStatAttackPower() { return AdditionalAttack; }
-		FORCEINLINE float GetWeaponAttackPower() { return AttackPower; }
-		FORCEINLINE float GetRuneAttackPower() { return CachedRuneAttackBonus; }
+		FORCEINLINE float GetStatAttackPower() const { return AdditionalAttack; }
+		FORCEINLINE float GetWeaponAttackPower() const { return AttackPower; }
+		FORCEINLINE float GetRuneAttackPower() const { return CachedRuneAttackBonus; }
 
 		// --- Setters ---
 		FORCEINLINE void SetVigor(int32 NewVigor) { Vigor = NewVigor; }

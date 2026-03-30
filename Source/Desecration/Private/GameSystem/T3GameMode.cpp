@@ -93,6 +93,9 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	SaveGame->CurrentMana = Character->GetCurrentMana();
 	SaveGame->MaxStamina = Character->GetMaxStamina();
 	SaveGame->CurrentStamina = Character->GetCurrentStamina();
+	SaveGame->StatAttackPower = Character->GetStatAttackPower();
+	SaveGame->WeaponAttackPower = Character->GetWeaponAttackPower();
+	SaveGame->RuneAttackPower = Character->GetRuneAttackPower();
 	SaveGame->CriticalChance = Character->GetCriticalChance();
 	SaveGame->CriticalDamage = Character->GetCriticalDamage();
 	SaveGame->MoveSpeed = Character->GetMoveSpeed();
@@ -142,7 +145,6 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	//장비
 	if (const UT3PlayerEquipmentComponent* EquipComp = Character->FindComponentByClass<UT3PlayerEquipmentComponent>())
 	{
-		SaveGame->AttackPower = EquipComp->GetCurrentAttackPower();
 		EquipComp->GetEquipmentSaveData(SaveGame->WeaponSaveData, SaveGame->ArmorSaveData);
 	}
 	
@@ -335,6 +337,9 @@ bool AT3GameMode::SaveOnlyStat(const AT3CharacterBase* Character)
 	SaveGame->CurrentMana = Character->GetCurrentMana();
 	SaveGame->MaxStamina = Character->GetMaxStamina();
 	SaveGame->CurrentStamina = Character->GetCurrentStamina();
+	SaveGame->StatAttackPower = Character->GetStatAttackPower();
+	SaveGame->WeaponAttackPower = Character->GetWeaponAttackPower();
+	SaveGame->RuneAttackPower = Character->GetRuneAttackPower();
 	SaveGame->CriticalChance = Character->GetCriticalChance();
 	SaveGame->CriticalDamage = Character->GetCriticalDamage();
 	SaveGame->MoveSpeed = Character->GetMoveSpeed();
@@ -345,11 +350,6 @@ bool AT3GameMode::SaveOnlyStat(const AT3CharacterBase* Character)
 	SaveGame->Intelligence = Character->GetIntelligence();
 	SaveGame->WeaponLevel = Character->GetWeaponLevel();
 	SaveGame->CharacterLevel = Character->GetCharacterLevel();
-	//공격력 저장을 위해 PlayerEquipmentComponent를 사용
-	if (const UT3PlayerEquipmentComponent* EquipComp = Character->FindComponentByClass<UT3PlayerEquipmentComponent>())
-	{
-		SaveGame->AttackPower = EquipComp->GetCurrentAttackPower();
-	}
 	
 	//스탯 강화로 사용한 돈을 저장하기 위해 인벤토리에 접근
 	if (const TObjectPtr<UT3InventoryComponent> InventoryComponent = Character->InventoryComponent)
@@ -431,7 +431,9 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 	Character->SetCurrentMana(SaveGame->CurrentMana);
 	Character->SetMaxStamina(SaveGame->MaxStamina);
 	Character->SetCurrentStamina(SaveGame->CurrentStamina);
-	Character->SetAttackPower(SaveGame->AttackPower);
+	Character->SetStatAttackPower(SaveGame->StatAttackPower);
+	Character->SetAttackPower(SaveGame->WeaponAttackPower);
+	Character->SetRuneAttackPower(SaveGame->RuneAttackPower);
 	Character->SetCriticalChance(SaveGame->CriticalChance);
 	Character->SetCriticalDamage(SaveGame->CriticalDamage);
 	Character->SetMoveSpeed(SaveGame->MoveSpeed);
