@@ -457,14 +457,20 @@ public:
 
 		FORCEINLINE int32 GetWeaponLevel() const { return WeaponLevel; }
 
+		FORCEINLINE float GetStatAttackPower() { return AdditionalAttack; }
+		FORCEINLINE float GetWeaponAttackPower() { return AttackPower; }
+		FORCEINLINE float GetRuneAttackPower() { return CachedRuneAttackBonus; }
 
 		// --- Setters ---
-		FORCEINLINE void SetVigor(int32 NewVigor) {  Vigor = NewVigor; }
-		FORCEINLINE void SetEndurance(int32 NewEndurance) {  Endurance = NewEndurance; }
-		FORCEINLINE void SetMind(int32 NewMind) {  Mind = NewMind; }
-		FORCEINLINE void SetStrength(int32 NewStrength) {  Strength = NewStrength; }
-		FORCEINLINE void SetIntelligence(int32 NewIntelligence) {  Intelligence = NewIntelligence; }
-		FORCEINLINE void SetCharacterLevel(int32 NewCharacterLevel) {  CharacterLevel = NewCharacterLevel; }
+		FORCEINLINE void SetVigor(int32 NewVigor) { Vigor = NewVigor; }
+		FORCEINLINE void SetEndurance(int32 NewEndurance) { Endurance = NewEndurance; }
+		FORCEINLINE void SetMind(int32 NewMind) { Mind = NewMind; }
+		FORCEINLINE void SetStrength(int32 NewStrength) { Strength = NewStrength; }
+		FORCEINLINE void SetIntelligence(int32 NewIntelligence) { Intelligence = NewIntelligence; }
+		FORCEINLINE void SetCharacterLevel(int32 NewCharacterLevel) { CharacterLevel = NewCharacterLevel; }
+
+		FORCEINLINE void SetStatAttackPower(float NewStatAttackPower) { AdditionalAttack = NewStatAttackPower; }
+		FORCEINLINE void SetRuneAttackPower(float NewRuneAttackPower) { CachedRuneAttackBonus = NewRuneAttackPower; }
 
 
 		// 현재 스탯 총합을 기반으로 계산된 레벨
