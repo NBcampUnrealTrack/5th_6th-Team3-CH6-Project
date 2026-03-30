@@ -280,7 +280,7 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 			{
 				bIsHPPotionCooldown = true;
 				
-				RecoverHPAmount = ItemData.BuffValue + RecoveryBonus;
+				RecoverHPAmount = OwnerCharacter->GetMaxHP() * (ItemData.BuffValue + RecoveryBonus) / 100.0f;
 			
 				RecoverHPTickCount = ItemData.ActiveTime / RecoverHPInterval;
 				RecoverHPPerTick = RecoverHPAmount / RecoverHPTickCount;
@@ -320,7 +320,7 @@ bool UT3ItemUseComponent::ApplyConsumableItem(const FT3ConsumableItemData& ItemD
 			{
 				bIsMPPotionCooldown = true;
 				
-				RecoverMPAmount = ItemData.BuffValue + RecoveryBonus;
+				RecoverMPAmount = OwnerCharacter->GetMaxMana() * (ItemData.BuffValue + RecoveryBonus) / 100.0f;
 			
 				RecoverMPTickCount = ItemData.ActiveTime / RecoverMPInterval;
 				RecoverMPPerTick = RecoverMPAmount / RecoverMPTickCount;
