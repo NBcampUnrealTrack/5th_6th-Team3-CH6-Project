@@ -404,8 +404,11 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 	}
 
 	//스탯 적용 (스탯은 즉시 적용해도 안전합니다)
+	Character->SetMaxHP(SaveGame->MaxHP);
 	Character->SetCurrentHP(SaveGame->CurrentHP);
+	Character->SetMaxMana(SaveGame->MaxMana);
 	Character->SetCurrentMana(SaveGame->CurrentMana);
+	Character->SetMaxStamina(SaveGame->MaxStamina);
 	Character->SetCurrentStamina(SaveGame->CurrentStamina);
 	Character->SetAttackPower(SaveGame->AttackPower);
 	Character->SetCriticalChance(SaveGame->CriticalChance);
