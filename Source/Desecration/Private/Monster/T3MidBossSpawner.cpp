@@ -40,32 +40,33 @@ AT3MidBossSpawner::AT3MidBossSpawner()
 	ActivationTriggerBox->SetHiddenInGame(true);
 }
 
-void AT3MidBossSpawner::BeginPlay()
+void AT3MidBossSpawner::PostInitializeComponents()
 {
-	Super::BeginPlay();
+	Super::PostInitializeComponents();
 
-	// ObjectID가 0이면 저장 기능 사용 안 함
 	if (ObjectID == 0)
 	{
 		return;
 	}
 
-	// WorldSubsystem에서 저장된 상태 확인
+	// BeginPlay보다 먼저 실행 — 다른 액터의 BeginPlay에서 bBossAlreadyDefeated를 안전하게 읽을 수 있음
 	if (const UT3WorldSubsystem* WorldSubsystem = GetWorld()->GetSubsystem<UT3WorldSubsystem>())
 	{
 		const int32 SavedState = WorldSubsystem->GetObjectState(ObjectID);
 		if (SavedState >= 1)
 		{
-			// 이미 처치된 보스 — 스폰 스킵, 즉시 사망 이벤트 브로드캐스트
 			bBossAlreadyDefeated = true;
 
 			UE_LOG(LogDesecration, Log,
-				TEXT("T3_MidBossSpawner: [%s] ObjectID:%d 이미 처치됨 (State:%d) → 스폰 스킵, OnBossDied 브로드캐스트"),
+				TEXT("T3_MidBossSpawner: [%s] ObjectID:%d 이미 처치됨 (State:%d) → 플래그 세팅 (PostInitializeComponents)"),
 				*GetName(), ObjectID, SavedState);
-
-			OnBossDied.Broadcast();
 		}
 	}
+}
+
+void AT3MidBossSpawner::BeginPlay()
+{
+	Super::BeginPlay();
 }
 
 AT3MidBossMonster* AT3MidBossSpawner::SpawnAndPrepareBoss()
