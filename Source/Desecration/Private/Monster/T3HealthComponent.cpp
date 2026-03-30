@@ -51,16 +51,6 @@ void UT3HealthComponent::HandleTakeDamage(float DamageAmount, const FDamageEvent
 		);
 	}
 
-	// 몬스터의 체력이 40퍼센트 이하로 내려가면 슈퍼아머 발동(블루프린트에서 Do Once로 1회 제어)
-	if (CurrentHP <= MaxHP * 0.4f)
-	{
-		if (AT3MonsterBase* Monster = Cast<AT3MonsterBase>(GetOwner()))
-		{
-			Monster->HalfHpSuperArmor();
-		}
-	}
-
-
 	if (CurrentHP <= 0.f)
 	{
 		if (OnDeath.IsBound())
@@ -73,6 +63,15 @@ void UT3HealthComponent::HandleTakeDamage(float DamageAmount, const FDamageEvent
 		if (OnDamaged.IsBound())
 		{
 			OnDamaged.Broadcast(DamageAmount, DamageEvent.DamageTypeClass ? DamageEvent.DamageTypeClass->GetDefaultObject<UDamageType>() : nullptr, EventInstigator, DamageCauser);
+		}
+	}
+
+	// 몬스터의 체력이 40퍼센트 이하로 내려가면 슈퍼아머 발동(블루프린트에서 Do Once로 1회 제어)
+	if (CurrentHP <= MaxHP * 0.4f)
+	{
+		if (AT3MonsterBase* Monster = Cast<AT3MonsterBase>(GetOwner()))
+		{
+			Monster->HalfHpSuperArmor();
 		}
 	}
 }
