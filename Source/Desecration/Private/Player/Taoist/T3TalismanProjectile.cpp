@@ -10,6 +10,18 @@
 #include "Player/Taoist/T3Taoist_SkillComponent.h"
 #include "Player/Taoist/T3TaoistClone.h"
 
+void AT3TalismanProjectile::SetHomingTarget(AActor* Target)
+{
+    if (!Target || !ProjectileMovement) return;
+
+    USceneComponent* TargetRoot = Target->GetRootComponent();
+    if (!TargetRoot) return;
+
+    ProjectileMovement->bIsHomingProjectile = true;
+    ProjectileMovement->HomingTargetComponent = TargetRoot;
+    ProjectileMovement->HomingAccelerationMagnitude = HomingAcceleration;
+}
+
 AT3TalismanProjectile::AT3TalismanProjectile()
 {
     PrimaryActorTick.bCanEverTick = true;
