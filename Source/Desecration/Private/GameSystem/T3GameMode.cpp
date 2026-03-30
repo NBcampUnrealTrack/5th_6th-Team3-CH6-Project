@@ -208,13 +208,19 @@ bool AT3GameMode::SaveInventoryAndPotionLevel(const AT3CharacterBase* Character)
 		{
 			break;
 		}
-		InventoryComponent->Items[iNum] = SaveGame->Items[iNum];
-		InventoryComponent->RuneItems[iNum] = SaveGame->RuneItems[iNum];
-		InventoryComponent->EtcItems[iNum] = SaveGame->EtcItems[iNum];
+		SaveGame->Items[iNum] = InventoryComponent->Items[iNum];
+		SaveGame->RuneItems[iNum] = InventoryComponent->RuneItems[iNum];
+		SaveGame->EtcItems[iNum] = InventoryComponent->EtcItems[iNum];
 	}
 	//포션 강화
 	SaveGame->PotionAmountUpgradeLevel = InventoryComponent->GetPotionAmountUpgradeLevel();
 	SaveGame->PotionRecoveryUpgradeLevel = InventoryComponent->GetPotionRecoveryUpgradeLevel();
+	
+	//장비 컴포넌트
+	if (UT3PlayerEquipmentComponent* EquipComp = Character->FindComponentByClass<UT3PlayerEquipmentComponent>())
+	{
+		EquipComp->GetEquipmentSaveData(SaveGame->WeaponSaveData, SaveGame->ArmorSaveData);
+	}
 	
 	//저장
 	if (!T3GameInstance->SaveGame())
@@ -334,6 +340,12 @@ bool AT3GameMode::SaveOnlyStat(const AT3CharacterBase* Character)
 	if (const UT3PlayerEquipmentComponent* EquipComp = Character->FindComponentByClass<UT3PlayerEquipmentComponent>())
 	{
 		SaveGame->AttackPower = EquipComp->GetCurrentAttackPower();
+	}
+	
+	//스탯 강화로 사용한 돈을 저장하기 위해 인벤토리에 접근
+	if (const TObjectPtr<UT3InventoryComponent> InventoryComponent = Character->InventoryComponent)
+	{
+		SaveGame->Money = InventoryComponent->GetMoney();
 	}
 	
 	//저장
