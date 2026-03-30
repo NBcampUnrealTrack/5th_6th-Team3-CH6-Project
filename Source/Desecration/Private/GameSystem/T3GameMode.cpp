@@ -134,8 +134,8 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	SaveGame->ArmorEpicStoneCount = InventoryComponent->GetArmorEpicStoneCount();
 	SaveGame->ArmorLegendaryStoneCount = InventoryComponent->GetArmorLegendaryStoneCount();
 	//포션
-	SaveGame->HPPotionCount = InventoryComponent->GetHPPotionCount();
-	SaveGame->MPPotionCount = InventoryComponent->GetMPPotionCount();
+	SaveGame->HPPotionMaxCount = InventoryComponent->GetMaxHPPotionCount();
+	SaveGame->MPPotionMaxCount = InventoryComponent->GetMaxMPPotionCount();
 	SaveGame->PotionAmountUpgradeLevel = InventoryComponent->GetPotionAmountUpgradeLevel();
 	SaveGame->PotionRecoveryUpgradeLevel = InventoryComponent->GetPotionRecoveryUpgradeLevel();
 	
@@ -212,9 +212,18 @@ bool AT3GameMode::SaveInventoryAndPotionLevel(const AT3CharacterBase* Character)
 		SaveGame->RuneItems[iNum] = InventoryComponent->RuneItems[iNum];
 		SaveGame->EtcItems[iNum] = InventoryComponent->EtcItems[iNum];
 	}
+	SaveGame->Money = InventoryComponent->GetMoney();
+	SaveGame->WeaponNormalStoneCount = InventoryComponent->GetWeaponNormalStoneCount();
+	SaveGame->WeaponEpicStoneCount = InventoryComponent->GetWeaponEpicStoneCount();
+	SaveGame->WeaponLegendaryStoneCount = InventoryComponent->GetWeaponLegendaryStoneCount();
+	SaveGame->ArmorNormalStoneCount = InventoryComponent->GetArmorNormalStoneCount();
+	SaveGame->ArmorEpicStoneCount = InventoryComponent->GetArmorEpicStoneCount();
+	SaveGame->ArmorLegendaryStoneCount = InventoryComponent->GetArmorLegendaryStoneCount();
 	//포션 강화
 	SaveGame->PotionAmountUpgradeLevel = InventoryComponent->GetPotionAmountUpgradeLevel();
 	SaveGame->PotionRecoveryUpgradeLevel = InventoryComponent->GetPotionRecoveryUpgradeLevel();
+	SaveGame->HPPotionMaxCount = InventoryComponent->GetMaxHPPotionCount();
+	SaveGame->MPPotionMaxCount = InventoryComponent->GetMaxMPPotionCount();
 	
 	//장비 컴포넌트
 	if (UT3PlayerEquipmentComponent* EquipComp = Character->FindComponentByClass<UT3PlayerEquipmentComponent>())
@@ -461,19 +470,24 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 		InventoryComponent->SetArmorLegendaryStoneCount(SaveGame->ArmorLegendaryStoneCount);
 		
 		//포션
-		InventoryComponent->SetHPPotionCount(SaveGame->HPPotionCount);
-		InventoryComponent->SetMPPotionCount(SaveGame->MPPotionCount);
 		InventoryComponent->LoadPotionUpgradeLevel(SaveGame->PotionAmountUpgradeLevel, SaveGame->PotionRecoveryUpgradeLevel);
+		InventoryComponent->SetHPPotionCount(SaveGame->HPPotionMaxCount);
+		InventoryComponent->SetMPPotionCount(SaveGame->MPPotionMaxCount);
+
+		//인벤토리 갱신
+		InventoryComponent->OnInventoryInitialized.Broadcast();
 	}
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("InventoryComponent is Null on %s"), *Character->GetName());
 	}
 
-	//장비 컴포넌트 유효성 검사
+	//장비 컴포넌트
 	if (UT3PlayerEquipmentComponent* EquipComp = Character->FindComponentByClass<UT3PlayerEquipmentComponent>())
 	{
 		EquipComp->LoadEquipmentFromSave(SaveGame->WeaponSaveData, SaveGame->ArmorSaveData);
+		
+		EquipComp->OnRuneSocketChanged.Broadcast();
 	}
 	
 	//스킬

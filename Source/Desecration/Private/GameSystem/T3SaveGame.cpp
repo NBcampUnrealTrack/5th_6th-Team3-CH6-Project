@@ -53,8 +53,8 @@ void UT3SaveGame::ResetGameData()
 	Money = 0;
 	
 	//포션
-	HPPotionCount = 3;
-	MPPotionCount = 3;
+	HPPotionMaxCount = 3;
+	MPPotionMaxCount = 3;
 	PotionAmountUpgradeLevel = 0;
 	PotionRecoveryUpgradeLevel = 0;
 	

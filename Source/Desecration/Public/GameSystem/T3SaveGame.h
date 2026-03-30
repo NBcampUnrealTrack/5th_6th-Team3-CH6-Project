@@ -139,11 +139,11 @@ public:
 	
 	//HP포션 개수
 	UPROPERTY()
-	int32 HPPotionCount;
+	int32 HPPotionMaxCount;
 	
 	//MP포션 개수
 	UPROPERTY()
-	int32 MPPotionCount;
+	int32 MPPotionMaxCount;
 	
 	//포션 개수 강화 단계
 	UPROPERTY()
