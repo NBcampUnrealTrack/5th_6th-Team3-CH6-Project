@@ -1,4 +1,3 @@
-© 2025 TriForce Team, NbcampUnreal.5th_6th-Team3-CH6-Project. All rights reserved.
 ![꾸미기 스크린샷 2026-03-30 155629](https://github.com/user-attachments/assets/4d5b8dcb-921d-436b-a8ca-5312db1cc561)
 # Desecration
 
@@ -311,3 +310,5 @@ Source/Desecration/
 - Unreal Engine Documentation
 - State Tree in Unreal Engine
 - Motion Warping in Unreal Engine
+
+© 2025 TriForce Team, NbcampUnreal.5th_6th-Team3-CH6-Project. All rights reserved.
