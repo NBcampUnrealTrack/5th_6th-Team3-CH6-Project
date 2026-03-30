@@ -144,6 +144,9 @@ protected:
 	//설정에서 지정한 내용
 	UPROPERTY()
 	TObjectPtr<class UT3SaveUserSettings> SaveUserSettings;
+	//게임 모드
+	UPROPERTY()
+	TObjectPtr<class AT3GameMode> T3GameMode;
 
 private:
 	bool bIsInventoryOpen = false;
