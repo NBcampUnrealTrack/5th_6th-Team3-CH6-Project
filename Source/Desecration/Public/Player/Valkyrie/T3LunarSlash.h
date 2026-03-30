@@ -20,7 +20,7 @@ public:
 	AT3LunarSlash();
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "LunarSlash")
-	float ExplosionDamage = 50.0f;
+	float ExplosionDamage = 300.0f;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VFX")
 	class UNiagaraComponent* ColdAuraComponent;
@@ -47,7 +47,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LunarSlash")
 	float DamageTickRate = 0.5f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LunarSlash")
-	float DamageRate = 5.0f;
+	float DamageRate = 0.4f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LunarSlash")
+	TObjectPtr<AT3CharacterBase> OwnerChar;
 	
 	FTimerHandle DamageTickTimer;
 	
