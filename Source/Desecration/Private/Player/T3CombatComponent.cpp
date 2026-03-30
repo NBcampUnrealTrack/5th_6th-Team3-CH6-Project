@@ -657,6 +657,8 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 		else
 		{
 			CurrentState = ECharacterCombatState::Dead;
+			// 사망 시 록온 해제
+			ResetLockOn();
 			// 사망 로직 실행
 			OwnerChar->OnDeath();
 			return;
