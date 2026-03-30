@@ -11,6 +11,7 @@
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Blueprint/UserWidget.h"
 #include "GameSystem/T3GameInstance.h"
+#include "GameSystem/T3GameMode.h"
 #include "GameSystem/T3SaveUserSettings.h"
 #include "Item/Component/T3InventoryComponent.h"
 #include "UI/T3PopUpMenu.h"
@@ -114,6 +115,14 @@ void AT3PlayerController::BeginPlay()
 				UE_LOG(LogTemp, Log, TEXT("Your Past Class is: %s"), *ClassName);
 			}
 		}
+	}
+	
+	//게임 모드
+	T3GameMode = Cast<AT3GameMode>(GetWorld()->GetAuthGameMode());
+	if (!T3GameMode)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s : T3GameMode가 null"), *GetNameSafe(this));
+		return;
 	}
 
 	//게임 인스턴스를 통해 설정 가져오기
@@ -336,6 +345,12 @@ void AT3PlayerController::ToggleInventoryInput()
 			
 			SetShowMouseCursor(false);
 			SetInventoryOpen(false);
+			
+			//인벤토리를 닫는 시점에서 인벤토리 저장
+			if (T3GameMode)
+			{
+				T3GameMode->SaveInventoryAndPotionLevel(OwnerChar);
+			}
 		}
 		else if (!MainInventoryWidget->IsVisible() && !bIsShopUIOpen && !bIsUpgradeUIOpen)
 		{
