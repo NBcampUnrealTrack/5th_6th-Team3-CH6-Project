@@ -1,5 +1,5 @@
 © 2025 TriForce Team, NbcampUnreal.5th_6th-Team3-CH6-Project. All rights reserved.
-
+![꾸미기 스크린샷 2026-03-30 155629](https://github.com/user-attachments/assets/4d5b8dcb-921d-436b-a8ca-5312db1cc561)
 # Desecration
 
 > 데몬즈소울과 다크소울 1에서 영감을 받은 소울라이크 3D 액션 RPG  
@@ -100,10 +100,103 @@
 
 ## 🔌 사용 플러그인
 
-- Motion Warping
-- Procedural Vegetation Editor
-- VARCO Sounds
-- IconCreater
+| 플러그인 | 용도 |
+|----------|------|
+| Motion Warping | 공격 및 이동 애니메이션을 상황에 맞게 보정하여 자연스러운 전투 연출 구현 |
+| Procedural Vegetation Editor | 레벨의 지형 및 자연 환경을 효율적으로 배치 |
+| VARCO Sounds | 환경음 및 효과음 제작 |
+| IconCreater | UI 아이콘 및 아이템 아이콘 제작 |
+
+---
+
+## 🛒 사용한 마켓플레이스 에셋
+
+
+### 👤 캐릭터
+
+| 구분 | 에셋 | 링크 |
+|------|------|------|
+| 팔라딘 - 캐릭터 | Dark Knight - Male and Female | https://fab.com/s/057b6c0390a0 |
+| 팔라딘 - 애니메이션 | Sword and Shield Animation Pack | https://fab.com/s/87b75ea1c755 |
+| 팔라딘 - 방패 | Eye Round Shield | https://fab.com/s/b13cf7192edd |
+| 도사 - 캐릭터 | Samurai Ronin (Modular) | https://fab.com/s/fe59137958ea |
+| 도사 - 공격 모션 | Throwing Animation Pack | https://fab.com/s/d63dcd9ac85f |
+| 도사 - 무기 | Folding Fan | https://fab.com/s/3774b006efea |
+| 도사 - 소환수 | Medhue Tiger | https://fab.com/s/acdf31bd9cfa |
+| 발키리 - 캐릭터 | Angel Valkyrie | https://fab.com/s/503640f74a79 |
+| 발키리 - 애니메이션 | Essential Great Sword Animation Pack | https://fab.com/s/04dd2001f4a3 |
+| 공통 - 회복 모션 | Healing Animation Pack | https://fab.com/s/1497aaaf7192 |
+| 공통 - 사다리 모션 | Climbing Ladder Pro - MoCap Animation Pack | https://fab.com/s/9ff3f1cf791b |
+
+
+### 👹 몬스터
+
+| 에셋 | 링크 |
+|------|------|
+| Demon Warrior | https://fab.com/s/40823748700d |
+| Demon Woman | https://fab.com/s/877d7d84d62e |
+| Skeleton Enemy | https://fab.com/s/289262fbdcb9 |
+| Realistic Blood VFX (Niagara Blood Effects) | https://fab.com/s/5eaee75530cf |
+| Death Knight - Armor Fantasy RPG Dungeon Warrior Monster Medieval Boss Character | https://fab.com/s/fd6f35d6fd6d |
+| Bossy Enemy Animation Pack | https://fab.com/s/e96f0bb76c90 |
+
+
+### 👑 보스 몬스터
+
+| 에셋 | 링크 |
+|------|------|
+| Dragon | https://fab.com/s/653e0d985877 |
+| Demon Executioner | https://fab.com/s/547be0d0bee7 |
+| Demon God Raijin 01 | https://fab.com/s/b4a6ae52158a |
+| Fallen Angel | https://fab.com/s/059936bbb76c |
+
+
+### 🗺️ 레벨 / 환경 에셋
+
+#### 메인 맵
+
+| 에셋 | 링크 |
+|------|------|
+| Laketown | https://fab.com/s/5d5a5442f969 |
+| Abandoned Cathedral | https://fab.com/s/2d49121c2c79 |
+| Dark Castle | https://fab.com/s/7a6bd30ef52d |
+| Traditional Chinese Style Park | https://fab.com/s/5762351d4e9b |
+
+#### 지형 / 자연 환경
+
+| 에셋 | 링크 |
+|------|------|
+| Lowpoly Realistic Rock [FREE] | https://fab.com/s/1a5fcb0ca8ad |
+| Rock Environment Pack | https://fab.com/s/02c5961a5c17 |
+| Desert Western Cliff Layered Large 03 | https://fab.com/s/38509138f484 |
+| Quarry Cliff 01 | https://fab.com/s/495fd84fa5a1 |
+| Quarry Cliff 02 | https://fab.com/s/b6072f0676a7 |
+| Quarry Cliff 03 | https://fab.com/s/e70e6da62af1 |
+| Quarry Cliff 04 | https://fab.com/s/77413986a06e |
+| Quarry Cliff 05 | https://fab.com/s/201ca3fbfa11 |
+| YF-Env: Cliff Pine Tree | https://fab.com/s/c90d1a3a229a |
+| Water Environment Essentials | https://fab.com/s/be4af125f3a4 |
+
+#### 오브젝트 / 구조물
+
+| 구분 | 에셋 | 링크 |
+|------|------|------|
+| 포탈 | Stylized Portals VFX | https://fab.com/s/214c449296e2 |
+| 엘리베이터 | Fantasy Elevators | https://fab.com/s/20528c39bbbe |
+| 사다리 | Climbing Ladder Pro - MoCap Animation Pack | https://fab.com/s/9ff3f1cf791b |
+| 발리스타 | Balista Medieval | https://skfb.ly/oSzVV |
+| 바리케이드 | Wooden Barricade | https://skfb.ly/6WUBE |
+| 투석기 | Trebuchet Fantasy | https://skfb.ly/XGTL |
+| 장식용 무기 | Free Fantasy Weapon Sample Pack | https://fab.com/s/f96b04bf745e |
+| 인테리어 가구 | Old West VOL.1 - Interior Furniture | https://fab.com/s/7f2f0af60dd7 |
+| 문 | Door | https://skfb.ly/6ZWw8 |
+| 로프 다리 | Rope Bridges - Dynamic Responsive & Efficient | https://fab.com/s/9ad854b78da5 |
+
+## 📌 에셋 활용 방식
+
+- 모든 캐릭터 및 몬스터 에셋은 프로젝트 콘셉트에 맞게 머티리얼, 애니메이션, 이펙트 등을 수정하여 사용했습니다.
+- 레벨 에셋은 맵 구조에 맞춰 일부 메쉬를 재배치하고, 콜리전 및 라이팅 설정을 추가로 조정했습니다.
+- 애니메이션 에셋은 Motion Warping 및 블렌드 스페이스를 적용하여 보다 자연스럽게 연결되도록 구성했습니다.
 
 ---
 
