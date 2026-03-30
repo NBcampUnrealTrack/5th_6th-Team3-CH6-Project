@@ -419,6 +419,11 @@ void AT3PlayerController::Input_PopupMenu(const FInputActionValue& Value)
 		return;
 	}
 	
+	if (bIsInventoryOpen || bIsShopUIOpen || bIsUpgradeUIOpen)
+	{
+		return;
+	}
+	
 	//플레이어 사망시 무시
 	if (!OwnerChar || OwnerChar->bIsDead)
 	{
