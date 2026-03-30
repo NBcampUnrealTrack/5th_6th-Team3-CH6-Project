@@ -115,6 +115,8 @@ protected:
 	bool bIsKnockback = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	bool bIsLying = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
+	bool bIsRolling = false;
 	
 	void ApplyCharacterData(UT3CharacterDataAsset* Data);
 
@@ -223,14 +225,15 @@ public:
 	FORCEINLINE float GetMaxMana() const { return MaxMana; }
 	FORCEINLINE float GetCurrentMana() const { return CurrentMana; }
 	void SetCurrentMana(float NewMana) { CurrentMana = FMath::Clamp(NewMana, 0.f, MaxMana); BroadcastStatChange(ET3StatType::MP);}
+	void SetMaxMana(float NewMana) { MaxMana = NewMana; BroadcastStatChange(ET3StatType::MP); }
 	void ConsumeMana(float Amount);
-
 
 	// Stamina
 	FORCEINLINE float GetMaxStamina() const { return MaxStamina; }
 	UFUNCTION(BlueprintCallable, Category = "Stat")
 	FORCEINLINE float GetCurrentStamina() const { return CurrentStamina; }
 	void SetCurrentStamina(float NewStamina) { CurrentStamina = FMath::Clamp(NewStamina, 0.f, MaxStamina); BroadcastStatChange(ET3StatType::Stamina);}
+	void SetMaxStamina(float NewStamina) { MaxStamina = NewStamina; BroadcastStatChange(ET3StatType::Stamina); }
 	bool bCanRegenStamina = true;
 
 	// Attack

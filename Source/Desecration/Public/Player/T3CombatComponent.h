@@ -160,6 +160,7 @@ public:
 	void RequestAttackDamage(AActor* TargetActor, float DamageAmount, EHitIntensity Intensity = EHitIntensity::Light, float DamageMultiflier = 1.0f , TSubclassOf<class UT3DamageType_Base> DamageTypeClass = nullptr, float InStunAmount = 0.f, bool bIsBasicAttack = false);
 
 	// 스태미너 소모 함수
+	UFUNCTION(BlueprintCallable)
 	void ConsumeStamina(float Amount);
 
 

@@ -657,6 +657,8 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 		else
 		{
 			CurrentState = ECharacterCombatState::Dead;
+			// 사망 시 록온 해제
+			ResetLockOn();
 			// 사망 로직 실행
 			OwnerChar->OnDeath();
 			return;
@@ -873,7 +875,6 @@ void UT3CombatComponent::ConsumeStamina(float Amount)
 		float NewStamina = OwnerChar->GetCurrentStamina() - Amount;
 		OwnerChar->SetCurrentStamina(NewStamina);
 		UE_LOG(LogTemp, Display, TEXT("Consume Stamina: %.1f, Remaining Stamina: %.1f"), Amount,OwnerChar->GetCurrentStamina());
-
 	}
 }
 
