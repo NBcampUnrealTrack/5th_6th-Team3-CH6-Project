@@ -115,6 +115,8 @@ protected:
 	bool bIsKnockback = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	bool bIsLying = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
+	bool bIsRolling = false;
 	
 	void ApplyCharacterData(UT3CharacterDataAsset* Data);
 

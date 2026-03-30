@@ -436,13 +436,10 @@ void AT3CharacterBase::Roll(const FInputActionValue& Value)
 	
 	OnWakeUp();
 	
-	if (PlayerInputState.bWantsToRoll == false && bIsLying == false && bIsKnockback == false)
+	if (bIsLying == false && bIsKnockback == false)
 	{
-
 		// 스태미나 20 차감
-		Combat->ConsumeStamina(20);
-
-		PlayerInputState.bWantsToRoll = true;
+		//Combat->ConsumeStamina(20);
 		
 		float CurrentAngle = PlayerInputState.InputYawOffset;
 		PlayerInputState.RollDirection = GetRollDirection(CurrentAngle);
