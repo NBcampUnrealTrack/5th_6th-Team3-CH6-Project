@@ -90,7 +90,7 @@ void UT3PlayerEquipmentComponent::EquipArmor(UT3TestItemInstance* NewItem)
 // 세이브/로드 (세이브팀에서 호출)
 // ============================================================================
 
-void UT3PlayerEquipmentComponent::LoadEquipmentFromSave(const FT3ItemSaveData& WeaponData, const FT3ItemSaveData& ArmorData)
+void UT3PlayerEquipmentComponent::LoadEquipmentFromSave(const FT3ItemSaveData& WeaponData, const FT3ItemSaveData& ArmorData, const TArray<FName>& InClassRuneIDs)
 {
 	if (WeaponData.ItemID != NAME_None)
 	{
@@ -108,14 +108,16 @@ void UT3PlayerEquipmentComponent::LoadEquipmentFromSave(const FT3ItemSaveData& W
 
 	WeaponSocketedRuneIDs = WeaponData.SocketedRuneIDs;
 	ArmorSocketedRuneIDs = ArmorData.SocketedRuneIDs;
+	ClassSocketedRuneIDs = InClassRuneIDs;
 
 	RestoreRunes(WeaponSocketedRuneIDs, WeaponActiveRunes);
 	RestoreRunes(ArmorSocketedRuneIDs, ArmorActiveRunes);
+	RestoreRunes(ClassSocketedRuneIDs, ClassActiveRunes);
 	
 	OnRuneSocketChanged.Broadcast();
 }
 
-void UT3PlayerEquipmentComponent::GetEquipmentSaveData(FT3ItemSaveData& OutWeaponData, FT3ItemSaveData& OutArmorData) const
+void UT3PlayerEquipmentComponent::GetEquipmentSaveData(FT3ItemSaveData& OutWeaponData, FT3ItemSaveData& OutArmorData, TArray<FName>& OutClassRuneIDs) const
 {
 	if (WeaponInstance)
 	{
@@ -145,6 +147,7 @@ void UT3PlayerEquipmentComponent::GetEquipmentSaveData(FT3ItemSaveData& OutWeapo
 
 	OutWeaponData.SocketedRuneIDs = WeaponSocketedRuneIDs;
 	OutArmorData.SocketedRuneIDs = ArmorSocketedRuneIDs;
+	OutClassRuneIDs = ClassSocketedRuneIDs;
 }
 
 void UT3PlayerEquipmentComponent::UpdateWeaponVisuals()
