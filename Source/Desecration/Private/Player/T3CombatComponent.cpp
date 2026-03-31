@@ -572,10 +572,10 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 			AT3BossMonster* HitBoss = Cast<AT3BossMonster>(DamageCauser);
 			if (HitBoss) { HitBoss->Damage(0, 10.f); }
 
-			// 팔라딘의 경우 신성게이지 20 증가
+			// 팔라딘의 경우 신성게이지 40 증가
 			if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
 			{
-				SkillComp->AddResource(HolyGaugeChargeAmount);
+				SkillComp->AddResource(40.f);
 			}
 			UE_LOG(LogTemp, Display, TEXT("Parrying!"));
 			// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("Result: [PARRY] - Success!"));
@@ -599,8 +599,8 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 		// 팔라딘이라면 신성 게이지 10 상승
 		if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
 		{
-			SkillComp->AddResource(HolyGaugeChargeAmount / 2.0f);
-			UE_LOG(LogItem, Display, TEXT("신성 게이지 %.1f 상승"), HolyGaugeChargeAmount / 2.0f);
+			SkillComp->AddResource(15.f);
+			UE_LOG(LogItem, Display, TEXT("신성 게이지 %.1f 상승"), 15.f);
 		}
 
 		/*GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow,

@@ -321,7 +321,8 @@ void AT3MidBossMonster::HandlePatternNotify(FName NotifyName)
 		if (AoEPreviewSound)
 		{
 			UGameplayStatics::PlaySoundAtLocation(
-				this, AoEPreviewSound, AoECenter, SoundVolume * AoEPreviewVolumeMultiplier);
+				this, AoEPreviewSound, AoECenter, FRotator::ZeroRotator,
+				SoundVolume * AoEPreviewVolumeMultiplier, 1.f, 0.f, SoundAttenuationSettings);
 		}
 
 		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: GroundSlamPreview — 범위 표시 (반경:%.0f)"), AoERadius);
