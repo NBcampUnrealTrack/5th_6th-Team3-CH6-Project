@@ -272,8 +272,8 @@ void AT3MidBossMonster::BeginDeathSequence()
 	if (DeathSound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(
-			this, DeathSound, GetActorLocation(),
-			SoundVolume * DeathVolumeMultiplier);
+			this, DeathSound, GetActorLocation(), FRotator::ZeroRotator,
+			SoundVolume * DeathVolumeMultiplier, 1.f, 0.f, SoundAttenuationSettings);
 	}
 
 	// BGM 페이드아웃
@@ -399,7 +399,9 @@ void AT3MidBossMonster::StartDissolve()
 	// 디졸브 사운드 재생
 	if (DissolveSound)
 	{
-		UGameplayStatics::PlaySoundAtLocation(this, DissolveSound, GetActorLocation());
+		UGameplayStatics::PlaySoundAtLocation(
+			this, DissolveSound, GetActorLocation(), FRotator::ZeroRotator,
+			SoundVolume, 1.f, 0.f, SoundAttenuationSettings);
 	}
 
 	DissolveTimeline->PlayFromStart();
