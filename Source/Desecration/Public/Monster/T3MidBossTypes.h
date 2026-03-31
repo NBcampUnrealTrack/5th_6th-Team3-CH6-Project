@@ -4,6 +4,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/DataTable.h"
 #include "Player/T3DamageTypes.h"
 #include "T3MidBossTypes.generated.h"
 
@@ -189,12 +190,35 @@ struct FMidBossStats
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float CurrentHP = 1500.f;
 
+	// 공격력 배율 (섹션 Damage × 이 값 = 최종 데미지)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float AttackPower = 20.f;
+	float AttackMultiplier = 1.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float StunThreshold = 100.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float CurrentStunGauge = 0.f;
+};
+
+// ============================================================
+// DataTable Row: 스테이지별 보스 스탯 (RowName = "1", "2", "3" ...)
+// ============================================================
+
+USTRUCT(BlueprintType)
+struct FMidBossStageRow : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	// 최대 체력
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MaxHP = 1500.f;
+
+	// 공격력 배율 (섹션 Damage × 이 값 = 최종 데미지)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float AttackMultiplier = 1.f;
+
+	// 스턴 임계치
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float StunThreshold = 100.f;
 };
