@@ -43,13 +43,18 @@ AT3MidBossSpawner::AT3MidBossSpawner()
 void AT3MidBossSpawner::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
+}
+
+void AT3MidBossSpawner::BeginPlay()
+{
+	Super::BeginPlay();
 
 	if (ObjectID == 0)
 	{
 		return;
 	}
 
-	// BeginPlay보다 먼저 실행 — 다른 액터의 BeginPlay에서 bBossAlreadyDefeated를 안전하게 읽을 수 있음
+	// OnWorldBeginPlay 이후 실행 → ObjectStateData 확실히 초기화된 상태
 	if (const UT3WorldSubsystem* WorldSubsystem = GetWorld()->GetSubsystem<UT3WorldSubsystem>())
 	{
 		const int32 SavedState = WorldSubsystem->GetObjectState(ObjectID);
@@ -57,16 +62,20 @@ void AT3MidBossSpawner::PostInitializeComponents()
 		{
 			bBossAlreadyDefeated = true;
 
+			// 한 프레임 지연 — 모든 액터 BeginPlay 완료 후 브로드캐스트 (BossRoomLock 바인딩 보장)
+			GetWorld()->GetTimerManager().SetTimerForNextTick([WeakThis = TWeakObjectPtr<AT3MidBossSpawner>(this)]()
+			{
+				if (WeakThis.IsValid())
+				{
+					WeakThis->OnBossDied.Broadcast();
+				}
+			});
+
 			UE_LOG(LogDesecration, Log,
-				TEXT("T3_MidBossSpawner: [%s] ObjectID:%d 이미 처치됨 (State:%d) → 플래그 세팅 (PostInitializeComponents)"),
+				TEXT("T3_MidBossSpawner: [%s] ObjectID:%d 이미 처치됨 (State:%d) → 플래그 세팅 + OnBossDied 지연 브로드캐스트 예약"),
 				*GetName(), ObjectID, SavedState);
 		}
 	}
-}
-
-void AT3MidBossSpawner::BeginPlay()
-{
-	Super::BeginPlay();
 }
 
 AT3MidBossMonster* AT3MidBossSpawner::SpawnAndPrepareBoss()
