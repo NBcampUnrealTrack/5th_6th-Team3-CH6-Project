@@ -4,6 +4,7 @@
 #include "Player/T3ANS_Combat.h"
 #include "Player/T3CharacterBase.h"
 #include "Player/T3WeaponBase.h"
+#include "Player/Paladin/T3Paladin_SkillComponent.h"
 
 
 UT3ANS_Combat::UT3ANS_Combat()
@@ -32,7 +33,13 @@ void UT3ANS_Combat::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceB
                 if (TargetWeapon)
                 {
                  TargetWeapon->SetWeaponCollisionEnabled(true, AttackDamageMultiflier, DamageTypeClass, AttackIntensity, StunAmount, StaminaAmount);
-                 Combat->ConsumeStamina(StaminaAmount);
+                 float ActualStaminaCost = StaminaAmount;
+                 UT3Paladin_SkillComponent* PaladinSkill = Char->FindComponentByClass<UT3Paladin_SkillComponent>();
+                 if (PaladinSkill && PaladinSkill->bIsHolyMode)
+                 {
+                     ActualStaminaCost *= 0.5f;
+                 }
+                 Combat->ConsumeStamina(ActualStaminaCost);
                  const FString SlotName = StaticEnum<EEquipSlot>()->GetNameStringByValue((int64)TargetSlot);
                  UE_LOG(LogTemp, Log, TEXT("TargetSlot: %s"), *SlotName);
                 }

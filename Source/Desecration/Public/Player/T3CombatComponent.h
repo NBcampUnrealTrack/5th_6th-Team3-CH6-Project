@@ -280,7 +280,7 @@ public:
 	void SetHolyGaugeChargeAmount(float NewAmount);
 	
 private:
-	float HolyGaugeChargeAmount = 20.f;
+	float HolyGaugeChargeAmount = 40.f;
 	
 #pragma endregion
 
