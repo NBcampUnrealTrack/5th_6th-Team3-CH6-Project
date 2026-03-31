@@ -79,6 +79,8 @@ void UT3SaveGame::ResetGameData()
 	ArmorSaveData.Type = ET3EquipmentType::Armor;
 	ArmorSaveData.SocketedRuneIDs.Empty();
 	
+	ClassSocketedRuneIDs.Empty();
+	
 	//스킬
 	SkillUnlockStates.Empty();
 	CurrentSkillSlot = 1;
