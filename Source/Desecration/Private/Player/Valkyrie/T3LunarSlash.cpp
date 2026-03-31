@@ -17,7 +17,6 @@ AT3LunarSlash::AT3LunarSlash()
 	PrimaryActorTick.bCanEverTick = false;
 	bIsAlreadyExploded = false;
 	
-	OwnerChar = Cast<AT3CharacterBase>(GetOwner());
 	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
 	SphereComponent->InitSphereRadius(500.0f);
 	SphereComponent->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
@@ -125,6 +124,8 @@ void AT3LunarSlash::ExplodeLunarSlash(int32 ChargeLevel)
 void AT3LunarSlash::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	OwnerChar = Cast<AT3CharacterBase>(GetOwner());
 	
 	GetWorldTimerManager().SetTimer(DamageTickTimer, this, &AT3LunarSlash::ApplyDamage, DamageTickRate, true);
 	
