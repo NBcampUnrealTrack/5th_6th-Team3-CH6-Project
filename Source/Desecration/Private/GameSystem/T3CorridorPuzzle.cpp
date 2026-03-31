@@ -240,6 +240,12 @@ void AT3CorridorPuzzle::DestroyBarriers()
 	{
 		if (IsValid(Barrier))
 		{
+			// Wind/Foliage 렌더 크래시 방지
+			Barrier->SetActorHiddenInGame(true);
+			if (Barrier->GetRootComponent())
+			{
+				Barrier->GetRootComponent()->SetVisibility(false, true);
+			}
 			Barrier->Destroy();
 		}
 	}
@@ -270,11 +276,18 @@ void AT3CorridorPuzzle::CompletePuzzle()
 	// 이상현상 액터 정리 (ActorsToShow 스포너 Destroy 포함)
 	for (const FCorridorPuzzleStep& Step : PuzzleSteps)
 	{
-		// 이상현상으로 추가된 액터 → 파괴
+		// 이상현상으로 추가된 액터 → 렌더 스레드 안전 파괴
 		for (AActor* Actor : Step.ActorsToShow)
 		{
 			if (IsValid(Actor))
 			{
+				// Wind/Foliage 렌더 크래시 방지: Visibility 먼저 해제 후 파괴
+				Actor->SetActorHiddenInGame(true);
+				Actor->SetActorEnableCollision(false);
+				if (Actor->GetRootComponent())
+				{
+					Actor->GetRootComponent()->SetVisibility(false, true);
+				}
 				Actor->Destroy();
 			}
 		}
@@ -379,6 +392,8 @@ void AT3CorridorPuzzle::ApplyStepChanges(int32 StepIndex, bool bApply)
 		{
 			Actor->SetActorHiddenInGame(!bApply);
 			Actor->SetActorEnableCollision(bApply);
+			// Wind/Foliage 렌더 크래시 방지: 렌더 스레드에서 완전히 제거
+			Actor->GetRootComponent()->SetVisibility(bApply, true);
 		}
 	}
 
@@ -389,6 +404,8 @@ void AT3CorridorPuzzle::ApplyStepChanges(int32 StepIndex, bool bApply)
 		{
 			Actor->SetActorHiddenInGame(bApply);
 			Actor->SetActorEnableCollision(!bApply);
+			// Wind/Foliage 렌더 크래시 방지: 렌더 스레드에서 완전히 제거
+			Actor->GetRootComponent()->SetVisibility(!bApply, true);
 		}
 	}
 }
