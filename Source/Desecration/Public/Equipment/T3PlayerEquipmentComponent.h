@@ -25,7 +25,7 @@ class DESECRATION_API UT3PlayerEquipmentComponent : public UActorComponent
 public:
 	UT3PlayerEquipmentComponent();
 
-	// 장비 스탯 변경 델리게이트 (캐릭터팀 바인딩용)
+	// 장비 스탯 변경 델리게이트 (캐릭터팀 바인딩용)	
 	// BeginPlay 초기 장착, 강화, 룬 장착 시 자동 발송
 	UPROPERTY(BlueprintAssignable, Category = "Equipment|Events")
 	FOnEquipmentStatsChanged OnEquipmentStatsChanged;
@@ -81,12 +81,18 @@ public:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Rune")
 	TArray<FName> ArmorSocketedRuneIDs;
 
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Rune")
+	TArray<FName> ClassSocketedRuneIDs;
+	
 	// [런타임용] 활성화된 룬 객체 (저장 불필요, Transient)
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UT3RuneBase>> WeaponActiveRunes;
 
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UT3RuneBase>> ArmorActiveRunes;
+	
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UT3RuneBase>> ClassActiveRunes;
 	
 	// ==========================================================
 	// 기능
