@@ -358,8 +358,10 @@ bool UT3PlayerEquipmentComponent::TryUpgrade(ET3EquipmentType TargetType, int32 
 bool UT3PlayerEquipmentComponent::GetSocketedRuneData(ET3EquipmentType EquipmentType, int32 SlotIndex,
 	FT3RuneItemData& OutRuneData) const
 {
-	const TArray<FName>& SocketedIDs = (EquipmentType == ET3EquipmentType::Weapon) ? WeaponSocketedRuneIDs : ArmorSocketedRuneIDs;
-
+	const TArray<FName>& SocketedIDs =
+		(EquipmentType == ET3EquipmentType::Weapon) ? WeaponSocketedRuneIDs :
+		(EquipmentType == ET3EquipmentType::Armor)  ? ArmorSocketedRuneIDs  : ClassSocketedRuneIDs;
+	
 	if (!SocketedIDs.IsValidIndex(SlotIndex))
 	{
 		return false;
@@ -400,10 +402,12 @@ bool UT3PlayerEquipmentComponent::SocketRune(FName RuneID, ET3EquipmentType Targ
 	}
 
 	TArray<FName>& SocketedIDs =
-		(TargetEquipment == ET3EquipmentType::Weapon) ? WeaponSocketedRuneIDs : ArmorSocketedRuneIDs;
+		(TargetEquipment == ET3EquipmentType::Weapon) ? WeaponSocketedRuneIDs :
+		(TargetEquipment == ET3EquipmentType::Armor)  ? ArmorSocketedRuneIDs  : ClassSocketedRuneIDs;
 	
 	TArray<TObjectPtr<UT3RuneBase>>& ActiveRunes =
-		(TargetEquipment == ET3EquipmentType::Weapon) ? WeaponActiveRunes : ArmorActiveRunes;
+		(TargetEquipment == ET3EquipmentType::Weapon) ? WeaponActiveRunes :
+		(TargetEquipment == ET3EquipmentType::Armor)  ? ArmorActiveRunes  : ClassActiveRunes;
 
 	if (SocketedIDs.Num() >= MaxRuneSockets)
 	{
@@ -428,6 +432,13 @@ bool UT3PlayerEquipmentComponent::SocketRune(FName RuneID, ET3EquipmentType Targ
 	if (RuneRow->EquipmentType != TargetEquipment)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("룬 타입이 장비 슬롯과 맞지 않음"));
+		return false;
+	}
+	
+	if (TargetEquipment == ET3EquipmentType::ClassSpecific && RuneRow->RequiredClass != ECharacterClass::None
+	&& OwnerCharacter->GetCurrentClass() != RuneRow->RequiredClass)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("직업 전용 룬: 직업이 맞지 않음"));
 		return false;
 	}
 	
@@ -459,10 +470,12 @@ bool UT3PlayerEquipmentComponent::SocketRune(FName RuneID, ET3EquipmentType Targ
 bool UT3PlayerEquipmentComponent::UnsocketRune(FName RuneID, ET3EquipmentType TargetEquipment)
 {
 	TArray<FName>& SocketedIDs =
-		(TargetEquipment ==	ET3EquipmentType::Weapon) ? WeaponSocketedRuneIDs : ArmorSocketedRuneIDs;
-	
+		(TargetEquipment == ET3EquipmentType::Weapon) ? WeaponSocketedRuneIDs :
+		(TargetEquipment == ET3EquipmentType::Armor)  ? ArmorSocketedRuneIDs  : ClassSocketedRuneIDs;
+
 	TArray<TObjectPtr<UT3RuneBase>>& ActiveRunes =
-		(TargetEquipment == ET3EquipmentType::Weapon) ? WeaponActiveRunes : ArmorActiveRunes;
+		(TargetEquipment == ET3EquipmentType::Weapon) ? WeaponActiveRunes :
+		(TargetEquipment == ET3EquipmentType::Armor)  ? ArmorActiveRunes  : ClassActiveRunes;
 
 	int32 Index = SocketedIDs.Find(RuneID);
 

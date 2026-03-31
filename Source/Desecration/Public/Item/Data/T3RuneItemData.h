@@ -5,6 +5,7 @@
 #include "T3ItemBaseData.h"
 #include "Item/Rune/T3RuneBase.h"
 #include "Equipment/T3EquipmentTypes.h"
+#include "Player/T3PlayerInputState.h"
 #include "T3RuneItemData.generated.h"
 
 USTRUCT(BlueprintType)
@@ -20,6 +21,9 @@ struct FT3RuneItemData : public FTableRowBase
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rune")
 	ET3EquipmentType EquipmentType = ET3EquipmentType::Weapon;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rune", meta = (EditCondition = "EquipmentType == ET3EquipmentType::ClassSpecific"))
+	ECharacterClass RequiredClass = ECharacterClass::None;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Synthesis")
 	ET3RuneGrade RuneGrade = ET3RuneGrade::Normal;

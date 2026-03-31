@@ -18,6 +18,7 @@
 class UT3BossWeaponComponent;
 class UT3MidBossHPBarWidget;
 class UCurveFloat;
+class USoundAttenuation;
 class UAudioComponent;
 class UWidgetComponent;
 
@@ -416,6 +417,10 @@ public:
 	void StartDissolve();
 
 	// --- 사운드 ---
+	// 거리 감쇠 설정 (nullptr이면 감쇠 없이 글로벌 재생)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound")
+	TObjectPtr<USoundAttenuation> SoundAttenuationSettings;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Sound")
 	float SoundVolume = 1.0f;
 

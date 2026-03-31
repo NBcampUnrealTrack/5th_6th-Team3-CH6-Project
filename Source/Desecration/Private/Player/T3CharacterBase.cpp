@@ -520,12 +520,12 @@ void AT3CharacterBase::RegenerateStamina()
 
 	if (!bCanRegenStamina || PlayerInputState.bIsBlocking) // 공격, 구르기, 막기 중 스태미너 소량 회복
 	{
-		AddStamina(StaminaRegenLowRate * StaminaRegenInterval);
+		AddStamina(MaxStamina * 0.05f * StaminaRegenInterval);
 	}
 
 	else if (CurrentStamina < MaxStamina)
 	{
-		AddStamina(StaminaRegenRate * StaminaRegenInterval);
+		AddStamina(MaxStamina * 0.25f * StaminaRegenInterval);
 	}
 }
 

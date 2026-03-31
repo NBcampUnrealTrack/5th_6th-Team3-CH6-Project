@@ -9,7 +9,8 @@ enum class ET3EquipmentType : uint8
 {
 	Weapon,
 	Armor,
-	Rune
+	Rune,
+	ClassSpecific
 };
 
 // 강화석 등급
