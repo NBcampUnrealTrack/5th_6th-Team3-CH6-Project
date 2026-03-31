@@ -8,8 +8,10 @@ FReply UT3RuneSocketSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeome
 	{
 		if (IsValid(EquipmentComponent))
 		{
-			const TArray<FName>& SocketedIDs = (TargetEquipmentType == ET3EquipmentType::Weapon)
-				? EquipmentComponent->WeaponSocketedRuneIDs : EquipmentComponent->ArmorSocketedRuneIDs;
+			const TArray<FName>& SocketedIDs =
+				(TargetEquipmentType == ET3EquipmentType::Weapon) ? EquipmentComponent->WeaponSocketedRuneIDs :
+				(TargetEquipmentType == ET3EquipmentType::Armor)  ? EquipmentComponent->ArmorSocketedRuneIDs :
+																	EquipmentComponent->ClassSocketedRuneIDs;
 
 			if (SocketedIDs.Num() > 0)
 			{
@@ -26,8 +28,10 @@ FReply UT3RuneSocketSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeome
 			return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 		}
 
-		const TArray<FName>& SocketedIDs = (TargetEquipmentType == ET3EquipmentType::Weapon)
-			? EquipmentComponent->WeaponSocketedRuneIDs : EquipmentComponent->ArmorSocketedRuneIDs;
+		const TArray<FName>& SocketedIDs =
+			(TargetEquipmentType == ET3EquipmentType::Weapon) ? EquipmentComponent->WeaponSocketedRuneIDs :
+			(TargetEquipmentType == ET3EquipmentType::Armor)  ? EquipmentComponent->ArmorSocketedRuneIDs :
+																EquipmentComponent->ClassSocketedRuneIDs;
 
 		if (SocketedIDs.Num() == 0)
 		{
@@ -51,8 +55,10 @@ void UT3RuneSocketSlotWidget::NativeOnDragDetected(const FGeometry& InGeometry, 
 		return;
 	}
 
-	const TArray<FName>& SocketedIDs = (TargetEquipmentType == ET3EquipmentType::Weapon)
-		? EquipmentComponent->WeaponSocketedRuneIDs	: EquipmentComponent->ArmorSocketedRuneIDs;
+	const TArray<FName>& SocketedIDs =
+		(TargetEquipmentType == ET3EquipmentType::Weapon) ? EquipmentComponent->WeaponSocketedRuneIDs :
+		(TargetEquipmentType == ET3EquipmentType::Armor)  ? EquipmentComponent->ArmorSocketedRuneIDs :
+															EquipmentComponent->ClassSocketedRuneIDs;
 
 	if (SocketedIDs.Num() == 0)
 	{
