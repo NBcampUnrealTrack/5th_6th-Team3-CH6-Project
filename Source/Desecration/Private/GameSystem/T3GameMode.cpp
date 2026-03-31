@@ -488,8 +488,6 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 	if (UT3PlayerEquipmentComponent* EquipComp = Character->FindComponentByClass<UT3PlayerEquipmentComponent>())
 	{
 		EquipComp->LoadEquipmentFromSave(SaveGame->WeaponSaveData, SaveGame->ArmorSaveData, SaveGame->ClassSocketedRuneIDs);
-		
-		EquipComp->OnRuneSocketChanged.Broadcast();
 	}
 	
 	//스킬

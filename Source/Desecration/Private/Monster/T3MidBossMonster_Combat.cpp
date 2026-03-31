@@ -325,7 +325,7 @@ void AT3MidBossMonster::ExecuteAoEDamage(float Radius, float DamageAmount, EHitI
 
 		FT3DamageEvent DamageEvent(DamageTypeClass);
 		DamageEvent.HitIntensity = Intensity;
-		DamageEvent.HitDamageMultiplier = 1.0f;
+		DamageEvent.HitDamageMultiplier = MidBossStats.AttackMultiplier;
 
 		HitActor->TakeDamage(DamageAmount, DamageEvent, GetController(), this);
 
