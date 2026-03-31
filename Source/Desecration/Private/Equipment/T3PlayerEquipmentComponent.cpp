@@ -548,6 +548,7 @@ void UT3PlayerEquipmentComponent::RestoreRunes(const TArray<FName>& RuneIDs, TAr
 		}
 
 		UT3RuneBase* NewRune = NewObject<UT3RuneBase>(this, RuneRow->RuneLogicClass);
+		NewRune->SetGrade(RuneRow->RuneGrade);
 		OutActiveRunes.Add(NewRune);
 		NewRune->OnSocketed(OwnerCharacter);
 	}
