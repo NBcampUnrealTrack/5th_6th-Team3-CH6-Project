@@ -27,7 +27,7 @@ void UT3SaveGame::ResetGameData()
 	CurrentMana = MaxMana;
 	MaxStamina = 100.0f;
 	CurrentStamina = MaxStamina;
-	StatAttackPower = 5.0f;
+	StatAttackPower = 0.0;
 	WeaponAttackPower = 45.0f;
 	RuneAttackPower = 0.0f;
 	CriticalChance = 0.1f;

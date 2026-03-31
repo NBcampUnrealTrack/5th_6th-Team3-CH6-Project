@@ -138,7 +138,7 @@ void UT3CombatComponent::StartBlock()
 {
 	// 1. 조건 체크 (스태미너 등)
 	if (!OwnerChar || OwnerChar->GetCurrentStamina() < 50.f) return;
-	if (CurrentState != ECharacterCombatState::Idle || !bCanBlock) return;
+	if (CurrentState != ECharacterCombatState::Idle || !bCanBlock || OwnerChar->PlayerInputState.bIsAttacking) return;
 
 	// 2. 즉시 막기 상태로 전환
 	CurrentState = ECharacterCombatState::Blocking;
