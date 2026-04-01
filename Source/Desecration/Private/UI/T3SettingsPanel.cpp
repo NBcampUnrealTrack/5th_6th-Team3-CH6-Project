@@ -146,7 +146,8 @@ void UT3SettingsPanel::OpenSettingsPanel()
 	}
 	
 	//1번째 위젯을 연다.
-	OnClickTabButton(0);
+	//TODO : 버그 수정 후 첫 번째(0)를 여는 것으로 수정
+	OnClickTabButton(1);
 	
 	//패널 활성화
 	SetVisibility(ESlateVisibility::Visible);
