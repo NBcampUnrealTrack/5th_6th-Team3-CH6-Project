@@ -894,8 +894,13 @@ void UT3CombatComponent::ChangeActiveSlot(ESlotType Type)
 		int32 S2_ID = SkillComp->GetSkillIDBySlotIndex(2);
 
 		// GetSkillDataByID가 Const 포인터나 레퍼런스를 반환하는지 확인 필수
-		SkillComp->OnSkillSlotUpdated.Broadcast(1, S1_ID, *SkillComp->GetSkillDataByID(S1_ID));
-		SkillComp->OnSkillSlotUpdated.Broadcast(2, S2_ID, *SkillComp->GetSkillDataByID(S2_ID));
+		FSkillData* Data1 = SkillComp->GetSkillDataByID(S1_ID);
+		FSkillData SafeData1 = Data1 ? *Data1 : FSkillData();
+		SkillComp->OnSkillSlotUpdated.Broadcast(1, S1_ID, SafeData1);
+
+		FSkillData* Data2 = SkillComp->GetSkillDataByID(S2_ID);
+		FSkillData SafeData2 = Data2 ? *Data2 : FSkillData();
+		SkillComp->OnSkillSlotUpdated.Broadcast(2, S2_ID, SafeData2);
 	}
 }
 

@@ -567,7 +567,7 @@ void AT3MidBossMonster::GetCurrentHitData(float& OutDamage, EHitIntensity& OutIn
 	}
 
 	const FPatternMontageData& MontageData = PatternData->MontageChain[CurrentChainIndex];
-	OutDamage = MontageData.Damage * MidBossStats.AttackMultiplier;
+	OutDamage = MontageData.Damage;
 	OutIntensity = MontageData.HitIntensity;
 	OutDamageType = MontageData.DamageTypeClass;
 }
