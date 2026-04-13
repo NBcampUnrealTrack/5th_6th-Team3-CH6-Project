@@ -4,6 +4,7 @@
 #include "Player/Valkyrie/T3Valkyrie_SkillComponent.h"
 
 #include "Desecration.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Player/Valkyrie/T3LunarSlash.h"
 #include "Player/T3CharacterBase.h"
 #include "Player/T3CombatComponent.h"
@@ -25,6 +26,17 @@ void UT3Valkyrie_SkillComponent::StartCharge()
     if (bIsCharging) return;
     
     bIsCharging = true;
+    
+    if (OwnerChar && OwnerChar->GetCharacterMovement())
+    {
+        OwnerChar->GetCharacterMovement()->bAllowPhysicsRotationDuringAnimRootMotion = true;
+        if (!OwnerChar->PlayerInputState.bIsLockOn)
+        {
+            OwnerChar->bUseControllerRotationYaw=true;
+            OwnerChar->GetCharacterMovement()->bOrientRotationToMovement = false;
+        }
+    }
+    
     bHasRelease = false;
     ChargingLevel = 0;
     
@@ -55,6 +67,16 @@ void UT3Valkyrie_SkillComponent::EndCharging()
     GetWorld()->GetTimerManager().ClearTimer(ChargingTimerHandle);
     GetWorld()->GetTimerManager().ClearTimer(MaxChargingTimerHandle);
     bHasRelease = true;
+    
+    if (OwnerChar && OwnerChar->GetCharacterMovement())
+    {
+        OwnerChar->GetCharacterMovement()->bAllowPhysicsRotationDuringAnimRootMotion = false;
+        if (!OwnerChar->PlayerInputState.bIsLockOn)
+        {
+            OwnerChar->bUseControllerRotationYaw = false;
+            OwnerChar->GetCharacterMovement()->bOrientRotationToMovement = true;
+        }
+    }
     OnEndCharging();
 }
 
@@ -65,6 +87,15 @@ void UT3Valkyrie_SkillComponent::MaxCharging()
     GetWorld()->GetTimerManager().ClearTimer(MaxChargingTimerHandle);
     
     bHasRelease = true;
+    if (OwnerChar && OwnerChar->GetCharacterMovement())
+    {
+        OwnerChar->GetCharacterMovement()->bAllowPhysicsRotationDuringAnimRootMotion = false;
+        if (!OwnerChar->PlayerInputState.bIsLockOn)
+        {
+            OwnerChar->bUseControllerRotationYaw = false;
+            OwnerChar->GetCharacterMovement()->bOrientRotationToMovement = true;
+        }
+    }
     OnEndCharging();
 }
 

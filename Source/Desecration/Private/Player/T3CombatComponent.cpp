@@ -138,7 +138,7 @@ void UT3CombatComponent::StartBlock()
 {
 	// 1. 조건 체크 (스태미너 등)
 	if (!OwnerChar || OwnerChar->GetCurrentStamina() < 50.f) return;
-	if (CurrentState != ECharacterCombatState::Idle || !bCanBlock) return;
+	if (CurrentState != ECharacterCombatState::Idle || !bCanBlock || OwnerChar->PlayerInputState.bIsAttacking) return;
 
 	// 2. 즉시 막기 상태로 전환
 	CurrentState = ECharacterCombatState::Blocking;
@@ -572,7 +572,7 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 			AT3BossMonster* HitBoss = Cast<AT3BossMonster>(DamageCauser);
 			if (HitBoss) { HitBoss->Damage(0, 10.f); }
 
-			// 팔라딘의 경우 신성게이지 20 증가
+			// 팔라딘의 경우 신성게이지 40 증가
 			if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
 			{
 				SkillComp->AddResource(HolyGaugeChargeAmount);
@@ -599,8 +599,8 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 		// 팔라딘이라면 신성 게이지 10 상승
 		if (OwnerChar->GetCurrentClass() == ECharacterClass::Paladin)
 		{
-			SkillComp->AddResource(HolyGaugeChargeAmount / 2.0f);
-			UE_LOG(LogItem, Display, TEXT("신성 게이지 %.1f 상승"), HolyGaugeChargeAmount / 2.0f);
+			SkillComp->AddResource(HolyGaugeChargeAmount * 3.0f / 8.0f);
+			UE_LOG(LogItem, Display, TEXT("신성 게이지 %.1f 상승"), HolyGaugeChargeAmount * 3.0f / 8.0f);
 		}
 
 		/*GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow,
@@ -894,8 +894,13 @@ void UT3CombatComponent::ChangeActiveSlot(ESlotType Type)
 		int32 S2_ID = SkillComp->GetSkillIDBySlotIndex(2);
 
 		// GetSkillDataByID가 Const 포인터나 레퍼런스를 반환하는지 확인 필수
-		SkillComp->OnSkillSlotUpdated.Broadcast(1, S1_ID, *SkillComp->GetSkillDataByID(S1_ID));
-		SkillComp->OnSkillSlotUpdated.Broadcast(2, S2_ID, *SkillComp->GetSkillDataByID(S2_ID));
+		FSkillData* Data1 = SkillComp->GetSkillDataByID(S1_ID);
+		FSkillData SafeData1 = Data1 ? *Data1 : FSkillData();
+		SkillComp->OnSkillSlotUpdated.Broadcast(1, S1_ID, SafeData1);
+
+		FSkillData* Data2 = SkillComp->GetSkillDataByID(S2_ID);
+		FSkillData SafeData2 = Data2 ? *Data2 : FSkillData();
+		SkillComp->OnSkillSlotUpdated.Broadcast(2, S2_ID, SafeData2);
 	}
 }
 

@@ -73,11 +73,15 @@ public:
 	// 스테이지 & 스탯 주입
 	// ============================================================
 
-	/** 이 맵의 보스 스테이지 (패턴 해금 기준) */
+	/** 이 맵의 보스 스테이지 (패턴 해금 기준, DataTable RowName으로도 사용) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBossSpawner|Stage")
 	int32 BossStage = 1;
 
-	/** 스테이지별 스탯 오버라이드 */
+	/** 스테이지별 스탯 데이터 테이블 (FMidBossStageRow) — 설정 시 BossStage로 행 조회하여 자동 적용 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBossSpawner|Stage")
+	TObjectPtr<UDataTable> StageDataTable;
+
+	/** 수동 스탯 오버라이드 (StageDataTable 미설정 시 사용) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBossSpawner|Stage")
 	FMidBossStats StatsOverride;
 

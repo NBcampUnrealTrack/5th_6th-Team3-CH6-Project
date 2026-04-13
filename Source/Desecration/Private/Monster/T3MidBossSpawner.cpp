@@ -43,13 +43,18 @@ AT3MidBossSpawner::AT3MidBossSpawner()
 void AT3MidBossSpawner::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
+}
+
+void AT3MidBossSpawner::BeginPlay()
+{
+	Super::BeginPlay();
 
 	if (ObjectID == 0)
 	{
 		return;
 	}
 
-	// BeginPlay보다 먼저 실행 — 다른 액터의 BeginPlay에서 bBossAlreadyDefeated를 안전하게 읽을 수 있음
+	// OnWorldBeginPlay 이후 실행 → ObjectStateData 확실히 초기화된 상태
 	if (const UT3WorldSubsystem* WorldSubsystem = GetWorld()->GetSubsystem<UT3WorldSubsystem>())
 	{
 		const int32 SavedState = WorldSubsystem->GetObjectState(ObjectID);
@@ -57,16 +62,20 @@ void AT3MidBossSpawner::PostInitializeComponents()
 		{
 			bBossAlreadyDefeated = true;
 
+			// 한 프레임 지연 — 모든 액터 BeginPlay 완료 후 브로드캐스트 (BossRoomLock 바인딩 보장)
+			GetWorld()->GetTimerManager().SetTimerForNextTick([WeakThis = TWeakObjectPtr<AT3MidBossSpawner>(this)]()
+			{
+				if (WeakThis.IsValid())
+				{
+					WeakThis->OnBossDied.Broadcast();
+				}
+			});
+
 			UE_LOG(LogDesecration, Log,
-				TEXT("T3_MidBossSpawner: [%s] ObjectID:%d 이미 처치됨 (State:%d) → 플래그 세팅 (PostInitializeComponents)"),
+				TEXT("T3_MidBossSpawner: [%s] ObjectID:%d 이미 처치됨 (State:%d) → 플래그 세팅 + OnBossDied 지연 브로드캐스트 예약"),
 				*GetName(), ObjectID, SavedState);
 		}
 	}
-}
-
-void AT3MidBossSpawner::BeginPlay()
-{
-	Super::BeginPlay();
 }
 
 AT3MidBossMonster* AT3MidBossSpawner::SpawnAndPrepareBoss()
@@ -113,6 +122,28 @@ AT3MidBossMonster* AT3MidBossSpawner::SpawnAndPrepareBoss()
 	// 스테이지 주입
 	SpawnedBoss->BossStage = BossStage;
 
+	// DataTable이 설정되어 있으면 BossStage를 RowName으로 스탯 조회
+	if (StageDataTable)
+	{
+		const FString RowName = FString::FromInt(BossStage);
+		if (const FMidBossStageRow* Row = StageDataTable->FindRow<FMidBossStageRow>(FName(*RowName), TEXT("MidBossSpawner")))
+		{
+			StatsOverride.MaxHP = Row->MaxHP;
+			StatsOverride.AttackMultiplier = Row->AttackMultiplier;
+			StatsOverride.StunThreshold = Row->StunThreshold;
+
+			UE_LOG(LogDesecration, Log,
+				TEXT("T3_MidBossSpawner: [%s] DataTable Row '%s' 로드 — HP:%.0f, AtkMul:%.2f, Stun:%.0f"),
+				*GetName(), *RowName, Row->MaxHP, Row->AttackMultiplier, Row->StunThreshold);
+		}
+		else
+		{
+			UE_LOG(LogDesecration, Warning,
+				TEXT("T3_MidBossSpawner: [%s] DataTable에서 Row '%s' 찾기 실패 — StatsOverride 수동값 사용"),
+				*GetName(), *RowName);
+		}
+	}
+
 	// 스탯 주입 (CurrentHP를 MaxHP에 맞춤)
 	StatsOverride.CurrentHP = StatsOverride.MaxHP;
 	StatsOverride.CurrentStunGauge = 0.f;
@@ -128,8 +159,8 @@ AT3MidBossMonster* AT3MidBossSpawner::SpawnAndPrepareBoss()
 	OnBossSpawned.Broadcast(SpawnedBoss);
 
 	UE_LOG(LogDesecration, Log,
-		TEXT("T3_MidBossSpawner: [%s] 보스 스폰 완료 — Stage:%d, HP:%.0f, ATK:%.0f"),
-		*GetName(), BossStage, StatsOverride.MaxHP, StatsOverride.AttackPower);
+		TEXT("T3_MidBossSpawner: [%s] 보스 스폰 완료 — Stage:%d, HP:%.0f, AtkMul:%.2f, Stun:%.0f"),
+		*GetName(), BossStage, StatsOverride.MaxHP, StatsOverride.AttackMultiplier, StatsOverride.StunThreshold);
 
 	return SpawnedBoss;
 }

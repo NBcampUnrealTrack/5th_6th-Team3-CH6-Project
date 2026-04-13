@@ -71,8 +71,8 @@ void AT3MidBossMonster::ApplyDamageToMidBoss(float DamageAmount, float StunAmoun
 		if (CurrentTime - LastHitSoundTime >= HitSoundMinInterval)
 		{
 			UGameplayStatics::PlaySoundAtLocation(
-				this, HitSound, GetActorLocation(),
-				SoundVolume * HitVolumeMultiplier);
+				this, HitSound, GetActorLocation(), FRotator::ZeroRotator,
+				SoundVolume * HitVolumeMultiplier, 1.f, 0.f, SoundAttenuationSettings);
 			LastHitSoundTime = CurrentTime;
 		}
 	}
@@ -209,8 +209,8 @@ void AT3MidBossMonster::ApplyStun()
 	if (StunSound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(
-			this, StunSound, GetActorLocation(),
-			SoundVolume * StunVolumeMultiplier);
+			this, StunSound, GetActorLocation(), FRotator::ZeroRotator,
+			SoundVolume * StunVolumeMultiplier, 1.f, 0.f, SoundAttenuationSettings);
 	}
 
 	OnMidBossStun.Broadcast();
@@ -325,7 +325,7 @@ void AT3MidBossMonster::ExecuteAoEDamage(float Radius, float DamageAmount, EHitI
 
 		FT3DamageEvent DamageEvent(DamageTypeClass);
 		DamageEvent.HitIntensity = Intensity;
-		DamageEvent.HitDamageMultiplier = 1.0f;
+		DamageEvent.HitDamageMultiplier = MidBossStats.AttackMultiplier;
 
 		HitActor->TakeDamage(DamageAmount, DamageEvent, GetController(), this);
 
@@ -344,7 +344,8 @@ void AT3MidBossMonster::ExecuteAoEDamage(float Radius, float DamageAmount, EHitI
 	if (AoESound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(
-			this, AoESound, AoECenter, SoundVolume * AoEVolumeMultiplier);
+			this, AoESound, AoECenter, FRotator::ZeroRotator,
+			SoundVolume * AoEVolumeMultiplier, 1.f, 0.f, SoundAttenuationSettings);
 	}
 
 	// 카메라 쉐이크
@@ -513,7 +514,8 @@ void AT3MidBossMonster::ExecuteParryCounter(AActor* ParriedAttacker)
 	if (ParrySound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(
-			this, ParrySound, GetActorLocation(), SoundVolume * ParryVolumeMultiplier);
+			this, ParrySound, GetActorLocation(), FRotator::ZeroRotator,
+			SoundVolume * ParryVolumeMultiplier, 1.f, 0.f, SoundAttenuationSettings);
 	}
 
 	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 패링 반격 — Slow 해제, 몽타주 이어서 재생"));

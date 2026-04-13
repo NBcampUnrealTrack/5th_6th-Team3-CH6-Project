@@ -1095,4 +1095,6 @@ void UT3InventoryComponent::LoadPotionUpgradeLevel(int32 AmountLevel, int32 Reco
 {
 	PotionAmountUpgradeLevel = AmountLevel;
 	PotionRecoveryUpgradeLevel = RecoveryLevel;
+	
+	OnPotionUpgraded.Broadcast();
 }
