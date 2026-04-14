@@ -542,6 +542,24 @@ bool UT3PlayerEquipmentComponent::SocketRuneAuto(FName RuneID)
 	return SocketRune(RuneID, RuneRow->EquipmentType);
 }
 
+void UT3PlayerEquipmentComponent::ResetRunesForNewRun()
+{
+	auto ResetArray = [](TArray<TObjectPtr<UT3RuneBase>>& Runes)
+	{
+		for (TObjectPtr<UT3RuneBase>& Rune : Runes)
+		{
+			if (Rune)
+			{
+				Rune->ResetCooldown();
+			}
+		}
+	};
+
+	ResetArray(WeaponActiveRunes);
+	ResetArray(ArmorActiveRunes);
+	ResetArray(ClassActiveRunes);
+}
+
 void UT3PlayerEquipmentComponent::RestoreRunes(const TArray<FName>& RuneIDs, TArray<TObjectPtr<UT3RuneBase>>& OutActiveRunes)
 {
 	OutActiveRunes.Empty();
