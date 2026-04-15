@@ -18,7 +18,7 @@ class DESECRATION_API UT3SelectClassWidget : public UUserWidget
 	GENERATED_BODY()
 	
 protected:
-	virtual void NativeConstruct() override;
+	virtual void NativeOnInitialized() override;
 	
 public:
 	//이름 입력 패널 활성화 여부

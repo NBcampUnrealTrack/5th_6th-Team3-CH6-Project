@@ -7,9 +7,9 @@
 #include "GameSystem/T3GameInstance.h"
 #include "UI/T3SettingsPanelCategory.h"
 
-void UT3SettingsPanel::NativeConstruct()
+void UT3SettingsPanel::NativeOnInitialized()
 {
-	Super::NativeConstruct();
+	Super::NativeOnInitialized();
 	
 	//게임 인스턴스
 	T3GameInstance = Cast<UT3GameInstance>(GetGameInstance());
@@ -34,7 +34,7 @@ void UT3SettingsPanel::NativeConstruct()
 		//각 범주별 초기화 진행
 		CategoryWidget->T3GameInstance = T3GameInstance;
 		CategoryWidget->SettingsPanel = this;
-		CategoryWidget->CustomNativeConstruct();
+		CategoryWidget->CustomNativeOnInitialized();
 	}
 	
 	//상단 탭 버튼

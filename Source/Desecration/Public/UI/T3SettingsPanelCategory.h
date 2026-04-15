@@ -14,8 +14,8 @@ class DESECRATION_API UT3SettingsPanelCategory : public UUserWidget
 	friend UT3SettingsPanel;
 	
 protected:
-	//부모인 설정 패널에 의해 시작하는 NativeConstruct
-	virtual void CustomNativeConstruct() PURE_VIRTUAL(UT3SettingsPanelCategory::CustomNativeConstruct, );
+	//부모인 설정 패널에 의해 시작하는 NativeOnInitialized
+	virtual void CustomNativeOnInitialized() PURE_VIRTUAL(UT3SettingsPanelCategory::CustomNativeOnInitialized, );
 	
 	//설정 화면을 열 때마다 실행하는 초기화
 	virtual void InitializeSettingsPanel() PURE_VIRTUAL(UT3SettingsPanelCategory::InitializeSettingsPanel, );
