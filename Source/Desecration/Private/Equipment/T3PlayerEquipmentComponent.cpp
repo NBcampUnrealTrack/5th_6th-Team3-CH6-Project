@@ -113,7 +113,7 @@ void UT3PlayerEquipmentComponent::LoadEquipmentFromSave(const FT3ItemSaveData& W
 	RestoreRunes(WeaponSocketedRuneIDs, WeaponActiveRunes);
 	RestoreRunes(ArmorSocketedRuneIDs, ArmorActiveRunes);
 	RestoreRunes(ClassSocketedRuneIDs, ClassActiveRunes);
-	
+
 	OnRuneSocketChanged.Broadcast();
 }
 
@@ -364,7 +364,7 @@ bool UT3PlayerEquipmentComponent::GetSocketedRuneData(ET3EquipmentType Equipment
 	const TArray<FName>& SocketedIDs =
 		(EquipmentType == ET3EquipmentType::Weapon) ? WeaponSocketedRuneIDs :
 		(EquipmentType == ET3EquipmentType::Armor)  ? ArmorSocketedRuneIDs  : ClassSocketedRuneIDs;
-	
+
 	if (!SocketedIDs.IsValidIndex(SlotIndex))
 	{
 		return false;

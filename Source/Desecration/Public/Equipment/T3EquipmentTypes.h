@@ -9,7 +9,6 @@ enum class ET3EquipmentType : uint8
 {
 	Weapon,
 	Armor,
-	Rune,
 	ClassSpecific
 };
 
