@@ -135,6 +135,21 @@ float UT3UndyingRune::GetCooldownRemaining() const
 	return CachedOwner->GetWorldTimerManager().GetTimerRemaining(CooldownTimerHandle);
 }
 
+void UT3UndyingRune::ResetCooldown()
+{
+	if (CachedOwner.IsValid())
+	{
+		CachedOwner->GetWorldTimerManager().ClearTimer(CooldownTimerHandle);
+	}
+
+	bIsCooldown = false;
+
+	if (bIsSocketed && CachedOwner.IsValid())
+	{
+		CachedOwner->SetIsUndyingState(true);
+	}
+}
+
 void UT3UndyingRune::RestoreCooldown(float RemainingTime)
 {
 	if (RemainingTime <= 0.f || !CachedOwner.IsValid())

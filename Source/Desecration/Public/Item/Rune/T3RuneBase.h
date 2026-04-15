@@ -27,6 +27,8 @@ public:
 	
 	virtual void RestoreCooldown(float RemainingTime);
 
+	virtual void ResetCooldown() {}
+
 protected:
 	float ValueByGrade = 0.0f;
 };
