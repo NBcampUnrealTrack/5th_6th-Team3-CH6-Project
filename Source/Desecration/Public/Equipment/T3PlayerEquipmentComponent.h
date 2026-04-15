@@ -161,7 +161,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Rune")
 	bool SocketRuneAuto(FName RuneID);
-	
+
+	void ResetRunesForNewRun();
+
 private:
 	TMap<TSubclassOf<UT3RuneBase>, float> RuneCooldownEndTimeMap;
 	
