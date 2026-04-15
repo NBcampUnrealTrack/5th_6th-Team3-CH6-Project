@@ -67,12 +67,20 @@ class DESECRATION_API UT3SkillComponentBase : public UActorComponent
     GENERATED_BODY()
 
 public:
-    // 슬롯 1, 2에 장착된 스킬 번호 -> 스킬 갈아끼울때 여기만 수정하면 된다. 기본 빈스킬.
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill")
-    int32 CurrentSkillSlot = 1; // 메인 슬롯
+    // 최대 장착 가능 스킬 수
+    static constexpr int32 MAX_SKILL_SLOTS = 4;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill")
-    int32 NextSkillSlot = 2; // 서브 슬롯
+    // 장착된 스킬 ID 배열 (최대 4개). [0]이 항상 현재 활성 슬롯.
+    // SwapSkills() 호출 시 [0]이 뒤로 순환: [A,B,C,D] → [B,C,D,A]
+    UPROPERTY(BlueprintReadOnly, Category = "Skill")
+    TArray<int32> EquippedSkillIDs;
+
+    // BP 호환 getter - HUD 위젯에서 현재/다음 슬롯을 가져올 때 사용
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Skill")
+    int32 GetCurrentSkillSlot() const { return EquippedSkillIDs.IsValidIndex(0) ? EquippedSkillIDs[0] : 0; }
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Skill")
+    int32 GetNextSkillSlot() const { return EquippedSkillIDs.IsValidIndex(1) ? EquippedSkillIDs[1] : 0; }
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill")
     bool bUsingSkill = false;
@@ -88,12 +96,14 @@ public:
     UPROPERTY(BlueprintAssignable, Category = "Events")
     FOnSkillSlotUpdated OnSkillSlotUpdated;
     
-    // UI팀이 현재 장착된 모든 스킬 정보를 한 번에 가져가고 싶을 때
+    // UI팀이 현재 장착된 모든 스킬 정보를 한 번에 가져가고 싶을 때 (HUD 슬롯 1=현재, 슬롯 2=다음)
     UFUNCTION(BlueprintCallable, Category = "Skill")
     void GetCurrentEquippedSkills(FSkillData& OutSlot1, FSkillData& OutSlot2)
     {
-        OutSlot1 = *GetSkillDataByID(CurrentSkillSlot);
-        OutSlot2 = *GetSkillDataByID(NextSkillSlot);
+        FSkillData* D1 = GetSkillDataByID(GetCurrentSkillSlot());
+        FSkillData* D2 = GetSkillDataByID(GetNextSkillSlot());
+        OutSlot1 = D1 ? *D1 : FSkillData();
+        OutSlot2 = D2 ? *D2 : FSkillData();
     }
     
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Skill")
@@ -178,6 +188,9 @@ public:
 protected:
 
     virtual void BeginPlay() override;
+
+    // HUD용 슬롯 업데이트 브로드캐스트 (슬롯 인덱스 1=현재, 2=다음 고정)
+    void BroadcastSlotUpdated();
 
     UPROPERTY()
     class AT3CharacterBase* OwnerChar;

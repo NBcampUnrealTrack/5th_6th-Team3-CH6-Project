@@ -164,9 +164,8 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 		bool& State = SaveGame->SkillUnlockStates.FindOrAdd(UnlockState.Key);
 		State = UnlockState.Value;
 	}
-	SaveGame->CurrentSkillSlot = SkillComponent->CurrentSkillSlot;
-	SaveGame->NextSkillSlot = SkillComponent->NextSkillSlot;
-	
+	SaveGame->EquippedSkillIDs = SkillComponent->EquippedSkillIDs;
+
 	//임시 저장이라면 세이브 데이터를 가지고만 있고 직접 저장하지 않는다.
 	if (bTemporarySave)
 	{
@@ -280,9 +279,8 @@ bool AT3GameMode::SaveOnlySkill(const AT3CharacterBase* Character)
 		bool& State = SaveGame->SkillUnlockStates.FindOrAdd(UnlockState.Key);
 		State = UnlockState.Value;
 	}
-	SaveGame->CurrentSkillSlot = SkillComponent->CurrentSkillSlot;
-	SaveGame->NextSkillSlot = SkillComponent->NextSkillSlot;
-	
+	SaveGame->EquippedSkillIDs = SkillComponent->EquippedSkillIDs;
+
 	return true;
 }
 */
@@ -306,7 +304,7 @@ bool AT3GameMode::SaveOnlySkill(const AT3CharacterBase* Character)
             {
                 SaveGame->SkillUnlockStates.FindOrAdd(UnlockState.Key) = UnlockState.Value;
             }
-            SaveGame->CurrentSkillSlot = SkillComp->CurrentSkillSlot;
+            SaveGame->EquippedSkillIDs = SkillComp->EquippedSkillIDs;
         }
     }
 
@@ -507,13 +505,13 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 	{
 		SkillComponent->SetSkillUnlockState(SavedState.Key, SavedState.Value);
 	}
-	if (SaveGame->CurrentSkillSlot != 0)
+	// 장착된 스킬 배열을 순서대로 복원 (최대 4개, 순서 유지)
+	for (int32 SkillID : SaveGame->EquippedSkillIDs)
 	{
-		SkillComponent->SetSkillSlot(SaveGame->CurrentSkillSlot, true);
-	}
-	if (SaveGame->NextSkillSlot != 0)
-	{
-		SkillComponent->SetSkillSlot(SaveGame->NextSkillSlot, true);
+		if (SkillID != 0)
+		{
+			SkillComponent->SetSkillSlot(SkillID, true);
+		}
 	}
 }
 
