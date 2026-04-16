@@ -500,5 +500,9 @@ public:
 			// 사망에 이르는 최소 하강 속도 (마이너스 값)
 			UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 			float MinDeathVelocity = -1500.f;
+	
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Foot")
+	FVector CurrentFootOffset = FVector(0.0f, 0.0f, 0.0f);
 
 };
