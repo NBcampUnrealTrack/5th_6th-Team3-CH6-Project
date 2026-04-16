@@ -72,8 +72,8 @@ FSkillData* UT3Taoist_SkillComponent::GetSkillDataByID(int32 SkillID)
 
 void UT3Taoist_SkillComponent::ExecuteSkill(int32 SlotNumber)
 {
-    // 1. 슬롯 번호(1 or 2)에 따른 ID 추출
-    int32 SkillID = (SlotNumber == 1) ? CurrentSkillSlot : NextSkillSlot;
+    // 1. 슬롯 번호(1=현재, 2=다음)에 따른 ID 추출
+    int32 SkillID = GetSkillIDBySlotIndex(SlotNumber);
 
     // 2. ID에 맞는 데이터 가져오기
     FSkillData* TargetData = GetSkillDataByID(SkillID);
