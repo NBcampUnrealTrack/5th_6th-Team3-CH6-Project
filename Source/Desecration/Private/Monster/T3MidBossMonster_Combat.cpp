@@ -78,7 +78,7 @@ void AT3MidBossMonster::ApplyDamageToMidBoss(float DamageAmount, float StunAmoun
 	}
 
 	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 피격 (데미지: %.0f, 남은HP: %.0f, 스턴게이지: %.0f/%.0f)"),
-		*BossName, DamageAmount, MidBossStats.CurrentHP, MidBossStats.CurrentStunGauge, MidBossStats.StunThreshold);
+		*BossDisplayName.ToString(), DamageAmount, MidBossStats.CurrentHP, MidBossStats.CurrentStunGauge, MidBossStats.StunThreshold);
 
 	// 카메라 쉐이크 — 상태 무관하게 항상 재생 (피격 피드백)
 	if (HitCameraShakeClass)
@@ -121,7 +121,7 @@ void AT3MidBossMonster::ApplyDamageToMidBoss(float DamageAmount, float StunAmoun
 
 		BeginDeathSequence();
 
-		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 사망 (StateTree 이벤트 전송)"), *BossName);
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 사망 (StateTree 이벤트 전송)"), *BossDisplayName.ToString());
 		return;
 	}
 
@@ -228,7 +228,7 @@ void AT3MidBossMonster::ApplyStun()
 		StunDuration, false);
 
 	UE_LOG(LogDesecration, Log,
-		TEXT("T3_MidBoss: %s 스턴 상태 진입 (%.1f초 후 자동 해제, StateTree 이벤트 전송)"), *BossName, StunDuration);
+		TEXT("T3_MidBoss: %s 스턴 상태 진입 (%.1f초 후 자동 해제, StateTree 이벤트 전송)"), *BossDisplayName.ToString(), StunDuration);
 }
 
 void AT3MidBossMonster::RecoverFromStun()
@@ -243,7 +243,7 @@ void AT3MidBossMonster::RecoverFromStun()
 		StateTreeComponent->SendStateTreeEvent(TAG_Boss_Event_StunRecovered);
 	}
 
-	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 스턴 해제 (StateTree 이벤트 전송)"), *BossName);
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 스턴 해제 (StateTree 이벤트 전송)"), *BossDisplayName.ToString());
 }
 
 // ============================================================

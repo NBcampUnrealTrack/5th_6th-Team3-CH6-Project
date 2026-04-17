@@ -8,7 +8,7 @@
 #include "T3BossWeaponComponent.generated.h"
 
 class UStaticMeshComponent;
-class UBoxComponent;
+class UCapsuleComponent;
 class USphereComponent;
 class USkeletalMeshComponent;
 class UTimelineComponent;
@@ -42,13 +42,13 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TObjectPtr<UStaticMeshComponent> WeaponMeshComponent;
 
-	// 무기 판정 박스 — AttachToSocket()에서 WeaponMesh에 런타임 부착
+	// 무기 판정 캡슐 — AttachToSocket()에서 WeaponMesh에 런타임 부착
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
-	TObjectPtr<UBoxComponent> WeaponHitBox;
+	TObjectPtr<UCapsuleComponent> WeaponHitBox;
 
-	// 넓은 판정 박스 — 대쉬 내려찍기 등 특수 공격용 (런타임 부착)
+	// 넓은 판정 캡슐 — 대쉬 내려찍기 등 특수 공격용 (런타임 부착)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
-	TObjectPtr<UBoxComponent> WeaponHitBoxWide;
+	TObjectPtr<UCapsuleComponent> WeaponHitBoxWide;
 
 	// 팔 공격 판정 구체 — 캐릭터 메시 본에 부착 (무기와 독립)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|BodyAttack")

@@ -17,6 +17,7 @@
 
 class UT3BossWeaponComponent;
 class UT3MidBossHPBarWidget;
+class UT3MidBossMaterialSet;
 class UCurveFloat;
 class USoundAttenuation;
 class UAudioComponent;
@@ -122,7 +123,7 @@ public:
 
 	// --- 보스 정보 & 스탯 ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Info")
-	FString BossName = "MidBoss";
+	FText BossDisplayName = FText::FromString(TEXT("MidBoss"));
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Stats")
 	FMidBossStats MidBossStats;
@@ -133,6 +134,10 @@ public:
 	// --- 무기 ---
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MidBoss|Weapon")
 	TObjectPtr<UT3BossWeaponComponent> WeaponComponent;
+
+	// --- 머티리얼 세트 적용 ---
+	UFUNCTION(BlueprintCallable, Category = "MidBoss|Visual")
+	void ApplyMaterialSet(const UT3MidBossMaterialSet* MaterialSet);
 
 	// --- HP바 위젯 ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|UI")

@@ -207,7 +207,7 @@ void AT3MidBossMonster::BeginPlay()
 	OnMidBossSpawned.Broadcast();
 
 	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 스폰 완료 (HP: %.0f, Stage: %d, 등록 패턴: %d개, Modifier: %s, Dissolve: %s, ExtTrigger: %s)"),
-		*BossName, MidBossStats.MaxHP, BossStage, AttackPatterns.Num(),
+		*BossDisplayName.ToString(), MidBossStats.MaxHP, BossStage, AttackPatterns.Num(),
 		ModifierDataAsset ? TEXT("O") : TEXT("X"),
 		bEnableDissolve ? TEXT("O") : TEXT("X"),
 		ExternalActivationTrigger ? *ExternalActivationTrigger->GetName() : TEXT("없음"));
