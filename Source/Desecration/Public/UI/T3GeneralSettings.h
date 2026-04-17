@@ -22,7 +22,7 @@ class DESECRATION_API UT3GeneralSettings : public UT3SettingsPanelCategory
 	GENERATED_BODY()
 
 protected:
-	virtual void CustomNativeOnInitialized() override;
+	virtual void OnParentConstruct() override;
 	virtual void InitializeSettingsPanel() override;
 	
 private:

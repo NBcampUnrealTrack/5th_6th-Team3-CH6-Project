@@ -3,7 +3,7 @@
 #include "Components/ComboBoxString.h"
 #include "Kismet/KismetInternationalizationLibrary.h"
 
-void UT3GeneralSettings::CustomNativeOnInitialized()
+void UT3GeneralSettings::OnParentConstruct()
 {	
 	//콤보 박스에 항목 추가
 	for (const ELanguage Language : TEnumRange<ELanguage>())

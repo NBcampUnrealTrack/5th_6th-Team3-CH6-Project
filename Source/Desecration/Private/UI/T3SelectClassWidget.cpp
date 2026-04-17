@@ -7,9 +7,9 @@
 #include "Player/T3SelectClassPlayerController.h"
 #include "UI/T3InputNamePanel.h"
 
-void UT3SelectClassWidget::NativeOnInitialized()
+void UT3SelectClassWidget::NativeConstruct()
 {
-	Super::NativeOnInitialized();
+	Super::NativeConstruct();
 	
 	//게임 인스턴스
 	T3GameInstance = Cast<UT3GameInstance>(GetGameInstance());

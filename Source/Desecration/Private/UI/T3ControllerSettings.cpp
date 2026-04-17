@@ -6,7 +6,7 @@
 #include "GameSystem/T3SaveUserSettings.h"
 #include "UI/T3Slider.h"
 
-void UT3ControllerSettings::CustomNativeOnInitialized()
+void UT3ControllerSettings::OnParentConstruct()
 {	
 	//컨트롤러 선택 콤보 박스
 	for (const FString Key : CONTROLLER_KEY_STRINGS)

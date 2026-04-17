@@ -3,7 +3,7 @@
 #include "Components/ComboBoxString.h"
 #include "GameFramework/GameUserSettings.h"
 
-void UT3DisplaySettings::CustomNativeOnInitialized()
+void UT3DisplaySettings::OnParentConstruct()
 {	
 	if (!GEngine)
 	{

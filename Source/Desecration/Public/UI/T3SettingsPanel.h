@@ -25,7 +25,7 @@ class DESECRATION_API UT3SettingsPanel : public UUserWidget
 	friend UT3SettingsPanelCategory;
 	
 protected:
-	virtual void NativeOnInitialized() override;
+	virtual void NativeConstruct() override;
 	
 private:
 	//상단 탭 버튼에 대한 동작
