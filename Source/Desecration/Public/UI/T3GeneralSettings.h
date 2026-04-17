@@ -4,12 +4,13 @@
 #include "T3SettingsPanelCategory.h"
 #include "T3GeneralSettings.generated.h"
 
-//언어 (추후 언어 추가시 반드시 IETF 코드를 DisplayName으로 포함할 것)
+class UTextBlock;
+//언어 (추후 언어 추가시 반드시 IETF 코드로 추가할 것)
 UENUM()
 enum class ELanguage
 {
-	English UMETA(DisplayName = "en"),
-	Korean UMETA(DisplayName = "ko"),
+	en,//영어
+	ko,//한국어
 	None UMETA(Hidden)
 };
 ENUM_RANGE_BY_COUNT(ELanguage, ELanguage::None);
