@@ -1,5 +1,6 @@
 #include "UI/T3DisplaySettings.h"
 
+#include "Components/CheckBox.h"
 #include "Components/ComboBoxString.h"
 #include "GameFramework/GameUserSettings.h"
 
@@ -39,6 +40,9 @@ void UT3DisplaySettings::OnParentConstruct()
 		GraphicQualityComboBox->AddOption(OptionString);
 	}
 	GraphicQualityComboBox->OnSelectionChanged.AddDynamic(this, &ThisClass::OnSelectionChangedGraphicQualityComboBox);
+	
+	//수직 동기화 체크 박스
+	VSyncCheckBox->OnCheckStateChanged.AddDynamic(this, &ThisClass::OnCheckStateChangedVSyncCheckBox);
 }
 
 void UT3DisplaySettings::InitializeSettingsPanel()
@@ -60,6 +64,12 @@ void UT3DisplaySettings::InitializeSettingsPanel()
 	{
 		const int32 TargetIndex = GameUserSettings->GetOverallScalabilityLevel();
 		GraphicQualityComboBox->SetSelectedIndex(TargetIndex);
+	}
+	
+	//수직 동기화
+	{
+		const bool bVSync = GameUserSettings->IsVSyncEnabled();
+		VSyncCheckBox->SetCheckedState(bVSync ? ECheckBoxState::Checked : ECheckBoxState::Unchecked);
 	}
 }
 
@@ -122,6 +132,17 @@ void UT3DisplaySettings::OnSelectionChangedGraphicQualityComboBox(FString Select
 	
 	const int32 SelectedIndex = GraphicQualityComboBox->GetSelectedIndex();
 	SetGraphicQuality(SelectedIndex);
+}
+
+void UT3DisplaySettings::OnCheckStateChangedVSyncCheckBox(bool bIsChecked)
+{
+	GameUserSettings->SetVSyncEnabled(bIsChecked);
+	GameUserSettings->ApplySettings(true);
+	
+#if WITH_EDITOR
+	//수직 동기화 여부를 에디터에서 파악할 수 있도록 로그로 표시
+	UE_LOG(LogTemp, Warning, TEXT("수직 동기화 : %hhd"), bIsChecked);
+#endif
 }
 
 void UT3DisplaySettings::SetResolution(const FInt32Point Resolution)
