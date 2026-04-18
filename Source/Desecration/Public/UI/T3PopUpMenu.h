@@ -16,16 +16,17 @@ class DESECRATION_API UT3PopUpMenu : public UUserWidget
 {
 	GENERATED_BODY()
 	
-public:
-	virtual void NativeConstruct() override;
+protected:
+	virtual void NativeOnInitialized() override;
 	
+public:
 	//팝업 메뉴 열기 또는 닫기
 	UFUNCTION(BlueprintCallable)
 	void SetActivePopUpMenu(bool bActive);
 	
 	//팝업 메뉴의 열림 여부
 	UFUNCTION(BlueprintPure)
-	bool IsActivePopUpMenu();
+	bool IsActivePopUpMenu() const;
 	
 private:
 	//계속하기

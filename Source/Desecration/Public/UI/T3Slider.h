@@ -13,9 +13,10 @@ class DESECRATION_API UT3Slider : public UUserWidget
 {
 	GENERATED_BODY()
 	
-public:
+protected:
 	virtual void NativeOnInitialized() override;
 	
+public:
 	//슬라이더의 값 지정
 	void SetValue(const float Value);
 	
