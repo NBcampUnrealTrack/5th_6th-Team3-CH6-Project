@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Player/T3CharacterBase.h"
 #include "UObject/Object.h"
 #include "T3EquipmentTypes.generated.h"
 
@@ -9,7 +10,8 @@ enum class ET3EquipmentType : uint8
 {
 	Weapon,
 	Armor,
-	ClassSpecific
+	ClassSpecific,
+	Accessory
 };
 
 // 강화석 등급
@@ -122,3 +124,65 @@ struct FT3ItemSaveData
 	TArray<FName> SocketedRuneIDs;
 };
 
+#pragma region Accessory
+
+UENUM(BlueprintType)
+enum class ET3AccessoryType : uint8
+{
+	Vigor,
+	Endurance,
+	Mind,
+	Intelligence,
+	Strength,
+	Balrog,
+	Oni,
+	FallenAngel,
+	Dragon
+};
+
+USTRUCT(BlueprintType)
+struct FT3AccessoryLevelData
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 StatBonus = 0;
+};
+
+USTRUCT(BlueprintType)
+struct FT3AccessoryDataRow : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base")
+	FText Name = FText::GetEmpty();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base")
+	TObjectPtr<UTexture2D> Icon = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base")
+	ET3AccessoryType AccessoryType = ET3AccessoryType::Vigor;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base")
+	int32 BaseStatBonus = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Growth")
+	TArray<FT3AccessoryLevelData> LevelStats;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	TSubclassOf<class UT3AccessoryEffectBase> EffectClass;
+};
+
+USTRUCT(BlueprintType)
+struct FT3AccessorySaveData
+{
+	GENERATED_BODY()
+	
+	UPROPERTY()
+	FName ItemID = NAME_None;
+	
+	UPROPERTY()
+	int32 Level = 0;
+};
+
+#pragma endregion

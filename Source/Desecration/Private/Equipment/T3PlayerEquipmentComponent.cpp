@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Engine/AssetManager.h"
 #include "Engine/StaticMeshActor.h"
+#include "Equipment/Accessory/T3AccessoryEffectBase.h"
 #include "Item/Component/T3InventoryComponent.h"
 #include "Item/Data/T3RuneItemData.h"
 #include "Player/T3CharacterBase.h"
@@ -318,7 +319,7 @@ bool UT3PlayerEquipmentComponent::TryUpgrade(ET3EquipmentType TargetType, int32 
             }
         }
     }
-    else // Armor
+    else if (TargetType == ET3EquipmentType::Armor)
     {
         if (ArmorTable)
         {
@@ -585,5 +586,209 @@ void UT3PlayerEquipmentComponent::RestoreRunes(const TArray<FName>& RuneIDs, TAr
 		NewRune->SetGrade(RuneRow->RuneGrade);
 		OutActiveRunes.Add(NewRune);
 		NewRune->OnSocketed(OwnerCharacter);
+	}
+}
+
+void UT3PlayerEquipmentComponent::EquipAccessory(UT3TestItemInstance* NewItem)
+{
+	if (IsValid(AccessoryInstance))
+	{
+		UnequipAccessory();
+	}
+	
+	AccessoryInstance = NewItem;
+	
+	FT3AccessoryDataRow* ItemRow =
+		AccessoryTable->FindRow<FT3AccessoryDataRow>(AccessoryInstance->ItemID, TEXT("EquipAccessory"));
+	
+	if (!ItemRow)
+	{
+		AccessoryInstance = nullptr;
+		return;
+	}
+	
+	ApplyAccessoryStatPointBonus(ItemRow, AccessoryInstance->CurrentLevel, false);
+	
+	if (IsValid(ItemRow->EffectClass))
+	{
+		ActiveAccessoryEffect = NewObject<UT3AccessoryEffectBase>(this, ItemRow->EffectClass);
+		ActiveAccessoryEffect->OnEquipped(OwnerCharacter);
+	}
+}
+
+void UT3PlayerEquipmentComponent::UnequipAccessory()
+{
+	if (!IsValid(AccessoryInstance))
+	{
+		return;
+	}
+	
+	FT3AccessoryDataRow* ItemRow =
+		AccessoryTable->FindRow<FT3AccessoryDataRow>(AccessoryInstance->ItemID, TEXT("EquipAccessory"));
+	
+	if (!ItemRow)
+	{
+		return;
+	}
+	
+	ApplyAccessoryStatPointBonus(ItemRow, AccessoryInstance->CurrentLevel, true);
+	
+	if (IsValid(ActiveAccessoryEffect))
+	{
+		ActiveAccessoryEffect->OnUnequipped(OwnerCharacter);
+	}
+	
+	ActiveAccessoryEffect = nullptr;
+	
+	AccessoryInstance = nullptr;
+}
+
+bool UT3PlayerEquipmentComponent::TryUpgradeAccessory(int32 MaxAllowedLevel)
+{
+	if (!IsValid(AccessoryInstance))
+	{
+		return false;
+	}
+	
+	FT3AccessoryDataRow* ItemRow =
+		AccessoryTable->FindRow<FT3AccessoryDataRow>(AccessoryInstance->ItemID, TEXT("EquipAccessory"));
+	
+	if (!ItemRow)
+	{
+		return false;
+	}
+	
+	if (ItemRow->LevelStats.Num() == 0)
+	{
+		return false;
+	}
+	
+	if (AccessoryInstance->CurrentLevel >= ItemRow->LevelStats.Num())
+	{
+		return false;
+	}
+	
+	if ((AccessoryInstance->CurrentLevel + 1) > MaxAllowedLevel)
+	{
+		return false;
+	}
+	
+	UT3TestItemInstance* TempInstance = AccessoryInstance;
+
+	UnequipAccessory();
+	
+	TempInstance->CurrentLevel++;
+
+	EquipAccessory(TempInstance);
+
+	return true;
+}
+
+void UT3PlayerEquipmentComponent::LoadAccessoryFromSave(const FT3AccessorySaveData& AccessoryData)
+{
+	if (AccessoryData.ItemID == NAME_None)
+	{
+		return;
+	}
+
+	UT3TestItemInstance* NewInstance = NewObject<UT3TestItemInstance>(this);
+	NewInstance->Init(AccessoryData.ItemID, AccessoryData.Level, ET3EquipmentType::Accessory);
+
+	EquipAccessory(NewInstance);
+}
+
+void UT3PlayerEquipmentComponent::GetAccessorySaveData(FT3AccessorySaveData& OutData) const
+{
+	if (!IsValid(AccessoryInstance))
+	{
+		OutData.ItemID = NAME_None;
+		OutData.Level = 0;
+		return;
+	}
+
+	OutData.ItemID = AccessoryInstance->ItemID;
+	OutData.Level = AccessoryInstance->CurrentLevel;
+}
+
+void UT3PlayerEquipmentComponent::SetOniAccessoryEquipped(bool IsEquipped)
+{
+	bOniAccessoryEquipped = IsEquipped;
+}
+
+bool UT3PlayerEquipmentComponent::GetOniAccessoryEquipped() const
+{
+	return bOniAccessoryEquipped;
+}
+
+void UT3PlayerEquipmentComponent::ApplyAccessoryStatPointBonus(const FT3AccessoryDataRow* Row, int32 Level, bool bRemove)
+{
+	if (!IsValid(OwnerCharacter) || !Row)
+	{
+		return;
+	}
+
+	int32 StatPointBonus = Row->BaseStatBonus;
+
+	if (Level > 0 && Row->LevelStats.IsValidIndex(Level - 1))
+	{
+		StatPointBonus = Row->LevelStats[Level - 1].StatBonus;
+	}
+	
+	if (bRemove)
+	{
+		StatPointBonus = -StatPointBonus;
+	}
+
+	switch (Row->AccessoryType)
+	{
+	case ET3AccessoryType::Vigor:
+		OwnerCharacter->SetVigor(OwnerCharacter->GetVigor() + StatPointBonus);
+		break;
+
+	case ET3AccessoryType::Endurance:
+		OwnerCharacter->SetEndurance(OwnerCharacter->GetEndurance() + StatPointBonus);
+		break;
+
+	case ET3AccessoryType::Mind:
+		OwnerCharacter->SetMind(OwnerCharacter->GetMind() + StatPointBonus);
+		break;
+
+	case ET3AccessoryType::Strength:
+		OwnerCharacter->SetStrength(OwnerCharacter->GetStrength() + StatPointBonus);
+		break;
+
+	case ET3AccessoryType::Intelligence:
+		OwnerCharacter->SetIntelligence(OwnerCharacter->GetIntelligence() + StatPointBonus);
+		break;
+
+	case ET3AccessoryType::Balrog:
+		OwnerCharacter->SetVigor(OwnerCharacter->GetVigor() + StatPointBonus);
+		break;
+		
+	case ET3AccessoryType::Oni:
+		OwnerCharacter->SetEndurance(OwnerCharacter->GetEndurance() + StatPointBonus);
+		break;
+		
+	case ET3AccessoryType::FallenAngel:
+		OwnerCharacter->SetStrength(OwnerCharacter->GetStrength() + StatPointBonus);
+		OwnerCharacter->SetIntelligence(OwnerCharacter->GetIntelligence() + StatPointBonus);
+		break;
+		
+	case ET3AccessoryType::Dragon:
+		OwnerCharacter->SetVigor(OwnerCharacter->GetVigor() + StatPointBonus);
+		OwnerCharacter->SetEndurance(OwnerCharacter->GetEndurance() + StatPointBonus);
+		OwnerCharacter->SetMind(OwnerCharacter->GetMind() + StatPointBonus);
+		OwnerCharacter->SetStrength(OwnerCharacter->GetStrength() + StatPointBonus);
+		OwnerCharacter->SetIntelligence(OwnerCharacter->GetIntelligence() + StatPointBonus);
+		break;
+		
+	default:
+		break;
+	}
+
+	// 장착 시에만 캐시 저장
+	if (!bRemove)
+	{
+		CachedAccessoryStatPointBonus = StatPointBonus;
 	}
 }
