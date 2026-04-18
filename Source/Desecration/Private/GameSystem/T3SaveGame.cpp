@@ -79,6 +79,9 @@ void UT3SaveGame::ResetGameData()
 	ArmorSaveData.Type = ET3EquipmentType::Armor;
 	ArmorSaveData.SocketedRuneIDs.Empty();
 	
+	AccessorySaveData.ItemID = NAME_None;
+	AccessorySaveData.Level  = 0;
+	
 	ClassSocketedRuneIDs.Empty();
 	
 	//스킬

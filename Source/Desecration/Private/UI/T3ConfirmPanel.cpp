@@ -3,9 +3,9 @@
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 
-void UT3ConfirmPanel::NativeConstruct()
+void UT3ConfirmPanel::NativeOnInitialized()
 {
-	Super::NativeConstruct();
+	Super::NativeOnInitialized();
 	
 	//버튼 바인딩
 	ConfirmButton->OnClicked.AddDynamic(this, &ThisClass::OnClickConfirmButton);

@@ -4,6 +4,8 @@
 #include "T3SettingsPanelCategory.h"
 #include "T3DisplaySettings.generated.h"
 
+class UCheckBox;
+
 //해상도 정보
 USTRUCT()
 struct FResolution
@@ -32,7 +34,7 @@ class DESECRATION_API UT3DisplaySettings : public UT3SettingsPanelCategory
 	GENERATED_BODY()
 
 protected:
-	virtual void CustomNativeConstruct() override;
+	virtual void OnParentConstruct() override;
 	virtual void InitializeSettingsPanel() override;
 	virtual void ReinitializeByChangeLanguage() override;
 	
@@ -45,6 +47,9 @@ private:
 	
 	UFUNCTION()
 	void OnSelectionChangedGraphicQualityComboBox(FString SelectedItem, ESelectInfo::Type SelectionType);
+	
+	UFUNCTION()
+	void OnCheckStateChangedVSyncCheckBox(bool bIsChecked);
 	
 	//해상도 설정하기
 	void SetResolution(const FInt32Point Resolution);
@@ -69,6 +74,10 @@ private:
 	//그래픽 품질 설정
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
 	TObjectPtr<UComboBoxString> GraphicQualityComboBox;
+	
+	//수직 동기화 체크 박스
+	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
+	TObjectPtr<UCheckBox> VSyncCheckBox;
 	
 	//엔진의 게임 설정
 	UPROPERTY()
