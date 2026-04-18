@@ -15,7 +15,7 @@ class DESECRATION_API UT3ConfirmPanel : public UUserWidget
 	GENERATED_BODY()
 	
 protected:
-	virtual void NativeConstruct() override;
+	virtual void NativeOnInitialized() override;
 	virtual void NativeDestruct() override;
 	
 public:

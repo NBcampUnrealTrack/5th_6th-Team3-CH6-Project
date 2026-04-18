@@ -24,7 +24,7 @@ class DESECRATION_API UT3SettingsPanel : public UUserWidget
 	
 	friend UT3SettingsPanelCategory;
 	
-public:
+protected:
 	virtual void NativeConstruct() override;
 	
 private:

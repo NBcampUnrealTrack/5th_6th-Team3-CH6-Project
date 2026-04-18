@@ -146,6 +146,7 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	if (const UT3PlayerEquipmentComponent* EquipComp = Character->FindComponentByClass<UT3PlayerEquipmentComponent>())
 	{
 		EquipComp->GetEquipmentSaveData(SaveGame->WeaponSaveData, SaveGame->ArmorSaveData, SaveGame->ClassSocketedRuneIDs);
+		EquipComp->GetAccessorySaveData(SaveGame->AccessorySaveData);
 	}
 	
 	//스킬
@@ -231,6 +232,7 @@ bool AT3GameMode::SaveInventoryAndPotionLevel(const AT3CharacterBase* Character)
 	if (UT3PlayerEquipmentComponent* EquipComp = Character->FindComponentByClass<UT3PlayerEquipmentComponent>())
 	{
 		EquipComp->GetEquipmentSaveData(SaveGame->WeaponSaveData, SaveGame->ArmorSaveData, SaveGame->ClassSocketedRuneIDs);
+		EquipComp->GetAccessorySaveData(SaveGame->AccessorySaveData);
 	}
 	
 	//저장
@@ -488,6 +490,7 @@ void AT3GameMode::SetCharacterBySavedData(AT3CharacterBase* Character)
 	if (UT3PlayerEquipmentComponent* EquipComp = Character->FindComponentByClass<UT3PlayerEquipmentComponent>())
 	{
 		EquipComp->LoadEquipmentFromSave(SaveGame->WeaponSaveData, SaveGame->ArmorSaveData, SaveGame->ClassSocketedRuneIDs);
+		EquipComp->LoadAccessoryFromSave(SaveGame->AccessorySaveData);
 	}
 	
 	//스킬

@@ -250,7 +250,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Upgrade|Utility")
 	UT3InventoryComponent* GetPlayerInventoryComponent() const;
 
-#pragma region Synthesis
+#pragma region 룬 합성
 public:
 	UPROPERTY(BlueprintReadOnly, Category = "Rune|Synthesis")
 	TArray<FName> SynthesisSlots;

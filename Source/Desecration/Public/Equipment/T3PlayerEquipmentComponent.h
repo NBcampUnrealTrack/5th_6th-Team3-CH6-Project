@@ -161,9 +161,55 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Rune")
 	bool SocketRuneAuto(FName RuneID);
-	
+
+	void ResetRunesForNewRun();
+
 private:
 	TMap<TSubclassOf<UT3RuneBase>, float> RuneCooldownEndTimeMap;
+
+#pragma endregion
+
+#pragma region Accessory
+	
+private:
+	UPROPERTY(EditDefaultsOnly, Category = "Data")
+	TObjectPtr<UDataTable> AccessoryTable;
+	
+	uint8 bOniAccessoryEquipped : 1 = false;
+
+	void ApplyAccessoryStatPointBonus(const FT3AccessoryDataRow* Row, int32 Level, bool bRemove = false);
+	
+protected:
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "State")
+	TObjectPtr<UT3TestItemInstance> AccessoryInstance;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UT3AccessoryEffectBase> ActiveAccessoryEffect;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Stats")
+	int32 CachedAccessoryStatPointBonus = 0;
+	
+public:
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	void EquipAccessory(UT3TestItemInstance* NewItem);
+
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	void UnequipAccessory();
+
+	UFUNCTION(BlueprintCallable, Category = "Upgrade")
+	bool TryUpgradeAccessory(int32 MaxAllowedLevel);
+
+	UFUNCTION(BlueprintCallable, Category = "Equipment|Save")
+	void LoadAccessoryFromSave(const FT3AccessorySaveData& AccessoryData);
+
+	UFUNCTION(BlueprintCallable, Category = "Equipment|Save")
+	void GetAccessorySaveData(FT3AccessorySaveData& OutData) const;
+	
+	UFUNCTION()
+	void SetOniAccessoryEquipped(bool IsEquipped);
+	
+	UFUNCTION()
+	bool GetOniAccessoryEquipped() const;
 	
 #pragma endregion
 };
