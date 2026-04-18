@@ -599,10 +599,11 @@ void UT3PlayerEquipmentComponent::EquipAccessory(UT3TestItemInstance* NewItem)
 	AccessoryInstance = NewItem;
 	
 	FT3AccessoryDataRow* ItemRow =
-		AccessoryTable->FindRow<FT3AccessoryDataRow>(AccessoryInstance->ItemID, "EquipAccessory");
+		AccessoryTable->FindRow<FT3AccessoryDataRow>(AccessoryInstance->ItemID, TEXT("EquipAccessory"));
 	
 	if (!ItemRow)
 	{
+		AccessoryInstance = nullptr;
 		return;
 	}
 	
@@ -623,7 +624,7 @@ void UT3PlayerEquipmentComponent::UnequipAccessory()
 	}
 	
 	FT3AccessoryDataRow* ItemRow =
-		AccessoryTable->FindRow<FT3AccessoryDataRow>(AccessoryInstance->ItemID, "EquipAccessory");
+		AccessoryTable->FindRow<FT3AccessoryDataRow>(AccessoryInstance->ItemID, TEXT("EquipAccessory"));
 	
 	if (!ItemRow)
 	{
@@ -632,7 +633,7 @@ void UT3PlayerEquipmentComponent::UnequipAccessory()
 	
 	ApplyAccessoryStatPointBonus(ItemRow, AccessoryInstance->CurrentLevel, true);
 	
-	if (IsValid(ItemRow->EffectClass))
+	if (IsValid(ActiveAccessoryEffect))
 	{
 		ActiveAccessoryEffect->OnUnequipped(OwnerCharacter);
 	}
@@ -650,7 +651,7 @@ bool UT3PlayerEquipmentComponent::TryUpgradeAccessory(int32 MaxAllowedLevel)
 	}
 	
 	FT3AccessoryDataRow* ItemRow =
-		AccessoryTable->FindRow<FT3AccessoryDataRow>(AccessoryInstance->ItemID, "EquipAccessory");
+		AccessoryTable->FindRow<FT3AccessoryDataRow>(AccessoryInstance->ItemID, TEXT("EquipAccessory"));
 	
 	if (!ItemRow)
 	{
@@ -662,6 +663,11 @@ bool UT3PlayerEquipmentComponent::TryUpgradeAccessory(int32 MaxAllowedLevel)
 		return false;
 	}
 	
+	if (AccessoryInstance->CurrentLevel >= ItemRow->LevelStats.Num())
+	{
+		return false;
+	}
+	
 	if ((AccessoryInstance->CurrentLevel + 1) > MaxAllowedLevel)
 	{
 		return false;
@@ -669,6 +675,8 @@ bool UT3PlayerEquipmentComponent::TryUpgradeAccessory(int32 MaxAllowedLevel)
 	
 	UT3TestItemInstance* TempInstance = AccessoryInstance;
 
+	UnequipAccessory();
+	
 	TempInstance->CurrentLevel++;
 
 	EquipAccessory(TempInstance);

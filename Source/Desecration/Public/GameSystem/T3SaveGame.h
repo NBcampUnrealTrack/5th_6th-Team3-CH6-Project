@@ -171,6 +171,10 @@ public:
 	UPROPERTY()
 	FT3ItemSaveData ArmorSaveData;
 	
+	// 장신구 저장 데이터
+	UPROPERTY()
+	FT3AccessorySaveData AccessorySaveData;
+	
 	// 직업 전용 소켓 룬 저장 데이터
 	UPROPERTY()
 	TArray<FName> ClassSocketedRuneIDs;
