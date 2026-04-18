@@ -561,7 +561,9 @@ void AT3CharacterBase::OnDeath()
 {
 	bMoveLock = true;
 	OnDeathAnimation();
-	
+
+	EquipComp->ResetRunesForNewRun();
+
 	if (const TObjectPtr<AT3PlayerController> PC = GetController<AT3PlayerController>())
 	{
 		PC->ClosePopupMenu();

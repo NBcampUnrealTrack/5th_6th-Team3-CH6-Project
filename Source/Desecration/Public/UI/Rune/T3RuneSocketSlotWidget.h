@@ -13,7 +13,7 @@ class DESECRATION_API UT3RuneSocketSlotWidget : public UUserWidget
 	GENERATED_BODY()
 	
 public:
-	UPROPERTY(BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (ExposeOnSpawn = "true"))
 	ET3EquipmentType TargetEquipmentType;
 
 	UPROPERTY(BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))

@@ -49,24 +49,6 @@ class DESECRATION_API UT3GameInstance : public UGameInstance
 	GENERATED_BODY()
 	
 public:
-
-	// 에디터에서 커스텀 로딩 UI 블루프린트를 할당하세요.
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
-    TSubclassOf<UUserWidget> LoadingWidgetClass;
-
-    // 생성된 위젯 인스턴스를 보관 (GC 보호)
-    UPROPERTY()
-    TObjectPtr<UUserWidget> LoadingWidgetInstance;
-
-    // 로딩 UI 시작 (레벨 이동 전 호출)
-    UFUNCTION(BlueprintCallable, Category = "Loading")
-    void StartCustomLoading();
-
-    // 로딩 UI 종료 (새 레벨 BeginPlay에서 호출)
-    UFUNCTION(BlueprintCallable, Category = "Loading")
-    void EndCustomLoading();
-
-
 	/** 
 	 * 지정한 키를 번역하기
 	 * @param Namespace 텍스트를 찾을 테이블의 네임스페이스
@@ -86,6 +68,14 @@ public:
 	static FString GetStringFromTable(const FString& Namespace, const FString& Key);
 	
 	virtual void Init() override;
+
+	// 로딩 UI 시작 (레벨 이동 전 호출)
+	UFUNCTION(BlueprintCallable, Category = "Loading")
+	void StartCustomLoading();
+
+	// 로딩 UI 종료 (새 레벨 BeginPlay에서 호출)
+	UFUNCTION(BlueprintCallable, Category = "Loading")
+	void EndCustomLoading();
 
 	// 레벨 해금
 	UFUNCTION(BlueprintCallable)
@@ -209,6 +199,14 @@ public:
 	//에디터용 : 캐릭터의 위치가 저장 데이터의 영향을 받지 않게 하려면 이 값을 true로 설정
     UPROPERTY(EditDefaultsOnly, Category = "Only For Test")
     bool bDoNotMoveCharacterBySavedData = false;
+	
+	// 에디터에서 커스텀 로딩 UI 블루프린트를 할당하세요.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UUserWidget> LoadingWidgetClass;
+
+	// 생성된 위젯 인스턴스를 보관 (GC 보호)
+	UPROPERTY()
+	TObjectPtr<UUserWidget> LoadingWidgetInstance;
 
 private:
 	//현재 설정

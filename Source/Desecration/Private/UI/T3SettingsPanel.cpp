@@ -34,7 +34,7 @@ void UT3SettingsPanel::NativeConstruct()
 		//각 범주별 초기화 진행
 		CategoryWidget->T3GameInstance = T3GameInstance;
 		CategoryWidget->SettingsPanel = this;
-		CategoryWidget->CustomNativeConstruct();
+		CategoryWidget->OnParentConstruct();
 	}
 	
 	//상단 탭 버튼
