@@ -364,6 +364,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Animation")
 	TObjectPtr<UAnimMontage> StunMontage;
 
+	// --- 백스텝 (Disengage ST Task에서 참조) ---
+	// 보스별 스켈레톤이 다르므로 캐릭터에 두고 ST는 Boss->BackStepMontage 참조
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Animation")
+	TObjectPtr<UAnimMontage> BackStepMontage;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Combat")
 	float StunDuration = 3.0f;
 

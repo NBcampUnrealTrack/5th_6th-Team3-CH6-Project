@@ -407,10 +407,10 @@ EStateTreeRunStatus FT3STT_Disengage::EnterState(
 	// 진입 전 잔여 몽타주 정리 (히트리액션 등이 남아있으면 백스텝과 겹침)
 	Data.Boss->StopAnimMontage();
 
-	// 백스텝 몽타주 재생
-	if (Data.bBackStep && Data.BackStepMontage)
+	// 백스텝 몽타주 재생 (보스별 몽타주는 AT3MidBossMonster::BackStepMontage에서 참조)
+	if (Data.bBackStep && Data.Boss->BackStepMontage)
 	{
-		Data.Boss->PlayAnimMontage(Data.BackStepMontage);
+		Data.Boss->PlayAnimMontage(Data.Boss->BackStepMontage);
 	}
 
 	UE_LOG(LogDesecration, Log,
@@ -475,9 +475,9 @@ void FT3STT_Disengage::ExitState(
 		Data.Boss->RemoveStateTag(TAG_Boss_State_Disengaging);
 
 		// 백스텝 몽타주 정지
-		if (Data.bBackStep && Data.BackStepMontage)
+		if (Data.bBackStep && Data.Boss->BackStepMontage)
 		{
-			Data.Boss->StopAnimMontage(Data.BackStepMontage);
+			Data.Boss->StopAnimMontage(Data.Boss->BackStepMontage);
 		}
 
 		// 루트모션 스케일 복원
