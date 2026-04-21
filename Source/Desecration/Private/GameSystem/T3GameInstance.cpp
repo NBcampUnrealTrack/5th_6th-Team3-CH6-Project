@@ -29,7 +29,7 @@ void UT3GameInstance::Init()
 	Super::Init();
 	
 	//게임 데이터
-	LoadGame();
+	LoadGameFromFile();
 	
 	//잃어버린 재화
 	if (!LoadLostMoney())
@@ -189,12 +189,12 @@ void UT3GameInstance::MakeFirstObjectStateData()
 	ObjectStateData->ResetGameData();
 }
 
-bool UT3GameInstance::SaveGame()
+bool UT3GameInstance::SaveGameToFile()
 {
 	return UGameplayStatics::SaveGameToSlot(SavedGameData, SAVE_GAME_NAME, 0);
 }
 
-bool UT3GameInstance::LoadGame()
+bool UT3GameInstance::LoadGameFromFile()
 {
 	TObjectPtr<UT3SaveGame> SavedData = Cast<UT3SaveGame>(UGameplayStatics::LoadGameFromSlot(SAVE_GAME_NAME, 0));
 	if (!SavedData)
@@ -379,7 +379,7 @@ void UT3GameInstance::UnlockLevel(const ELevelName LevelName)
 	{
 		SavedGameData->LevelProgressMap[LevelName].bLevelUnlocked = true;
 	}
-	if (SaveGame())
+	if (SaveGameToFile())
 	{
 		UE_LOG(LogTemp, Log, TEXT("Level %d Unlocked and Saved Successfully!"), (int32)LevelName);
 	}
@@ -411,7 +411,7 @@ void UT3GameInstance::UnlockSavePoint(ELevelName LevelName, FName SavePointID, F
     // 3. 맵에 추가 또는 갱신
 	SavedGameData->LevelProgressMap[LevelName].SavePoints.Add(SavePointID, PointData);
 	
-	SaveGame();
+	SaveGameToFile();
 }
 
 // ===== 레벨 해금 여부 =====

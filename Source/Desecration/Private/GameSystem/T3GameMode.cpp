@@ -174,7 +174,7 @@ bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName L
 	}
 	
 	//저장
-	return T3GameInstance->SaveGame();
+	return T3GameInstance->SaveGameToFile();
 }
 
 bool AT3GameMode::SaveInventoryAndPotionLevel(const AT3CharacterBase* Character)
@@ -235,7 +235,7 @@ bool AT3GameMode::SaveInventoryAndPotionLevel(const AT3CharacterBase* Character)
 	}
 	
 	//저장
-	if (!T3GameInstance->SaveGame())
+	if (!T3GameInstance->SaveGameToFile())
 	{
 		UE_LOG(LogTemp, Error, TEXT("SaveInventoryAndPotionLevel : 저장 실패"));
 		return false;
@@ -311,7 +311,7 @@ bool AT3GameMode::SaveOnlySkill(const AT3CharacterBase* Character)
     }
 
     // 2. 저장 (이때 파일에는 '기존에 저장되어 있던 위치'와 '새로운 스킬'이 함께 써집니다)
-    return T3GameInstance->SaveGame();
+    return T3GameInstance->SaveGameToFile();
 }
 
 bool AT3GameMode::SaveOnlyStat(const AT3CharacterBase* Character)
@@ -358,13 +358,13 @@ bool AT3GameMode::SaveOnlyStat(const AT3CharacterBase* Character)
 	}
 	
 	//저장
-	return T3GameInstance->SaveGame();
+	return T3GameInstance->SaveGameToFile();
 }
 
 void AT3GameMode::LoadGame()
 {
 	//저장된 게임을 불러오는데 성공하면 그 맵으로 이동
-	if (T3GameInstance->LoadGame())
+	if (T3GameInstance->LoadGameFromFile())
 	{
 		const TObjectPtr<UT3SaveGame> SaveGame = T3GameInstance->GetSavedGameData();
 		T3GameInstance->OpenLevel(SaveGame->SavedLevelName);
@@ -549,7 +549,7 @@ bool AT3GameMode::YouHaveBeenCorrupted(const AT3CharacterBase* Character) const
 	
 	//잃어버린 것을 반영하기 위한 저장
 	T3GameInstance->GetLostMoneyData()->AddLostMoney(NewLostMoney);
-	const bool SaveGameResult = T3GameInstance->SaveGame();
+	const bool SaveGameResult = T3GameInstance->SaveGameToFile();
 	const bool SaveLostMoneyResult = T3GameInstance->SaveLostMoney();
 	if (!SaveGameResult || !SaveLostMoneyResult)
 	{

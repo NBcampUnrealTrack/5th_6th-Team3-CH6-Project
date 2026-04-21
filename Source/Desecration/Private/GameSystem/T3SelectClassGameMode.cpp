@@ -39,7 +39,7 @@ void AT3SelectClassGameMode::MakeFirstGameData(const FString& PlayerName, const 
 	T3GameInstance->MakeFirstObjectStateData();
 	
 	//모든 게임 데이터 저장
-	T3GameInstance->SaveGame();
+	T3GameInstance->SaveGameToFile();
 	T3GameInstance->SaveLostMoney();
 	T3GameInstance->SaveObjectState();
 }
