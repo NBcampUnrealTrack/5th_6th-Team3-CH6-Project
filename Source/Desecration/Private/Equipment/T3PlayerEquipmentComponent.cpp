@@ -591,9 +591,9 @@ void UT3PlayerEquipmentComponent::RestoreRunes(const TArray<FName>& RuneIDs, TAr
 
 void UT3PlayerEquipmentComponent::EquipAccessory(UT3TestItemInstance* NewItem)
 {
-	if (!IsValid(NewItem))
+	if (!IsValid(NewItem) || NewItem->ItemID == NAME_None)
 	{
-		UE_LOG(LogTemp, Error, TEXT("EquipAccessory: NewItem이 유효하지 않음"));
+		UE_LOG(LogTemp, Warning, TEXT("EquipAccessory: 유효하지 않은 아이템 (ItemID가 None)"));
 		return;
 	}
 
@@ -605,6 +605,15 @@ void UT3PlayerEquipmentComponent::EquipAccessory(UT3TestItemInstance* NewItem)
 
 	if (IsValid(AccessoryInstance))
 	{
+		if (IsValid(OwnerCharacter) && IsValid(OwnerCharacter->InventoryComponent))
+		{
+			const FName OldItemID = AccessoryInstance->ItemID;
+			const int32 OldLevel = AccessoryInstance->CurrentLevel;
+
+			OwnerCharacter->InventoryComponent->SetAccessoryLevel(OldItemID, OldLevel);
+			OwnerCharacter->InventoryComponent->AddAccessoryItemByCount(OldItemID, 1);
+		}
+
 		UnequipAccessory();
 	}
 
@@ -626,6 +635,8 @@ void UT3PlayerEquipmentComponent::EquipAccessory(UT3TestItemInstance* NewItem)
 		ActiveAccessoryEffect = NewObject<UT3AccessoryEffectBase>(this, ItemRow->EffectClass);
 		ActiveAccessoryEffect->OnEquipped(OwnerCharacter);
 	}
+	
+	OnAccessoryChanged.Broadcast();
 }
 
 void UT3PlayerEquipmentComponent::UnequipAccessory()
@@ -653,6 +664,8 @@ void UT3PlayerEquipmentComponent::UnequipAccessory()
 	ActiveAccessoryEffect = nullptr;
 	
 	AccessoryInstance = nullptr;
+	
+	OnAccessoryChanged.Broadcast();
 }
 
 bool UT3PlayerEquipmentComponent::TryUpgradeAccessory(int32 MaxAllowedLevel)

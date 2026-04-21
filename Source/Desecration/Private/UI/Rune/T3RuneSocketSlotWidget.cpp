@@ -16,8 +16,12 @@ FReply UT3RuneSocketSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeome
 			if (SocketedIDs.Num() > 0)
 			{
 				EquipmentComponent->UnsocketRune(SocketedIDs[0], TargetEquipmentType);
+				return FReply::Handled();
 			}
 		}
+
+		// 소켓에 룬이 없으면 델리게이트 발동 (블루프린트에서 장신구 해제 등 처리)
+		OnRightClickedEmpty.Broadcast();
 		return FReply::Handled();
 	}
 
