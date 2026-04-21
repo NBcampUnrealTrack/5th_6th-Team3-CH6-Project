@@ -60,6 +60,14 @@ void UT3GameInstance::OnStart()
 	}
 }
 
+void UT3GameInstance::Shutdown()
+{
+	//게임 정료시 가지고 있던 게임 내용을 파일로 저장
+	SaveGameToFile();
+	
+	Super::Shutdown();
+}
+
 void UT3GameInstance::MakeFirstSettings()
 {
 	//효과음, 배경음 모두 0.8을 기본으로
@@ -159,6 +167,11 @@ TObjectPtr<UT3SaveGame> UT3GameInstance::MakeFirstGameData(const ECharacterClass
 
 bool UT3GameInstance::SaveGameToFile()
 {
+	if (!SavedGameData)
+	{
+		return false;
+	}
+	
 	return UGameplayStatics::SaveGameToSlot(SavedGameData, SAVE_GAME_NAME, 0);
 }
 
@@ -169,7 +182,6 @@ bool UT3GameInstance::LoadGameFromFile()
 	{
 		return false;
 	}
-	UE_LOG(LogTemp, Error, TEXT("세이브에 저장된 현재 위치는 : %s"), *SavedData->PlayerLocation.ToString());
 	
 	SavedGameData = SavedData;
 	return true;
@@ -246,6 +258,9 @@ void UT3GameInstance::OpenLevel(const ELevelName LevelName)
 
     UE_LOG(LogTemp, Warning, TEXT("Attempting to Open Level: %s"), *LevelPath);
 	CurrentLevel = LevelName;
+	
+	//최종 호출 전 현재 게임을 파일로 저장
+	SaveGameToFile();
     
     // 최종 호출
     UGameplayStatics::OpenLevel(CurrentWorld, FName(*LevelPath));

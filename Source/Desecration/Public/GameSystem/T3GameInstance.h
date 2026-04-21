@@ -69,6 +69,9 @@ public:
 protected:
 	virtual void OnStart() override;
 	
+public:
+	virtual void Shutdown() override;
+	
 private:
 	//최초 설정값 생성
 	void MakeFirstSettings();

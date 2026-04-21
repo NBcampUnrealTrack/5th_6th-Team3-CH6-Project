@@ -33,9 +33,6 @@ void AT3SelectClassGameMode::MakeFirstGameData(const FString& PlayerName, const 
 			FirstGameData->WeaponAttackPower = WeaponRow->BaseAttackPower;
 		}
 	}
-	
-	//게임 데이터 저장
-	T3GameInstance->SaveGameToFile();
 }
 
 void AT3SelectClassGameMode::TutorialStart_Implementation()
