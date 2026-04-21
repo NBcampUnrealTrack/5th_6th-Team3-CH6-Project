@@ -610,4 +610,11 @@ private:
 	ET3MonsterType MonsterType = ET3MonsterType::MiddleBoss;
 
 #pragma endregion
+	
+#pragma region 장신구
+
+public:
+	virtual void SetAnimationSpeedMultiplier(float MoveAnimMultiplier, float AttackAnimMultiplier) override;
+	
+#pragma endregion
 };
