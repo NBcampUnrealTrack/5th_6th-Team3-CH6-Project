@@ -163,6 +163,9 @@ struct FT3AccessoryDataRow : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base")
 	ET3AccessoryType AccessoryType = ET3AccessoryType::Vigor;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
+	FText Description = FText::GetEmpty();
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base")
 	int32 BaseStatBonus = 0;
 
@@ -177,11 +180,11 @@ USTRUCT(BlueprintType)
 struct FT3AccessorySaveData
 {
 	GENERATED_BODY()
-	
-	UPROPERTY()
+
+	UPROPERTY(BlueprintReadWrite)
 	FName ItemID = NAME_None;
-	
-	UPROPERTY()
+
+	UPROPERTY(BlueprintReadWrite)
 	int32 Level = 0;
 };
 
