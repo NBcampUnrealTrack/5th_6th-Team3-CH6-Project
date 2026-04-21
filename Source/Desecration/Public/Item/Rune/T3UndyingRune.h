@@ -19,6 +19,8 @@ public:
 	virtual float GetCooldownRemaining() const override;
 	
 	virtual void RestoreCooldown(float RemainingTime) override;
+
+	virtual void ResetCooldown() override;
 	
 private:
 	TWeakObjectPtr<AT3CharacterBase> CachedOwner;

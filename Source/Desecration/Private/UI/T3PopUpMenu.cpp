@@ -7,9 +7,9 @@
 #include "UI/T3ConfirmPanel.h"
 #include "UI/T3SettingsPanel.h"
 
-void UT3PopUpMenu::NativeConstruct()
+void UT3PopUpMenu::NativeOnInitialized()
 {
-	Super::NativeConstruct();
+	Super::NativeOnInitialized();
 	
 	//플레이어 컨트롤러
 	T3PlayerController = Cast<AT3PlayerController>(GetOwningPlayer());
@@ -39,15 +39,7 @@ void UT3PopUpMenu::NativeConstruct()
 	ResumeButton->OnClicked.AddDynamic(this, &ThisClass::OnClickResumeButton);
 	LoadButton->OnClicked.AddDynamic(this, &ThisClass::OnClickLoadButton);
 	TitleButton->OnClicked.AddDynamic(this, &ThisClass::OnClickTitleButton);
-	//설정 버튼은 마을에서만 동작
-	if (T3GameInstance->GetCurrentLevel() == ELevelName::Town)
-	{
-		SettingsButton->OnClicked.AddDynamic(this, &ThisClass::OnClickSettingsButton);
-	}
-	else
-	{
-		SettingsButton->SetIsEnabled(false);
-	}
+	SettingsButton->OnClicked.AddDynamic(this, &ThisClass::OnClickSettingsButton);
 	
 	//설정 패널을 닫을 때 메뉴 복구하기
 	SettingsPanel->OnClosePanel.BindUObject(this, &ThisClass::OnCloseSettingsPanel);
@@ -76,7 +68,7 @@ void UT3PopUpMenu::SetActivePopUpMenu(const bool bActive)
 	SetVisibility(bActive ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 }
 
-bool UT3PopUpMenu::IsActivePopUpMenu()
+bool UT3PopUpMenu::IsActivePopUpMenu() const
 {
 	return GetVisibility() == ESlateVisibility::Visible;
 }

@@ -3,7 +3,7 @@
 #include "Sound/SoundClass.h"
 #include "UI/T3Slider.h"
 
-void UT3SoundSettings::CustomNativeConstruct()
+void UT3SoundSettings::OnParentConstruct()
 {
 	//사운드 클래스 가져오기
 	SoundClassBGM = T3GameInstance->GetSoundClassBGM();

@@ -31,6 +31,7 @@ public:
 	ET3EquipmentType ItemType;
 
 	// 초기화 함수
+	UFUNCTION(BlueprintCallable)
 	void Init(FName InItemID, int32 InLevel, ET3EquipmentType InType)
 	{
 		ItemID = InItemID;

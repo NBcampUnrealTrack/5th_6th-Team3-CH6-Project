@@ -3,7 +3,7 @@
 #include "Components/ComboBoxString.h"
 #include "Kismet/KismetInternationalizationLibrary.h"
 
-void UT3GeneralSettings::CustomNativeConstruct()
+void UT3GeneralSettings::OnParentConstruct()
 {	
 	//콤보 박스에 항목 추가
 	for (const ELanguage Language : TEnumRange<ELanguage>())
@@ -55,10 +55,10 @@ FString UT3GeneralSettings::ELanguageToTranslatedString(const ELanguage Language
 {
 	switch (Language)
 	{
-	case ELanguage::English:
+	case ELanguage::en:
 		return TEXT("English");
 		
-	case ELanguage::Korean:
+	case ELanguage::ko:
 		return TEXT("한국어");
 		
 	default:
@@ -70,7 +70,11 @@ FString UT3GeneralSettings::ELanguageToTranslatedString(const ELanguage Language
 
 FString UT3GeneralSettings::ELanguageToIETF(const ELanguage Language)
 {
-	return UEnum::GetDisplayValueAsText(Language).ToString();
+	if (const UEnum* EnumPtr = StaticEnum<ELanguage>())
+	{
+		return EnumPtr->GetNameStringByValue(static_cast<int64>(Language));
+	}
+	return FString();
 }
 
 ELanguage UT3GeneralSettings::IETFToELanguage(const FString& IETF)

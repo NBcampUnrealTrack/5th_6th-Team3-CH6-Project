@@ -171,6 +171,10 @@ public:
 	UPROPERTY()
 	FT3ItemSaveData ArmorSaveData;
 	
+	// 장신구 저장 데이터
+	UPROPERTY()
+	FT3AccessorySaveData AccessorySaveData;
+	
 	// 직업 전용 소켓 룬 저장 데이터
 	UPROPERTY()
 	TArray<FName> ClassSocketedRuneIDs;
@@ -201,12 +205,8 @@ public:
 	UPROPERTY()
 	TMap<int32, bool> SkillUnlockStates;
 	
-	//현재 스킬
+	// 장착된 스킬 슬롯 배열 (최대 4개, [0]이 현재 활성 슬롯)
 	UPROPERTY()
-	int32 CurrentSkillSlot;
-	
-	//다음 스킬
-	UPROPERTY()
-	int32 NextSkillSlot;
+	TArray<int32> EquippedSkillIDs;
 #pragma endregion
 };

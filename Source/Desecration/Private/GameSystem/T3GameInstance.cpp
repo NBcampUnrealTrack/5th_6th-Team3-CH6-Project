@@ -12,41 +12,6 @@
 #include "Framework/Application/SlateApplication.h" // Slate 관련
 #include "Kismet/KismetInternationalizationLibrary.h"
 
-void UT3GameInstance::StartCustomLoading()
-{
-    if (LoadingWidgetClass && !LoadingWidgetInstance)
-    {
-        // 1. 위젯 생성
-        LoadingWidgetInstance = CreateWidget<UUserWidget>(this, LoadingWidgetClass);
-
-        if (LoadingWidgetInstance && GEngine && GEngine->GameViewport)
-        {
-            // 2. AddToViewport 대신 GameViewport에 직접 추가 (레벨 전환 시 파괴 방지)
-            GEngine->GameViewport->AddViewportWidgetContent(
-                LoadingWidgetInstance->TakeWidget(),
-                9999999 // 높은 ZOrder 설정
-            );
-            
-            UE_LOG(LogTemp, Log, TEXT("Custom Loading UI Added to Viewport"));
-        }
-    }
-}
-
-void UT3GameInstance::EndCustomLoading()
-{
-    if (LoadingWidgetInstance && GEngine && GEngine->GameViewport)
-    {
-        // 3. 명시적으로 뷰포트에서 제거 (TakeWidget으로 가져왔던 Slate를 제거)
-        GEngine->GameViewport->RemoveViewportWidgetContent(LoadingWidgetInstance->TakeWidget());
-        
-        // 4. 참조 해제 (메모리 정리)
-        LoadingWidgetInstance = nullptr;
-        
-        UE_LOG(LogTemp, Log, TEXT("Custom Loading UI Removed"));
-    }
-}
-
-
 FText UT3GameInstance::GetTextFromTable(const FString& Namespace, const FString& Key)
 {
 	FText ReturnValue;
@@ -282,6 +247,40 @@ void UT3GameInstance::OpenLevelBySavedData()
 	if (SavedGameData)
 	{
 		OpenLevel(SavedGameData->SavedLevelName);
+	}
+}
+
+void UT3GameInstance::StartCustomLoading()
+{
+	if (LoadingWidgetClass && !LoadingWidgetInstance)
+	{
+		// 1. 위젯 생성
+		LoadingWidgetInstance = CreateWidget<UUserWidget>(this, LoadingWidgetClass);
+
+		if (LoadingWidgetInstance && GEngine && GEngine->GameViewport)
+		{
+			// 2. AddToViewport 대신 GameViewport에 직접 추가 (레벨 전환 시 파괴 방지)
+			GEngine->GameViewport->AddViewportWidgetContent(
+				LoadingWidgetInstance->TakeWidget(),
+				9999999 // 높은 ZOrder 설정
+			);
+            
+			UE_LOG(LogTemp, Log, TEXT("Custom Loading UI Added to Viewport"));
+		}
+	}
+}
+
+void UT3GameInstance::EndCustomLoading()
+{
+	if (LoadingWidgetInstance && GEngine && GEngine->GameViewport)
+	{
+		// 3. 명시적으로 뷰포트에서 제거 (TakeWidget으로 가져왔던 Slate를 제거)
+		GEngine->GameViewport->RemoveViewportWidgetContent(LoadingWidgetInstance->TakeWidget());
+        
+		// 4. 참조 해제 (메모리 정리)
+		LoadingWidgetInstance = nullptr;
+        
+		UE_LOG(LogTemp, Log, TEXT("Custom Loading UI Removed"));
 	}
 }
 

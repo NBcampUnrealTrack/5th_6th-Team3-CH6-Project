@@ -152,6 +152,7 @@ void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)
 			}
 		}
 	}
+	CurrentFootOffset = Data->FootOffset_Z;
 }
 
 
@@ -560,7 +561,9 @@ void AT3CharacterBase::OnDeath()
 {
 	bMoveLock = true;
 	OnDeathAnimation();
-	
+
+	EquipComp->ResetRunesForNewRun();
+
 	if (const TObjectPtr<AT3PlayerController> PC = GetController<AT3PlayerController>())
 	{
 		PC->ClosePopupMenu();
