@@ -69,12 +69,12 @@ ECharacterClass AT3GameMode::GetPlayerClass()
 	return SaveGame->PlayerClass;
 }
 
-bool AT3GameMode::SaveGame_V2(const AT3CharacterBase* Character, const ESaveType SaveType, const ELevelName LevelName, const FVector& TargetLocation, const FRotator& TargetRotation)
+bool AT3GameMode::SaveGameV2(const AT3CharacterBase* Character, const ESaveType SaveType, const ELevelName LevelName, const FVector& TargetLocation, const FRotator& TargetRotation)
 {
-	return SaveGame_V2(Character, static_cast<uint8>(SaveType), LevelName, TargetLocation, TargetRotation);
+	return SaveGameV2_MultiType(Character, static_cast<uint8>(SaveType), LevelName, TargetLocation, TargetRotation);
 }
 
-bool AT3GameMode::SaveGame_V2(const AT3CharacterBase* Character, const uint8 SaveType, const ELevelName LevelName, const FVector& TargetLocation, const FRotator& TargetRotation)
+bool AT3GameMode::SaveGameV2_MultiType(const AT3CharacterBase* Character, const uint8 SaveType, const ELevelName LevelName, const FVector& TargetLocation, const FRotator& TargetRotation)
 {
 	//캐릭터 정보를 저장된 게임 데이터에 저장한다.
 	const TObjectPtr<UT3SaveGame> SaveGame = T3GameInstance->GetSavedGameData();
@@ -202,7 +202,7 @@ bool AT3GameMode::SaveGame_V2(const AT3CharacterBase* Character, const uint8 Sav
 
 bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName LevelName, const bool bTemporarySave, const FVector TargetLocation, const FRotator TargetRotation)
 {
-	return SaveGame_V2(Character, 0, LevelName, TargetLocation, TargetRotation);
+	return SaveGameV2_MultiType(Character, 0, LevelName, TargetLocation, TargetRotation);
 }
 
 bool AT3GameMode::SaveInventoryAndPotionLevel(const AT3CharacterBase* Character)
@@ -210,13 +210,13 @@ bool AT3GameMode::SaveInventoryAndPotionLevel(const AT3CharacterBase* Character)
 	//인벤토리 저장
 	//기존 코드에는 장비에도 접근해서 장비 저장도 포함
 	constexpr uint8 SaveType = static_cast<uint8>(ESaveType::Inventory) + static_cast<uint8>(ESaveType::Equipment);
-	return SaveGame_V2(Character, SaveType);
+	return SaveGameV2_MultiType(Character, SaveType);
 }
 
 bool AT3GameMode::SaveOnlySkill(const AT3CharacterBase* Character)
 {
 	//스킬 저장
-    return SaveGame_V2(Character, ESaveType::Skill);
+    return SaveGameV2(Character, ESaveType::Skill);
 }
 
 bool AT3GameMode::SaveOnlyStat(const AT3CharacterBase* Character)
@@ -224,7 +224,7 @@ bool AT3GameMode::SaveOnlyStat(const AT3CharacterBase* Character)
 	//스탯 저장
 	//스탯 강화로 사용한 돈을 저장하기 위해 인벤토리에도 접근
 	constexpr uint8 SaveType = static_cast<uint8>(ESaveType::Stat) + static_cast<uint8>(ESaveType::Money);
-	return SaveGame_V2(Character, SaveType);
+	return SaveGameV2_MultiType(Character, SaveType);
 }
 
 void AT3GameMode::LoadGame() const

@@ -42,7 +42,7 @@ public:
 	 * @return true : 저장 성공
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
-	bool SaveGame_V2(
+	bool SaveGameV2(
 		const AT3CharacterBase* Character,
 		const ESaveType SaveType,
 		const ELevelName LevelName = ELevelName::Tutorial, 
@@ -50,7 +50,7 @@ public:
 		const FRotator& TargetRotation = FRotator(0,0,0));
 	
 	/**
-	 * 게임 저장하기 
+	 * 게임 저장하기 (비트 연산을 이용하여 둘 이상의 범위를 저장할 때 사용)
 	 * @details 각 매개변수 중 필수가 아닌 것은 저장 범위에 따라 적절하게 값을 넣거나 무시하면 됩니다.
 	 * @param Character : (필수) 현재 조종중인 캐릭터
 	 * @param SaveType : (필수) 저장 범위 (비트 연산을 통해 2개 이상의 범위를 사용할 수 있음)
@@ -59,7 +59,8 @@ public:
 	 * @param TargetRotation : 저장시 캐릭터의 회전값
 	 * @return true : 저장 성공
 	 */
-	bool SaveGame_V2(
+	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
+	bool SaveGameV2_MultiType(
 		const AT3CharacterBase* Character,
 		const uint8 SaveType,
 		const ELevelName LevelName = ELevelName::Tutorial, 
@@ -69,9 +70,9 @@ public:
 	/**
 	 * 게임 저장하기 
 	 * @return true : 저장 성공
-	 * @deprecated 세이브 로직 최적화를 했습니다. SaveGame_V2 함수를 사용하세요.
+	 * @deprecated 세이브 로직 최적화를 했습니다. SaveGame_V2 또는 SaveGameV2_MultiType 함수를 사용하세요.
 	 */
-	UE_DEPRECATED(5.7, "세이브 로직 최적화를 했습니다. SaveGame_V2 함수를 사용하세요.")
+	UE_DEPRECATED(0, "세이브 로직 최적화를 했습니다. SaveGame_V2 또는 SaveGameV2_MultiType 함수를 사용하세요.")
 	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
 	bool SaveGame(
 		const AT3CharacterBase* Character, 
@@ -84,27 +85,27 @@ public:
 	/**
 	 * 인벤토리 및 물약 강화 상태만 저장하기
 	 * @return true : 저장 성공
-	 * @deprecated 세이브 로직 최적화를 했습니다. SaveGame_V2 함수를 사용하세요.
+	 * @deprecated 세이브 로직 최적화를 했습니다. SaveGame_V2 또는 SaveGameV2_MultiType 함수를 사용하세요.
 	 */
-	UE_DEPRECATED(5.7, "세이브 로직 최적화를 했습니다. SaveGame_V2 함수를 사용하세요.")
+	UE_DEPRECATED(0, "세이브 로직 최적화를 했습니다. SaveGame_V2 또는 SaveGameV2_MultiType 함수를 사용하세요.")
 	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
 	bool SaveInventoryAndPotionLevel(const AT3CharacterBase* Character);
 	
 	/**
 	 * 스킬만 저장하기
 	 * @return true : 저장 성공
-	 * @deprecated 세이브 로직 최적화를 했습니다. SaveGame_V2()를 사용하세요.
+	 * @deprecated 세이브 로직 최적화를 했습니다. SaveGame_V2 또는 SaveGameV2_MultiType 함수를 사용하세요.
 	 */
-	UE_DEPRECATED(5.7, "세이브 로직 최적화를 했습니다. SaveGame_V2 함수를 사용하세요.")
+	UE_DEPRECATED(0, "세이브 로직 최적화를 했습니다. SaveGame_V2 또는 SaveGameV2_MultiType 함수를 사용하세요.")
 	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
 	bool SaveOnlySkill(const AT3CharacterBase* Character);
 
 	/**
 	 * 스탯만 저장하기
 	 * @return true : 저장 성공
-	 * @deprecated 세이브 로직 최적화를 했습니다. SaveGame_V2()를 사용하세요.
+	 * @deprecated 세이브 로직 최적화를 했습니다. SaveGame_V2 또는 SaveGameV2_MultiType 함수를 사용하세요.
 	 */
-	UE_DEPRECATED(5.7, "세이브 로직 최적화를 했습니다. SaveGame_V2 함수를 사용하세요.")
+	UE_DEPRECATED(0, "세이브 로직 최적화를 했습니다. SaveGame_V2 또는 SaveGameV2_MultiType 함수를 사용하세요.")
 	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
 	bool SaveOnlyStat(const AT3CharacterBase* Character);
 	
