@@ -69,9 +69,18 @@ public:
 	
 	virtual void Init() override;
 	
+protected:
+	virtual void OnStart() override;
+	
 private:
 	//최초 설정값 생성
 	void MakeFirstSettings();
+	
+	//저장된 창 위치를 적용
+	void LoadGameWindowPosition(const TObjectPtr<UGameUserSettings> GameUserSettings, const TSharedPtr<SWindow>& GameWindow);
+	
+	//창 위치 저장
+	void SaveGameWindowPosition(const TObjectPtr<UGameUserSettings> GameUserSettings, const TSharedPtr<SWindow>& GameWindow);
 
 public:
 	//첫 게임 데이터 생성

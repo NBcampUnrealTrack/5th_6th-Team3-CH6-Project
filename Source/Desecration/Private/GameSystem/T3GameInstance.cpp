@@ -50,6 +50,30 @@ void UT3GameInstance::Init()
 	}
 }
 
+void UT3GameInstance::OnStart()
+{
+	Super::OnStart();
+	
+	if (GEngine && GEngine->GameViewport)
+	{
+		//저장된 위치로 창을 옮김
+		const TSharedPtr<SWindow> GameWindow = GEngine->GameViewport->GetWindow();
+		LoadGameWindowPosition(GEngine->GetGameUserSettings(), GameWindow);
+		
+		//창을 옮길 때 그 창 위치를 기록
+		if (GameWindow)
+		{
+			GameWindow->SetOnWindowMoved(FOnWindowMoved::CreateLambda([this](const TSharedRef<SWindow>& GWindow)
+			{
+				if (GEngine)
+				{
+					SaveGameWindowPosition(GEngine->GetGameUserSettings(), GWindow);
+				}
+			}));
+		}
+	}
+}
+
 void UT3GameInstance::MakeFirstSettings()
 {
 	//효과음, 배경음 모두 0.8을 기본으로
@@ -78,6 +102,58 @@ void UT3GameInstance::MakeFirstSettings()
 	CurrentSettings->CameraSpeed = 1.0f;
 	
 	SaveUserSettings();
+}
+
+void UT3GameInstance::LoadGameWindowPosition(const TObjectPtr<UGameUserSettings> GameUserSettings, const TSharedPtr<SWindow>& GameWindow)
+{
+	if (!GameUserSettings || !GameWindow)
+	{
+		return;
+	}
+	
+	//전체 화면이라면 이하의 과정을 무시 (창모드, 전체 창모드에서만 동작)
+	if (GameUserSettings->GetFullscreenMode() == EWindowMode::Type::Fullscreen)
+	{
+		return;
+	}
+	
+	//창 위치
+	const FVector2D WindowPosition = GameUserSettings->GetWindowPosition();
+	const int32 SavedX = WindowPosition.X;
+	const int32 SavedY = WindowPosition.Y;
+	
+	//유효한 위치인지 확인
+	FDisplayMetrics DisplayMetrics;
+	FDisplayMetrics::RebuildDisplayMetrics(DisplayMetrics);
+	bool bValidPosition = false;
+	for (const FMonitorInfo& Monitor : DisplayMetrics.MonitorInfo)
+	{
+		if (SavedX >= Monitor.DisplayRect.Left && SavedX < Monitor.DisplayRect.Right &&
+			SavedY >= Monitor.DisplayRect.Top && SavedY < Monitor.DisplayRect.Bottom)
+		{
+			bValidPosition = true;
+			break;
+		}
+	}
+	
+	//유효한 위치라면 그 위치로 이동
+	if (bValidPosition)
+	{
+		GameWindow->MoveWindowTo(WindowPosition);
+	}
+}
+
+void UT3GameInstance::SaveGameWindowPosition(const TObjectPtr<UGameUserSettings> GameUserSettings, const TSharedPtr<SWindow>& GameWindow)
+{
+	if (!GameUserSettings || !GameWindow)
+	{
+		return;
+	}
+
+	//현재 창 위치를 기록
+	const FVector2D WindowPos = GameWindow->GetPositionInScreen();
+	GameUserSettings->SetWindowPosition(WindowPos.X, WindowPos.Y);
+	GameUserSettings->SaveConfig();
 }
 
 TObjectPtr<UT3SaveGame> UT3GameInstance::MakeFirstGameData(const ECharacterClass SelectedPlayerClass)
