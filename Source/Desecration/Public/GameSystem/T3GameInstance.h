@@ -68,39 +68,11 @@ public:
 	static FString GetStringFromTable(const FString& Namespace, const FString& Key);
 	
 	virtual void Init() override;
-
-	// 로딩 UI 시작 (레벨 이동 전 호출)
-	UFUNCTION(BlueprintCallable, Category = "Loading")
-	void StartCustomLoading();
-
-	// 로딩 UI 종료 (새 레벨 BeginPlay에서 호출)
-	UFUNCTION(BlueprintCallable, Category = "Loading")
-	void EndCustomLoading();
-
-	// 레벨 해금
-	UFUNCTION(BlueprintCallable)
-	void UnlockLevel(const ELevelName LevelName);
-
-	// 세이브포인트 해금 (위치/회전 정보 포함 버전으로 업데이트)
-	UFUNCTION(BlueprintCallable)
-	void UnlockSavePoint(ELevelName LevelName, FName SavePointID, FVector Location, FRotator Rotation);
-
-	// 레벨 해금 체크
-	UFUNCTION(BlueprintPure)
-	bool IsLevelUnlocked(ELevelName LevelName);
-
-	// 세이브포인트 해금 체크
-	UFUNCTION(BlueprintPure)
-	bool IsSavePointUnlocked(ELevelName LevelName, FName SavePointID);
 	
-	// 특정 세이브 포인트의 위치 정보 가져오기 (이동 구현용)
-	UFUNCTION(BlueprintPure)
-	bool GetSavePointTransform(ELevelName LevelName, FName SavePointID, FVector& OutLocation, FRotator& OutRotation);
-
 private:
 	//최초 설정값 생성
 	void MakeFirstSettings();
-	
+
 public:
 	//첫 게임 데이터 생성
 	TObjectPtr<UT3SaveGame> MakeFirstGameData(const ECharacterClass SelectedPlayerClass);
@@ -173,6 +145,34 @@ public:
 	//저장된 데이터를 기준으로 레벨(맵) 이동
 	UFUNCTION(BlueprintCallable)
 	void OpenLevelBySavedData();
+	
+	// 로딩 UI 시작 (레벨 이동 전 호출)
+	UFUNCTION(BlueprintCallable, Category = "Loading")
+	void StartCustomLoading();
+
+	// 로딩 UI 종료 (새 레벨 BeginPlay에서 호출)
+	UFUNCTION(BlueprintCallable, Category = "Loading")
+	void EndCustomLoading();
+
+	// 레벨 해금
+	UFUNCTION(BlueprintCallable)
+	void UnlockLevel(const ELevelName LevelName);
+
+	// 세이브포인트 해금 (위치/회전 정보 포함 버전으로 업데이트)
+	UFUNCTION(BlueprintCallable)
+	void UnlockSavePoint(ELevelName LevelName, FName SavePointID, FVector Location, FRotator Rotation);
+
+	// 레벨 해금 체크
+	UFUNCTION(BlueprintPure)
+	bool IsLevelUnlocked(ELevelName LevelName);
+
+	// 세이브포인트 해금 체크
+	UFUNCTION(BlueprintPure)
+	bool IsSavePointUnlocked(ELevelName LevelName, FName SavePointID);
+	
+	// 특정 세이브 포인트의 위치 정보 가져오기 (이동 구현용)
+	UFUNCTION(BlueprintPure)
+	bool GetSavePointTransform(ELevelName LevelName, FName SavePointID, FVector& OutLocation, FRotator& OutRotation);
 	
 	//현재 레벨
 	UFUNCTION(BlueprintPure)
