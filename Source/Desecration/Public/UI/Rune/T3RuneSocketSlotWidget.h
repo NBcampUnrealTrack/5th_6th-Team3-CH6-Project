@@ -7,6 +7,9 @@
 
 class UT3PlayerEquipmentComponent;
 
+// 룬 소켓이 비어있을 때 우클릭 — 장신구 해제 등 외부 처리용
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRuneSocketRightClickedEmpty);
+
 UCLASS()
 class DESECRATION_API UT3RuneSocketSlotWidget : public UUserWidget
 {
@@ -18,6 +21,10 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
 	TObjectPtr<UT3PlayerEquipmentComponent> EquipmentComponent;
+
+	// 소켓이 비어있을 때 우클릭 시 발동 — 블루프린트에서 장신구 해제 등에 바인딩
+	UPROPERTY(BlueprintAssignable, Category = "Rune Socket")
+	FOnRuneSocketRightClickedEmpty OnRightClickedEmpty;
 
 protected:
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;

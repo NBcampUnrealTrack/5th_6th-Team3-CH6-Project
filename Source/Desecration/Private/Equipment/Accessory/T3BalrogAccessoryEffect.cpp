@@ -1,5 +1,6 @@
 #include "Equipment/Accessory/T3BalrogAccessoryEffect.h"
 
+#include "DrawDebugHelpers.h"
 #include "Engine/DamageEvents.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Monster/Interface/T3Monster.h"
@@ -40,6 +41,11 @@ void UT3BalrogAccessoryEffect::PerformDamage()
 		nullptr,
 		{Owner},
 		Overlapped);
+
+	if (bShowDebugRadius)
+	{
+		DrawDebugSphere(Owner->GetWorld(), Owner->GetActorLocation(), DamageRadius, 16, FColor::Red, false, DamageInterval);
+	}
 
 	for (AActor* Hit : Overlapped)
 	{

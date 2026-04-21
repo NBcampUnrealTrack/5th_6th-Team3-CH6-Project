@@ -25,6 +25,9 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly)
 	float DamageInterval = 3.f;
-	
+
+	UPROPERTY(EditDefaultsOnly)
+	bool bShowDebugRadius = false;
+
 	FTimerHandle DamageTimerHandle;
 };
