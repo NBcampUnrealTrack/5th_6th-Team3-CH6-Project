@@ -4,6 +4,8 @@
 #include "UObject/Object.h"
 #include "T3AccessoryEffectBase.generated.h"
 
+class AT3CharacterBase;
+
 UCLASS(Abstract, Blueprintable)
 class DESECRATION_API UT3AccessoryEffectBase : public UObject
 {

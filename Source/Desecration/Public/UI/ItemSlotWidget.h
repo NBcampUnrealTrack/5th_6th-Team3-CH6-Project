@@ -40,6 +40,12 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	bool SetIsEtcSlot(bool IsEtcSlot);
+
+	UFUNCTION(BlueprintPure)
+	bool GetIsAccSlot() const;
+
+	UFUNCTION(BlueprintCallable)
+	bool SetIsAccSlot(bool IsAccSlot);
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnInventorySlotClicked OnSlotClicked;
@@ -57,6 +63,9 @@ protected:
 	UPROPERTY(BlueprintReadWrite)
 	uint8 bIsEtcSlot : 1 = false;
 
+	UPROPERTY(BlueprintReadWrite)
+	uint8 bIsAccSlot : 1 = false;
+	
 	uint8 bDragDetected : 1 = false;
 	
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;

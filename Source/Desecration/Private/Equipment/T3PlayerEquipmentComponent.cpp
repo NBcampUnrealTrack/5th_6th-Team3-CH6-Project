@@ -591,13 +591,25 @@ void UT3PlayerEquipmentComponent::RestoreRunes(const TArray<FName>& RuneIDs, TAr
 
 void UT3PlayerEquipmentComponent::EquipAccessory(UT3TestItemInstance* NewItem)
 {
+	if (!IsValid(NewItem))
+	{
+		UE_LOG(LogTemp, Error, TEXT("EquipAccessory: NewItem이 유효하지 않음"));
+		return;
+	}
+
+	if (!IsValid(AccessoryTable))
+	{
+		UE_LOG(LogTemp, Error, TEXT("EquipAccessory: AccessoryTable이 할당되지 않음"));
+		return;
+	}
+
 	if (IsValid(AccessoryInstance))
 	{
 		UnequipAccessory();
 	}
-	
+
 	AccessoryInstance = NewItem;
-	
+
 	FT3AccessoryDataRow* ItemRow =
 		AccessoryTable->FindRow<FT3AccessoryDataRow>(AccessoryInstance->ItemID, TEXT("EquipAccessory"));
 	

@@ -20,6 +20,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCooldownUpdated, FName, ItemID, 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCooldownProgressUpdated, FName, ItemID, float, Progress);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMoneyUpdated, int32, NewMoney);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPotionUpgraded);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAccessoryInventoryUpdated);
 
 UENUM(BlueprintType)
 enum class EConsumableItemType : uint8
@@ -96,12 +97,31 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	void AddEtcItemByCount(const FName& ItemName, int32 Count = 1);
-	
+
 	UFUNCTION(BlueprintCallable)
 	bool RemoveEtcItemByCount(const FName& ItemName, int32 Count = 1);
-	
+
 	UFUNCTION(BlueprintCallable)
 	int32 GetRuneItemCountByRuneID(const FName& RuneID);
+
+	UFUNCTION(BlueprintCallable)
+	void AddAccessoryItemByCount(const FName& ItemName, int32 Count = 1);
+
+	UFUNCTION(BlueprintCallable)
+	bool RemoveAccessoryItemByCount(const FName& ItemName, int32 Count = 1);
+
+	UFUNCTION(BlueprintCallable)
+	void SwapAccessorySlots(int32 SourceSlotIndex, int32 TargetSlotIndex);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory")
+	int32 GetAccessoryCountByItemID(const FName& ItemName);
+
+	// 악세서리 강화 레벨 캐시 — 장착 해제 시 저장, 장착 시 읽기
+	UFUNCTION(BlueprintCallable, Category = "Inventory|Accessory")
+	void SetAccessoryLevel(const FName& ItemName, int32 Level);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory|Accessory")
+	int32 GetAccessoryLevel(const FName& ItemName) const;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Inventory|Consumable")
 	TArray<FInventorySlot> Items;
@@ -111,6 +131,9 @@ public:
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Inventory|Etc")
 	TArray<FInventorySlot> EtcItems;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory|Accessory")
+	TArray<FInventorySlot> AccessoryItems;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Inventory|Consumable")
 	int32 InventorySize;
@@ -120,12 +143,18 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Inventory|Etc")
 	int32 EtcInventorySize;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory|Accessory")
+	int32 AccessoryInventorySize;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Data|Rune")
 	TObjectPtr<UDataTable> RuneTable;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Data|Etc")
 	TObjectPtr<UDataTable> EtcTable;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Data|Accessory")
+	TObjectPtr<UDataTable> AccessoryTable;
 	
 	UPROPERTY(BlueprintAssignable, Category = "Inventory")
 	FOnInventoryUpdated OnInventoryUpdated;
@@ -135,6 +164,9 @@ public:
 	
 	UPROPERTY(BlueprintAssignable, Category = "Inventory")
 	FOnEtcInventoryUpdated OnEtcInventoryUpdated;
+
+	UPROPERTY(BlueprintAssignable, Category = "Inventory")
+	FOnAccessoryInventoryUpdated OnAccessoryInventoryUpdated;
 	
 	UPROPERTY(BlueprintAssignable, Category = "Inventory")
 	FOnInventoryInitialized OnInventoryInitialized;
@@ -203,6 +235,10 @@ private:
 	UPROPERTY()
 	AT3CharacterBase* OwnerCharacter;
 	
+	// 악세서리별 강화 레벨 (ItemID → Level)
+	UPROPERTY()
+	TMap<FName, int32> AccessoryLevelMap;
+
 	UPROPERTY()
 	TMap<FName, float> ItemCooldownStartTimes;
     
