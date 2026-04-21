@@ -12,6 +12,51 @@ struct FInventorySlot;
 struct FSkillData;
 enum class ECharacterClass : uint8;
 
+UENUM(BlueprintType)
+enum class ESaveType : uint8
+{
+	All = 0b0,//전체
+	Location = 0b1,//캐릭터 위치
+	Stat = 0b10,//캐릭터 스탯
+	Inventory = 0b100,//인벤토리 (표션 강화 레벨 포함)
+	Money = 0b1000,//재화만 따로 저장
+	Equipment = 0b10000,//장비
+	Skill = 0b100000,//스킬
+};
+
+//게임 오버로 인해 잃어버린 재화에 대한 정보
+USTRUCT(BlueprintType)
+struct FLostMoney
+{
+	GENERATED_BODY()
+	
+	FLostMoney()
+	{
+		LevelName = ELevelName::Tutorial;
+		Location = FVector::Zero();
+		Money = 0;
+	}
+	
+	FLostMoney(const ELevelName LevelName, const FVector& Location, const int32 Money)
+	{
+		this->LevelName = LevelName;
+		this->Location = Location;
+		this->Money = Money;
+	}
+	
+	//장소
+	UPROPERTY()
+	ELevelName LevelName;
+	
+	//얼마나 잃었는가
+	UPROPERTY()
+	int32 Money;
+	
+	//위치
+	UPROPERTY()
+	FVector Location;
+};
+
 UCLASS()
 class DESECRATION_API UT3SaveGame : public UT3SaveGameParent
 {
@@ -24,6 +69,12 @@ public:
 	//지정한 캐릭터 데이터로 스탯 변경
 	void SetStatByCharacterData(TObjectPtr<UT3CharacterDataAsset> CharacterData);
 	
+	//잃어버린 재화 추가
+	void AddLostMoney(FLostMoney NewLostMoney);
+	
+	//잃어버린 재화를 회수하여 목록에서 제거
+	void RegainLostMoney(const int32 LostMoneyID);
+	
 	//플레이어의 클래스
 	UPROPERTY()
 	ECharacterClass PlayerClass;
@@ -32,6 +83,19 @@ public:
 	UPROPERTY()
 	FString PlayerName;
 	
+	//현재 도달한 세이브 포인트(룬) 위치
+	UPROPERTY()
+	TMap<ELevelName, FLevelProgressData> LevelProgressMap;
+	
+	//잃어버린 재화 목록
+	UPROPERTY()
+	TMap<int32, FLostMoney> LostMoneyList;
+	
+	//모든 레벨의 물체 상태
+	UPROPERTY()
+	TMap<int32, int32> LevelObjectStates;
+	
+#pragma region 캐릭터 위치
 	//저장한 맵 내의 위치
 	UPROPERTY()
 	FVector PlayerLocation;
@@ -40,14 +104,9 @@ public:
 	UPROPERTY()
 	FRotator PlayerRotation;
 	
-#pragma region 레벨(맵)
 	//저장한 곳의 맵 이름
 	UPROPERTY()
 	ELevelName SavedLevelName;
-	
-	//현재 도달한 세이브 포인트(룬) 위치
-	UPROPERTY()
-	TMap<ELevelName, FLevelProgressData> LevelProgressMap;
 #pragma endregion
 	
 #pragma region 캐릭터 스탯

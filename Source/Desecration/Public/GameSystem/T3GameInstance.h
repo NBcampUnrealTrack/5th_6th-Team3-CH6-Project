@@ -6,10 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "T3GameInstance.generated.h"
 
-
-class UT3SaveObjectState;
 enum class ECharacterClass : uint8;
-class UT3SaveLostMoney;
 class UT3SaveUserSettings;
 class UT3CharacterDataAsset;
 class UT3SaveGame;
@@ -86,12 +83,6 @@ public:
 	//첫 게임 데이터 생성
 	TObjectPtr<UT3SaveGame> MakeFirstGameData(const ECharacterClass SelectedPlayerClass);
 	
-	//잃어버린 재화 데이터 생성
-	void MakeFirstLostMoneyData();
-	
-	//물체 상태 데이터 생성
-	void MakeFirstObjectStateData();
-	
 	/**
 	 * 게임을 파일에 저장하기
 	 * @return true : 저장 성공
@@ -109,18 +100,6 @@ public:
 	
 	//저장된 유저 세팅 불러오기
 	bool LoadUserSettings();
-	
-	//잃어버린 재화 정보 저장
-	bool SaveLostMoney();
-	
-	//잃어버린 재화 정보 불러오기
-	bool LoadLostMoney();
-	
-	//물체 상태 저장
-	bool SaveObjectState();
-	
-	//물체 상태 불러오기
-	bool LoadObjectState();
 	
 	//지정한 캐릭터 클래스에 해당되는 데이터 에셋
 	TObjectPtr<UT3CharacterDataAsset> GetCharacterDataAsset();
@@ -193,12 +172,6 @@ public:
 	//현재 설정
 	FORCEINLINE TObjectPtr<UT3SaveUserSettings> GetCurrentSettings() { return CurrentSettings; }
 	
-	//잃어버린 재화
-	FORCEINLINE TObjectPtr<UT3SaveLostMoney> GetLostMoneyData() { return LostMoneyData; }
-	
-	//물체 상태
-	FORCEINLINE TObjectPtr<UT3SaveObjectState> GetObjectStateData() { return ObjectStateData; }
-	
 	//배경음 사운드 클래스
 	FORCEINLINE TObjectPtr<USoundClass> GetSoundClassBGM() { return SoundClassBGM; }
 	
@@ -226,14 +199,6 @@ private:
 	UPROPERTY()
 	TObjectPtr<UT3SaveGame> SavedGameData;
 	
-	//잃어버린 재화
-	UPROPERTY()
-	TObjectPtr<UT3SaveLostMoney> LostMoneyData;
-	
-	//물체 상태
-	UPROPERTY()
-	TObjectPtr<UT3SaveObjectState> ObjectStateData;
-	
 	//효과음
 	UPROPERTY(EditDefaultsOnly, Category = "Sound Class", meta = (AllowPrivateAccess = true))
 	TObjectPtr<USoundClass> SoundClassSE;
@@ -260,6 +225,4 @@ private:
 	//저장, 불러오기에 사용할 슬롯 이름
 	const FString SAVE_GAME_NAME = TEXT("SaveSlot1");
 	const FString SAVE_USER_SETTINGS_NAME = TEXT("UserSettings");
-	const FString SAVE_LOST_MONEY_NAME = TEXT("LostMoney");
-	const FString SAVE_OBJECT_STATE_NAME = TEXT("ObjectState");
 };

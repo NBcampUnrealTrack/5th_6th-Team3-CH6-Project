@@ -2,8 +2,6 @@
 
 #include "GameFramework/GameUserSettings.h"
 #include "GameSystem/T3SaveGame.h"
-#include "GameSystem/T3SaveLostMoney.h"
-#include "GameSystem/T3SaveObjectState.h"
 #include "GameSystem/T3SaveUserSettings.h"
 #include "Kismet/GameplayStatics.h"
 #include "Player/T3CharacterDataAsset.h"
@@ -30,18 +28,6 @@ void UT3GameInstance::Init()
 	
 	//게임 데이터
 	LoadGameFromFile();
-	
-	//잃어버린 재화
-	if (!LoadLostMoney())
-	{
-		MakeFirstLostMoneyData();
-	}
-	
-	//물체 상태
-	if (!LoadObjectState())
-	{
-		MakeFirstObjectStateData();
-	}
 	
 	//설정
 	if (!LoadUserSettings())
@@ -171,24 +157,6 @@ TObjectPtr<UT3SaveGame> UT3GameInstance::MakeFirstGameData(const ECharacterClass
 	return SavedGameData;
 }
 
-void UT3GameInstance::MakeFirstLostMoneyData()
-{
-	if (!LostMoneyData)
-	{
-		LostMoneyData = NewObject<UT3SaveLostMoney>();
-	}
-	LostMoneyData->ResetGameData();
-}
-
-void UT3GameInstance::MakeFirstObjectStateData()
-{
-	if (!ObjectStateData)
-	{
-		ObjectStateData = NewObject<UT3SaveObjectState>();
-	}
-	ObjectStateData->ResetGameData();
-}
-
 bool UT3GameInstance::SaveGameToFile()
 {
 	return UGameplayStatics::SaveGameToSlot(SavedGameData, SAVE_GAME_NAME, 0);
@@ -221,41 +189,6 @@ bool UT3GameInstance::LoadUserSettings()
 	}
 	
 	CurrentSettings = T3UserSettings;
-	return true;
-}
-
-bool UT3GameInstance::SaveLostMoney()
-{
-	return UGameplayStatics::SaveGameToSlot(LostMoneyData, SAVE_LOST_MONEY_NAME, 0);
-}
-
-bool UT3GameInstance::LoadLostMoney()
-{
-	TObjectPtr<UT3SaveLostMoney> T3LostMoney = Cast<UT3SaveLostMoney>(UGameplayStatics::LoadGameFromSlot(SAVE_LOST_MONEY_NAME, 0));
-	if (!T3LostMoney)
-	{
-		return false;
-	}
-	
-	LostMoneyData = T3LostMoney;
-	return true;
-}
-
-bool UT3GameInstance::SaveObjectState()
-{
-	return UGameplayStatics::SaveGameToSlot(ObjectStateData, SAVE_OBJECT_STATE_NAME, 0);
-}
-
-bool UT3GameInstance::LoadObjectState()
-{
-	//TObjectPtr<UT3SaveObjectState> T3ObjectState = Cast<UT3SaveObjectState>(UGameplayStatics::LoadGameFromSlot(SAVE_LOST_MONEY_NAME, 0));
-	TObjectPtr<UT3SaveObjectState> T3ObjectState = Cast<UT3SaveObjectState>(UGameplayStatics::LoadGameFromSlot(SAVE_OBJECT_STATE_NAME, 0));
-	if (!T3ObjectState)
-	{
-		return false;
-	}
-	
-	ObjectStateData = T3ObjectState;
 	return true;
 }
 
