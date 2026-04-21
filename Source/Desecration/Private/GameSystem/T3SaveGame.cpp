@@ -86,8 +86,8 @@ void UT3SaveGame::ResetGameData()
 	
 	//스킬
 	SkillUnlockStates.Empty();
-	CurrentSkillSlot = 1;
-	NextSkillSlot = 0;
+	EquippedSkillIDs.Empty();
+	EquippedSkillIDs.Add(1); // 기본: 1번 스킬만 장착
 }
 
 void UT3SaveGame::SetStatByCharacterData(const TObjectPtr<UT3CharacterDataAsset> CharacterData)

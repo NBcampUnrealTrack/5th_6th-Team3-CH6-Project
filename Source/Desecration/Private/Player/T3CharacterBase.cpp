@@ -152,6 +152,7 @@ void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)
 			}
 		}
 	}
+	CurrentFootOffset = Data->FootOffset_Z;
 }
 
 
