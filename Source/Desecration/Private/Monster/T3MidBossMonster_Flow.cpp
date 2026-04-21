@@ -1,4 +1,4 @@
-// T3MidBossMonster_Flow.cpp — 활성화, 인트로, 사망 연출, 디졸브, 이동/회전/워프
+﻿// T3MidBossMonster_Flow.cpp — 활성화, 인트로, 사망 연출, 디졸브, 이동/회전/워프
 
 #include "Monster/T3MidBossMonster.h"
 #include "Monster/T3BossWeaponComponent.h"
@@ -452,6 +452,7 @@ void AT3MidBossMonster::OnDissolveFinished()
 			}
 
 			// 무기 디졸브 완료 후 액터 제거
+
 			Self->SetLifeSpan(Self->WeaponComponent ? Self->WeaponComponent->WeaponDissolveDuration + 0.5f : 3.f);
 
 		}, 1.f, false);
