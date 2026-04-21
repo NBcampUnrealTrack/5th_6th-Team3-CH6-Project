@@ -28,6 +28,14 @@ public:
 	void ReturnToTitleLevel();
 	
 private:
+	//튜토리얼 시작시 캐릭터 위치
+	UPROPERTY(EditDefaultsOnly, Category = "Character Start", meta = (AllowPrivateAccess = true))
+	FVector TutorialStartLocation;
+	
+	//튜토리얼 시작시 캐릭터 회전 값
+	UPROPERTY(EditDefaultsOnly, Category = "Character Start", meta = (AllowPrivateAccess = true))
+	FRotator TutorialStartRotation;
+	
 	//무기 공격력 테이블 (기본 공격력 확인용)
 	UPROPERTY(EditDefaultsOnly, Category = "Data", meta = (AllowPrivateAccess = true))
 	TObjectPtr<UDataTable> WeaponTable;

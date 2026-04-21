@@ -36,6 +36,18 @@ bool UItemSlotWidget::SetIsEtcSlot(bool IsEtcSlot)
 	return bIsEtcSlot;
 }
 
+bool UItemSlotWidget::GetIsAccSlot() const
+{
+	return bIsAccSlot;
+}
+
+bool UItemSlotWidget::SetIsAccSlot(bool IsAccSlot)
+{
+	bIsAccSlot = IsAccSlot;
+
+	return bIsAccSlot;
+}
+
 bool UItemSlotWidget::GetSlotData_Implementation(FInventorySlot& OutSlotData) const
 {
 	return false;
@@ -46,7 +58,7 @@ FReply UItemSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, con
 	if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
 	{
 		OnSlotClicked.Broadcast(this, true);
-		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+		return FReply::Handled();
 	}
 	
 	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
@@ -205,6 +217,10 @@ bool UItemSlotWidget::NativeOnDrop(const FGeometry& InGeometry, const FDragDropE
 	else if (bIsEtcSlot)
 	{
 		InventoryComponent->SwapEtcSlots(ItemDragOp->SourceSlotIndex, SlotIndex);
+	}
+	else if (bIsAccSlot)
+	{
+		InventoryComponent->SwapAccessorySlots(ItemDragOp->SourceSlotIndex, SlotIndex);
 	}
 	else
 	{

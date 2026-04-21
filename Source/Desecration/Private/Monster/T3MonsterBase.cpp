@@ -6,6 +6,7 @@
 #include "Perception/AISense_Touch.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/WidgetComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 
 AT3MonsterBase::AT3MonsterBase()
@@ -81,6 +82,29 @@ float AT3MonsterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 	}
 
 	return ActualDamage;
+}
+
+void AT3MonsterBase::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
+{
+	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
+
+	if (GetCharacterMovement() && GetCharacterMovement()->MovementMode == EMovementMode::MOVE_Falling)
+	{
+		StartFallHeight = GetActorLocation().Z;
+	}
+}
+
+void AT3MonsterBase::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+
+	const float EndFallHeight = GetActorLocation().Z;
+	const float FallDistance = StartFallHeight - EndFallHeight;
+
+	if (FallDistance > DeathFallDistance)
+	{
+		TakeDamage(9999.f, FDamageEvent(), GetController(), this);
+	}
 }
 
 void AT3MonsterBase::OnCapsuleBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -178,4 +202,8 @@ void AT3MonsterBase::ApplyBonusDamage(float BonusDamage)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("T3MonsterBase: HealthComponent is null when taking damage."));
 	}
+}
+
+void AT3MonsterBase::SetAnimationSpeedMultiplier(float MoveAnimMultiplier, float AttackAnimMultiplier)
+{
 }

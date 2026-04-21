@@ -9,6 +9,7 @@ UT3InventoryComponent::UT3InventoryComponent()
 InventorySize(20),
 RuneInventorySize(20),
 EtcInventorySize(20),
+AccessoryInventorySize(20),
 Money(0),
 WeaponNormalStoneCount(0),
 WeaponEpicStoneCount(0),
@@ -31,6 +32,7 @@ PotionRecoveryUpgradeLevel(0)
 	Items.SetNum(InventorySize);
 	RuneItems.SetNum(RuneInventorySize);
 	EtcItems.SetNum(EtcInventorySize);
+	AccessoryItems.SetNum(AccessoryInventorySize);
 }
 
 void UT3InventoryComponent::BeginPlay()
@@ -505,6 +507,118 @@ int32 UT3InventoryComponent::GetRuneItemCountByRuneID(const FName& RuneID)
 		}
 	}
 	return 0;
+}
+
+void UT3InventoryComponent::AddAccessoryItemByCount(const FName& ItemName, int32 Count)
+{
+	for (FInventorySlot& AccessoryItem : AccessoryItems)
+	{
+		if (AccessoryItem.ItemID == ItemName)
+		{
+			AccessoryItem.ItemStack += Count;
+
+			UE_LOG(LogTemp, Log, TEXT("[%s] %d개 추가됨"), *AccessoryItem.ItemID.ToString(), Count);
+
+			OnAccessoryInventoryUpdated.Broadcast();
+			return;
+		}
+	}
+
+	for (FInventorySlot& AccessoryItem : AccessoryItems)
+	{
+		if (AccessoryItem.ItemID == NAME_None)
+		{
+			AccessoryItem.ItemID = ItemName;
+			AccessoryItem.ItemStack = Count;
+
+			UE_LOG(LogTemp, Log, TEXT("[%s] %d개 추가됨"), *AccessoryItem.ItemID.ToString(), Count);
+			
+			OnAccessoryInventoryUpdated.Broadcast();
+			return;
+		}
+	}
+}
+
+bool UT3InventoryComponent::RemoveAccessoryItemByCount(const FName& ItemName, int32 Count)
+{
+	for (FInventorySlot& AccessoryItem : AccessoryItems)
+	{
+		if (AccessoryItem.ItemID == ItemName)
+		{
+			if (AccessoryItem.ItemStack < Count)
+			{
+				UE_LOG(LogTemp, Error, TEXT("보유한 아이템 개수보다 제거하는 악세서리 아이템이 많음"));
+				return false;
+			}
+
+			AccessoryItem.ItemStack -= Count;
+
+			if (AccessoryItem.ItemStack <= 0)
+			{
+				AccessoryItem.ItemID = NAME_None;
+				AccessoryItem.ItemStack = 0;
+			}
+
+			OnAccessoryInventoryUpdated.Broadcast();
+			return true;
+		}
+	}
+
+	UE_LOG(LogTemp, Error, TEXT("제거 할 악세서리 아이템이 없음"));
+	return false;
+}
+
+void UT3InventoryComponent::SwapAccessorySlots(int32 SourceSlotIndex, int32 TargetSlotIndex)
+{
+	if (!AccessoryItems.IsValidIndex(SourceSlotIndex) || !AccessoryItems.IsValidIndex(TargetSlotIndex))
+	{
+		return;
+	}
+
+	if (SourceSlotIndex == TargetSlotIndex)
+	{
+		return;
+	}
+
+	FInventorySlot TempSlot = AccessoryItems[SourceSlotIndex];
+	AccessoryItems[SourceSlotIndex] = AccessoryItems[TargetSlotIndex];
+	AccessoryItems[TargetSlotIndex] = TempSlot;
+
+	OnAccessoryInventoryUpdated.Broadcast();
+}
+
+int32 UT3InventoryComponent::GetAccessoryCountByItemID(const FName& ItemName)
+{
+	for (FInventorySlot& AccessoryItem : AccessoryItems)
+	{
+		if (AccessoryItem.ItemID == ItemName)
+		{
+			return AccessoryItem.ItemStack;
+		}
+	}
+	return 0;
+}
+
+void UT3InventoryComponent::SetAccessoryLevel(const FName& ItemName, int32 Level)
+{
+	if (ItemName == NAME_None)
+	{
+		return;
+	}
+
+	AccessoryLevelMap.Add(ItemName, Level);
+}
+
+int32 UT3InventoryComponent::GetAccessoryLevel(const FName& ItemName) const
+{
+	if (ItemName == NAME_None)
+	{
+		return 0;
+	}
+
+	const int32* Found = AccessoryLevelMap.Find(ItemName);
+
+	return Found ? *Found : 0;
 }
 
 // 무기 강화석

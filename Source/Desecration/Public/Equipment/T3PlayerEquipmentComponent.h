@@ -16,6 +16,7 @@ class AT3CharacterBase;
 // 캐릭터팀에서 바인딩하여 공격력/방어력을 동기화
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnEquipmentStatsChanged, float, NewAttackPower, float, NewDefensePower, float, NewWeaponLevel);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRuneSocketChanged);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAccessoryChanged);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class DESECRATION_API UT3PlayerEquipmentComponent : public UActorComponent
@@ -29,7 +30,7 @@ public:
 	// BeginPlay 초기 장착, 강화, 룬 장착 시 자동 발송
 	UPROPERTY(BlueprintAssignable, Category = "Equipment|Events")
 	FOnEquipmentStatsChanged OnEquipmentStatsChanged;
-
+	
 protected:
 	virtual void BeginPlay() override;
 
@@ -161,9 +162,58 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Rune")
 	bool SocketRuneAuto(FName RuneID);
-	
+
+	void ResetRunesForNewRun();
+
 private:
 	TMap<TSubclassOf<UT3RuneBase>, float> RuneCooldownEndTimeMap;
+
+#pragma endregion
+
+#pragma region Accessory
+	
+private:
+	UPROPERTY(EditDefaultsOnly, Category = "Data")
+	TObjectPtr<UDataTable> AccessoryTable;
+	
+	uint8 bOniAccessoryEquipped : 1 = false;
+
+	void ApplyAccessoryStatPointBonus(const FT3AccessoryDataRow* Row, int32 Level, bool bRemove = false);
+	
+protected:
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "State")
+	TObjectPtr<UT3TestItemInstance> AccessoryInstance;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UT3AccessoryEffectBase> ActiveAccessoryEffect;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Stats")
+	int32 CachedAccessoryStatPointBonus = 0;
+	
+public:
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	void EquipAccessory(UT3TestItemInstance* NewItem);
+
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	void UnequipAccessory();
+
+	UFUNCTION(BlueprintCallable, Category = "Upgrade")
+	bool TryUpgradeAccessory(int32 MaxAllowedLevel);
+
+	UFUNCTION(BlueprintCallable, Category = "Equipment|Save")
+	void LoadAccessoryFromSave(const FT3AccessorySaveData& AccessoryData);
+
+	UFUNCTION(BlueprintCallable, Category = "Equipment|Save")
+	void GetAccessorySaveData(FT3AccessorySaveData& OutData) const;
+	
+	UFUNCTION()
+	void SetOniAccessoryEquipped(bool IsEquipped);
+	
+	UFUNCTION()
+	bool GetOniAccessoryEquipped() const;
+	
+	UPROPERTY(BlueprintAssignable)
+	FOnAccessoryChanged OnAccessoryChanged;
 	
 #pragma endregion
 };

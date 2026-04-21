@@ -33,6 +33,21 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	int CurrentStage;
 
+protected:
+	// 이동 상태(Walking, Falling 등)가 변경될 때
+	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
+
+	// 지면에 착지했을 때
+	virtual void Landed(const FHitResult& Hit) override;
+
+	// 낙하 시작 시점의 Z 높이
+	float StartFallHeight = 0.f;
+
+	// 즉사 낙하 거리
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Movement")
+	float DeathFallDistance = 1500.f;
+
+
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	class UT3HealthComponent* HealthComponent;
@@ -91,6 +106,13 @@ public:
 	
 private:
 	ET3MonsterType MonsterType = ET3MonsterType::Normal;
+	
+#pragma endregion
+	
+#pragma region 장신구
+
+public:
+	virtual void SetAnimationSpeedMultiplier(float MoveAnimMultiplier, float AttackAnimMultiplier) override;
 	
 #pragma endregion
 };

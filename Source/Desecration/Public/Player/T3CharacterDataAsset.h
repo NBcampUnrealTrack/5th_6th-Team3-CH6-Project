@@ -69,5 +69,8 @@ public:
 
     // 기본 스탯
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stat")
-    float MaxHealth = 150.f; 
+    float MaxHealth = 150.f;
+    
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Foot")
+    FVector FootOffset_Z = FVector(0.0f, 0.0f, 0.0f);
 };

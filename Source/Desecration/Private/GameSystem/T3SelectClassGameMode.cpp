@@ -22,6 +22,9 @@ void AT3SelectClassGameMode::MakeFirstGameData(const FString& PlayerName, const 
 	//첫 게임 데이터 생성
 	const TObjectPtr<UT3SaveGame> FirstGameData = T3GameInstance->MakeFirstGameData(SelectedPlayerClass);
 	FirstGameData->PlayerName = PlayerName;
+	//튜토리얼 시작 위치
+	FirstGameData->PlayerLocation = TutorialStartLocation;
+	FirstGameData->PlayerRotation = TutorialStartRotation;
 	//무기 테이블을 참고하여 추가로 초기화
 	if (WeaponTable)
 	{
