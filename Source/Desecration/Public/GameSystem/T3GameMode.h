@@ -69,9 +69,9 @@ public:
 	/**
 	 * 게임 저장하기 
 	 * @return true : 저장 성공
-	 * @deprecated 세이브 로직 최적화를 했습니다. SaveGame_V2()를 사용하세요.
+	 * @deprecated 세이브 로직 최적화를 했습니다. SaveGame_V2 함수를 사용하세요.
 	 */
-	UE_DEPRECATED(5.7, "세이브 로직 최적화를 했습니다. SaveGame_V2()를 사용하세요.")
+	UE_DEPRECATED(5.7, "세이브 로직 최적화를 했습니다. SaveGame_V2 함수를 사용하세요.")
 	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
 	bool SaveGame(
 		const AT3CharacterBase* Character, 
@@ -84,8 +84,9 @@ public:
 	/**
 	 * 인벤토리 및 물약 강화 상태만 저장하기
 	 * @return true : 저장 성공
+	 * @deprecated 세이브 로직 최적화를 했습니다. SaveGame_V2 함수를 사용하세요.
 	 */
-	UE_DEPRECATED(5.7, "세이브 로직 최적화를 했습니다. SaveGame_V2()를 사용하세요.")
+	UE_DEPRECATED(5.7, "세이브 로직 최적화를 했습니다. SaveGame_V2 함수를 사용하세요.")
 	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
 	bool SaveInventoryAndPotionLevel(const AT3CharacterBase* Character);
 	
@@ -94,7 +95,7 @@ public:
 	 * @return true : 저장 성공
 	 * @deprecated 세이브 로직 최적화를 했습니다. SaveGame_V2()를 사용하세요.
 	 */
-	UE_DEPRECATED(5.7, "세이브 로직 최적화를 했습니다. SaveGame_V2()를 사용하세요.")
+	UE_DEPRECATED(5.7, "세이브 로직 최적화를 했습니다. SaveGame_V2 함수를 사용하세요.")
 	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
 	bool SaveOnlySkill(const AT3CharacterBase* Character);
 
@@ -103,7 +104,7 @@ public:
 	 * @return true : 저장 성공
 	 * @deprecated 세이브 로직 최적화를 했습니다. SaveGame_V2()를 사용하세요.
 	 */
-	UE_DEPRECATED(5.7, "새로 만들어진 SaveGame함수(매개변수 있는 것)를 사용하세요")
+	UE_DEPRECATED(5.7, "세이브 로직 최적화를 했습니다. SaveGame_V2 함수를 사용하세요.")
 	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
 	bool SaveOnlyStat(const AT3CharacterBase* Character);
 	
