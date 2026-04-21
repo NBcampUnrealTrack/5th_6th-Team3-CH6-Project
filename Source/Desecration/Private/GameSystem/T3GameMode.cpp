@@ -88,7 +88,10 @@ bool AT3GameMode::SaveGameV2_MultiType(const AT3CharacterBase* Character, const 
 	if (SaveType == 0 || SaveType & static_cast<uint8>(ESaveType::Location))
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s : 로케이션 위치"), *SaveGame->PlayerLocation.ToString());
-		SaveGame->SavedLevelName = LevelName;
+		if (LevelName >= ELevelName::Tutorial)
+		{
+			SaveGame->SavedLevelName = LevelName;
+		}
 		SaveGame->PlayerLocation = TargetLocation;
 		SaveGame->PlayerRotation = TargetRotation;
 	}
