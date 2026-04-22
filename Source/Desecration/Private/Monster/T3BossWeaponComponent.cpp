@@ -1,7 +1,7 @@
 #include "Monster/T3BossWeaponComponent.h"
 #include "Desecration.h"
 #include "Components/StaticMeshComponent.h"
-#include "Components/BoxComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/TimelineComponent.h"
 #include "Curves/CurveFloat.h"
@@ -18,31 +18,31 @@ UT3BossWeaponComponent::UT3BossWeaponComponent()
 	WeaponMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	WeaponMeshComponent->SetCanEverAffectNavigation(false);
 
-	// 무기 판정 박스 — AttachToSocket()에서 WeaponMesh에 런타임 부착
+	// 무기 판정 캡슐 — AttachToSocket()에서 WeaponMesh에 런타임 부착
 	// (생성자 SetupAttachment는 UActorComponent 서브오브젝트에서 템플릿 불일치 유발)
-	WeaponHitBox = CreateDefaultSubobject<UBoxComponent>(TEXT("WeaponHitBox"));
+	WeaponHitBox = CreateDefaultSubobject<UCapsuleComponent>(TEXT("WeaponHitBox"));
 	WeaponHitBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	WeaponHitBox->SetCollisionObjectType(ECC_WorldDynamic);
 	WeaponHitBox->SetCollisionResponseToAllChannels(ECR_Ignore);
 	WeaponHitBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	WeaponHitBox->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
 	WeaponHitBox->SetGenerateOverlapEvents(true);
-	WeaponHitBox->SetBoxExtent(FVector(10.f, 5.f, 40.f));
+	WeaponHitBox->SetCapsuleSize(10.f, 40.f);
 
-	// 에디터에서 히트박스 와이어프레임 항상 표시 (선택하지 않아도 보임)
+	// 에디터에서 히트캡슐 와이어프레임 항상 표시 (선택하지 않아도 보임)
 	WeaponHitBox->bDrawOnlyIfSelected = false;
 	WeaponHitBox->ShapeColor = FColor::Red;
 	WeaponHitBox->SetHiddenInGame(true);
 
-	// 넓은 판정 박스 — 대쉬 내려찍기 등 특수 공격용 (런타임 부착)
-	WeaponHitBoxWide = CreateDefaultSubobject<UBoxComponent>(TEXT("WeaponHitBoxWide"));
+	// 넓은 판정 캡슐 — 대쉬 내려찍기 등 특수 공격용 (런타임 부착)
+	WeaponHitBoxWide = CreateDefaultSubobject<UCapsuleComponent>(TEXT("WeaponHitBoxWide"));
 	WeaponHitBoxWide->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	WeaponHitBoxWide->SetCollisionObjectType(ECC_WorldDynamic);
 	WeaponHitBoxWide->SetCollisionResponseToAllChannels(ECR_Ignore);
 	WeaponHitBoxWide->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	WeaponHitBoxWide->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
 	WeaponHitBoxWide->SetGenerateOverlapEvents(true);
-	WeaponHitBoxWide->SetBoxExtent(FVector(30.f, 30.f, 60.f));
+	WeaponHitBoxWide->SetCapsuleSize(30.f, 60.f);
 
 	WeaponHitBoxWide->bDrawOnlyIfSelected = false;
 	WeaponHitBoxWide->ShapeColor = FColor::Orange;
@@ -314,10 +314,11 @@ void UT3BossWeaponComponent::SetAttackCollisionEnabled(bool bEnable)
 			bEnable ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
 
 		UE_LOG(LogDesecration, Log,
-			TEXT("T3_BossWeapon: 무기 콜리전 %s (위치:%s, Extent:%s, GenerateOverlap:%d)"),
+			TEXT("T3_BossWeapon: 무기 콜리전 %s (위치:%s, 반경:%.0f, 반높이:%.0f, GenerateOverlap:%d)"),
 			bEnable ? TEXT("ON") : TEXT("OFF"),
 			*WeaponHitBox->GetComponentLocation().ToString(),
-			*WeaponHitBox->GetUnscaledBoxExtent().ToString(),
+			WeaponHitBox->GetUnscaledCapsuleRadius(),
+			WeaponHitBox->GetUnscaledCapsuleHalfHeight(),
 			WeaponHitBox->GetGenerateOverlapEvents());
 	}
 	else
@@ -339,9 +340,10 @@ void UT3BossWeaponComponent::SetWideCollisionEnabled(bool bEnable)
 			bEnable ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
 
 		UE_LOG(LogDesecration, Log,
-			TEXT("T3_BossWeapon: 넓은 콜리전 %s (Extent:%s)"),
+			TEXT("T3_BossWeapon: 넓은 콜리전 %s (반경:%.0f, 반높이:%.0f)"),
 			bEnable ? TEXT("ON") : TEXT("OFF"),
-			*WeaponHitBoxWide->GetUnscaledBoxExtent().ToString());
+			WeaponHitBoxWide->GetUnscaledCapsuleRadius(),
+			WeaponHitBoxWide->GetUnscaledCapsuleHalfHeight());
 	}
 }
 

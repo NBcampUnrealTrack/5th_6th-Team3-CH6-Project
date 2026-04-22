@@ -1,8 +1,9 @@
-// T3MidBossMonster_Flow.cpp — 활성화, 인트로, 사망 연출, 디졸브, 이동/회전/워프
+﻿// T3MidBossMonster_Flow.cpp — 활성화, 인트로, 사망 연출, 디졸브, 이동/회전/워프
 
 #include "Monster/T3MidBossMonster.h"
 #include "Monster/T3BossWeaponComponent.h"
 #include "Monster/T3MidBossHPBarWidget.h"
+#include "Monster/T3MidBossMaterialSet.h"
 #include "Desecration.h"
 #include "AIController.h"
 #include "Blueprint/UserWidget.h"
@@ -103,7 +104,7 @@ void AT3MidBossMonster::ActivateBoss(AActor* Activator)
 	OnMidBossActivated.Broadcast();
 
 	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 활성화 (타겟: %s, BGM: %s, HPBar: %s)"),
-		*BossName, *Activator->GetName(),
+		*BossDisplayName.ToString(), *Activator->GetName(),
 		BossBGM ? TEXT("O") : TEXT("X"),
 		BossHPBarWidget ? TEXT("O") : TEXT("X"));
 
@@ -145,7 +146,7 @@ void AT3MidBossMonster::StartBossLogic()
 		StateTreeComponent->StartLogic();
 	}
 
-	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s StateTree 시작"), *BossName);
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s StateTree 시작"), *BossDisplayName.ToString());
 }
 
 // ============================================================
@@ -360,7 +361,7 @@ void AT3MidBossMonster::FinishDeathSequence()
 	SetLifeSpan(DeathCleanupDelay);
 
 	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 사망 연출 완료 (%.0f초 후 제거)"),
-		*BossName, DeathCleanupDelay);
+		*BossDisplayName.ToString(), DeathCleanupDelay);
 }
 
 // ============================================================
@@ -407,7 +408,7 @@ void AT3MidBossMonster::StartDissolve()
 	DissolveTimeline->PlayFromStart();
 
 	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 디졸브 시작 (%.1f초, 머티리얼 %d개)"),
-		*BossName, DissolveDuration, DynamicMaterials.Num());
+		*BossDisplayName.ToString(), DissolveDuration, DynamicMaterials.Num());
 }
 
 void AT3MidBossMonster::OnDissolveUpdate(float Value)
@@ -423,7 +424,7 @@ void AT3MidBossMonster::OnDissolveUpdate(float Value)
 
 void AT3MidBossMonster::OnDissolveFinished()
 {
-	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 본체 디졸브 완료"), *BossName);
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 본체 디졸브 완료"), *BossDisplayName.ToString());
 
 	// 본체 메시 숨김
 	if (GetMesh())
@@ -452,6 +453,7 @@ void AT3MidBossMonster::OnDissolveFinished()
 			}
 
 			// 무기 디졸브 완료 후 액터 제거
+
 			Self->SetLifeSpan(Self->WeaponComponent ? Self->WeaponComponent->WeaponDissolveDuration + 0.5f : 3.f);
 
 		}, 1.f, false);
@@ -462,4 +464,63 @@ void AT3MidBossMonster::OnDissolveFinished()
 
 	// 무기 없으면 바로 제거
 	SetLifeSpan(0.5f);
+}
+
+// ============================================================
+// 머티리얼 세트 적용
+// ============================================================
+
+void AT3MidBossMonster::ApplyMaterialSet(const UT3MidBossMaterialSet* MaterialSet)
+{
+	if (!MaterialSet)
+	{
+		return;
+	}
+
+	// 본체 스켈레탈 메시 머티리얼 적용
+	if (USkeletalMeshComponent* BodyMesh = GetMesh())
+	{
+		const int32 SlotCount = FMath::Min(MaterialSet->BodyMaterials.Num(), BodyMesh->GetNumMaterials());
+		for (int32 i = 0; i < SlotCount; ++i)
+		{
+			if (MaterialSet->BodyMaterials[i])
+			{
+				BodyMesh->SetMaterial(i, MaterialSet->BodyMaterials[i]);
+			}
+		}
+	}
+
+	// 무기 머티리얼 적용
+	if (MaterialSet->WeaponMaterial && WeaponComponent && WeaponComponent->WeaponMeshComponent)
+	{
+		WeaponComponent->WeaponMeshComponent->SetMaterial(0, MaterialSet->WeaponMaterial);
+	}
+
+	// 디졸브용 DynamicMaterial 재생성 — SetMaterial()이 기존 DMI를 무효화하므로
+	if (bEnableDissolve)
+	{
+		DynamicMaterials.Empty();
+		CreateDynamicMaterials();
+
+		// 디졸브/프레넬 색상 오버라이드 적용
+		for (UMaterialInstanceDynamic* DynMat : DynamicMaterials)
+		{
+			if (!DynMat) continue;
+
+			if (MaterialSet->bOverrideDissolveColor)
+			{
+				DynMat->SetVectorParameterValue(TEXT("DissolveEv"), MaterialSet->DissolveColor);
+			}
+			if (MaterialSet->bOverrideFresnelColor)
+			{
+				DynMat->SetVectorParameterValue(TEXT("ColorFresnel"), MaterialSet->FresnelColor);
+			}
+		}
+	}
+
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 머티리얼 세트 적용 (본체:%d슬롯, 무기:%s, DMI재생성:%s)"),
+		*BossDisplayName.ToString(),
+		MaterialSet->BodyMaterials.Num(),
+		MaterialSet->WeaponMaterial ? TEXT("O") : TEXT("X"),
+		bEnableDissolve ? TEXT("O") : TEXT("X"));
 }

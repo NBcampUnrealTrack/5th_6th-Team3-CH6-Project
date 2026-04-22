@@ -201,7 +201,8 @@ void AT3MidBossMonster::HandlePatternNotify(FName NotifyName)
 			const FMidBossAttackPattern* SlowPatternData = FindPatternData(CurrentPatternName);
 			const float BaseRate = (SlowPatternData && SlowPatternData->MontageChain.IsValidIndex(CurrentChainIndex))
 				? SlowPatternData->MontageChain[CurrentChainIndex].PlayRate : 1.0f;
-			AnimInstance->Montage_SetPlayRate(CurrentMontage, BaseRate * Multiplier);
+			// 천사 장신구 슬로우 누적 곱
+			AnimInstance->Montage_SetPlayRate(CurrentMontage, BaseRate * Multiplier * CurrentAttackAnimRate);
 		}
 		// Pity 결과 기록
 		if (NotifyModifier)
@@ -219,7 +220,8 @@ void AT3MidBossMonster::HandlePatternNotify(FName NotifyName)
 			const FMidBossAttackPattern* FastPatternData = FindPatternData(CurrentPatternName);
 			const float FastBaseRate = (FastPatternData && FastPatternData->MontageChain.IsValidIndex(CurrentChainIndex))
 				? FastPatternData->MontageChain[CurrentChainIndex].PlayRate : 1.0f;
-			AnimInstance->Montage_SetPlayRate(CurrentMontage, FastBaseRate * FastMultiplier);
+			// 천사 장신구 슬로우 누적 곱
+			AnimInstance->Montage_SetPlayRate(CurrentMontage, FastBaseRate * FastMultiplier * CurrentAttackAnimRate);
 		}
 		if (NotifyModifier)
 		{
@@ -232,7 +234,8 @@ void AT3MidBossMonster::HandlePatternNotify(FName NotifyName)
 		const FMidBossAttackPattern* PatternData = FindPatternData(CurrentPatternName);
 		if (PatternData && PatternData->MontageChain.IsValidIndex(CurrentChainIndex))
 		{
-			AnimInstance->Montage_SetPlayRate(CurrentMontage, PatternData->MontageChain[CurrentChainIndex].PlayRate);
+			// 천사 장신구 슬로우 누적 곱
+			AnimInstance->Montage_SetPlayRate(CurrentMontage, PatternData->MontageChain[CurrentChainIndex].PlayRate * CurrentAttackAnimRate);
 		}
 	}
 	// --- 이동 + 속도 복구 (확률 적용) ---
@@ -245,7 +248,8 @@ void AT3MidBossMonster::HandlePatternNotify(FName NotifyName)
 			const FMidBossAttackPattern* StepPatternData = FindPatternData(CurrentPatternName);
 			if (StepPatternData && StepPatternData->MontageChain.IsValidIndex(CurrentChainIndex))
 			{
-				AnimInstance->Montage_SetPlayRate(CurrentMontage, StepPatternData->MontageChain[CurrentChainIndex].PlayRate);
+				// 천사 장신구 슬로우 누적 곱
+				AnimInstance->Montage_SetPlayRate(CurrentMontage, StepPatternData->MontageChain[CurrentChainIndex].PlayRate * CurrentAttackAnimRate);
 			}
 			// 보정기에서 범위 내 랜덤 거리/시간 조회
 			const float StepDist = NotifyModifier ? NotifyModifier->GetStepDistance(CurrentPatternName) : 200.f;
@@ -368,8 +372,9 @@ void AT3MidBossMonster::HandlePatternNotify(FName NotifyName)
 			if (PatternData->MontageChain.IsValidIndex(CurrentChainIndex))
 			{
 				// 새 섹션의 PlayRate 적용 — SetNextSection은 배속을 변경하지 않으므로 명시적 갱신
+				// 천사 장신구 슬로우 누적 곱
 				const FPatternMontageData& CurrentEntry = PatternData->MontageChain[CurrentChainIndex];
-				AnimInstance->Montage_SetPlayRate(CurrentMontage, CurrentEntry.PlayRate);
+				AnimInstance->Montage_SetPlayRate(CurrentMontage, CurrentEntry.PlayRate * CurrentAttackAnimRate);
 
 				// 동적 섹션 전환: 현재 섹션 → 다음 섹션 설정
 				// 같은 섹션 이름이 반복되어도 매 NextCombo마다 갱신하므로 정확한 다음 섹션 지정
@@ -610,9 +615,9 @@ void AT3MidBossMonster::PlayCurrentChainMontage()
 	// === 섹션 콤보 모드: 첫 진입 시 섹션 체인 설정 ===
 	if (PatternData->bUseSectionCombo && CurrentChainIndex == 0)
 	{
-		// 시작 섹션 지정하여 재생
+		// 시작 섹션 지정하여 재생 — 천사 장신구 슬로우 누적 곱
 		const FName StartSection = MontageData.SectionName.IsNone() ? NAME_None : MontageData.SectionName;
-		PlayAnimMontage(MontageData.Montage, MontageData.PlayRate, StartSection);
+		PlayAnimMontage(MontageData.Montage, MontageData.PlayRate * CurrentAttackAnimRate, StartSection);
 
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 		if (AnimInstance)
@@ -660,9 +665,9 @@ void AT3MidBossMonster::PlayCurrentChainMontage()
 		return;
 	}
 
-	// === 기존 체인 모드 (또는 섹션 콤보 후속의 다른 몽타주) ===
+	// === 기존 체인 모드 (또는 섹션 콤보 후속의 다른 몽타주) === 천사 장신구 슬로우 누적 곱
 	const FName StartSection = MontageData.SectionName.IsNone() ? NAME_None : MontageData.SectionName;
-	PlayAnimMontage(MontageData.Montage, MontageData.PlayRate, StartSection);
+	PlayAnimMontage(MontageData.Montage, MontageData.PlayRate * CurrentAttackAnimRate, StartSection);
 
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance)
