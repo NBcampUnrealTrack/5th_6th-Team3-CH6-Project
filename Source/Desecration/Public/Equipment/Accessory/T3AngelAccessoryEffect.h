@@ -21,6 +21,9 @@ private:
 	float SlowRadius = 400.f;
 
 	UPROPERTY(EditDefaultsOnly)
+	float MoveSpeedSlowAmount = 0.5f;
+
+	UPROPERTY(EditDefaultsOnly)
 	float MoveAnimSlowAmount = 0.5f;
 
 	UPROPERTY(EditDefaultsOnly)
@@ -35,4 +38,6 @@ private:
 	FTimerHandle SlowTimerHandle;
 
 	TArray<TWeakObjectPtr<AActor>> SlowedMonsters;
+
+	TArray<float> OriginalMaxWalkSpeeds;
 };

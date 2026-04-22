@@ -1,6 +1,7 @@
 #include "Equipment/Accessory/T3AngelAccessoryEffect.h"
 
 #include "DrawDebugHelpers.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Monster/Interface/T3Monster.h"
 #include "Player/T3CharacterBase.h"
@@ -32,10 +33,17 @@ void UT3AngelAccessoryEffect::ApplySlowAura()
 			{
 				Monster->SetAnimationSpeedMultiplier(1.f, 1.f);
 			}
+
+			if (ACharacter* MonsterChar = Cast<ACharacter>(SlowedMonsters[i].Get()))
+			{
+				MonsterChar->GetCharacterMovement()->MaxWalkSpeed = OriginalMaxWalkSpeeds[i];
+			}
 		}
 	}
 
 	SlowedMonsters.Empty();
+
+	OriginalMaxWalkSpeeds.Empty();
 
 	AT3CharacterBase* Owner = CachedOwner.Get();
 
@@ -65,7 +73,18 @@ void UT3AngelAccessoryEffect::ApplySlowAura()
 		{
 			Monster->SetAnimationSpeedMultiplier(MoveAnimSlowAmount, AttackAnimSlowAmount);
 
+			float OriginalSpeed = 0.f;
+
+			if (ACharacter* MonsterChar = Cast<ACharacter>(Actor))
+			{
+				OriginalSpeed = MonsterChar->GetCharacterMovement()->MaxWalkSpeed;
+
+				MonsterChar->GetCharacterMovement()->MaxWalkSpeed *= MoveSpeedSlowAmount;
+			}
+
 			SlowedMonsters.Add(Actor);
+
+			OriginalMaxWalkSpeeds.Add(OriginalSpeed);
 		}
 	}
 }
@@ -82,8 +101,15 @@ void UT3AngelAccessoryEffect::OnUnequipped_Implementation(AT3CharacterBase* Owne
 			{
 				Monster->SetAnimationSpeedMultiplier(1.f, 1.f);
 			}
+
+			if (ACharacter* MonsterChar = Cast<ACharacter>(SlowedMonsters[i].Get()))
+			{
+				MonsterChar->GetCharacterMovement()->MaxWalkSpeed = OriginalMaxWalkSpeeds[i];
+			}
 		}
 	}
 
 	SlowedMonsters.Empty();
+
+	OriginalMaxWalkSpeeds.Empty();
 }
