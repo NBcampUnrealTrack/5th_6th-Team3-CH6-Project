@@ -240,25 +240,18 @@ void AT3CorridorPuzzle::DestroyBarriers()
 	{
 		if (IsValid(Barrier))
 		{
-			// Wind/Foliage 렌더 크래시 방지: Visibility 먼저 해제 → 다음 틱에 파괴
+			// Wind/Foliage 렌더 크래시 방지: Destroy 하지 않고 숨김만 — 레벨 언로드 시 자동 정리
 			Barrier->SetActorHiddenInGame(true);
 			Barrier->SetActorEnableCollision(false);
+			Barrier->SetActorTickEnabled(false);
 			if (Barrier->GetRootComponent())
 			{
 				Barrier->GetRootComponent()->SetVisibility(false, true);
 			}
-			TWeakObjectPtr<AActor> WeakBarrier = Barrier;
-			GetWorld()->GetTimerManager().SetTimerForNextTick([WeakBarrier]()
-			{
-				if (AActor* B = WeakBarrier.Get())
-				{
-					B->Destroy();
-				}
-			});
 		}
 	}
 
-	UE_LOG(LogDesecration, Log, TEXT("T3_CorridorPuzzle: 장막(배리어) 제거"));
+	UE_LOG(LogDesecration, Log, TEXT("T3_CorridorPuzzle: 장막(배리어) 숨김"));
 }
 
 // ============================================================
@@ -281,29 +274,21 @@ void AT3CorridorPuzzle::CompletePuzzle()
 		}
 	}
 
-	// 이상현상 액터 정리 (ActorsToShow 스포너 Destroy 포함)
+	// 이상현상 액터 정리 (Destroy 없이 숨김만 — Wind/Foliage 렌더 크래시 원천 방지)
 	for (const FCorridorPuzzleStep& Step : PuzzleSteps)
 	{
-		// 이상현상으로 추가된 액터 → 렌더 스레드 안전 파괴
+		// 이상현상으로 추가된 액터 → 숨김 (레벨 언로드 시 자동 정리)
 		for (AActor* Actor : Step.ActorsToShow)
 		{
 			if (IsValid(Actor))
 			{
-				// Wind/Foliage 렌더 크래시 방지: Visibility 먼저 해제 → 다음 틱에 파괴
 				Actor->SetActorHiddenInGame(true);
 				Actor->SetActorEnableCollision(false);
+				Actor->SetActorTickEnabled(false);
 				if (Actor->GetRootComponent())
 				{
 					Actor->GetRootComponent()->SetVisibility(false, true);
 				}
-				TWeakObjectPtr<AActor> WeakActor = Actor;
-				GetWorld()->GetTimerManager().SetTimerForNextTick([WeakActor]()
-				{
-					if (AActor* A = WeakActor.Get())
-					{
-						A->Destroy();
-					}
-				});
 			}
 		}
 		// 이상현상으로 숨겨진 원본 → 복원
@@ -313,6 +298,7 @@ void AT3CorridorPuzzle::CompletePuzzle()
 			{
 				Actor->SetActorHiddenInGame(false);
 				Actor->SetActorEnableCollision(true);
+				Actor->SetActorTickEnabled(true);
 			}
 		}
 	}
@@ -407,8 +393,11 @@ void AT3CorridorPuzzle::ApplyStepChanges(int32 StepIndex, bool bApply)
 		{
 			Actor->SetActorHiddenInGame(!bApply);
 			Actor->SetActorEnableCollision(bApply);
-			// Wind/Foliage 렌더 크래시 방지: 렌더 스레드에서 완전히 제거
-			Actor->GetRootComponent()->SetVisibility(bApply, true);
+			Actor->SetActorTickEnabled(bApply);
+			if (Actor->GetRootComponent())
+			{
+				Actor->GetRootComponent()->SetVisibility(bApply, true);
+			}
 		}
 	}
 
@@ -419,8 +408,11 @@ void AT3CorridorPuzzle::ApplyStepChanges(int32 StepIndex, bool bApply)
 		{
 			Actor->SetActorHiddenInGame(bApply);
 			Actor->SetActorEnableCollision(!bApply);
-			// Wind/Foliage 렌더 크래시 방지: 렌더 스레드에서 완전히 제거
-			Actor->GetRootComponent()->SetVisibility(!bApply, true);
+			Actor->SetActorTickEnabled(!bApply);
+			if (Actor->GetRootComponent())
+			{
+				Actor->GetRootComponent()->SetVisibility(!bApply, true);
+			}
 		}
 	}
 }
