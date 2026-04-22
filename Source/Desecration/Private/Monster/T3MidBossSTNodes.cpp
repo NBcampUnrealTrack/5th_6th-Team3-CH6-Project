@@ -388,14 +388,11 @@ EStateTreeRunStatus FT3STT_Disengage::EnterState(
 		Data.StrafeDirection = FMath::RandBool() ? 1.f : -1.f;
 	}
 
-	// Strafe 속도 적용
+	// Strafe 속도 적용 — Boss의 단일 베이스 속도 진입점 사용 (천사 장신구 슬로우 곱 자동 적용)
 	if (Data.StrafeSpeed > 0.f)
 	{
-		if (UCharacterMovementComponent* MoveComp = Data.Boss->GetCharacterMovement())
-		{
-			Data.CachedDefaultSpeed = MoveComp->MaxWalkSpeed;
-			MoveComp->MaxWalkSpeed = Data.StrafeSpeed;
-		}
+		Data.CachedDefaultSpeed = Data.Boss->GetActiveBaseWalkSpeed();
+		Data.Boss->SetActiveBaseWalkSpeed(Data.StrafeSpeed);
 	}
 
 	// 루트모션 거리 스케일 적용
@@ -408,9 +405,10 @@ EStateTreeRunStatus FT3STT_Disengage::EnterState(
 	Data.Boss->StopAnimMontage();
 
 	// 백스텝 몽타주 재생 (보스별 몽타주는 AT3MidBossMonster::BackStepMontage에서 참조)
+	// 천사 장신구 이동 슬로우 적용
 	if (Data.bBackStep && Data.Boss->BackStepMontage)
 	{
-		Data.Boss->PlayAnimMontage(Data.Boss->BackStepMontage);
+		Data.Boss->PlayAnimMontage(Data.Boss->BackStepMontage, Data.Boss->GetMoveAnimRateMultiplier());
 	}
 
 	UE_LOG(LogDesecration, Log,
@@ -486,13 +484,10 @@ void FT3STT_Disengage::ExitState(
 			Data.Boss->SetAnimRootMotionTranslationScale(1.0f);
 		}
 
-		// Strafe 속도 복원 — Failed/Succeeded 모두 안전하게 복원
+		// Strafe 속도 복원 — Failed/Succeeded 모두 안전하게 이전 베이스로 복원
 		if (Data.CachedDefaultSpeed > 0.f)
 		{
-			if (UCharacterMovementComponent* MoveComp = Data.Boss->GetCharacterMovement())
-			{
-				MoveComp->MaxWalkSpeed = Data.CachedDefaultSpeed;
-			}
+			Data.Boss->SetActiveBaseWalkSpeed(Data.CachedDefaultSpeed);
 			Data.CachedDefaultSpeed = 0.f;
 		}
 	}
@@ -552,11 +547,8 @@ EStateTreeRunStatus FT3STT_RunToAttackRange::EnterState(
 		return EStateTreeRunStatus::Failed;
 	}
 
-	// MaxWalkSpeed 캐시
-	if (UCharacterMovementComponent* MoveComp = Data.Boss->GetCharacterMovement())
-	{
-		Data.CachedDefaultSpeed = MoveComp->MaxWalkSpeed;
-	}
+	// 이전 베이스 속도 캐시 — 종료 시 복원용 (Boss의 단일 진입점 사용)
+	Data.CachedDefaultSpeed = Data.Boss->GetActiveBaseWalkSpeed();
 
 	// SetFocus — 딜레이 동안 타겟 방향으로 회전
 	if (AAIController* AIC = GetBossAIController(Data.Boss))
@@ -593,10 +585,8 @@ EStateTreeRunStatus FT3STT_RunToAttackRange::Tick(
 	// 딜레이 끝난 직후 — 돌진 시작 (1회만)
 	if (Data.ElapsedTime - DeltaTime < Data.PreDashDelay)
 	{
-		if (UCharacterMovementComponent* MoveComp = Data.Boss->GetCharacterMovement())
-		{
-			MoveComp->MaxWalkSpeed = Data.DashSpeed;
-		}
+		// Dash 베이스 속도 푸시 — 천사 슬로우 곱은 Boss 측에서 자동 적용
+		Data.Boss->SetActiveBaseWalkSpeed(Data.DashSpeed);
 		if (Data.RunMontage)
 		{
 			Data.Boss->PlayAnimMontage(Data.RunMontage);
@@ -647,13 +637,10 @@ void FT3STT_RunToAttackRange::ExitState(
 			Data.Boss->StopAnimMontage(Data.RunMontage);
 		}
 
-		// MaxWalkSpeed 복원
+		// 베이스 속도 복원 — Boss의 단일 진입점 사용 (천사 슬로우와 자동 동기)
 		if (Data.CachedDefaultSpeed > 0.f)
 		{
-			if (UCharacterMovementComponent* MoveComp = Data.Boss->GetCharacterMovement())
-			{
-				MoveComp->MaxWalkSpeed = Data.CachedDefaultSpeed;
-			}
+			Data.Boss->SetActiveBaseWalkSpeed(Data.CachedDefaultSpeed);
 			Data.CachedDefaultSpeed = 0.f;
 		}
 	}

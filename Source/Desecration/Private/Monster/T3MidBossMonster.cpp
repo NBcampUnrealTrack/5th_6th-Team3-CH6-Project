@@ -156,6 +156,14 @@ void AT3MidBossMonster::BeginPlay()
 	MidBossStats.CurrentHP = MidBossStats.MaxHP;
 	MidBossStats.CurrentStunGauge = 0.f;
 
+	// 천사 장신구 슬로우 복원 기준값 캐시 — BP CDO에서 설정한 값을 보존
+	// ActiveBaseWalkSpeed도 동일 초기화 (STNodes가 Strafe/Dash 진입 시 푸시, 종료 시 복원)
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		DefaultMaxWalkSpeed = MoveComp->MaxWalkSpeed;
+		ActiveBaseWalkSpeed = DefaultMaxWalkSpeed;
+	}
+
 	// 초기 상태 태그 설정 (기존 bSuperArmor = true 대체)
 	AddStateTag(TAG_Boss_State_SuperArmor);
 
