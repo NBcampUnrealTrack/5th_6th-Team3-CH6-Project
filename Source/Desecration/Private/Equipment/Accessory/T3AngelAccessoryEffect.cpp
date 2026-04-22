@@ -1,14 +1,14 @@
 #include "Equipment/Accessory/T3AngelAccessoryEffect.h"
 
-#include "GameFramework/CharacterMovementComponent.h"
+#include "DrawDebugHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "Monster/T3MonsterBase.h"
+#include "Monster/Interface/T3Monster.h"
 #include "Player/T3CharacterBase.h"
 
 void UT3AngelAccessoryEffect::OnEquipped_Implementation(AT3CharacterBase* OwnerChar)
 {
 	CachedOwner = OwnerChar;
-	
+
 	OwnerChar->GetWorldTimerManager().SetTimer(
 		SlowTimerHandle,
 		this,
@@ -28,20 +28,21 @@ void UT3AngelAccessoryEffect::ApplySlowAura()
 	{
 		if (SlowedMonsters[i].IsValid())
 		{
-			SlowedMonsters[i]->GetCharacterMovement()->MaxWalkSpeed = OriginalSpeeds[i];
+			if (IT3Monster* Monster = Cast<IT3Monster>(SlowedMonsters[i].Get()))
+			{
+				Monster->SetAnimationSpeedMultiplier(1.f, 1.f);
+			}
 		}
 	}
-	
+
 	SlowedMonsters.Empty();
-	
-	OriginalSpeeds.Empty();
 
 	AT3CharacterBase* Owner = CachedOwner.Get();
-	
+
 	TArray<AActor*> Overlapped;
 
 	TArray<TEnumAsByte<EObjectTypeQuery>> ObjTypes;
-	
+
 	ObjTypes.Add(UEngineTypes::ConvertToObjectType(ECC_Pawn));
 
 	UKismetSystemLibrary::SphereOverlapActors(
@@ -52,18 +53,19 @@ void UT3AngelAccessoryEffect::ApplySlowAura()
 		nullptr,
 		{Owner},
 		Overlapped);
-	
+
+	if (bShowDebugRadius)
+	{
+		DrawDebugSphere(Owner->GetWorld(), Owner->GetActorLocation(), SlowRadius, 16, FColor::Cyan, false, SlowInterval);
+	}
+
 	for (AActor* Actor : Overlapped)
 	{
-		if (AT3MonsterBase* Monster = Cast<AT3MonsterBase>(Actor))
+		if (IT3Monster* Monster = Cast<IT3Monster>(Actor))
 		{
-			float OriginSpeed = Monster->GetCharacterMovement()->MaxWalkSpeed;
-			
-			Monster->GetCharacterMovement()->MaxWalkSpeed *= SlowAmount;
-			
-			SlowedMonsters.Add(Monster);
-			
-			OriginalSpeeds.Add(OriginSpeed);
+			Monster->SetAnimationSpeedMultiplier(MoveAnimSlowAmount, AttackAnimSlowAmount);
+
+			SlowedMonsters.Add(Actor);
 		}
 	}
 }
@@ -71,16 +73,17 @@ void UT3AngelAccessoryEffect::ApplySlowAura()
 void UT3AngelAccessoryEffect::OnUnequipped_Implementation(AT3CharacterBase* OwnerChar)
 {
 	OwnerChar->GetWorldTimerManager().ClearTimer(SlowTimerHandle);
-	// 슬로우 중인 몬스터 전체 속도 복구
+
 	for (int32 i = 0; i < SlowedMonsters.Num(); ++i)
 	{
 		if (SlowedMonsters[i].IsValid())
 		{
-			SlowedMonsters[i]->GetCharacterMovement()->MaxWalkSpeed = OriginalSpeeds[i];
+			if (IT3Monster* Monster = Cast<IT3Monster>(SlowedMonsters[i].Get()))
+			{
+				Monster->SetAnimationSpeedMultiplier(1.f, 1.f);
+			}
 		}
 	}
-	
+
 	SlowedMonsters.Empty();
-	
-	OriginalSpeeds.Empty();
 }

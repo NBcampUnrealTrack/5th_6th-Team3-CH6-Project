@@ -58,7 +58,7 @@ FReply UItemSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, con
 	if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
 	{
 		OnSlotClicked.Broadcast(this, true);
-		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+		return FReply::Handled();
 	}
 	
 	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)

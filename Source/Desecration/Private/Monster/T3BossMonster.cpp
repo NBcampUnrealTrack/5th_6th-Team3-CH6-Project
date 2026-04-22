@@ -134,3 +134,7 @@ void AT3BossMonster::ApplyBonusDamage(float BonusDamage)
 {
 	Damage(BonusDamage, 0.0f);
 }
+
+void AT3BossMonster::SetAnimationSpeedMultiplier(float MoveAnimMultiplier, float AttackAnimMultiplier)
+{
+}

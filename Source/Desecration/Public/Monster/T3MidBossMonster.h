@@ -17,6 +17,7 @@
 
 class UT3BossWeaponComponent;
 class UT3MidBossHPBarWidget;
+class UT3MidBossMaterialSet;
 class UCurveFloat;
 class USoundAttenuation;
 class UAudioComponent;
@@ -122,7 +123,7 @@ public:
 
 	// --- 보스 정보 & 스탯 ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Info")
-	FString BossName = "MidBoss";
+	FText BossDisplayName = FText::FromString(TEXT("MidBoss"));
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Stats")
 	FMidBossStats MidBossStats;
@@ -133,6 +134,10 @@ public:
 	// --- 무기 ---
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MidBoss|Weapon")
 	TObjectPtr<UT3BossWeaponComponent> WeaponComponent;
+
+	// --- 머티리얼 세트 적용 ---
+	UFUNCTION(BlueprintCallable, Category = "MidBoss|Visual")
+	void ApplyMaterialSet(const UT3MidBossMaterialSet* MaterialSet);
 
 	// --- HP바 위젯 ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|UI")
@@ -358,6 +363,11 @@ public:
 	// --- 스턴 ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Animation")
 	TObjectPtr<UAnimMontage> StunMontage;
+
+	// --- 백스텝 (Disengage ST Task에서 참조) ---
+	// 보스별 스켈레톤이 다르므로 캐릭터에 두고 ST는 Boss->BackStepMontage 참조
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Animation")
+	TObjectPtr<UAnimMontage> BackStepMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Combat")
 	float StunDuration = 3.0f;
@@ -608,6 +618,47 @@ public:
 	
 private:
 	ET3MonsterType MonsterType = ET3MonsterType::MiddleBoss;
+
+#pragma endregion
+	
+#pragma region 장신구
+
+public:
+	virtual void SetAnimationSpeedMultiplier(float MoveAnimMultiplier, float AttackAnimMultiplier) override;
+
+	// 외부 장신구가 적용한 공격 애님 배율 (1.0 = 영향 없음) — 패턴 PlayRate 계산에 곱해짐
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "MidBoss|Accessory")
+	float GetAttackAnimRateMultiplier() const { return CurrentAttackAnimRate; }
+
+	// 외부 장신구가 적용한 이동 애님 배율 (1.0 = 영향 없음) — BackStep 등 이동 몽타주에 곱해짐
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "MidBoss|Accessory")
+	float GetMoveAnimRateMultiplier() const { return CurrentMoveAnimRate; }
+
+	// STNodes(Strafe/Dash 등)가 베이스 이동 속도를 푸시할 때 사용 — 내부에서 MaxWalkSpeed = NewBase * MoveRate 적용
+	// 호출 측은 이전 GetActiveBaseWalkSpeed() 값을 캐시해뒀다가 종료 시 다시 SetActiveBaseWalkSpeed로 복원
+	UFUNCTION(BlueprintCallable, Category = "MidBoss|Movement")
+	void SetActiveBaseWalkSpeed(float NewBaseSpeed);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "MidBoss|Movement")
+	float GetActiveBaseWalkSpeed() const { return ActiveBaseWalkSpeed; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "MidBoss|Movement")
+	float GetDefaultMaxWalkSpeed() const { return DefaultMaxWalkSpeed; }
+
+private:
+	// 외부 슬로우/가속 영향 (천사 장신구 등) — 절대 배율, 누적되지 않음
+	float CurrentMoveAnimRate = 1.f;
+	float CurrentAttackAnimRate = 1.f;
+
+	// 슬로우 미적용 상태의 MaxWalkSpeed (BeginPlay 시 캐시) — 복원 기준값
+	float DefaultMaxWalkSpeed = 0.f;
+
+	// 현재 활성 베이스 이동 속도 (Default 또는 STNodes가 푸시한 Strafe/Dash 속도)
+	// 실제 MaxWalkSpeed = ActiveBaseWalkSpeed * CurrentMoveAnimRate
+	float ActiveBaseWalkSpeed = 0.f;
+
+	// CharacterMovement->MaxWalkSpeed에 (ActiveBaseWalkSpeed * CurrentMoveAnimRate) 적용 — 단일 계산 진입점
+	void ApplyCurrentWalkSpeed();
 
 #pragma endregion
 };

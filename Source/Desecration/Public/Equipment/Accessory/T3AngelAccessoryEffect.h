@@ -4,8 +4,6 @@
 #include "T3AccessoryEffectBase.h"
 #include "T3AngelAccessoryEffect.generated.h"
 
-class AT3MonsterBase;
-
 UCLASS()
 class DESECRATION_API UT3AngelAccessoryEffect : public UT3AccessoryEffectBase
 {
@@ -21,16 +19,20 @@ private:
 
 	UPROPERTY(EditDefaultsOnly)
 	float SlowRadius = 400.f;
-	
+
 	UPROPERTY(EditDefaultsOnly)
-	float SlowAmount = 0.7f;
-	
+	float MoveAnimSlowAmount = 0.5f;
+
 	UPROPERTY(EditDefaultsOnly)
-	float SlowInterval  = 1.0f;
-	
+	float AttackAnimSlowAmount = 0.7f;
+
+	UPROPERTY(EditDefaultsOnly)
+	float SlowInterval = 1.0f;
+
+	UPROPERTY(EditDefaultsOnly)
+	bool bShowDebugRadius = false;
+
 	FTimerHandle SlowTimerHandle;
 
-	TArray<TWeakObjectPtr<AT3MonsterBase>> SlowedMonsters;
-	
-	TArray<float> OriginalSpeeds;
+	TArray<TWeakObjectPtr<AActor>> SlowedMonsters;
 };

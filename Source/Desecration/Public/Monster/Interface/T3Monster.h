@@ -29,4 +29,6 @@ public:
 	virtual float GetHPPercent() const = 0;
 	
 	virtual void ApplyBonusDamage(float BonusDamage) = 0;
+	
+	virtual void SetAnimationSpeedMultiplier(float MoveAnimMultiplier, float AttackAnimMultiplier) = 0;
 };

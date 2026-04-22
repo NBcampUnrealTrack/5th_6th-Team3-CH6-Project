@@ -203,3 +203,7 @@ void AT3MonsterBase::ApplyBonusDamage(float BonusDamage)
 		UE_LOG(LogTemp, Warning, TEXT("T3MonsterBase: HealthComponent is null when taking damage."));
 	}
 }
+
+void AT3MonsterBase::SetAnimationSpeedMultiplier(float MoveAnimMultiplier, float AttackAnimMultiplier)
+{
+}

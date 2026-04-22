@@ -2,6 +2,7 @@
 
 #include "Monster/T3MidBossSpawner.h"
 #include "Monster/T3MidBossMonster.h"
+#include "Monster/T3MidBossMaterialSet.h"
 #include "GameSystem/T3WorldSubsystem.h"
 #include "Desecration.h"
 
@@ -132,9 +133,23 @@ AT3MidBossMonster* AT3MidBossSpawner::SpawnAndPrepareBoss()
 			StatsOverride.AttackMultiplier = Row->AttackMultiplier;
 			StatsOverride.StunThreshold = Row->StunThreshold;
 
+			// 보스 표시 이름 주입 (비어있지 않으면)
+			if (!Row->BossDisplayName.IsEmpty())
+			{
+				SpawnedBoss->BossDisplayName = Row->BossDisplayName;
+			}
+
+			// 머티리얼 세트 적용
+			if (Row->MaterialSet)
+			{
+				SpawnedBoss->ApplyMaterialSet(Row->MaterialSet);
+			}
+
 			UE_LOG(LogDesecration, Log,
-				TEXT("T3_MidBossSpawner: [%s] DataTable Row '%s' 로드 — HP:%.0f, AtkMul:%.2f, Stun:%.0f"),
-				*GetName(), *RowName, Row->MaxHP, Row->AttackMultiplier, Row->StunThreshold);
+				TEXT("T3_MidBossSpawner: [%s] DataTable Row '%s' 로드 — HP:%.0f, AtkMul:%.2f, Stun:%.0f, Name:'%s', Mat:%s"),
+				*GetName(), *RowName, Row->MaxHP, Row->AttackMultiplier, Row->StunThreshold,
+				*Row->BossDisplayName.ToString(),
+				Row->MaterialSet ? TEXT("O") : TEXT("X"));
 		}
 		else
 		{

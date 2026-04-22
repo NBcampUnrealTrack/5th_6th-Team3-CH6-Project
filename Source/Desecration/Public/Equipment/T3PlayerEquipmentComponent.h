@@ -16,6 +16,7 @@ class AT3CharacterBase;
 // 캐릭터팀에서 바인딩하여 공격력/방어력을 동기화
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnEquipmentStatsChanged, float, NewAttackPower, float, NewDefensePower, float, NewWeaponLevel);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRuneSocketChanged);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAccessoryChanged);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class DESECRATION_API UT3PlayerEquipmentComponent : public UActorComponent
@@ -29,7 +30,7 @@ public:
 	// BeginPlay 초기 장착, 강화, 룬 장착 시 자동 발송
 	UPROPERTY(BlueprintAssignable, Category = "Equipment|Events")
 	FOnEquipmentStatsChanged OnEquipmentStatsChanged;
-
+	
 protected:
 	virtual void BeginPlay() override;
 
@@ -210,6 +211,9 @@ public:
 	
 	UFUNCTION()
 	bool GetOniAccessoryEquipped() const;
+	
+	UPROPERTY(BlueprintAssignable)
+	FOnAccessoryChanged OnAccessoryChanged;
 	
 #pragma endregion
 };

@@ -9,6 +9,7 @@
 #include "T3MidBossTypes.generated.h"
 
 class UAnimMontage;
+class UT3MidBossMaterialSet;
 
 // ============================================================
 // Enum: 패턴 분류 (고정 — 거리 기반 선택에 사용)
@@ -210,6 +211,10 @@ struct FMidBossStageRow : public FTableRowBase
 {
 	GENERATED_BODY()
 
+	// 보스 표시 이름 (로컬라이징 대응)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FText BossDisplayName;
+
 	// 최대 체력
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MaxHP = 1500.f;
@@ -221,4 +226,8 @@ struct FMidBossStageRow : public FTableRowBase
 	// 스턴 임계치
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float StunThreshold = 100.f;
+
+	// 머티리얼 세트 (nullptr이면 BP 기본 머티리얼 사용)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<UT3MidBossMaterialSet> MaterialSet;
 };
