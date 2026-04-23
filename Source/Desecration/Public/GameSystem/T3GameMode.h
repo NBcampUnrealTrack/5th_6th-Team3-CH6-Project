@@ -50,7 +50,7 @@ public:
 		const FRotator& TargetRotation = FRotator(0,0,0));
 	
 	/**
-	 * 게임 저장하기 (비트 연산을 이용하여 둘 이상의 범위를 저장할 때 사용)
+	 * 게임 저장하기 (전체가 아닌 둘 이상의 범위를 저장할 때 사용)
 	 * @details 각 매개변수 중 필수가 아닌 것은 저장 범위에 따라 적절하게 값을 넣거나 무시하면 됩니다.
 	 * @param Character : (필수) 현재 조종중인 캐릭터
 	 * @param SaveTypes : (필수) 저장 범위 (TSet에 원하는 저장 범위를 지정)
