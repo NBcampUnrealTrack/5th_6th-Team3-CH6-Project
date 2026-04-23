@@ -79,6 +79,11 @@ bool AT3GameMode::SaveGameV2_MultiType(const AT3CharacterBase* Character, const 
 	uint8 SumValue = 0;
 	for (const ESaveType& SaveType : SaveTypes)
 	{
+		if (SaveType == ESaveType::All)//전체 저장(0)이 포함되면 나머지가 필요없음
+		{
+			SumValue = 0;
+			break;
+		}
 		SumValue += static_cast<uint8>(SaveType);
 	}
 	return SaveGameV2_MultiType(Character, SumValue, LevelName, TargetLocation, TargetRotation);
