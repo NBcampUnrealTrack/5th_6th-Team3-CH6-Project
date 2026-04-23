@@ -17,6 +17,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBossSpawnedDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBoss25perDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBoss50perDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBoss75perDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBossActionSpeedChanged);
 
 USTRUCT(BlueprintType)
 struct FBossMonsterStats
@@ -30,6 +31,8 @@ struct FBossMonsterStats
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) float AttackPower = 25.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) float StunThreshold = 100.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) float CurrentStunGauge = 0.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) float MoveSpeed = 1.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) float AttackSpeed = 1.f;
 };
 
 UCLASS()
@@ -82,6 +85,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FBoss75perDelegate OnBoss75per;
+
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FBossActionSpeedChanged OnBossActionSpeedChanged;
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void Damage(float DamageAmount, float StunAmount);
