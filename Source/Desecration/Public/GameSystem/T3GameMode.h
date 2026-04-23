@@ -53,7 +53,7 @@ public:
 	 * 게임 저장하기 (비트 연산을 이용하여 둘 이상의 범위를 저장할 때 사용)
 	 * @details 각 매개변수 중 필수가 아닌 것은 저장 범위에 따라 적절하게 값을 넣거나 무시하면 됩니다.
 	 * @param Character : (필수) 현재 조종중인 캐릭터
-	 * @param SaveType : (필수) 저장 범위 (비트 연산을 통해 2개 이상의 범위를 사용할 수 있음)
+	 * @param SaveTypes : (필수) 저장 범위 (TSet에 원하는 저장 범위를 지정)
 	 * @param LevelName : 저장하려는 레벨(맵) 이름, 타이틀 및 클래스 선택 레벨로 지정하면 무시됨
 	 * @param TargetLocation : 저장하려는 맵 내의 위치
 	 * @param TargetRotation : 저장시 캐릭터의 회전값
@@ -62,7 +62,24 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
 	bool SaveGameV2_MultiType(
 		const AT3CharacterBase* Character,
-		const uint8 SaveType,
+		const TSet<ESaveType> SaveTypes,
+		const ELevelName LevelName = ELevelName::Tutorial, 
+		const FVector& TargetLocation = FVector(0,0,0), 
+		const FRotator& TargetRotation = FRotator(0,0,0));
+	
+	/**
+    	 * 게임 저장하기 (비트 연산을 이용하여 둘 이상의 범위를 저장할 때 사용)
+    	 * @details 각 매개변수 중 필수가 아닌 것은 저장 범위에 따라 적절하게 값을 넣거나 무시하면 됩니다.
+    	 * @param Character : (필수) 현재 조종중인 캐릭터
+    	 * @param SaveTypes : (필수) 저장 범위 (비트 연산을 통해 2개 이상의 범위를 사용할 수 있음)
+    	 * @param LevelName : 저장하려는 레벨(맵) 이름, 타이틀 및 클래스 선택 레벨로 지정하면 무시됨
+    	 * @param TargetLocation : 저장하려는 맵 내의 위치
+    	 * @param TargetRotation : 저장시 캐릭터의 회전값
+    	 * @return true : 저장 성공
+    	 */
+	bool SaveGameV2_MultiType(
+		const AT3CharacterBase* Character,
+		const uint8 SaveTypes,
 		const ELevelName LevelName = ELevelName::Tutorial, 
 		const FVector& TargetLocation = FVector(0,0,0), 
 		const FRotator& TargetRotation = FRotator(0,0,0));

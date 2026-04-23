@@ -74,7 +74,17 @@ bool AT3GameMode::SaveGameV2(const AT3CharacterBase* Character, const ESaveType 
 	return SaveGameV2_MultiType(Character, static_cast<uint8>(SaveType), LevelName, TargetLocation, TargetRotation);
 }
 
-bool AT3GameMode::SaveGameV2_MultiType(const AT3CharacterBase* Character, const uint8 SaveType, const ELevelName LevelName, const FVector& TargetLocation, const FRotator& TargetRotation)
+bool AT3GameMode::SaveGameV2_MultiType(const AT3CharacterBase* Character, const TSet<ESaveType> SaveTypes, const ELevelName LevelName, const FVector& TargetLocation, const FRotator& TargetRotation)
+{
+	uint8 SumValue = 0;
+	for (const ESaveType& SaveType : SaveTypes)
+	{
+		SumValue += static_cast<uint8>(SaveType);
+	}
+	return SaveGameV2_MultiType(Character, SumValue, LevelName, TargetLocation, TargetRotation);
+}
+
+bool AT3GameMode::SaveGameV2_MultiType(const AT3CharacterBase* Character, const uint8 SaveTypes, const ELevelName LevelName, const FVector& TargetLocation, const FRotator& TargetRotation)
 {
 	//캐릭터 정보를 저장된 게임 데이터에 저장한다.
 	const TObjectPtr<UT3SaveGame> SaveGame = T3GameInstance->GetSavedGameData();
@@ -85,7 +95,7 @@ bool AT3GameMode::SaveGameV2_MultiType(const AT3CharacterBase* Character, const 
 	}
 	
 	//현재 위치
-	if (SaveType == 0 || SaveType & static_cast<uint8>(ESaveType::Location))
+	if (SaveTypes == 0 || SaveTypes & static_cast<uint8>(ESaveType::Location))
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s : 로케이션 위치"), *SaveGame->PlayerLocation.ToString());
 		if (LevelName >= ELevelName::Tutorial)
@@ -97,7 +107,7 @@ bool AT3GameMode::SaveGameV2_MultiType(const AT3CharacterBase* Character, const 
 	}
 	
 	//스탯
-	if (SaveType == 0 || SaveType & static_cast<uint8>(ESaveType::Stat))
+	if (SaveTypes == 0 || SaveTypes & static_cast<uint8>(ESaveType::Stat))
 	{
 		SaveGame->MaxHP = Character->GetMaxHP();
 		SaveGame->CurrentHP = Character->GetCurrentHP();
@@ -121,7 +131,7 @@ bool AT3GameMode::SaveGameV2_MultiType(const AT3CharacterBase* Character, const 
 	}
 	
 	//인벤토리
-	if (SaveType == 0 || SaveType & static_cast<uint8>(ESaveType::Inventory))
+	if (SaveTypes == 0 || SaveTypes & static_cast<uint8>(ESaveType::Inventory))
 	{
 		const TObjectPtr<UT3InventoryComponent> InventoryComponent = Character->InventoryComponent;
 		if (!InventoryComponent)
@@ -160,7 +170,7 @@ bool AT3GameMode::SaveGameV2_MultiType(const AT3CharacterBase* Character, const 
 	}
 	
 	//재화만 따로 저장
-	if (SaveType & static_cast<uint8>(ESaveType::Money))
+	if (SaveTypes & static_cast<uint8>(ESaveType::Money))
 	{
 		if (const TObjectPtr<UT3InventoryComponent> InventoryComponent = Character->InventoryComponent)
 		{
@@ -169,7 +179,7 @@ bool AT3GameMode::SaveGameV2_MultiType(const AT3CharacterBase* Character, const 
 	}
 	
 	//장비
-	if (SaveType == 0 || SaveType & static_cast<uint8>(ESaveType::Equipment))
+	if (SaveTypes == 0 || SaveTypes & static_cast<uint8>(ESaveType::Equipment))
 	{
 		if (const UT3PlayerEquipmentComponent* EquipComp = Character->FindComponentByClass<UT3PlayerEquipmentComponent>())
 		{
@@ -179,7 +189,7 @@ bool AT3GameMode::SaveGameV2_MultiType(const AT3CharacterBase* Character, const 
 	}
 	
 	//스킬
-	if (SaveType == 0 || SaveType & static_cast<uint8>(ESaveType::Skill))
+	if (SaveTypes == 0 || SaveTypes & static_cast<uint8>(ESaveType::Skill))
 	{
 		TObjectPtr<UT3SkillComponentBase> SkillComponent;
 		if (const TObjectPtr<UT3CombatComponent> CombatComponent = Character->GetCombatComponent(); !CombatComponent || !CombatComponent->GetSkillComponent())
@@ -212,8 +222,8 @@ bool AT3GameMode::SaveInventoryAndPotionLevel(const AT3CharacterBase* Character)
 {
 	//인벤토리 저장
 	//기존 코드에는 장비에도 접근해서 장비 저장도 포함
-	constexpr uint8 SaveType = static_cast<uint8>(ESaveType::Inventory) + static_cast<uint8>(ESaveType::Equipment);
-	return SaveGameV2_MultiType(Character, SaveType);
+	constexpr uint8 SaveTypes = static_cast<uint8>(ESaveType::Inventory) + static_cast<uint8>(ESaveType::Equipment);
+	return SaveGameV2_MultiType(Character, SaveTypes);
 }
 
 bool AT3GameMode::SaveOnlySkill(const AT3CharacterBase* Character)
@@ -226,8 +236,8 @@ bool AT3GameMode::SaveOnlyStat(const AT3CharacterBase* Character)
 {	
 	//스탯 저장
 	//스탯 강화로 사용한 돈을 저장하기 위해 인벤토리에도 접근
-	constexpr uint8 SaveType = static_cast<uint8>(ESaveType::Stat) + static_cast<uint8>(ESaveType::Money);
-	return SaveGameV2_MultiType(Character, SaveType);
+	constexpr uint8 SaveTypes = static_cast<uint8>(ESaveType::Stat) + static_cast<uint8>(ESaveType::Money);
+	return SaveGameV2_MultiType(Character, SaveTypes);
 }
 
 void AT3GameMode::LoadGame() const
