@@ -327,10 +327,6 @@ void UT3GameInstance::UnlockLevel(const ELevelName LevelName)
 	{
 		SavedGameData->LevelProgressMap[LevelName].bLevelUnlocked = true;
 	}
-	if (SaveGameToFile())
-	{
-		UE_LOG(LogTemp, Log, TEXT("Level %d Unlocked and Saved Successfully!"), (int32)LevelName);
-	}
 }
 
 // ===== 세이브포인트 해금 =====
@@ -358,8 +354,6 @@ void UT3GameInstance::UnlockSavePoint(ELevelName LevelName, FName SavePointID, F
 
     // 3. 맵에 추가 또는 갱신
 	SavedGameData->LevelProgressMap[LevelName].SavePoints.Add(SavePointID, PointData);
-	
-	SaveGameToFile();
 }
 
 // ===== 레벨 해금 여부 =====
