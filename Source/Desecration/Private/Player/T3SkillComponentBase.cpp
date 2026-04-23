@@ -137,7 +137,7 @@ bool UT3SkillComponentBase::CanExecuteSkill(FSkillData& Data)
     }
 
     // 입력 상태 체크 (OwnerChar가 확실히 있을 때만 접근)
-    if (bUsingSkill || !OwnerChar->PlayerInputState.bCanAttack || Combat->GetCurrentState() == ECharacterCombatState::Dead) return false;
+    if (OwnerChar->bUsingSkill || !OwnerChar->PlayerInputState.bCanAttack || Combat->GetCurrentState() == ECharacterCombatState::Dead) return false;
     
     // 1. 마나 체크
     if (OwnerChar->GetCurrentMana() < Data.ManaCost)

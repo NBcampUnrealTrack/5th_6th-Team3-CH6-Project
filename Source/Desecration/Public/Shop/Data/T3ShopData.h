@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataTable.h"
+#include "Player/T3PlayerInputState.h"
 #include "T3ShopData.generated.h"
 
 USTRUCT(BlueprintType)

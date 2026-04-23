@@ -73,7 +73,7 @@ void UT3Paladin_SkillComponent::ExecuteSwordWave()
     if (OwnerChar && AnimInstance)
     {
         // 1. 스킬 사용 시작 상태 설정
-        bUsingSkill = true;
+        OwnerChar->bUsingSkill = true;
 
         // 2. 몽타주 재생 (애니메이션 기반 스킬 실행)
         float Duration = OwnerChar->PlayAnimMontage(SwordWaveData.SkillMontage);
@@ -88,7 +88,7 @@ void UT3Paladin_SkillComponent::ExecuteSwordWave()
         else
         {
             // 재생 실패 시 즉시 상태 초기화
-            bUsingSkill = false;
+            OwnerChar->bUsingSkill = false;
         }
     }
 }
@@ -96,7 +96,7 @@ void UT3Paladin_SkillComponent::ExecuteSwordWave()
 void UT3Paladin_SkillComponent::OnSkillMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
     // 스킬 사용 상태 해제
-    bUsingSkill = false;
+    OwnerChar->bUsingSkill = false;
 
     UE_LOG(LogTemp, Log, TEXT("Skill Montage Ended. bUsingSkill set to false. Interrupted: %s"), bInterrupted ? TEXT("True") : TEXT("False"));
 }
@@ -157,7 +157,7 @@ void UT3Paladin_SkillComponent::ExecuteJudgment()
     if (!OwnerChar || !JudgmentData.SkillMontage) return;
 
     // 1. 상태 설정 (집중 시작)
-    bUsingSkill = true;
+    OwnerChar->bUsingSkill = true;
 
     // 2. 애니메이션 재생 (4초 이상 지속되는 몽타주)
     OwnerChar->PlayAnimMontage(JudgmentData.SkillMontage);
@@ -284,7 +284,7 @@ void UT3Paladin_SkillComponent::ApplyJudgmentDamage(int32 RemainingHits)
 void UT3Paladin_SkillComponent::CancleJudgmentLaser()
 {
     // 스킬 사용 중이 아니면 실행할 필요 없음
-    if (!bUsingSkill) return;
+    if (!OwnerChar->bUsingSkill) return;
 
     // 1. 진행 중인 모든 타이머(대기, 다단히트) 제거
     GetWorld()->GetTimerManager().ClearTimer(JudgmentTimerHandle);
@@ -295,7 +295,7 @@ void UT3Paladin_SkillComponent::CancleJudgmentLaser()
     }
 
     // 2. 상태 변수 초기화
-    bUsingSkill = false;
+    OwnerChar->bUsingSkill = false;
 
     UE_LOG(LogTemp, Warning, TEXT("신의 심판 스킬이 캔슬되었습니다."));
 }
@@ -303,7 +303,7 @@ void UT3Paladin_SkillComponent::CancleJudgmentLaser()
 // 공통 정리 함수 (정상 종료 & 필요 시 캔슬에서도 재활용 가능)
 void UT3Paladin_SkillComponent::FinishJudgmentSkill()
 {
-    bUsingSkill = false;
+    OwnerChar->bUsingSkill = false;
 
     if (IsValid(CurrentJudgmentLaserActor))
     {

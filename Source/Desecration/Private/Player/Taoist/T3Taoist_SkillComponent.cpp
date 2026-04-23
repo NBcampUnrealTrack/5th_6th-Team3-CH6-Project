@@ -119,7 +119,7 @@ void UT3Taoist_SkillComponent::ExecuteSkill(int32 SlotNumber)
 void UT3Taoist_SkillComponent::OnSkillMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
     // 스킬 사용 상태 해제
-    bUsingSkill = false;
+    OwnerChar->bUsingSkill = false;
 
     UE_LOG(LogTemp, Log, TEXT("Skill Montage Ended. bUsingSkill set to false. Interrupted: %s"), bInterrupted ? TEXT("True") : TEXT("False"));
 }
@@ -353,7 +353,7 @@ void UT3Taoist_SkillComponent::ExecuteStrongWind()
     if (AnimInstance)
     {
         // 2. 스킬 사용 중 상태 설정
-        bUsingSkill = true;
+        OwnerChar->bUsingSkill = true;
 
         // 3. 몽타주 재생
         float Duration = OwnerChar->PlayAnimMontage(StrongWindData.SkillMontage);
@@ -370,7 +370,7 @@ void UT3Taoist_SkillComponent::ExecuteStrongWind()
         }
         else
         {
-            bUsingSkill = false;
+            OwnerChar->bUsingSkill = false;
         }
     }
 }
