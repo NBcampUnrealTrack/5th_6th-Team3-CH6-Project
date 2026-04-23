@@ -82,9 +82,6 @@ public:
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Skill")
     int32 GetNextSkillSlot() const { return EquippedSkillIDs.IsValidIndex(1) ? EquippedSkillIDs[1] : 0; }
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill")
-    bool bUsingSkill = false;
-
     // 몽타주 종료 콜백 함수
     UFUNCTION()
     void OnSkillMontageEnded(UAnimMontage* Montage, bool bInterrupted);
