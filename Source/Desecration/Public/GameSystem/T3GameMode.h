@@ -1,9 +1,12 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
+#include "GlobalEnums.h"
+#include "T3SaveGame.h"
 #include "GameFramework/GameMode.h"
 #include "T3GameMode.generated.h"
 
+enum class ESaveType : uint8;
 class UT3CharacterDataAsset;
 class AT3LostMoney;
 class UT3GameInstance;
@@ -30,9 +33,64 @@ public:
 	
 	/**
 	 * 게임 저장하기 
+	 * @details 각 매개변수 중 필수가 아닌 것은 저장 범위에 따라 적절하게 값을 넣거나 무시하면 됩니다.
+	 * @param Character : (필수) 현재 조종중인 캐릭터
+	 * @param SaveType : (필수) 저장 범위
+	 * @param LevelName : 저장하려는 레벨(맵) 이름, 맵 저장시에 사용하며 타이틀 및 클래스 선택 레벨로 지정하면 무시됨
+	 * @param TargetLocation : 저장하려는 맵 내의 위치
+	 * @param TargetRotation : 저장시 캐릭터의 회전값
 	 * @return true : 저장 성공
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
+	bool SaveGameV2(
+		const AT3CharacterBase* Character,
+		const ESaveType SaveType,
+		const ELevelName LevelName = ELevelName::Tutorial, 
+		const FVector& TargetLocation = FVector(0,0,0), 
+		const FRotator& TargetRotation = FRotator(0,0,0));
+	
+	/**
+	 * 게임 저장하기 (비트 연산을 이용하여 둘 이상의 범위를 저장할 때 사용)
+	 * @details 각 매개변수 중 필수가 아닌 것은 저장 범위에 따라 적절하게 값을 넣거나 무시하면 됩니다.
+	 * @param Character : (필수) 현재 조종중인 캐릭터
+	 * @param SaveTypes : (필수) 저장 범위 (TSet에 원하는 저장 범위를 지정)
+	 * @param LevelName : 저장하려는 레벨(맵) 이름, 타이틀 및 클래스 선택 레벨로 지정하면 무시됨
+	 * @param TargetLocation : 저장하려는 맵 내의 위치
+	 * @param TargetRotation : 저장시 캐릭터의 회전값
+	 * @return true : 저장 성공
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
+	bool SaveGameV2_MultiType(
+		const AT3CharacterBase* Character,
+		const TSet<ESaveType> SaveTypes,
+		const ELevelName LevelName = ELevelName::Tutorial, 
+		const FVector& TargetLocation = FVector(0,0,0), 
+		const FRotator& TargetRotation = FRotator(0,0,0));
+	
+	/**
+    	 * 게임 저장하기 (비트 연산을 이용하여 둘 이상의 범위를 저장할 때 사용)
+    	 * @details 각 매개변수 중 필수가 아닌 것은 저장 범위에 따라 적절하게 값을 넣거나 무시하면 됩니다.
+    	 * @param Character : (필수) 현재 조종중인 캐릭터
+    	 * @param SaveTypes : (필수) 저장 범위 (비트 연산을 통해 2개 이상의 범위를 사용할 수 있음)
+    	 * @param LevelName : 저장하려는 레벨(맵) 이름, 타이틀 및 클래스 선택 레벨로 지정하면 무시됨
+    	 * @param TargetLocation : 저장하려는 맵 내의 위치
+    	 * @param TargetRotation : 저장시 캐릭터의 회전값
+    	 * @return true : 저장 성공
+    	 */
+	bool SaveGameV2_MultiType(
+		const AT3CharacterBase* Character,
+		const uint8 SaveTypes,
+		const ELevelName LevelName = ELevelName::Tutorial, 
+		const FVector& TargetLocation = FVector(0,0,0), 
+		const FRotator& TargetRotation = FRotator(0,0,0));
+	
+	/**
+	 * 게임 저장하기 
+	 * @return true : 저장 성공
+	 * @deprecated [영빈] 세이브 로직 최적화를 했습니다. SaveGameV2 또는 SaveGameV2_MultiType 함수를 사용하세요.
+	 */
+	UE_DEPRECATED(0, "[영빈] 세이브 로직 최적화를 했습니다. SaveGameV2 또는 SaveGameV2_MultiType 함수를 사용하세요.")
+	UFUNCTION(BlueprintCallable, Category = "Saved Game Data", meta = (DeprecatedFunction, DeprecationMessage = "[영빈] 세이브 로직 최적화를 했습니다. SaveGameV2 또는 SaveGameV2_MultiType 함수를 사용하세요."))
 	bool SaveGame(
 		const AT3CharacterBase* Character, 
 		const ELevelName LevelName, 
@@ -44,27 +102,33 @@ public:
 	/**
 	 * 인벤토리 및 물약 강화 상태만 저장하기
 	 * @return true : 저장 성공
+	 * @deprecated [영빈] 세이브 로직 최적화를 했습니다. SaveGameV2 또는 SaveGameV2_MultiType 함수를 사용하세요.
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
+	UE_DEPRECATED(0, "[영빈] 세이브 로직 최적화를 했습니다. SaveGameV2 또는 SaveGameV2_MultiType 함수를 사용하세요.")
+	UFUNCTION(BlueprintCallable, Category = "Saved Game Data", meta = (DeprecatedFunction, DeprecationMessage = "[영빈] 세이브 로직 최적화를 했습니다. SaveGameV2 또는 SaveGameV2_MultiType 함수를 사용하세요."))
 	bool SaveInventoryAndPotionLevel(const AT3CharacterBase* Character);
 	
 	/**
 	 * 스킬만 저장하기
 	 * @return true : 저장 성공
+	 * @deprecated [영빈] 세이브 로직 최적화를 했습니다. SaveGameV2 또는 SaveGameV2_MultiType 함수를 사용하세요.
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
+	UE_DEPRECATED(0, "[영빈] 세이브 로직 최적화를 했습니다. SaveGameV2 또는 SaveGameV2_MultiType 함수를 사용하세요.")
+	UFUNCTION(BlueprintCallable, Category = "Saved Game Data", meta = (DeprecatedFunction, DeprecationMessage = "[영빈] 세이브 로직 최적화를 했습니다. SaveGameV2 또는 SaveGameV2_MultiType 함수를 사용하세요."))
 	bool SaveOnlySkill(const AT3CharacterBase* Character);
 
 	/**
 	 * 스탯만 저장하기
 	 * @return true : 저장 성공
+	 * @deprecated [영빈] 세이브 로직 최적화를 했습니다. SaveGameV2 또는 SaveGameV2_MultiType 함수를 사용하세요.
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
+	UE_DEPRECATED(0, "[영빈] 세이브 로직 최적화를 했습니다. SaveGameV2 또는 SaveGameV2_MultiType 함수를 사용하세요.")
+	UFUNCTION(BlueprintCallable, Category = "Saved Game Data", meta = (DeprecatedFunction, DeprecationMessage = "[영빈] 세이브 로직 최적화를 했습니다. SaveGameV2 또는 SaveGameV2_MultiType 함수를 사용하세요."))
 	bool SaveOnlyStat(const AT3CharacterBase* Character);
 	
-	//게임 불러오기 : 마지막으로 저장한 데이터를 다시 불러오고 그 데이터에 기록된 맵으로 이동
+	//게임 불러오기 : 현재 저장된 데이터에 기록된 맵으로 이동
 	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
-	void LoadGame();
+	void LoadGame() const;
 	
 	//저장된 게임 데이터를 기반으로 캐릭터 세팅
 	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
