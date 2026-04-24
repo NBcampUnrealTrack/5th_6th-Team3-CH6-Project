@@ -27,8 +27,6 @@ public:
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 	
-	virtual float PlayAnimMontage(class UAnimMontage* AnimMontage, float InPlayRate = 1.f, FName StartSectionName = NAME_None) override;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	bool bIsDead;
 
@@ -116,7 +114,10 @@ public:
 	// IT3Monster 인터페이스 구현
 	virtual void SetAnimationSpeedMultiplier(float MoveAnimMultiplier, float AttackAnimMultiplier) override;
 
-	// 현재 저장된 공격 애니메이션 배율 반환 (새 몽타주 재생 시 PlayRate에 곱해줄 용도)
+	// 엔진 기본 몽타주 재생 함수를 오버라이드하여 새 몽타주 재생 시 배율 강제 적용
+	virtual float PlayAnimMontage(class UAnimMontage* AnimMontage, float InPlayRate = 1.f, FName StartSectionName = NAME_None) override;
+
+	// 현재 저장된 공격 애니메이션 배율 반환
 	UFUNCTION(BlueprintCallable, Category = "Combat|Accessory")
 	float GetCurrentAttackRate() const { return CurrentAttackRate; }
 
@@ -125,7 +126,7 @@ private:
 	float CurrentMoveRate = 1.f;
 	float CurrentAttackRate = 1.f;
 
-	// 기준이 되는 기본 이동 속도 (BeginPlay 시점의 값)
-	float DefaultMaxWalkSpeed = 0.f;
+	// 현재 재생 중인 몽타주의 속도를 즉시 업데이트하는 내부 헬퍼
+	void UpdateActiveMontagePlayRate();
 #pragma endregion
 };
