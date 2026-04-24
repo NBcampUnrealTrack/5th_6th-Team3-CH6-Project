@@ -2,8 +2,6 @@
 
 #include "GameFramework/GameUserSettings.h"
 #include "GameSystem/T3SaveGame.h"
-#include "GameSystem/T3SaveLostMoney.h"
-#include "GameSystem/T3SaveObjectState.h"
 #include "GameSystem/T3SaveUserSettings.h"
 #include "Kismet/GameplayStatics.h"
 #include "Player/T3CharacterDataAsset.h"
@@ -29,25 +27,45 @@ void UT3GameInstance::Init()
 	Super::Init();
 	
 	//게임 데이터
-	LoadGame();
-	
-	//잃어버린 재화
-	if (!LoadLostMoney())
-	{
-		MakeFirstLostMoneyData();
-	}
-	
-	//물체 상태
-	if (!LoadObjectState())
-	{
-		MakeFirstObjectStateData();
-	}
+	LoadGameFromFile();
 	
 	//설정
 	if (!LoadUserSettings())
 	{
 		MakeFirstSettings();
 	}
+}
+
+void UT3GameInstance::OnStart()
+{
+	Super::OnStart();
+	
+	if (GEngine && GEngine->GameViewport)
+	{
+		//저장된 위치로 창을 옮김
+		const TSharedPtr<SWindow> GameWindow = GEngine->GameViewport->GetWindow();
+		LoadGameWindowPosition(GEngine->GetGameUserSettings(), GameWindow);
+		
+		//창을 옮길 때 그 창 위치를 기록
+		if (GameWindow)
+		{
+			GameWindow->SetOnWindowMoved(FOnWindowMoved::CreateLambda([this](const TSharedRef<SWindow>& GWindow)
+			{
+				if (GEngine)
+				{
+					SaveGameWindowPosition(GEngine->GetGameUserSettings(), GWindow);
+				}
+			}));
+		}
+	}
+}
+
+void UT3GameInstance::Shutdown()
+{
+	//게임 정료시 가지고 있던 게임 내용을 파일로 저장
+	SaveGameToFile();
+	
+	Super::Shutdown();
 }
 
 void UT3GameInstance::MakeFirstSettings()
@@ -80,6 +98,58 @@ void UT3GameInstance::MakeFirstSettings()
 	SaveUserSettings();
 }
 
+void UT3GameInstance::LoadGameWindowPosition(const TObjectPtr<UGameUserSettings> GameUserSettings, const TSharedPtr<SWindow>& GameWindow)
+{
+	if (!GameUserSettings || !GameWindow)
+	{
+		return;
+	}
+	
+	//전체 화면이라면 이하의 과정을 무시 (창모드, 전체 창모드에서만 동작)
+	if (GameUserSettings->GetFullscreenMode() == EWindowMode::Type::Fullscreen)
+	{
+		return;
+	}
+	
+	//창 위치
+	const FVector2D WindowPosition = GameUserSettings->GetWindowPosition();
+	const int32 SavedX = WindowPosition.X;
+	const int32 SavedY = WindowPosition.Y;
+	
+	//유효한 위치인지 확인
+	FDisplayMetrics DisplayMetrics;
+	FDisplayMetrics::RebuildDisplayMetrics(DisplayMetrics);
+	bool bValidPosition = false;
+	for (const FMonitorInfo& Monitor : DisplayMetrics.MonitorInfo)
+	{
+		if (SavedX >= Monitor.DisplayRect.Left && SavedX < Monitor.DisplayRect.Right &&
+			SavedY >= Monitor.DisplayRect.Top && SavedY < Monitor.DisplayRect.Bottom)
+		{
+			bValidPosition = true;
+			break;
+		}
+	}
+	
+	//유효한 위치라면 그 위치로 이동
+	if (bValidPosition)
+	{
+		GameWindow->MoveWindowTo(WindowPosition);
+	}
+}
+
+void UT3GameInstance::SaveGameWindowPosition(const TObjectPtr<UGameUserSettings> GameUserSettings, const TSharedPtr<SWindow>& GameWindow)
+{
+	if (!GameUserSettings || !GameWindow)
+	{
+		return;
+	}
+
+	//현재 창 위치를 기록
+	const FVector2D WindowPos = GameWindow->GetPositionInScreen();
+	GameUserSettings->SetWindowPosition(WindowPos.X, WindowPos.Y);
+	GameUserSettings->SaveConfig();
+}
+
 TObjectPtr<UT3SaveGame> UT3GameInstance::MakeFirstGameData(const ECharacterClass SelectedPlayerClass)
 {
 	if (!SavedGameData)
@@ -95,37 +165,23 @@ TObjectPtr<UT3SaveGame> UT3GameInstance::MakeFirstGameData(const ECharacterClass
 	return SavedGameData;
 }
 
-void UT3GameInstance::MakeFirstLostMoneyData()
+bool UT3GameInstance::SaveGameToFile()
 {
-	if (!LostMoneyData)
+	if (!SavedGameData)
 	{
-		LostMoneyData = NewObject<UT3SaveLostMoney>();
+		return false;
 	}
-	LostMoneyData->ResetGameData();
-}
-
-void UT3GameInstance::MakeFirstObjectStateData()
-{
-	if (!ObjectStateData)
-	{
-		ObjectStateData = NewObject<UT3SaveObjectState>();
-	}
-	ObjectStateData->ResetGameData();
-}
-
-bool UT3GameInstance::SaveGame()
-{
+	
 	return UGameplayStatics::SaveGameToSlot(SavedGameData, SAVE_GAME_NAME, 0);
 }
 
-bool UT3GameInstance::LoadGame()
+bool UT3GameInstance::LoadGameFromFile()
 {
 	TObjectPtr<UT3SaveGame> SavedData = Cast<UT3SaveGame>(UGameplayStatics::LoadGameFromSlot(SAVE_GAME_NAME, 0));
 	if (!SavedData)
 	{
 		return false;
 	}
-	UE_LOG(LogTemp, Error, TEXT("세이브에 저장된 현재 위치는 : %s"), *SavedData->PlayerLocation.ToString());
 	
 	SavedGameData = SavedData;
 	return true;
@@ -145,41 +201,6 @@ bool UT3GameInstance::LoadUserSettings()
 	}
 	
 	CurrentSettings = T3UserSettings;
-	return true;
-}
-
-bool UT3GameInstance::SaveLostMoney()
-{
-	return UGameplayStatics::SaveGameToSlot(LostMoneyData, SAVE_LOST_MONEY_NAME, 0);
-}
-
-bool UT3GameInstance::LoadLostMoney()
-{
-	TObjectPtr<UT3SaveLostMoney> T3LostMoney = Cast<UT3SaveLostMoney>(UGameplayStatics::LoadGameFromSlot(SAVE_LOST_MONEY_NAME, 0));
-	if (!T3LostMoney)
-	{
-		return false;
-	}
-	
-	LostMoneyData = T3LostMoney;
-	return true;
-}
-
-bool UT3GameInstance::SaveObjectState()
-{
-	return UGameplayStatics::SaveGameToSlot(ObjectStateData, SAVE_OBJECT_STATE_NAME, 0);
-}
-
-bool UT3GameInstance::LoadObjectState()
-{
-	//TObjectPtr<UT3SaveObjectState> T3ObjectState = Cast<UT3SaveObjectState>(UGameplayStatics::LoadGameFromSlot(SAVE_LOST_MONEY_NAME, 0));
-	TObjectPtr<UT3SaveObjectState> T3ObjectState = Cast<UT3SaveObjectState>(UGameplayStatics::LoadGameFromSlot(SAVE_OBJECT_STATE_NAME, 0));
-	if (!T3ObjectState)
-	{
-		return false;
-	}
-	
-	ObjectStateData = T3ObjectState;
 	return true;
 }
 
@@ -237,6 +258,9 @@ void UT3GameInstance::OpenLevel(const ELevelName LevelName)
 
     UE_LOG(LogTemp, Warning, TEXT("Attempting to Open Level: %s"), *LevelPath);
 	CurrentLevel = LevelName;
+	
+	//최종 호출 전 현재 게임을 파일로 저장
+	SaveGameToFile();
     
     // 최종 호출
     UGameplayStatics::OpenLevel(CurrentWorld, FName(*LevelPath));
@@ -303,10 +327,6 @@ void UT3GameInstance::UnlockLevel(const ELevelName LevelName)
 	{
 		SavedGameData->LevelProgressMap[LevelName].bLevelUnlocked = true;
 	}
-	if (SaveGame())
-	{
-		UE_LOG(LogTemp, Log, TEXT("Level %d Unlocked and Saved Successfully!"), (int32)LevelName);
-	}
 }
 
 // ===== 세이브포인트 해금 =====
@@ -334,8 +354,6 @@ void UT3GameInstance::UnlockSavePoint(ELevelName LevelName, FName SavePointID, F
 
     // 3. 맵에 추가 또는 갱신
 	SavedGameData->LevelProgressMap[LevelName].SavePoints.Add(SavePointID, PointData);
-	
-	SaveGame();
 }
 
 // ===== 레벨 해금 여부 =====
