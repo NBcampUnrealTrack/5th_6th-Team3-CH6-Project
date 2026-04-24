@@ -37,6 +37,14 @@ AT3MonsterBase::AT3MonsterBase()
 void AT3MonsterBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// 엔진에 설정된 기본 MaxWalkSpeed를 저장해둡니다.
+	if (GetCharacterMovement())
+	{
+		DefaultMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+	}
+
+	// 헬스 컴포넌트 부착 및 초기화
 	HealthComponent = FindComponentByClass<UT3HealthComponent>();
 
 	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
@@ -82,6 +90,14 @@ float AT3MonsterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 	}
 
 	return ActualDamage;
+}
+
+float AT3MonsterBase::PlayAnimMontage(UAnimMontage* AnimMontage, float InPlayRate, FName StartSectionName)
+{
+	// 장신구로 설정한 CurrentAttackRate를 곱해서 최종 속도를 결정합니다.
+	float FinalPlayRate = InPlayRate * CurrentAttackRate;
+
+	return Super::PlayAnimMontage(AnimMontage, FinalPlayRate, StartSectionName);
 }
 
 void AT3MonsterBase::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
@@ -206,4 +222,21 @@ void AT3MonsterBase::ApplyBonusDamage(float BonusDamage)
 
 void AT3MonsterBase::SetAnimationSpeedMultiplier(float MoveAnimMultiplier, float AttackAnimMultiplier)
 {
+	// 1. 배율 데이터 갱신 (단순 덮어쓰기)
+	CurrentMoveRate = MoveAnimMultiplier;
+	CurrentAttackRate = AttackAnimMultiplier;
+
+	// 2. 현재 재생 중인 몽타주 속도 즉시 갱신
+	// 몽타주는 루핑되거나 긴 시간 재생될 수 있으므로, 호출 즉시 PlayRate를 바꿔줘야 시각적으로 자연스럽습니다.
+	if (UAnimInstance* AnimInst = GetMesh()->GetAnimInstance())
+	{
+		if (UAnimMontage* ActiveMontage = AnimInst->GetCurrentActiveMontage())
+		{
+			// 특정 타입을 구분하지 않기로 했으므로 AttackAnimMultiplier를 일괄 적용하거나, 
+			// 이동 배율과 공격 배율 중 더 낮은(더 느린) 값을 적용하여 시스템의 일관성을 유지할 수 있습니다.
+			float FinalRate = AttackAnimMultiplier;
+
+			AnimInst->Montage_SetPlayRate(ActiveMontage, FinalRate);
+		}
+	}
 }
