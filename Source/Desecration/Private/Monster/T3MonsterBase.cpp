@@ -226,10 +226,7 @@ void AT3MonsterBase::SetAnimationSpeedMultiplier(float MoveAnimMultiplier, float
 	CurrentMoveRate = MoveAnimMultiplier;
 	CurrentAttackRate = AttackAnimMultiplier;
 
-	// 2. 이동 속도 동기화
-	ApplyCurrentWalkSpeed();
-
-	// 3. 현재 재생 중인 몽타주 속도 즉시 갱신
+	// 2. 현재 재생 중인 몽타주 속도 즉시 갱신
 	// 몽타주는 루핑되거나 긴 시간 재생될 수 있으므로, 호출 즉시 PlayRate를 바꿔줘야 시각적으로 자연스럽습니다.
 	if (UAnimInstance* AnimInst = GetMesh()->GetAnimInstance())
 	{
@@ -241,16 +238,5 @@ void AT3MonsterBase::SetAnimationSpeedMultiplier(float MoveAnimMultiplier, float
 
 			AnimInst->Montage_SetPlayRate(ActiveMontage, FinalRate);
 		}
-	}
-}
-
-void AT3MonsterBase::ApplyCurrentWalkSpeed()
-{
-	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
-	{
-		// 장신구 시스템이 이미 조절 중이라 하셨으므로, 
-		// 여기서 다시 계산하면 수치가 중첩(0.5 * 0.5 = 0.25)될 위험이 있습니다.
-		// 만약 장신구 시스템이 이 함수를 통해서만 속도를 조절하게 하려면 아래 코드를 유지하세요.
-		MoveComp->MaxWalkSpeed = DefaultMaxWalkSpeed * CurrentMoveRate;
 	}
 }

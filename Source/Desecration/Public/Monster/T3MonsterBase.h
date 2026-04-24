@@ -120,13 +120,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Accessory")
 	float GetCurrentAttackRate() const { return CurrentAttackRate; }
 
-protected:
-	// 이동 속도 업데이트 (장신구 시스템과 로직 분리가 필요할 때 사용)
-	void ApplyCurrentWalkSpeed();
-
-	// 현재 재생 중인 모든 몽타주에 현재 배율을 즉시 강제 적용
-	void UpdateActiveMontagePlayRate();
-
 private:
 	// 현재 적용된 배율 (기본값 1.0)
 	float CurrentMoveRate = 1.f;
