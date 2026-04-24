@@ -4,6 +4,7 @@
 #include "Subsystems/WorldSubsystem.h"
 #include "T3WorldSubsystem.generated.h"
 
+class UT3SaveGame;
 class UT3GameInstance;
 class UT3SaveObjectState;
 
@@ -16,7 +17,7 @@ public:
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
 
 	/**
-	 * 지정한 물체의 상태
+	 * 지정한 물체 또는 몬스터의 상태
 	 * @param ObjectID 물체 번호
 	 * @return 그 물체의 상태를 반환, 없다면 0을 반환
 	 */
@@ -24,7 +25,7 @@ public:
 	int32 GetObjectState(const int32 ObjectID) const;
 
 	/**
-	 * 지정한 물체를 추가하거나 그 상태를 변경, 상태 변경시 물체 상태가 변경됨
+	 * 지정한 물체나 몬스터를 추가하거나 그 상태를 변경
 	 * @param ObjectID 추가 혹은 변경할 물체 번호
 	 * @param NewState 물체의 상태
 	 */
@@ -32,9 +33,9 @@ public:
 	void SetOrAddObjectState(const int32 ObjectID, const int32 NewState) const;
 	
 private:
-	//몬스터, 물체 상태 확인을 위한 저장된 물체 상태 참조
+	//몬스터, 물체 상태 확인을 위한 저장된 게임 참조
 	UPROPERTY()
-	TObjectPtr<UT3SaveObjectState> ObjectStateData;
+	TObjectPtr<UT3SaveGame> T3SaveGame;
 	
 	//게임 인스턴스
 	UPROPERTY()
