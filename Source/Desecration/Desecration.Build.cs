@@ -23,7 +23,8 @@ public class Desecration : ModuleRules
 			"SlateCore",
             "Niagara",
             "GameplayTags",
-            "MotionWarping"
+            "MotionWarping",
+            "ApplicationCore"
         });
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
