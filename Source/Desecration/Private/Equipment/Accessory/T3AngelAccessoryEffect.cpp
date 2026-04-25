@@ -1,7 +1,7 @@
 #include "Equipment/Accessory/T3AngelAccessoryEffect.h"
 
-#include "DrawDebugHelpers.h"
-#include "Kismet/KismetSystemLibrary.h"
+#include "Components/SphereComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Monster/Interface/T3Monster.h"
 #include "Player/T3CharacterBase.h"
 
@@ -9,81 +9,91 @@ void UT3AngelAccessoryEffect::OnEquipped_Implementation(AT3CharacterBase* OwnerC
 {
 	CachedOwner = OwnerChar;
 
-	OwnerChar->GetWorldTimerManager().SetTimer(
-		SlowTimerHandle,
-		this,
-		&UT3AngelAccessoryEffect::ApplySlowAura,
-		SlowInterval,
-		true);
+	AuraSphere = NewObject<USphereComponent>(OwnerChar);
+	AuraSphere->InitSphereRadius(SlowRadius);
+	AuraSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	AuraSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
+	AuraSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	AuraSphere->SetGenerateOverlapEvents(true);
+	AuraSphere->SetHiddenInGame(!bShowDebugRadius);
+	AuraSphere->SetupAttachment(OwnerChar->GetRootComponent());
+	AuraSphere->RegisterComponent();
+
+	AuraSphere->OnComponentBeginOverlap.AddDynamic(this, &UT3AngelAccessoryEffect::OnOverlapBegin);
+	AuraSphere->OnComponentEndOverlap.AddDynamic(this, &UT3AngelAccessoryEffect::OnOverlapEnd);
 }
 
-void UT3AngelAccessoryEffect::ApplySlowAura()
+void UT3AngelAccessoryEffect::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (!CachedOwner.IsValid())
+	IT3Monster* Monster = Cast<IT3Monster>(OtherActor);
+
+	if (!Monster)
 	{
 		return;
 	}
 
-	for (int32 i = 0; i < SlowedMonsters.Num(); ++i)
+	Monster->SetAnimationSpeedMultiplier(MoveAnimSlowAmount, AttackAnimSlowAmount);
+
+	float OriginalSpeed = 0.f;
+
+	if (ACharacter* MonsterChar = Cast<ACharacter>(OtherActor))
 	{
-		if (SlowedMonsters[i].IsValid())
+		OriginalSpeed = MonsterChar->GetCharacterMovement()->MaxWalkSpeed;
+
+		MonsterChar->GetCharacterMovement()->MaxWalkSpeed *= MoveSpeedSlowAmount;
+	}
+
+	SlowedMonsters.Add(OtherActor);
+
+	OriginalMaxWalkSpeeds.Add(OriginalSpeed);
+}
+
+void UT3AngelAccessoryEffect::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	int32 Index = SlowedMonsters.IndexOfByPredicate([OtherActor](const TWeakObjectPtr<AActor>& Ptr)
+	{
+		return Ptr.Get() == OtherActor;
+	});
+
+	if (Index == INDEX_NONE)
+	{
+		return;
+	}
+
+	RestoreMonster(Index);
+}
+
+void UT3AngelAccessoryEffect::RestoreMonster(int32 Index)
+{
+	if (SlowedMonsters[Index].IsValid())
+	{
+		if (IT3Monster* Monster = Cast<IT3Monster>(SlowedMonsters[Index].Get()))
 		{
-			if (IT3Monster* Monster = Cast<IT3Monster>(SlowedMonsters[i].Get()))
-			{
-				Monster->SetAnimationSpeedMultiplier(1.f, 1.f);
-			}
+			Monster->SetAnimationSpeedMultiplier(1.f, 1.f);
+		}
+
+		if (ACharacter* MonsterChar = Cast<ACharacter>(SlowedMonsters[Index].Get()))
+		{
+			MonsterChar->GetCharacterMovement()->MaxWalkSpeed = OriginalMaxWalkSpeeds[Index];
 		}
 	}
 
-	SlowedMonsters.Empty();
+	SlowedMonsters.RemoveAt(Index);
 
-	AT3CharacterBase* Owner = CachedOwner.Get();
-
-	TArray<AActor*> Overlapped;
-
-	TArray<TEnumAsByte<EObjectTypeQuery>> ObjTypes;
-
-	ObjTypes.Add(UEngineTypes::ConvertToObjectType(ECC_Pawn));
-
-	UKismetSystemLibrary::SphereOverlapActors(
-		Owner,
-		Owner->GetActorLocation(),
-		SlowRadius,
-		ObjTypes,
-		nullptr,
-		{Owner},
-		Overlapped);
-
-	if (bShowDebugRadius)
-	{
-		DrawDebugSphere(Owner->GetWorld(), Owner->GetActorLocation(), SlowRadius, 16, FColor::Cyan, false, SlowInterval);
-	}
-
-	for (AActor* Actor : Overlapped)
-	{
-		if (IT3Monster* Monster = Cast<IT3Monster>(Actor))
-		{
-			Monster->SetAnimationSpeedMultiplier(MoveAnimSlowAmount, AttackAnimSlowAmount);
-
-			SlowedMonsters.Add(Actor);
-		}
-	}
+	OriginalMaxWalkSpeeds.RemoveAt(Index);
 }
 
 void UT3AngelAccessoryEffect::OnUnequipped_Implementation(AT3CharacterBase* OwnerChar)
 {
-	OwnerChar->GetWorldTimerManager().ClearTimer(SlowTimerHandle);
-
-	for (int32 i = 0; i < SlowedMonsters.Num(); ++i)
+	if (IsValid(AuraSphere))
 	{
-		if (SlowedMonsters[i].IsValid())
-		{
-			if (IT3Monster* Monster = Cast<IT3Monster>(SlowedMonsters[i].Get()))
-			{
-				Monster->SetAnimationSpeedMultiplier(1.f, 1.f);
-			}
-		}
+		AuraSphere->DestroyComponent();
+
+		AuraSphere = nullptr;
 	}
 
-	SlowedMonsters.Empty();
+	for (int32 i = SlowedMonsters.Num() - 1; i >= 0; --i)
+	{
+		RestoreMonster(i);
+	}
 }
