@@ -4,6 +4,7 @@
 #include "T3SaveGameParent.h"
 #include "T3SaveUserSettings.generated.h"
 
+//주의 : 언리얼 엔진에서 직접 다루는 GameUserSettings와는 다른 클래스 (이건 T3'Save'UserSettings)
 UCLASS()
 class DESECRATION_API UT3SaveUserSettings : public UT3SaveGameParent
 {

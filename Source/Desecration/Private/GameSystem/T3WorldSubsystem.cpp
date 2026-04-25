@@ -1,7 +1,7 @@
 #include "GameSystem/T3WorldSubsystem.h"
 
 #include "GameSystem/T3GameInstance.h"
-#include "GameSystem/T3SaveObjectState.h"
+#include "GameSystem/T3SaveGame.h"
 
 void UT3WorldSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 {
@@ -22,18 +22,18 @@ void UT3WorldSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 	}
 	
 	//저장된 게임
-	ObjectStateData = T3GameInstance->GetObjectStateData();
+	T3SaveGame = T3GameInstance->GetSavedGameData();
 }
 
 int32 UT3WorldSubsystem::GetObjectState(const int32 ObjectID) const
 {
-	if (!ObjectStateData)
+	if (!T3SaveGame)
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s : 저장된 게임 데이터가 없음"), *GetNameSafe(this));
 		return 0;
 	}
 	
-	const int32* Result = ObjectStateData->LevelObjectStates.Find(ObjectID);
+	const int32* Result = T3SaveGame->LevelObjectStates.Find(ObjectID);
 	if (Result == nullptr)
 	{
 		return 0;
@@ -44,23 +44,17 @@ int32 UT3WorldSubsystem::GetObjectState(const int32 ObjectID) const
 
 void UT3WorldSubsystem::SetOrAddObjectState(const int32 ObjectID, const int32 NewState) const
 {
-	if (!ObjectStateData)
+	if (!T3SaveGame)
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s : 저장된 게임 데이터가 없음"), *GetNameSafe(this));
 		return;
 	}
 	
-	if (ObjectStateData->LevelObjectStates.Contains(ObjectID))
+	if (T3SaveGame->LevelObjectStates.Contains(ObjectID))
 	{
-		ObjectStateData->LevelObjectStates[ObjectID] = NewState;
+		T3SaveGame->LevelObjectStates[ObjectID] = NewState;
 		return;
 	}
 	
-	ObjectStateData->LevelObjectStates.Emplace(ObjectID, NewState);
-	
-	//저장
-	if (!T3GameInstance->SaveObjectState())
-	{
-		UE_LOG(LogTemp, Error, TEXT("%s : 물체 상태 저장 실패"), *GetNameSafe(this));
-	}
+	T3SaveGame->LevelObjectStates.Emplace(ObjectID, NewState);
 }

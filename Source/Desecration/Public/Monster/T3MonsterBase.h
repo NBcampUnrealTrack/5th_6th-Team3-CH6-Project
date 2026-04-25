@@ -26,7 +26,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	bool bIsDead;
 
@@ -110,9 +110,23 @@ private:
 #pragma endregion
 	
 #pragma region 장신구
-
 public:
+	// IT3Monster 인터페이스 구현
 	virtual void SetAnimationSpeedMultiplier(float MoveAnimMultiplier, float AttackAnimMultiplier) override;
-	
+
+	// 엔진 기본 몽타주 재생 함수를 오버라이드하여 새 몽타주 재생 시 배율 강제 적용
+	virtual float PlayAnimMontage(class UAnimMontage* AnimMontage, float InPlayRate = 1.f, FName StartSectionName = NAME_None) override;
+
+	// 현재 저장된 공격 애니메이션 배율 반환
+	UFUNCTION(BlueprintCallable, Category = "Combat|Accessory")
+	float GetCurrentAttackRate() const { return CurrentAttackRate; }
+
+private:
+	// 현재 적용된 배율 (기본값 1.0)
+	float CurrentMoveRate = 1.f;
+	float CurrentAttackRate = 1.f;
+
+	// 현재 재생 중인 몽타주의 속도를 즉시 업데이트하는 내부 헬퍼
+	void UpdateActiveMontagePlayRate();
 #pragma endregion
 };

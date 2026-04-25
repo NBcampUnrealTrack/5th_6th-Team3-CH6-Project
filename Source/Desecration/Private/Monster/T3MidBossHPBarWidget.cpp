@@ -19,7 +19,7 @@ void UT3MidBossHPBarWidget::NativeConstruct()
 	// 보스 이름 표시
 	if (Txt_BossName)
 	{
-		Txt_BossName->SetText(FText::FromString(TargetBoss->BossName));
+		Txt_BossName->SetText(TargetBoss->BossDisplayName);
 	}
 
 	// 초기 HP 비율 계산
@@ -51,7 +51,7 @@ void UT3MidBossHPBarWidget::NativeConstruct()
 	TargetBoss->OnMidBossDeath.AddDynamic(this, &UT3MidBossHPBarWidget::OnBossDeath);
 
 	UE_LOG(LogDesecration, Log, TEXT("T3_MidBossHPBar: 위젯 초기화 완료 (보스: %s, HP: %.0f/%.0f)"),
-		*TargetBoss->BossName, TargetBoss->MidBossStats.CurrentHP, MaxHP);
+		*TargetBoss->BossDisplayName.ToString(), TargetBoss->MidBossStats.CurrentHP, MaxHP);
 }
 
 void UT3MidBossHPBarWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)

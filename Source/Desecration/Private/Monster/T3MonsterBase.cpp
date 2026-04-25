@@ -37,6 +37,8 @@ AT3MonsterBase::AT3MonsterBase()
 void AT3MonsterBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// 헬스 컴포넌트 부착 및 초기화
 	HealthComponent = FindComponentByClass<UT3HealthComponent>();
 
 	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
@@ -82,6 +84,27 @@ float AT3MonsterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 	}
 
 	return ActualDamage;
+}
+
+float AT3MonsterBase::PlayAnimMontage(UAnimMontage* AnimMontage, float InPlayRate, FName StartSectionName)
+{
+	// 장신구로 설정한 CurrentAttackRate를 곱해서 최종 속도를 결정합니다.
+	float FinalPlayRate = InPlayRate * CurrentAttackRate;
+
+	return Super::PlayAnimMontage(AnimMontage, FinalPlayRate, StartSectionName);
+}
+
+void AT3MonsterBase::UpdateActiveMontagePlayRate()
+{
+	UAnimInstance* AnimInst = GetMesh() ? GetMesh()->GetAnimInstance() : nullptr;
+	if (!AnimInst) return;
+
+	// 현재 재생 중인 모든 몽타주에 대해 루프를 돌며 속도를 강제합니다.
+	if (UAnimMontage* ActiveMontage = AnimInst->GetCurrentActiveMontage())
+	{
+		AnimInst->Montage_SetPlayRate(ActiveMontage, CurrentAttackRate);
+	}
+
 }
 
 void AT3MonsterBase::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
@@ -206,4 +229,10 @@ void AT3MonsterBase::ApplyBonusDamage(float BonusDamage)
 
 void AT3MonsterBase::SetAnimationSpeedMultiplier(float MoveAnimMultiplier, float AttackAnimMultiplier)
 {
+	// 1. 배율 데이터 갱신
+	CurrentMoveRate = MoveAnimMultiplier;
+	CurrentAttackRate = AttackAnimMultiplier;
+
+	// 2. 현재 재생 중인 몽타주 속도 즉시 반영 (도중 감속)
+	UpdateActiveMontagePlayRate();
 }

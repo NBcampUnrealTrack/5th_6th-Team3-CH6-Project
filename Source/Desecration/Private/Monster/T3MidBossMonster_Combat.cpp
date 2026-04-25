@@ -10,6 +10,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Player/T3DamageTypes.h"
 
 // ============================================================
@@ -78,7 +79,7 @@ void AT3MidBossMonster::ApplyDamageToMidBoss(float DamageAmount, float StunAmoun
 	}
 
 	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 피격 (데미지: %.0f, 남은HP: %.0f, 스턴게이지: %.0f/%.0f)"),
-		*BossName, DamageAmount, MidBossStats.CurrentHP, MidBossStats.CurrentStunGauge, MidBossStats.StunThreshold);
+		*BossDisplayName.ToString(), DamageAmount, MidBossStats.CurrentHP, MidBossStats.CurrentStunGauge, MidBossStats.StunThreshold);
 
 	// 카메라 쉐이크 — 상태 무관하게 항상 재생 (피격 피드백)
 	if (HitCameraShakeClass)
@@ -121,7 +122,7 @@ void AT3MidBossMonster::ApplyDamageToMidBoss(float DamageAmount, float StunAmoun
 
 		BeginDeathSequence();
 
-		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 사망 (StateTree 이벤트 전송)"), *BossName);
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 사망 (StateTree 이벤트 전송)"), *BossDisplayName.ToString());
 		return;
 	}
 
@@ -228,7 +229,7 @@ void AT3MidBossMonster::ApplyStun()
 		StunDuration, false);
 
 	UE_LOG(LogDesecration, Log,
-		TEXT("T3_MidBoss: %s 스턴 상태 진입 (%.1f초 후 자동 해제, StateTree 이벤트 전송)"), *BossName, StunDuration);
+		TEXT("T3_MidBoss: %s 스턴 상태 진입 (%.1f초 후 자동 해제, StateTree 이벤트 전송)"), *BossDisplayName.ToString(), StunDuration);
 }
 
 void AT3MidBossMonster::RecoverFromStun()
@@ -243,7 +244,7 @@ void AT3MidBossMonster::RecoverFromStun()
 		StateTreeComponent->SendStateTreeEvent(TAG_Boss_Event_StunRecovered);
 	}
 
-	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 스턴 해제 (StateTree 이벤트 전송)"), *BossName);
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 스턴 해제 (StateTree 이벤트 전송)"), *BossDisplayName.ToString());
 }
 
 // ============================================================
@@ -505,8 +506,9 @@ void AT3MidBossMonster::ExecuteParryCounter(AActor* ParriedAttacker)
 		const FMidBossAttackPattern* PatternData = FindPatternData(CurrentPatternName);
 		if (PatternData && PatternData->MontageChain.IsValidIndex(CurrentChainIndex))
 		{
+			// 천사 장신구 슬로우는 별개 효과이므로 패링 카운터 풀스피드 복귀에도 곱해서 유지
 			AnimInstance->Montage_SetPlayRate(
-				PatternData->MontageChain[CurrentChainIndex].Montage, 1.0f);
+				PatternData->MontageChain[CurrentChainIndex].Montage, 1.0f * CurrentAttackAnimRate);
 		}
 	}
 
@@ -540,4 +542,30 @@ void AT3MidBossMonster::ApplyBonusDamage(float BonusDamage)
 
 void AT3MidBossMonster::SetAnimationSpeedMultiplier(float MoveAnimMultiplier, float AttackAnimMultiplier)
 {
+	// 천사 장신구가 매 1초마다 호출 → 절대 배율로 덮어써서 누적 방지 (멱등)
+	CurrentMoveAnimRate = FMath::Max(MoveAnimMultiplier, 0.f);
+	CurrentAttackAnimRate = FMath::Max(AttackAnimMultiplier, 0.f);
+
+	// 단일 진입점 — 현재 베이스(Default 또는 Strafe/Dash 푸시값)에 새 배율 적용
+	ApplyCurrentWalkSpeed();
+
+	// 진행 중 공격 몽타주는 다음 PlayRate 갱신 시점(노티파이/섹션 진행/패턴 시작)부터 곱이 적용됨
+	UE_LOG(LogDesecration, Verbose, TEXT("T3_MidBoss: 애님 배율 변경 — Move=%.2f, Attack=%.2f"),
+		CurrentMoveAnimRate, CurrentAttackAnimRate);
+}
+
+void AT3MidBossMonster::SetActiveBaseWalkSpeed(float NewBaseSpeed)
+{
+	// STNodes(Strafe/Dash 등)가 베이스 속도를 갱신 — 천사 슬로우 곱은 ApplyCurrentWalkSpeed에서 자동 적용
+	ActiveBaseWalkSpeed = FMath::Max(NewBaseSpeed, 0.f);
+	ApplyCurrentWalkSpeed();
+}
+
+void AT3MidBossMonster::ApplyCurrentWalkSpeed()
+{
+	// MaxWalkSpeed = 베이스 × 외부 슬로우 배율 — 천사/STNodes 모든 호출이 이 한 곳을 거침
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		MoveComp->MaxWalkSpeed = ActiveBaseWalkSpeed * CurrentMoveAnimRate;
+	}
 }

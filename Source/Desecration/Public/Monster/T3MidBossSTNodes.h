@@ -216,12 +216,9 @@ struct FT3STT_DisengageInstanceData
 	bool bStrafe = false;
 
 	// 백스텝 — 타겟 반대 방향으로 후퇴
+	// 몽타주는 AT3MidBossMonster::BackStepMontage 참조 (보스별 스켈레톤 대응)
 	UPROPERTY(EditAnywhere, Category = "Parameter")
 	bool bBackStep = false;
-
-	// 백스텝 몽타주 (선택) — 없으면 슬라이드 이동만
-	UPROPERTY(EditAnywhere, Category = "Parameter")
-	TObjectPtr<UAnimMontage> BackStepMontage = nullptr;
 
 	// 루트모션 거리 스케일 (1.0 = 원본, 0.5 = 절반 거리, 0 = 이동 없음)
 	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "0.0", ClampMax = "2.0"))
