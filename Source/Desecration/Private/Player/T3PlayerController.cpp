@@ -336,7 +336,7 @@ void AT3PlayerController::ToggleInventoryInput()
 {
 	if (IsValid(MainInventoryWidget))
 	{
-		if (MainInventoryWidget->IsVisible())
+		if (MainInventoryWidget->IsVisible() && !bIsConfirmDialogOpen)
 		{
 			MainInventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
 			

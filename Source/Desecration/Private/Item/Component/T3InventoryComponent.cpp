@@ -2,6 +2,7 @@
 
 //#include "IDetailTreeNode.h"
 #include "Item/Component/T3ItemUseComponent.h"
+#include "Item/Data/T3EtcItemData.h"
 #include "Player/T3CharacterBase.h"
 #include "Public/Item/Data/T3ConsumableItemData.h"
 UT3InventoryComponent::UT3InventoryComponent()
@@ -1211,4 +1212,40 @@ void UT3InventoryComponent::LoadPotionUpgradeLevel(int32 AmountLevel, int32 Reco
 	PotionRecoveryUpgradeLevel = RecoveryLevel;
 	
 	OnPotionUpgraded.Broadcast();
+}
+
+bool UT3InventoryComponent::UseBossRune(const FName& ItemID)
+{
+	if (!IsValid(EtcTable))
+	{
+		return false;
+	}
+
+	FT3EtcItemData* Row = EtcTable->FindRow<FT3EtcItemData>(ItemID, TEXT("UseBossRune"));
+	if (!Row || Row->RuneFragmentValue <= 0)
+	{
+		return false;
+	}
+
+	if (!RemoveEtcItemByCount(ItemID, 1))
+	{
+		return false;
+	}
+
+	SetMoney(GetMoney() + Row->RuneFragmentValue);
+
+	return true;
+}
+
+bool UT3InventoryComponent::HasEtcItemByItemID(const FName& ItemID) const
+{
+	for (const FInventorySlot& Slot : EtcItems)
+	{
+		if (Slot.ItemID == ItemID && Slot.ItemStack > 0)
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
