@@ -7,6 +7,7 @@
 #include "Curves/CurveFloat.h"
 #include "NiagaraComponent.h"
 #include "NiagaraSystem.h"
+#include "DrawDebugHelpers.h"
 
 UT3BossWeaponComponent::UT3BossWeaponComponent()
 {
@@ -29,6 +30,10 @@ UT3BossWeaponComponent::UT3BossWeaponComponent()
 	WeaponHitBox->SetGenerateOverlapEvents(true);
 	WeaponHitBox->SetCapsuleSize(10.f, 40.f);
 
+	// BP에서 튜닝한 크기가 월드 크기 그대로 유지되도록 — 부모 스케일 체인(손소켓×WeaponMesh) 영향 차단
+	// (위치/회전은 WeaponMesh 따라감 → 검 휘두름 추적 OK)
+	WeaponHitBox->SetUsingAbsoluteScale(true);
+
 	// 에디터에서 히트캡슐 와이어프레임 항상 표시 (선택하지 않아도 보임)
 	WeaponHitBox->bDrawOnlyIfSelected = false;
 	WeaponHitBox->ShapeColor = FColor::Red;
@@ -43,6 +48,9 @@ UT3BossWeaponComponent::UT3BossWeaponComponent()
 	WeaponHitBoxWide->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
 	WeaponHitBoxWide->SetGenerateOverlapEvents(true);
 	WeaponHitBoxWide->SetCapsuleSize(30.f, 60.f);
+
+	// 동일 — BP 튜닝 크기 보존
+	WeaponHitBoxWide->SetUsingAbsoluteScale(true);
 
 	WeaponHitBoxWide->bDrawOnlyIfSelected = false;
 	WeaponHitBoxWide->ShapeColor = FColor::Orange;
@@ -123,6 +131,12 @@ void UT3BossWeaponComponent::BeginPlay()
 	{
 		UE_LOG(LogDesecration, Warning, TEXT("T3_BossWeapon: WeaponAuraEffect가 nullptr!"));
 	}
+
+	// 디버그 시각화 ON이면 틱 항상 활성화 (소켓 블렌드와 무관하게 매 프레임 DrawDebug)
+	if (bShowDebugHitRange)
+	{
+		SetComponentTickEnabled(true);
+	}
 }
 
 void UT3BossWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -137,6 +151,7 @@ void UT3BossWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		// EaseOut — 시작에 빠르게 이동, 끝에서 미세 안착
 		Alpha = FMath::InterpEaseOut(0.f, 1.f, Alpha, SocketBlendExponent);
 
+		// 블렌드 종착점 = Identity (WeaponMesh는 소켓 원점에 Snap 부착)
 		FTransform BlendedTransform;
 		BlendedTransform.Blend(SocketBlendStartRelative, FTransform::Identity, Alpha);
 		WeaponMeshComponent->SetRelativeTransform(BlendedTransform);
@@ -145,8 +160,17 @@ void UT3BossWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		{
 			WeaponMeshComponent->SetRelativeTransform(FTransform::Identity);
 			bIsBlendingSocket = false;
-			SetComponentTickEnabled(false);
+			// 디버그 시각화 중이면 틱 유지, 아니면 비활성화
+			if (!bShowDebugHitRange)
+			{
+				SetComponentTickEnabled(false);
+			}
 		}
+	}
+
+	if (bShowDebugHitRange)
+	{
+		DrawDebugHitShapes();
 	}
 }
 
@@ -174,28 +198,59 @@ void UT3BossWeaponComponent::AttachToSocket(USkeletalMeshComponent* TargetMesh)
 		return;
 	}
 
+	// WeaponMesh는 소켓 원점이 곧 그립 → Snap (BP 프리뷰용 오프셋은 의미 없음, 소켓 기준 정렬)
 	WeaponMeshComponent->AttachToComponent(
 		TargetMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, DefaultSocketName);
 
-	// HitBox를 WeaponMesh에 명시적 재부착
+	// HitBox는 WeaponMesh 기준 오프셋(블레이드 끝 등)이 의미 있음 → KeepRelative로 BP 오프셋 보존
 	// (생성자의 SetupAttachment가 UActorComponent 내부 생성 시 런타임에 유지 안 됨)
+	// AbsoluteScale 강제 — 손 소켓 스케일(2x) 체인 무시, BP 튜닝한 RelScale을 그대로 월드 스케일로
+	// (생성자에서만 켜면 BP 직렬화값(false)이 덮어쓰므로 런타임에 재설정 필수)
+
+	// BP 튜닝 RelLoc 최초 1회 캐시 — 후속 부착에서 누적 ÷ 방지
+	if (!bHitBoxBPLocCached)
+	{
+		if (WeaponHitBox)     HitBoxBPRelLoc     = WeaponHitBox->GetRelativeLocation();
+		if (WeaponHitBoxWide) HitBoxWideBPRelLoc = WeaponHitBoxWide->GetRelativeLocation();
+		bHitBoxBPLocCached = true;
+	}
+
 	if (WeaponHitBox)
 	{
+		WeaponHitBox->SetUsingAbsoluteScale(true);
 		WeaponHitBox->AttachToComponent(
-			WeaponMeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+			WeaponMeshComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	}
 
 	if (WeaponHitBoxWide)
 	{
+		WeaponHitBoxWide->SetUsingAbsoluteScale(true);
 		WeaponHitBoxWide->AttachToComponent(
-			WeaponMeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+			WeaponMeshComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	}
 
-	// 오라 이펙트 재부착 + 에셋 할당
+	// 위치 보정 — bAbsoluteScale은 크기만 격리하고 RelLoc은 여전히 부모.WorldScale이 곱해짐
+	// 따라서 BP 튜닝 위치를 부모스케일로 나눠 적용 → 월드 오프셋 = BP RelLoc 그대로
+	{
+		const FVector ParentWorldScale = WeaponMeshComponent->GetComponentScale();
+		auto CompensateRelLoc = [&ParentWorldScale](USceneComponent* Comp, const FVector& BPLoc)
+		{
+			if (!Comp) return;
+			const FVector Safe(
+				FMath::IsNearlyZero(ParentWorldScale.X) ? 1.f : ParentWorldScale.X,
+				FMath::IsNearlyZero(ParentWorldScale.Y) ? 1.f : ParentWorldScale.Y,
+				FMath::IsNearlyZero(ParentWorldScale.Z) ? 1.f : ParentWorldScale.Z);
+			Comp->SetRelativeLocation(FVector(BPLoc.X / Safe.X, BPLoc.Y / Safe.Y, BPLoc.Z / Safe.Z));
+		};
+		CompensateRelLoc(WeaponHitBox, HitBoxBPRelLoc);
+		CompensateRelLoc(WeaponHitBoxWide, HitBoxWideBPRelLoc);
+	}
+
+	// 오라 이펙트 재부착 + 에셋 할당 (KeepRelative — BP 오프셋 유지)
 	if (WeaponAuraEffect)
 	{
 		WeaponAuraEffect->AttachToComponent(
-			WeaponMeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+			WeaponMeshComponent, FAttachmentTransformRules::KeepRelativeTransform);
 
 		if (WeaponAuraSystem)
 		{
@@ -206,7 +261,7 @@ void UT3BossWeaponComponent::AttachToSocket(USkeletalMeshComponent* TargetMesh)
 	// 소켓 스위칭용 캐싱
 	CachedTargetMesh = TargetMesh;
 
-	// 팔 공격 판정 구체를 캐릭터 메시 본에 부착
+	// 팔 공격 판정 구체 — 본 자체가 손 원점 → Snap
 	if (BodyHitSphere && TargetMesh->DoesSocketExist(BodyAttackBoneName))
 	{
 		BodyHitSphere->AttachToComponent(
@@ -228,6 +283,36 @@ void UT3BossWeaponComponent::AttachToSocket(USkeletalMeshComponent* TargetMesh)
 		*DefaultSocketName.ToString(),
 		*WeaponMeshComponent->GetComponentLocation().ToString(),
 		WeaponHitBox ? *WeaponHitBox->GetComponentLocation().ToString() : TEXT("nullptr"));
+
+	// 스케일 체인 진단 — BP 튜닝 vs 인게임 어디서 커지는지 추적
+	{
+		const FVector HandSocketWorldScale = TargetMesh->GetSocketTransform(DefaultSocketName, RTS_World).GetScale3D();
+		const FVector MeshRelScale = WeaponMeshComponent->GetRelativeScale3D();
+		const FVector MeshWorldScale = WeaponMeshComponent->GetComponentScale();
+		UE_LOG(LogDesecration, Warning, TEXT("[Scale진단] HandSocket월드:%s | WeaponMesh Rel:%s World:%s"),
+			*HandSocketWorldScale.ToString(), *MeshRelScale.ToString(), *MeshWorldScale.ToString());
+
+		if (WeaponHitBox)
+		{
+			UE_LOG(LogDesecration, Warning,
+				TEXT("[Scale진단] HitBox bAbsScale:%d Rel:%s World:%s | CapsuleSize H:%.2f R:%.2f (Scaled H:%.2f R:%.2f)"),
+				WeaponHitBox->IsUsingAbsoluteScale() ? 1 : 0,
+				*WeaponHitBox->GetRelativeScale3D().ToString(),
+				*WeaponHitBox->GetComponentScale().ToString(),
+				WeaponHitBox->GetUnscaledCapsuleHalfHeight(), WeaponHitBox->GetUnscaledCapsuleRadius(),
+				WeaponHitBox->GetScaledCapsuleHalfHeight(), WeaponHitBox->GetScaledCapsuleRadius());
+		}
+		if (WeaponHitBoxWide)
+		{
+			UE_LOG(LogDesecration, Warning,
+				TEXT("[Scale진단] HitBoxWide bAbsScale:%d Rel:%s World:%s | CapsuleSize H:%.2f R:%.2f (Scaled H:%.2f R:%.2f)"),
+				WeaponHitBoxWide->IsUsingAbsoluteScale() ? 1 : 0,
+				*WeaponHitBoxWide->GetRelativeScale3D().ToString(),
+				*WeaponHitBoxWide->GetComponentScale().ToString(),
+				WeaponHitBoxWide->GetUnscaledCapsuleHalfHeight(), WeaponHitBoxWide->GetUnscaledCapsuleRadius(),
+				WeaponHitBoxWide->GetScaledCapsuleHalfHeight(), WeaponHitBoxWide->GetScaledCapsuleRadius());
+		}
+	}
 }
 
 FName UT3BossWeaponComponent::GetSocketNameByType(EWeaponSocketType SocketType) const
@@ -260,32 +345,53 @@ void UT3BossWeaponComponent::SwitchToSocket(EWeaponSocketType SocketType)
 	// 블렌드용: 전환 전 월드 트랜스폼 저장
 	const FTransform OldWorldTransform = WeaponMeshComponent->GetComponentTransform();
 
-	// 새 소켓에 스냅 (상대 트랜스폼 = Identity)
+	// 새 소켓 부착 — Snap (WeaponMesh는 소켓 원점이 곧 그립)
 	WeaponMeshComponent->AttachToComponent(
 		CachedTargetMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TargetSocketName);
 
-	// 히트박스 재부착
+	// 히트박스 재부착 (KeepRelative — BP에서 튜닝한 WeaponMesh 기준 오프셋 유지)
+	// AbsoluteScale 보장 (소켓 전환 시에도 부모 스케일 체인 차단 유지)
 	if (WeaponHitBox)
 	{
+		WeaponHitBox->SetUsingAbsoluteScale(true);
 		WeaponHitBox->AttachToComponent(
-			WeaponMeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+			WeaponMeshComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	}
 	if (WeaponHitBoxWide)
 	{
+		WeaponHitBoxWide->SetUsingAbsoluteScale(true);
 		WeaponHitBoxWide->AttachToComponent(
-			WeaponMeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+			WeaponMeshComponent, FAttachmentTransformRules::KeepRelativeTransform);
+	}
+
+	// RelLoc 부모 스케일 보정 (AttachToSocket과 동일 — BP RelLoc ÷ 부모스케일)
+	{
+		const FVector ParentWorldScale = WeaponMeshComponent->GetComponentScale();
+		auto CompensateRelLoc = [&ParentWorldScale](USceneComponent* Comp, const FVector& BPLoc)
+		{
+			if (!Comp) return;
+			const FVector Safe(
+				FMath::IsNearlyZero(ParentWorldScale.X) ? 1.f : ParentWorldScale.X,
+				FMath::IsNearlyZero(ParentWorldScale.Y) ? 1.f : ParentWorldScale.Y,
+				FMath::IsNearlyZero(ParentWorldScale.Z) ? 1.f : ParentWorldScale.Z);
+			Comp->SetRelativeLocation(FVector(BPLoc.X / Safe.X, BPLoc.Y / Safe.Y, BPLoc.Z / Safe.Z));
+		};
+		CompensateRelLoc(WeaponHitBox, HitBoxBPRelLoc);
+		CompensateRelLoc(WeaponHitBoxWide, HitBoxWideBPRelLoc);
 	}
 	if (WeaponAuraEffect)
 	{
 		WeaponAuraEffect->AttachToComponent(
-			WeaponMeshComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+			WeaponMeshComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	}
 
-	// 블렌드 시작 — 옛 위치에서 새 소켓으로 부드럽게 전환
+	// 블렌드 시작 — 옛 위치에서 새 소켓 원점으로 부드럽게 전환
 	if (SocketBlendDuration > 0.f)
 	{
-		const FTransform NewSocketWorldTransform = WeaponMeshComponent->GetComponentTransform();
-		SocketBlendStartRelative = OldWorldTransform.GetRelativeTransform(NewSocketWorldTransform);
+		// Snap 부착 직후 GetComponentTransform()은 새 소켓 월드와 동일
+		const FTransform NewSocketWorld = WeaponMeshComponent->GetComponentTransform();
+		// SetRelativeTransform(X) 시 mesh 월드 = NewSocketWorld × X — OldWorld 위치 유지하려면 X = SocketWorld⁻¹ × OldWorld
+		SocketBlendStartRelative = OldWorldTransform.GetRelativeTransform(NewSocketWorld);
 		WeaponMeshComponent->SetRelativeTransform(SocketBlendStartRelative);
 		SocketBlendElapsed = 0.f;
 		bIsBlendingSocket = true;
@@ -562,4 +668,59 @@ void UT3BossWeaponComponent::OnWeaponDissolveFinished()
 	}
 
 	UE_LOG(LogDesecration, Log, TEXT("T3_BossWeapon: 무기 디졸브 완료"));
+}
+
+void UT3BossWeaponComponent::DrawDebugHitShapes() const
+{
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	// 콜리전 활성 여부에 따라 색상 강조 — 활성: 풀컬러, 비활성: 회색조 디밍
+	auto DrawCapsuleVisualizer = [World](const UCapsuleComponent* Cap, const FColor& ActiveColor)
+	{
+		if (!Cap)
+		{
+			return;
+		}
+		const bool bActive = (Cap->GetCollisionEnabled() != ECollisionEnabled::NoCollision);
+		const FColor DrawColor = bActive ? ActiveColor : FColor(80, 80, 80);
+		const float Thickness = bActive ? 1.5f : 0.5f;
+		DrawDebugCapsule(
+			World,
+			Cap->GetComponentLocation(),
+			Cap->GetScaledCapsuleHalfHeight(),
+			Cap->GetScaledCapsuleRadius(),
+			Cap->GetComponentQuat(),
+			DrawColor,
+			false,   // bPersistentLines
+			-1.f,    // LifeTime (한 프레임)
+			0,       // DepthPriority
+			Thickness
+		);
+	};
+
+	DrawCapsuleVisualizer(WeaponHitBox, FColor::Red);
+	DrawCapsuleVisualizer(WeaponHitBoxWide, FColor::Orange);
+
+	// 팔 공격 구체
+	if (BodyHitSphere)
+	{
+		const bool bActive = (BodyHitSphere->GetCollisionEnabled() != ECollisionEnabled::NoCollision);
+		const FColor DrawColor = bActive ? FColor::Yellow : FColor(80, 80, 80);
+		const float Thickness = bActive ? 1.5f : 0.5f;
+		DrawDebugSphere(
+			World,
+			BodyHitSphere->GetComponentLocation(),
+			BodyHitSphere->GetScaledSphereRadius(),
+			16,
+			DrawColor,
+			false,
+			-1.f,
+			0,
+			Thickness
+		);
+	}
 }

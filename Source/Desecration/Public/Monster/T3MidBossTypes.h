@@ -26,6 +26,63 @@ enum class EMidBossPatternCategory : uint8
 };
 
 // ============================================================
+// Enum: 막기 시퀀스 단계
+// In → Loop(자기 자신 무한) → 외부 신호 → Out → Idle
+// ============================================================
+
+UENUM(BlueprintType)
+enum class EBlockPhase : uint8
+{
+	Idle	UMETA(DisplayName = "Idle"),
+	In		UMETA(DisplayName = "In"),
+	Loop	UMETA(DisplayName = "Loop"),
+	Out		UMETA(DisplayName = "Out")
+};
+
+// ============================================================
+// Struct: 막기 몽타주 데이터
+// 같은 몽타주의 여러 섹션을 In/Loop/Out에 분할해서 넣어도 되고,
+// 완전히 다른 3개 몽타주(짜집기)를 넣어도 동일하게 동작
+// 단계 전환은 BlendingOut 콜백에서 다음 PlayAnimMontage 호출 → 자연 크로스페이드
+// ============================================================
+
+USTRUCT(BlueprintType)
+struct FBlockMontageEntry
+{
+	GENERATED_BODY()
+
+	// 재생할 몽타주
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<UAnimMontage> Montage = nullptr;
+
+	// 시작 섹션 — NAME_None이면 몽타주 디폴트 첫 섹션
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName SectionName = NAME_None;
+
+	// 재생 배속
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0.1"))
+	float PlayRate = 1.0f;
+};
+
+USTRUCT(BlueprintType)
+struct FBlockMontageData
+{
+	GENERATED_BODY()
+
+	// 막기 진입 모션
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FBlockMontageEntry InEntry;
+
+	// 무한 루프 (디자이너가 몽타주 자체에 자기 자신 NextSection 또는 bLooping 설정 권장)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FBlockMontageEntry LoopEntry;
+
+	// 종료 모션 — RequestEndBlockSequence 후 다음 BlendingOut 시점에 자연 크로스페이드로 진입
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FBlockMontageEntry OutEntry;
+};
+
+// ============================================================
 // Struct: 공격 패턴 데이터
 // ============================================================
 
@@ -156,6 +213,16 @@ struct FMidBossAttackPattern
 	// 노티파이별 기본 발동 확률 (BP에서 ModifyNotifyChance로 상황별 보정 가능)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FNotifyChanceConfig NotifyChances;
+
+	// 시작 체인 인덱스 — 0이 아니면 패턴 진입 시 앞쪽 N개 엔트리 스킵하고 해당 인덱스부터 시작
+	// 막기 리액션 패턴 등에서 "1번 모션부터 곧장 진입" 용도. 클램프는 ExecutePattern에서 처리
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0"))
+	int32 StartSectionIndex = 0;
+
+	// 패턴 전체 PlayRate에 곱해지는 배율 — 막기 리액션 패턴에서 모션을 빠르게 굴릴 때 사용
+	// 1.0 = 변화 없음, 1.5 = 50% 빠르게. MontageData.PlayRate × CurrentAttackAnimRate × 이 값
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0.1"))
+	float ReactionPlayRateMultiplier = 1.0f;
 };
 
 // ============================================================
