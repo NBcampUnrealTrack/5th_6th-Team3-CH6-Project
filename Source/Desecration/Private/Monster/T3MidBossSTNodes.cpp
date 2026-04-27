@@ -5,6 +5,8 @@
 #include "Navigation/PathFollowingComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "StateTreeExecutionContext.h"
+#include "Animation/AnimInstance.h"
+#include "Components/SkeletalMeshComponent.h"
 
 // ============================================================
 // Evaluator: FT3STE_MidBossCombat
@@ -405,10 +407,10 @@ EStateTreeRunStatus FT3STT_Disengage::EnterState(
 	Data.Boss->StopAnimMontage();
 
 	// 백스텝 몽타주 재생 (보스별 몽타주는 AT3MidBossMonster::BackStepMontage에서 참조)
-	// 천사 장신구 이동 슬로우 적용
+	// 천사 장신구 이동 슬로우 — 헬퍼 일원화 (BaseRate 캐시 + 실시간 슬로우 갱신)
 	if (Data.bBackStep && Data.Boss->BackStepMontage)
 	{
-		Data.Boss->PlayAnimMontage(Data.Boss->BackStepMontage, Data.Boss->GetMoveAnimRateMultiplier());
+		Data.Boss->PlayMoveMontageWithSlow(Data.Boss->BackStepMontage, 1.f);
 	}
 
 	UE_LOG(LogDesecration, Log,
@@ -491,6 +493,268 @@ void FT3STT_Disengage::ExitState(
 			Data.CachedDefaultSpeed = 0.f;
 		}
 	}
+}
+
+// ============================================================
+// Task: FT3STT_TestRoll
+// 임시 데모용 — 8방향 회피 모션 시각 검증 (Desmond 프로토타입)
+// ============================================================
+
+EStateTreeRunStatus FT3STT_TestRoll::EnterState(
+	FStateTreeExecutionContext& Context,
+	const FStateTreeTransitionResult& Transition) const
+{
+	FT3STT_TestRollInstanceData& Data = Context.GetInstanceData(*this);
+
+	Data.bRollEnded = false;
+	Data.DelayElapsed = 0.f;
+	Data.ActiveRoll = nullptr;
+	Data.bAppliedScale = false;
+
+	if (!Data.Boss)
+	{
+		UE_LOG(LogDesecration, Warning, TEXT("T3_ST: TestRoll — Boss가 바인딩되지 않음"));
+		return EStateTreeRunStatus::Failed;
+	}
+
+	if (Data.Boss->RollMontages_8Dir.Num() != 8)
+	{
+		UE_LOG(LogDesecration, Warning,
+			TEXT("T3_ST: TestRoll — Boss->RollMontages_8Dir가 8개여야 함 (현재 %d개)"),
+			Data.Boss->RollMontages_8Dir.Num());
+		return EStateTreeRunStatus::Failed;
+	}
+
+	// 방향 인덱스 결정 — 0°/45°/90°/135°/180°/225°/270°/315° 순
+	int32 Idx = 0;
+	if (Data.bRandomDirection)
+	{
+		Idx = FMath::RandRange(0, 7);
+	}
+	else
+	{
+		const int32 Raw = FMath::RoundToInt(Data.FixedDirectionYaw / 45.f);
+		Idx = ((Raw % 8) + 8) % 8;  // 음수 안전
+	}
+
+	UAnimMontage* Roll = Data.Boss->RollMontages_8Dir[Idx];
+	if (!Roll)
+	{
+		UE_LOG(LogDesecration, Warning,
+			TEXT("T3_ST: TestRoll — Boss->RollMontages_8Dir[%d] 슬롯이 비어있음"), Idx);
+		return EStateTreeRunStatus::Failed;
+	}
+
+	// i-frame — 몽타주 전체 구간에 Invulnerable 태그 적용 (TakeDamage가 데미지 0 처리)
+	// 더 정밀한 5~45f 윈도우가 필요하면 이 플래그 false + 몽타주에 ANS_BossInvulnerable 배치
+	if (Data.bUseInvulnerableTag)
+	{
+		Data.Boss->AddStateTag(TAG_Boss_State_Invulnerable);
+	}
+
+	// 방향별 배율 조회 — 배열이 비었거나 해당 인덱스가 없으면 1.0 (Boss->RollDirectionScales 참조)
+	const float PerDirScale = Data.Boss->RollDirectionScales.IsValidIndex(Idx)
+		? Data.Boss->RollDirectionScales[Idx]
+		: 1.0f;
+	const float FinalScale = Data.RootMotionScale * PerDirScale;
+
+	// 루트모션 거리 배율 적용 (1.0과 다를 때만)
+	if (!FMath::IsNearlyEqual(FinalScale, 1.0f))
+	{
+		Data.Boss->SetAnimRootMotionTranslationScale(FinalScale);
+		Data.bAppliedScale = true;
+	}
+
+	// 잔여 몽타주 정리 후 회피 재생 — 헬퍼 일원화 (BaseRate 캐시 + 실시간 슬로우 갱신)
+	Data.Boss->StopAnimMontage();
+	const float Duration = Data.Boss->PlayMoveMontageWithSlow(Roll, Data.PlayRate);
+
+	Data.ActiveRoll = Roll;
+
+	UE_LOG(LogDesecration, Log,
+		TEXT("T3_ST: TestRoll 시작 (Idx:%d, Angle:%.0f°, Duration:%.2f, Rate:%.2f, DistScale:%.2f[Master:%.2f × Dir:%.2f])"),
+		Idx, Idx * 45.f, Duration, Data.PlayRate,
+		FinalScale, Data.RootMotionScale, PerDirScale);
+
+	return EStateTreeRunStatus::Running;
+}
+
+EStateTreeRunStatus FT3STT_TestRoll::Tick(
+	FStateTreeExecutionContext& Context,
+	const float DeltaTime) const
+{
+	FT3STT_TestRollInstanceData& Data = Context.GetInstanceData(*this);
+
+	if (!Data.Boss)
+	{
+		return EStateTreeRunStatus::Failed;
+	}
+
+	// 몽타주 재생 종료 감지 — 폴링 (델리게이트 바인딩보다 단순)
+	if (!Data.bRollEnded)
+	{
+		const UAnimInstance* AnimInst = Data.Boss->GetMesh()
+			? Data.Boss->GetMesh()->GetAnimInstance()
+			: nullptr;
+		const bool bStillPlaying = AnimInst
+			&& Data.ActiveRoll
+			&& AnimInst->Montage_IsPlaying(Data.ActiveRoll);
+
+		if (!bStillPlaying)
+		{
+			Data.bRollEnded = true;
+
+			// 종료 시 i-frame 태그 제거 (Exit에서도 안전망 한 번 더)
+			if (Data.bUseInvulnerableTag)
+			{
+				Data.Boss->RemoveStateTag(TAG_Boss_State_Invulnerable);
+			}
+		}
+	}
+
+	// 종료 후 PostRollDelay 만큼 대기 → Succeeded
+	if (Data.bRollEnded)
+	{
+		Data.DelayElapsed += DeltaTime;
+		if (Data.DelayElapsed >= Data.PostRollDelay)
+		{
+			return EStateTreeRunStatus::Succeeded;
+		}
+	}
+
+	return EStateTreeRunStatus::Running;
+}
+
+void FT3STT_TestRoll::ExitState(
+	FStateTreeExecutionContext& Context,
+	const FStateTreeTransitionResult& Transition) const
+{
+	FT3STT_TestRollInstanceData& Data = Context.GetInstanceData(*this);
+
+	if (Data.Boss)
+	{
+		// 안전 복원 — Failed/Succeeded 모두 태그 제거
+		if (Data.bUseInvulnerableTag)
+		{
+			Data.Boss->RemoveStateTag(TAG_Boss_State_Invulnerable);
+		}
+
+		// 루트모션 스케일 복원 (EnterState에서 실제로 적용했을 때만)
+		if (Data.bAppliedScale)
+		{
+			Data.Boss->SetAnimRootMotionTranslationScale(1.0f);
+		}
+
+		// 진행 중 몽타주가 있으면 정지 (조기 종료 대비)
+		if (Data.ActiveRoll)
+		{
+			Data.Boss->StopAnimMontage(Data.ActiveRoll);
+		}
+	}
+
+	Data.ActiveRoll = nullptr;
+	Data.bRollEnded = false;
+	Data.DelayElapsed = 0.f;
+	Data.bAppliedScale = false;
+}
+
+// ============================================================
+// Task: FT3STT_Block
+// 막기 시퀀스 트리거 — Boss가 In→Loop(자기루프)→Out 흐름을 직접 관리
+// EnterState: StartBlockSequence (Phase=In 진입)
+// Tick: 종료 조건(시간/횟수) 충족 시 RequestEndBlockSequence (한 번만) → Phase=Idle 도달 시 Succeeded
+// ExitState: 외부 인터럽트면 StopBlockSequence로 강제 정리
+// ============================================================
+
+EStateTreeRunStatus FT3STT_Block::EnterState(
+	FStateTreeExecutionContext& Context,
+	const FStateTreeTransitionResult& Transition) const
+{
+	FT3STT_BlockInstanceData& Data = Context.GetInstanceData(*this);
+
+	if (!Data.Boss)
+	{
+		UE_LOG(LogDesecration, Warning, TEXT("T3_ST: Block — Boss가 바인딩되지 않음"));
+		return EStateTreeRunStatus::Failed;
+	}
+
+	// 진입 상태 리셋
+	Data.ElapsedTime = 0.f;
+	Data.bEndRequested = false;
+
+	// Boss 측 시퀀스 시작 — 태그 ON + InEntry 재생 + BlendingOut 콜백 등록 + BlockHitsCount=0
+	Data.Boss->StartBlockSequence();
+	Data.InitialHitsCount = Data.Boss->BlockHitsCount; // (보통 0 — 델타 측정용)
+
+	UE_LOG(LogDesecration, Log,
+		TEXT("T3_ST: Block 진입 (MaxDuration:%.2f, MaxHits:%d)"),
+		Data.MaxDuration, Data.MaxBlockHits);
+
+	return EStateTreeRunStatus::Running;
+}
+
+EStateTreeRunStatus FT3STT_Block::Tick(
+	FStateTreeExecutionContext& Context,
+	const float DeltaTime) const
+{
+	FT3STT_BlockInstanceData& Data = Context.GetInstanceData(*this);
+
+	if (!Data.Boss)
+	{
+		return EStateTreeRunStatus::Failed;
+	}
+
+	// 시퀀스가 자연 종료(Out 끝)되어 Idle 복귀 — STT Succeeded
+	if (Data.Boss->CurrentBlockPhase == EBlockPhase::Idle)
+	{
+		UE_LOG(LogDesecration, Log,
+			TEXT("T3_ST: Block 정상 종료 (Phase=Idle 도달, 경과:%.2f초, 막힘:%d회)"),
+			Data.ElapsedTime, Data.Boss->BlockHitsCount);
+		return EStateTreeRunStatus::Succeeded;
+	}
+
+	Data.ElapsedTime += DeltaTime;
+
+	// 종료 조건 평가 — 한 번만 RequestEndBlockSequence 호출 (이후엔 Idle 도달 대기)
+	if (!Data.bEndRequested)
+	{
+		const bool bDurationOver = (Data.ElapsedTime >= Data.MaxDuration);
+		const bool bHitsOver = (Data.MaxBlockHits > 0 && Data.Boss->BlockHitsCount >= Data.MaxBlockHits);
+
+		if (bDurationOver || bHitsOver)
+		{
+			UE_LOG(LogDesecration, Log,
+				TEXT("T3_ST: Block 종료 요청 (시간초과:%d, 횟수초과:%d, 경과:%.2f초, 막힘:%d/%d)"),
+				bDurationOver ? 1 : 0, bHitsOver ? 1 : 0,
+				Data.ElapsedTime, Data.Boss->BlockHitsCount, Data.MaxBlockHits);
+
+			Data.Boss->RequestEndBlockSequence();
+			Data.bEndRequested = true;
+		}
+	}
+
+	return EStateTreeRunStatus::Running;
+}
+
+void FT3STT_Block::ExitState(
+	FStateTreeExecutionContext& Context,
+	const FStateTreeTransitionResult& Transition) const
+{
+	FT3STT_BlockInstanceData& Data = Context.GetInstanceData(*this);
+
+	if (Data.Boss)
+	{
+		// 외부 인터럽트(BlockReaction 이벤트, 사망 등 ST 트랜지션)로 끊긴 경우 — 시퀀스 강제 정리
+		// 정상 Succeeded 경로에선 이미 Phase=Idle이라 StopBlockSequence가 early-return
+		if (Data.Boss->CurrentBlockPhase != EBlockPhase::Idle)
+		{
+			Data.Boss->StopBlockSequence();
+		}
+	}
+
+	Data.ElapsedTime = 0.f;
+	Data.InitialHitsCount = 0;
+	Data.bEndRequested = false;
 }
 
 // ============================================================
@@ -589,7 +853,8 @@ EStateTreeRunStatus FT3STT_RunToAttackRange::Tick(
 		Data.Boss->SetActiveBaseWalkSpeed(Data.DashSpeed);
 		if (Data.RunMontage)
 		{
-			Data.Boss->PlayAnimMontage(Data.RunMontage);
+			// Run 몽타주도 헬퍼 통과 — 슬로우 진입/이탈 실시간 갱신 가능
+			Data.Boss->PlayMoveMontageWithSlow(Data.RunMontage, 1.f);
 		}
 		UE_LOG(LogDesecration, Log, TEXT("T3_ST: RunToAttackRange — 딜레이 완료, 돌진 시작"));
 	}

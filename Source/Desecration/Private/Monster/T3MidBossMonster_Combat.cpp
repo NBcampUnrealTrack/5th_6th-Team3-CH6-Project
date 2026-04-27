@@ -37,7 +37,60 @@ float AT3MidBossMonster::TakeDamage(float DamageAmount, FDamageEvent const& Dama
 		return 0.f;
 	}
 
-	const float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	// 데미지 타입 체크 — Undodgable이면 모든 방어 우회
+	const UClass* DmgTypeClass = DamageEvent.DamageTypeClass;
+	const bool bUndodgable = DmgTypeClass && DmgTypeClass->IsChildOf(UT3DamageType_Undodgable::StaticClass());
+	const bool bUnparryable = DmgTypeClass && DmgTypeClass->IsChildOf(UT3DamageType_Unparryable::StaticClass());
+	const bool bUnblockable = DmgTypeClass && DmgTypeClass->IsChildOf(UT3DamageType_Unblockable::StaticClass());
+
+	float IncomingDamage = DamageAmount;
+
+	if (!bUndodgable)
+	{
+		// 회피 i-frame — 데미지 0
+		if (IsInvulnerable())
+		{
+			UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: i-frame 회피 성공 (피해 무효, 공격자: %s)"),
+				DamageCauser ? *DamageCauser->GetName() : TEXT("nullptr"));
+			return 0.f;
+		}
+
+		// 막기 — Unparryable / Unblockable이면 가드 뚫림 (풀데미지), 아니면 정면/후방 배율 적용
+		if (IsBlocking())
+		{
+			if (!bUnparryable && !bUnblockable)
+			{
+				const bool bFront = IsHitFromFront(DamageCauser);
+				const float Mult = bFront ? BlockDamageMultiplier_Front : BlockDamageMultiplier_Back;
+				IncomingDamage = DamageAmount * Mult;
+
+				// 막기 성공 카운트 — STT_Block이 이 값을 폴링해서 종료 조건으로 사용
+				++BlockHitsCount;
+
+				UE_LOG(LogDesecration, Log,
+					TEXT("T3_MidBoss: 막기 성공 (방향:%s, 배율:%.2f, 원본:%.0f → %.0f, 누적:%d회)"),
+					bFront ? TEXT("정면") : TEXT("후방"), Mult, DamageAmount, IncomingDamage, BlockHitsCount);
+
+				// 막기 리액션 굴림 — 성공 시 ST에 이벤트 송신 (빠른 반격 패턴 트랜지션 트리거)
+				// Unparry/Unblock 으로 가드 뚫린 분기에서는 굴리지 않음 (정상 막기에서만 반응)
+				if (BlockReactionChance > 0.f && FMath::FRand() < BlockReactionChance)
+				{
+					SendStateTreeStateEvent(TAG_Boss_Event_BlockReaction);
+					UE_LOG(LogDesecration, Log,
+						TEXT("T3_MidBoss: 막기 리액션 발동 (확률:%.2f) → BlockReaction 이벤트 송신"),
+						BlockReactionChance);
+				}
+			}
+			else
+			{
+				UE_LOG(LogDesecration, Log,
+					TEXT("T3_MidBoss: 가드 뚫림 (Unparry:%d Unblock:%d, 풀데미지:%.0f)"),
+					bUnparryable ? 1 : 0, bUnblockable ? 1 : 0, DamageAmount);
+			}
+		}
+	}
+
+	const float ActualDamage = Super::TakeDamage(IncomingDamage, DamageEvent, EventInstigator, DamageCauser);
 
 	float StunAmount = 0.f;
 	if (DamageEvent.GetTypeID() == FT3DamageEvent::ClassID)
@@ -62,45 +115,12 @@ void AT3MidBossMonster::ApplyDamageToMidBoss(float DamageAmount, float StunAmoun
 
 	MidBossStats.CurrentHP -= DamageAmount;
 	OnMidBossDamaged.Broadcast();
-	
-	UE_LOG(LogItem, Log, TEXT("중간보스의 남은 체력 : %.1f"), MidBossStats.CurrentHP);
-	
-	// 피격 사운드 재생 (최소 간격 제한 — 연속 히트 시 씹힘 방지)
-	if (HitSound)
-	{
-		const double CurrentTime = GetWorld()->GetTimeSeconds();
-		if (CurrentTime - LastHitSoundTime >= HitSoundMinInterval)
-		{
-			UGameplayStatics::PlaySoundAtLocation(
-				this, HitSound, GetActorLocation(), FRotator::ZeroRotator,
-				SoundVolume * HitVolumeMultiplier, 1.f, 0.f, SoundAttenuationSettings);
-			LastHitSoundTime = CurrentTime;
-		}
-	}
 
+	UE_LOG(LogItem, Log, TEXT("중간보스의 남은 체력 : %.1f"), MidBossStats.CurrentHP);
 	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 피격 (데미지: %.0f, 남은HP: %.0f, 스턴게이지: %.0f/%.0f)"),
 		*BossDisplayName.ToString(), DamageAmount, MidBossStats.CurrentHP, MidBossStats.CurrentStunGauge, MidBossStats.StunThreshold);
 
-	// 카메라 쉐이크 — 상태 무관하게 항상 재생 (피격 피드백)
-	if (HitCameraShakeClass)
-	{
-		UGameplayStatics::PlayWorldCameraShake(
-			this, HitCameraShakeClass, GetActorLocation(),
-			0.f, HitShakeOuterRadius, HitShakeFalloff);
-
-		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 카메라 쉐이크 재생 (Class: %s, Radius: %.0f)"),
-			*HitCameraShakeClass->GetName(), HitShakeOuterRadius);
-	}
-	else
-	{
-		UE_LOG(LogDesecration, Warning, TEXT("T3_MidBoss: HitCameraShakeClass가 할당되지 않음!"));
-	}
-
-	// 히트 리액션 — 슈퍼아머 + 비기절 + 비공격 + 비이탈 + 생존 시에만 재생
-	if (HasSuperArmor() && !IsStunned() && !IsExecutingPattern() && !IsDisengaging() && MidBossStats.CurrentHP > 0.f)
-	{
-		PlayAdditiveHitReaction(DamageCauser);
-	}
+	PlayHitFeedback(GetActorLocation(), DamageCauser);
 
 	if (!IsStunned())
 	{
@@ -109,20 +129,7 @@ void AT3MidBossMonster::ApplyDamageToMidBoss(float DamageAmount, float StunAmoun
 
 	if (MidBossStats.CurrentHP <= 0.f)
 	{
-		AddStateTag(TAG_Boss_State_Dead);
-		MidBossStats.CurrentHP = 0.f;
-		CancelCurrentPattern();
-		OnMidBossDeath.Broadcast();
-
-		// StateTree 이벤트 전송 — 즉시 Dead 상태로 전환 (State 태그를 이벤트로 겸용)
-		if (StateTreeComponent)
-		{
-			StateTreeComponent->SendStateTreeEvent(TAG_Boss_State_Dead);
-		}
-
-		BeginDeathSequence();
-
-		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 사망 (StateTree 이벤트 전송)"), *BossDisplayName.ToString());
+		EnterDeathState();
 		return;
 	}
 
@@ -144,7 +151,8 @@ void AT3MidBossMonster::PlayAdditiveHitReaction(AActor* DamageCauser)
 	UAnimMontage* Montage = GetDirectionalHitReactMontage(DamageCauser);
 	if (Montage)
 	{
-		PlayAnimMontage(Montage);
+		// 헬퍼 통과 — 슬로우 존 안에서 맞을 때 히트리액션도 실시간 슬로우 적용
+		PlayMoveMontageWithSlow(Montage, 1.f);
 	}
 }
 
@@ -200,27 +208,19 @@ void AT3MidBossMonster::ApplyStun()
 	MidBossStats.CurrentStunGauge = 0.f;
 	CancelCurrentPattern();
 
-	// 스턴 몽타주 재생
+	// 스턴 몽타주 재생 — 헬퍼 통과로 슬로우 존 실시간 갱신 적용
 	if (StunMontage)
 	{
-		PlayAnimMontage(StunMontage);
+		PlayMoveMontageWithSlow(StunMontage, 1.f);
 	}
 
 	// 스턴 사운드 재생
-	if (StunSound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(
-			this, StunSound, GetActorLocation(), FRotator::ZeroRotator,
-			SoundVolume * StunVolumeMultiplier, 1.f, 0.f, SoundAttenuationSettings);
-	}
+	PlayBossSoundAt(StunSound, GetActorLocation(), StunVolumeMultiplier);
 
 	OnMidBossStun.Broadcast();
 
 	// StateTree 이벤트 전송 — 즉시 Stunned 상태로 전환 (State 태그를 이벤트로 겸용)
-	if (StateTreeComponent)
-	{
-		StateTreeComponent->SendStateTreeEvent(TAG_Boss_State_Stunned);
-	}
+	SendStateTreeStateEvent(TAG_Boss_State_Stunned);
 
 	// 스턴 자동 해제 타이머 시작
 	GetWorldTimerManager().ClearTimer(StunTimerHandle);
@@ -239,12 +239,163 @@ void AT3MidBossMonster::RecoverFromStun()
 	MidBossStats.CurrentStunGauge = 0.f;
 
 	// StateTree 이벤트 전송 — Stunned 상태 종료, Approach로 복귀
-	if (StateTreeComponent)
-	{
-		StateTreeComponent->SendStateTreeEvent(TAG_Boss_Event_StunRecovered);
-	}
+	SendStateTreeStateEvent(TAG_Boss_Event_StunRecovered);
 
 	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 스턴 해제 (StateTree 이벤트 전송)"), *BossDisplayName.ToString());
+}
+
+// ============================================================
+// 막기 시퀀스 (In → Loop → Out)
+// 단계 전환은 BlendingOut 시점 PlayAnimMontage 자연 크로스페이드로 처리
+// (체인 패턴의 OnChainBlendingOut 매커니즘과 동일 원리 — 섹션 콤보 토독 방지)
+// ============================================================
+
+void AT3MidBossMonster::PlayBlockEntry(const FBlockMontageEntry& Entry, EBlockPhase NewPhase)
+{
+	if (!Entry.Montage)
+	{
+		UE_LOG(LogDesecration, Warning,
+			TEXT("T3_MidBoss: 막기 Entry 몽타주 누락 — Phase=%d, 시퀀스 중단"), (int32)NewPhase);
+		StopBlockSequence();
+		return;
+	}
+
+	const FName StartSection = Entry.SectionName.IsNone() ? NAME_None : Entry.SectionName;
+	PlayAnimMontage(Entry.Montage, Entry.PlayRate, StartSection);
+
+	if (UAnimInstance* AnimInst = GetMesh() ? GetMesh()->GetAnimInstance() : nullptr)
+	{
+		// 섹션 지정 시 해당 섹션만 재생 — 기본 섹션 순서 진행 방지 (체인 패턴과 동일)
+		if (!StartSection.IsNone())
+		{
+			AnimInst->Montage_SetNextSection(StartSection, NAME_None, Entry.Montage);
+		}
+
+		// BlendingOut 시점에 다음 단계로 자연 크로스페이드
+		FOnMontageBlendingOutStarted BlendOutDelegate;
+		BlendOutDelegate.BindUObject(this, &AT3MidBossMonster::OnBlockMontageBlendingOut);
+		AnimInst->Montage_SetBlendingOutDelegate(BlendOutDelegate, Entry.Montage);
+	}
+
+	CurrentBlockPhase = NewPhase;
+
+	UE_LOG(LogDesecration, Log,
+		TEXT("T3_MidBoss: 막기 Entry 재생 — Phase=%d, 몽타주='%s', 섹션='%s', PlayRate=%.2f"),
+		(int32)NewPhase,
+		*Entry.Montage->GetName(),
+		StartSection.IsNone() ? TEXT("None") : *StartSection.ToString(),
+		Entry.PlayRate);
+}
+
+void AT3MidBossMonster::StartBlockSequence()
+{
+	if (CurrentBlockPhase != EBlockPhase::Idle)
+	{
+		UE_LOG(LogDesecration, Verbose,
+			TEXT("T3_MidBoss: 막기 시퀀스 이미 진행 중 (Phase=%d) — 시작 무시"), (int32)CurrentBlockPhase);
+		return;
+	}
+
+	BlockHitsCount = 0;
+	bBlockEndRequested = false;
+	AddStateTag(TAG_Boss_State_Blocking);
+
+	PlayBlockEntry(BlockMontageData.InEntry, EBlockPhase::In);
+}
+
+void AT3MidBossMonster::RequestEndBlockSequence()
+{
+	// 이미 종료 단계거나 비활성이면 무시
+	if (CurrentBlockPhase == EBlockPhase::Idle || CurrentBlockPhase == EBlockPhase::Out)
+	{
+		return;
+	}
+
+	bBlockEndRequested = true;
+
+	// Loop 단계는 자기루프(Section bLoop=true)거나 길 수 있어서 자연 BlendingOut을 영원히 못 받을 수 있음
+	// → 능동적으로 Out 즉시 진입 (PlayAnimMontage가 Loop 인스턴스를 자연 크로스페이드로 끊음)
+	// In 단계는 짧고 곧 자연 종료되니 BlendingOut 콜백에서 Out 직행 처리 (Loop 거치지 않음)
+	if (CurrentBlockPhase == EBlockPhase::Loop)
+	{
+		UE_LOG(LogDesecration, Verbose,
+			TEXT("T3_MidBoss: 막기 종료 요청 — Loop에서 즉시 Out 진입"));
+		PlayBlockEntry(BlockMontageData.OutEntry, EBlockPhase::Out);
+	}
+	else
+	{
+		UE_LOG(LogDesecration, Verbose,
+			TEXT("T3_MidBoss: 막기 종료 요청 — In 단계, 자연 종료 후 Loop 건너뛰고 Out 직행 예정"));
+	}
+}
+
+void AT3MidBossMonster::StopBlockSequence()
+{
+	if (CurrentBlockPhase == EBlockPhase::Idle)
+	{
+		return;
+	}
+
+	// 진행 중인 막기 몽타주 즉시 정지 (인터럽트 — BlockReaction 이벤트, 사망, 스턴 등)
+	if (UAnimInstance* AnimInst = GetMesh() ? GetMesh()->GetAnimInstance() : nullptr)
+	{
+		AnimInst->StopAllMontages(0.2f);
+	}
+
+	RemoveStateTag(TAG_Boss_State_Blocking);
+	CurrentBlockPhase = EBlockPhase::Idle;
+	bBlockEndRequested = false;
+
+	UE_LOG(LogDesecration, Log,
+		TEXT("T3_MidBoss: 막기 시퀀스 강제 종료 — 누적 피격수 %d"), BlockHitsCount);
+}
+
+void AT3MidBossMonster::OnBlockMontageBlendingOut(UAnimMontage* Montage, bool bInterrupted)
+{
+	// 인터럽트(StopBlockSequence/외부 강제 정지)면 단계 전환 없이 종료 — Idle은 이미 StopBlockSequence가 set
+	if (bInterrupted)
+	{
+		return;
+	}
+
+	switch (CurrentBlockPhase)
+	{
+	case EBlockPhase::In:
+		// In 진행 중 RequestEnd가 들어왔으면 Loop 거치지 말고 Out 직행 (반응성 보장)
+		if (bBlockEndRequested)
+		{
+			PlayBlockEntry(BlockMontageData.OutEntry, EBlockPhase::Out);
+		}
+		else
+		{
+			PlayBlockEntry(BlockMontageData.LoopEntry, EBlockPhase::Loop);
+		}
+		break;
+
+	case EBlockPhase::Loop:
+		// 종료 요청 들어왔으면 Out 진입, 아니면 Loop 자기루프 (BlendingOut 자연 크로스페이드)
+		if (bBlockEndRequested)
+		{
+			PlayBlockEntry(BlockMontageData.OutEntry, EBlockPhase::Out);
+		}
+		else
+		{
+			PlayBlockEntry(BlockMontageData.LoopEntry, EBlockPhase::Loop);
+		}
+		break;
+
+	case EBlockPhase::Out:
+		// Out 종료 → Idle 복귀 (STT_Block이 폴링하여 Succeeded 처리)
+		RemoveStateTag(TAG_Boss_State_Blocking);
+		CurrentBlockPhase = EBlockPhase::Idle;
+		bBlockEndRequested = false;
+		UE_LOG(LogDesecration, Log,
+			TEXT("T3_MidBoss: 막기 시퀀스 정상 종료 — 누적 피격수 %d"), BlockHitsCount);
+		break;
+
+	default:
+		break;
+	}
 }
 
 // ============================================================
@@ -293,7 +444,8 @@ void AT3MidBossMonster::SpawnBossProjectile()
 // AoE 장판기 데미지
 // ============================================================
 
-void AT3MidBossMonster::ExecuteAoEDamage(float Radius, float DamageAmount, EHitIntensity Intensity)
+void AT3MidBossMonster::ExecuteAoEDamage(float Radius, float DamageAmount, EHitIntensity Intensity,
+	TSubclassOf<UT3DamageType_Base> DamageType)
 {
 	// AoE 중심 = 보스 발밑 (캡슐 하단)
 	const FVector AoECenter = GetActorLocation() - FVector(0.0, 0.0, static_cast<double>(GetCapsuleComponent()->GetScaledCapsuleHalfHeight()));
@@ -306,16 +458,8 @@ void AT3MidBossMonster::ExecuteAoEDamage(float Radius, float DamageAmount, EHitI
 	UKismetSystemLibrary::SphereOverlapActors(
 		this, AoECenter, Radius, ObjectTypes, nullptr, TArray<AActor*>{this}, OverlappedActors);
 
-	// 현재 패턴의 DamageType 조회
-	TSubclassOf<UDamageType> DamageTypeClass = UT3DamageType_Base::StaticClass();
-	const FMidBossAttackPattern* PatternData = FindPatternData(CurrentPatternName);
-	if (PatternData && PatternData->MontageChain.IsValidIndex(CurrentChainIndex))
-	{
-		if (PatternData->MontageChain[CurrentChainIndex].DamageTypeClass)
-		{
-			DamageTypeClass = PatternData->MontageChain[CurrentChainIndex].DamageTypeClass;
-		}
-	}
+	// DamageType nullptr → UT3DamageType_Base fallback (BP 하위호환 + 호출자 미지정 방어)
+	TSubclassOf<UDamageType> FinalDamageType = DamageType ? DamageType.Get() : UT3DamageType_Base::StaticClass();
 
 	for (AActor* HitActor : OverlappedActors)
 	{
@@ -324,7 +468,7 @@ void AT3MidBossMonster::ExecuteAoEDamage(float Radius, float DamageAmount, EHitI
 			continue;
 		}
 
-		FT3DamageEvent DamageEvent(DamageTypeClass);
+		FT3DamageEvent DamageEvent(FinalDamageType);
 		DamageEvent.HitIntensity = Intensity;
 		DamageEvent.HitDamageMultiplier = MidBossStats.AttackMultiplier;
 
@@ -342,12 +486,7 @@ void AT3MidBossMonster::ExecuteAoEDamage(float Radius, float DamageAmount, EHitI
 			this, AoEEffect, AoECenter, GetActorRotation(), ScaleVec);
 	}
 	// AoE 사운드
-	if (AoESound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(
-			this, AoESound, AoECenter, FRotator::ZeroRotator,
-			SoundVolume * AoEVolumeMultiplier, 1.f, 0.f, SoundAttenuationSettings);
-	}
+	PlayBossSoundAt(AoESound, AoECenter, AoEVolumeMultiplier);
 
 	// 카메라 쉐이크
 	if (AoECameraShakeClass)
@@ -418,11 +557,11 @@ void AT3MidBossMonster::NotifyParriedByPlayer()
 	// 현재 패턴 캔슬
 	CancelCurrentPattern();
 
-	// 정면 히트리액션 재생 + 종료 델리게이트 바인딩
+	// 정면 히트리액션 재생 + 종료 델리게이트 바인딩 — 헬퍼 통과로 슬로우 존 실시간 갱신 적용
 	UAnimMontage* HitReactMontage = GetDirectionalHitReactMontage(CombatTarget);
 	if (HitReactMontage)
 	{
-		PlayAnimMontage(HitReactMontage);
+		PlayMoveMontageWithSlow(HitReactMontage, 1.f);
 		bParryHitReactionPlaying = true;
 
 		// 몽타주 종료 시 콜백 바인딩
@@ -450,18 +589,15 @@ void AT3MidBossMonster::OnParryHitReactionEnded(UAnimMontage* Montage, bool bInt
 		bInterrupted ? TEXT("Y") : TEXT("N"));
 
 	// StateTree 이벤트 전송 — AC 잔량에 따라 분기
-	if (StateTreeComponent)
+	if (ActionCount <= 0)
 	{
-		if (ActionCount <= 0)
-		{
-			StateTreeComponent->SendStateTreeEvent(TAG_Boss_Event_ActionCountDepleted);
-			UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 패링 + AC 소진 → ActionCountDepleted 이벤트 전송"));
-		}
-		else
-		{
-			StateTreeComponent->SendStateTreeEvent(TAG_Boss_Event_ParriedByPlayer);
-			UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: ParriedByPlayer 이벤트 전송 (AC:%d)"), ActionCount);
-		}
+		SendStateTreeStateEvent(TAG_Boss_Event_ActionCountDepleted);
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 패링 + AC 소진 → ActionCountDepleted 이벤트 전송"));
+	}
+	else
+	{
+		SendStateTreeStateEvent(TAG_Boss_Event_ParriedByPlayer);
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: ParriedByPlayer 이벤트 전송 (AC:%d)"), ActionCount);
 	}
 }
 
@@ -513,14 +649,87 @@ void AT3MidBossMonster::ExecuteParryCounter(AActor* ParriedAttacker)
 	}
 
 	// 패링 사운드
-	if (ParrySound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(
-			this, ParrySound, GetActorLocation(), FRotator::ZeroRotator,
-			SoundVolume * ParryVolumeMultiplier, 1.f, 0.f, SoundAttenuationSettings);
-	}
+	PlayBossSoundAt(ParrySound, GetActorLocation(), ParryVolumeMultiplier);
 
 	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 패링 반격 — Slow 해제, 몽타주 이어서 재생"));
+}
+
+// ============================================================
+// 공통 사운드 헬퍼
+// ============================================================
+
+void AT3MidBossMonster::PlayBossSoundAt(USoundBase* Sound, const FVector& Loc, float VolumeMultiplier) const
+{
+	// nullptr 가드 + SoundVolume × Multiplier + SoundAttenuationSettings 일원화
+	if (!Sound)
+	{
+		return;
+	}
+
+	UGameplayStatics::PlaySoundAtLocation(
+		this, Sound, Loc, FRotator::ZeroRotator,
+		SoundVolume * VolumeMultiplier, 1.f, 0.f, SoundAttenuationSettings);
+}
+
+void AT3MidBossMonster::SendStateTreeStateEvent(FGameplayTag Tag) const
+{
+	// StateTreeComponent 가드 — State/Event 태그를 겸용으로 전송
+	if (StateTreeComponent)
+	{
+		StateTreeComponent->SendStateTreeEvent(Tag);
+	}
+}
+
+void AT3MidBossMonster::PlayHitFeedback(const FVector& HitLoc, AActor* DamageCauser)
+{
+	// 피격 사운드 — 최소 간격 제한 (연속 히트 시 씹힘 방지)
+	if (HitSound)
+	{
+		const double CurrentTime = GetWorld()->GetTimeSeconds();
+		if (CurrentTime - LastHitSoundTime >= HitSoundMinInterval)
+		{
+			PlayBossSoundAt(HitSound, HitLoc, HitVolumeMultiplier);
+			LastHitSoundTime = CurrentTime;
+		}
+	}
+
+	// 카메라 쉐이크 — 상태 무관하게 항상 재생 (피격 피드백)
+	if (HitCameraShakeClass)
+	{
+		UGameplayStatics::PlayWorldCameraShake(
+			this, HitCameraShakeClass, HitLoc,
+			0.f, HitShakeOuterRadius, HitShakeFalloff);
+
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 카메라 쉐이크 재생 (Class: %s, Radius: %.0f)"),
+			*HitCameraShakeClass->GetName(), HitShakeOuterRadius);
+	}
+	else
+	{
+		UE_LOG(LogDesecration, Warning, TEXT("T3_MidBoss: HitCameraShakeClass가 할당되지 않음!"));
+	}
+
+	// 히트 리액션 — 슈퍼아머 + 비기절 + 비공격 + 비이탈 + 비무적 + 비방어 + 생존 시에만 재생
+	// 막기 중에는 막기 몽타주가 진행되어야 하므로 히트리액션이 끼어들면 안 됨 (블록 시퀀스 끊김 방지)
+	if (HasSuperArmor() && !IsStunned() && !IsExecutingPattern() && !IsDisengaging() && !IsInvulnerable() && !IsBlocking() && MidBossStats.CurrentHP > 0.f)
+	{
+		PlayAdditiveHitReaction(DamageCauser);
+	}
+}
+
+void AT3MidBossMonster::EnterDeathState()
+{
+	// 순서 보존: 태그 먼저 → HP clamp → 패턴 캔슬 → 델리게이트 → ST 이벤트 → 사망 시퀀스
+	AddStateTag(TAG_Boss_State_Dead);
+	MidBossStats.CurrentHP = 0.f;
+	CancelCurrentPattern();
+	OnMidBossDeath.Broadcast();
+
+	// StateTree 이벤트 전송 — 즉시 Dead 상태로 전환 (State 태그를 이벤트로 겸용)
+	SendStateTreeStateEvent(TAG_Boss_State_Dead);
+
+	BeginDeathSequence();
+
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 사망 (StateTree 이벤트 전송)"), *BossDisplayName.ToString());
 }
 
 float AT3MidBossMonster::GetHPPercent() const
@@ -549,7 +758,44 @@ void AT3MidBossMonster::SetAnimationSpeedMultiplier(float MoveAnimMultiplier, fl
 	// 단일 진입점 — 현재 베이스(Default 또는 Strafe/Dash 푸시값)에 새 배율 적용
 	ApplyCurrentWalkSpeed();
 
-	// 진행 중 공격 몽타주는 다음 PlayRate 갱신 시점(노티파이/섹션 진행/패턴 시작)부터 곱이 적용됨
+	// 진행 중 몽타주에 즉시 새 배율 반영 — sphere 진입/이탈 모두 실시간 적용
+	// 어택 체인(full-body)과 헬퍼 추적 몽타주(HitReact additive 등)는 슬롯이 달라 동시 재생 가능
+	// → GetCurrentActiveMontage(하나만)에 의존하지 않고 두 종류 모두 명시적으로 체크
+	if (UAnimInstance* AnimInst = GetMesh() ? GetMesh()->GetAnimInstance() : nullptr)
+	{
+		// 1) 어택 체인 — 현재 인덱스 몽타주가 재생 중이면 BaseRate × Attack배율로 갱신
+		// 섹션 콤보는 [0]에만 몽타주 포인터가 있고 [1..]는 SectionName만 가짐 → [0]에서 조회
+		// (PlayRate는 ApplyCurrentChainPlayRate가 [CurrentChainIndex] 기준으로 읽음 — 섹션별 배속 OK)
+		const FMidBossAttackPattern* Pat = FindPatternData(CurrentPatternName);
+		if (Pat && Pat->MontageChain.Num() > 0)
+		{
+			UAnimMontage* ChainM = nullptr;
+			if (Pat->bUseSectionCombo)
+			{
+				ChainM = Pat->MontageChain[0].Montage;
+			}
+			else if (Pat->MontageChain.IsValidIndex(CurrentChainIndex))
+			{
+				ChainM = Pat->MontageChain[CurrentChainIndex].Montage;
+			}
+
+			if (ChainM && AnimInst->Montage_IsPlaying(ChainM))
+			{
+				ApplyCurrentChainPlayRate(AnimInst, ChainM, 1.f);
+			}
+		}
+
+		// 2) 헬퍼 추적 몽타주 — 재생 중이면 BaseRate × Move배율로 갱신 (어택 체인과 별개 슬롯 가능)
+		// Intro/Death raw 호출은 SlowManagedMontage에 안 잡혀서 자동 제외
+		if (UAnimMontage* SlowM = SlowManagedMontage.Get())
+		{
+			if (AnimInst->Montage_IsPlaying(SlowM))
+			{
+				ApplyCurrentMoveMontagePlayRate(AnimInst, SlowM);
+			}
+		}
+	}
+
 	UE_LOG(LogDesecration, Verbose, TEXT("T3_MidBoss: 애님 배율 변경 — Move=%.2f, Attack=%.2f"),
 		CurrentMoveAnimRate, CurrentAttackAnimRate);
 }
@@ -567,5 +813,25 @@ void AT3MidBossMonster::ApplyCurrentWalkSpeed()
 	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
 	{
 		MoveComp->MaxWalkSpeed = ActiveBaseWalkSpeed * CurrentMoveAnimRate;
+	}
+}
+
+float AT3MidBossMonster::PlayMoveMontageWithSlow(UAnimMontage* Montage, float BaseRate)
+{
+	// 이동 계열 몽타주 재생 단일 진입점 — BaseRate 캐시 후 슬로우 곱셈하여 재생
+	// 호출 측은 BaseRate만 넘기면 됨 (슬로우 진행 중 호출되어도 자동 반영)
+	LastMoveBaseRate = FMath::Max(BaseRate, 0.f);
+	// 슬로우 실시간 갱신 대상으로 추적 — 캐시 기준 일치할 때만 SetAnimationSpeedMultiplier에서 갱신됨
+	SlowManagedMontage = Montage;
+	return PlayAnimMontage(Montage, LastMoveBaseRate * CurrentMoveAnimRate);
+}
+
+void AT3MidBossMonster::ApplyCurrentMoveMontagePlayRate(UAnimInstance* AnimInst, UAnimMontage* Montage) const
+{
+	// PlayRate = LastMoveBaseRate × CurrentMoveAnimRate — 단일 계산 진입점
+	// SetAnimationSpeedMultiplier에서 슬로우 진입/이탈 시 진행 중 몽타주에 즉시 반영
+	if (AnimInst && Montage)
+	{
+		AnimInst->Montage_SetPlayRate(Montage, LastMoveBaseRate * CurrentMoveAnimRate);
 	}
 }

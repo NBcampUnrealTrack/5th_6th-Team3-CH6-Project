@@ -18,6 +18,7 @@
 #include "UI/T3HUDSlotWidget.h"
 #include "Player/Paladin/T3HolyGaugeWidget.h"
 #include "UI/T3ShopWidget.h"
+#include "UI/T3SkillWindowWidget.h"
 
 void AT3PlayerController::BeginPlay()
 {
@@ -53,9 +54,16 @@ void AT3PlayerController::BeginPlay()
 	if (IsValid(MainInventoryWidgetClass))
 	{
 		MainInventoryWidget = CreateWidget<UUserWidget>(this, MainInventoryWidgetClass);
-		
+
 		MainInventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
 		MainInventoryWidget->AddToViewport(99);
+	}
+
+	if (IsValid(SkillWindowWidgetClass))
+	{
+		SkillWindowWidget = CreateWidget<UT3SkillWindowWidget>(this, SkillWindowWidgetClass);
+		SkillWindowWidget->SetVisibility(ESlateVisibility::Collapsed);
+		SkillWindowWidget->AddToViewport(99);
 	}
 
 	if (IsValid(CombatWidgetClass))
@@ -347,10 +355,7 @@ void AT3PlayerController::ToggleInventoryInput()
 			SetInventoryOpen(false);
 			
 			//인벤토리를 닫는 시점에서 인벤토리 저장
-			if (T3GameMode)
-			{
-				T3GameMode->SaveInventoryAndPotionLevel(OwnerChar);
-			}
+			SaveInventoryAndPotionLevel();
 		}
 		else if (!MainInventoryWidget->IsVisible() && !bIsShopUIOpen && !bIsUpgradeUIOpen)
 		{
@@ -453,6 +458,30 @@ void AT3PlayerController::SetInventoryOpen(bool bIsOpen)
 	bIsInventoryOpen = bIsOpen;
 }
 
+void AT3PlayerController::SetSkillWindowOpen(bool bIsOpen)
+{
+	if (!IsValid(SkillWindowWidget)) return;
+
+	if (bIsOpen)
+	{
+		if (OwnerChar)
+		{
+			SkillWindowWidget->InitializeWidget(OwnerChar);
+		}
+		SkillWindowWidget->SetVisibility(ESlateVisibility::Visible);
+		FInputModeGameAndUI InputModeGameAndUI;
+		SetInputMode(InputModeGameAndUI);
+		SetShowMouseCursor(true);
+	}
+	else
+	{
+		SkillWindowWidget->SetVisibility(ESlateVisibility::Collapsed);
+		FInputModeGameOnly InputModeGameOnly;
+		SetInputMode(InputModeGameOnly);
+		SetShowMouseCursor(false);
+	}
+}
+
 void AT3PlayerController::SetShopUIOpen(bool bIsOpen)
 {
 	bIsShopUIOpen = bIsOpen;
@@ -518,6 +547,7 @@ void AT3PlayerController::SaveInventoryAndPotionLevel()
 {
 	if (T3GameMode)
 	{
-		T3GameMode->SaveInventoryAndPotionLevel(OwnerChar);
+		constexpr uint8 SaveTypes = static_cast<uint8>(ESaveType::Inventory) + static_cast<uint8>(ESaveType::Equipment);
+		T3GameMode->SaveGameV2_MultiType(OwnerChar, SaveTypes);
 	}
 }

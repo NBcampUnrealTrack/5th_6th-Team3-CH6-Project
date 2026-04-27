@@ -6,6 +6,14 @@
 #include "Player/T3CombatComponent.h"
 #include "Kismet/GameplayStatics.h"
 
+FSkillData* UT3SkillComponentBase::GetSkillDataFull(int32 SkillID)
+{
+	FSkillData* OwnData = GetSkillDataByID(SkillID);
+	if (OwnData) return OwnData;
+	if (LinkedCommonSkillComp) return LinkedCommonSkillComp->GetSkillDataByID(SkillID);
+	return nullptr;
+}
+
 void UT3SkillComponentBase::CancelCurrentSkill()
 {
 }
@@ -89,14 +97,15 @@ void UT3SkillComponentBase::BeginPlay()
         UE_LOG(LogTemp, Error, TEXT("[SkillBase] Owner is not AT3CharacterBase!"));
     }
 
-    // 스킬 상태 초기화
+    InitializeSkillDefaults();
+}
 
+void UT3SkillComponentBase::InitializeSkillDefaults()
+{
     // 기본적으로 1번 스킬은 해금 상태로 초기화
     if (!SkillUnlockStates.Contains(1))
     {
         SkillUnlockStates.Add(1, true);
-
-        // UI 팀에게 알림
         if (OnSkillUnlockStateChanged.IsBound())
         {
             OnSkillUnlockStateChanged.Broadcast(1, true);
@@ -109,7 +118,6 @@ void UT3SkillComponentBase::BeginPlay()
         if (!SkillUnlockStates.Contains(i))
         {
             SkillUnlockStates.Add(i, false);
-
             if (OnSkillUnlockStateChanged.IsBound())
             {
                 OnSkillUnlockStateChanged.Broadcast(i, false);
@@ -187,7 +195,7 @@ void UT3SkillComponentBase::StartCooldown(int32 SkillID, FSkillData& Data)
 
 float UT3SkillComponentBase::GetRemainingCooldown(int32 SkillID)
 {
-    FSkillData* Data = GetSkillDataByID(SkillID);
+    FSkillData* Data = GetSkillDataFull(SkillID);
     if (!Data) return 0.f;
 
     float ElapsedTime = GetWorld()->GetTimeSeconds() - Data->LastActivatedTime;
@@ -199,7 +207,7 @@ float UT3SkillComponentBase::GetRemainingCooldown(int32 SkillID)
 float UT3SkillComponentBase::GetCooldownRemainingRatio(int32 SkillID)
 {
     // 1. ID로 스킬 데이터 찾기
-    const FSkillData* Data = GetSkillDataByID(SkillID);
+    const FSkillData* Data = GetSkillDataFull(SkillID);
 
     if (!Data || Data->Cooldown <= 0.f) return 0.f;
 
@@ -293,11 +301,11 @@ void UT3SkillComponentBase::BroadcastSlotUpdated()
     int32 ID1 = GetCurrentSkillSlot();
     int32 ID2 = GetNextSkillSlot();
 
-    FSkillData* D1 = GetSkillDataByID(ID1);
+    FSkillData* D1 = GetSkillDataFull(ID1);
     FSkillData SafeD1 = D1 ? *D1 : FSkillData();
     OnSkillSlotUpdated.Broadcast(1, ID1, SafeD1);
 
-    FSkillData* D2 = GetSkillDataByID(ID2);
+    FSkillData* D2 = GetSkillDataFull(ID2);
     FSkillData SafeD2 = D2 ? *D2 : FSkillData();
     OnSkillSlotUpdated.Broadcast(2, ID2, SafeD2);
 }

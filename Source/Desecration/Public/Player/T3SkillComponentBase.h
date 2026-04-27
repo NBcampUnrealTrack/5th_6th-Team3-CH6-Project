@@ -97,8 +97,8 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Skill")
     void GetCurrentEquippedSkills(FSkillData& OutSlot1, FSkillData& OutSlot2)
     {
-        FSkillData* D1 = GetSkillDataByID(GetCurrentSkillSlot());
-        FSkillData* D2 = GetSkillDataByID(GetNextSkillSlot());
+        FSkillData* D1 = GetSkillDataFull(GetCurrentSkillSlot());
+        FSkillData* D2 = GetSkillDataFull(GetNextSkillSlot());
         OutSlot1 = D1 ? *D1 : FSkillData();
         OutSlot2 = D2 ? *D2 : FSkillData();
     }
@@ -106,7 +106,7 @@ public:
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Skill")
     UTexture2D* GetSkillIconByID(int32 SkillID)
     {
-        FSkillData* Data = GetSkillDataByID(SkillID);
+        FSkillData* Data = GetSkillDataFull(SkillID);
         return (Data) ? Data->SkillIcon : nullptr;
     }
 
@@ -118,12 +118,20 @@ public:
     int32 GetSkillIDBySlotIndex(int32 Index) const;
 
     virtual FSkillData* GetSkillDataByID(int32 SkillID) { return nullptr; }
-    
+
+    // 직업 스킬(1~4)과 보스 스킬(5~8)을 모두 조회.
+    // 자신의 GetSkillDataByID로 먼저 찾고, 없으면 LinkedCommonSkillComp에서 찾는다.
+    FSkillData* GetSkillDataFull(int32 SkillID);
+
+    // 보스 스킬 데이터 조회를 위해 CharacterBase에서 설정해준다.
+    UPROPERTY()
+    UT3SkillComponentBase* LinkedCommonSkillComp = nullptr;
+
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Skill")
     FText GetSkillNameByID(int32 SkillID)
     {
-        FSkillData* Data = GetSkillDataByID(SkillID);
-        
+        FSkillData* Data = GetSkillDataFull(SkillID);
+
         if (Data)
         {
             return Data->SkillName;
@@ -137,8 +145,8 @@ public:
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Skill")
     FText GetSkillInfoByID(int32 SkillID)
     {
-        FSkillData* Data = GetSkillDataByID(SkillID);
-        
+        FSkillData* Data = GetSkillDataFull(SkillID);
+
         if (Data)
         {
             return Data->Description;
@@ -185,6 +193,9 @@ public:
 protected:
 
     virtual void BeginPlay() override;
+
+    // BeginPlay에서 호출. 직업 스킬 1~4 초기화. CommonSkillComponent에서는 오버라이드하여 skip.
+    virtual void InitializeSkillDefaults();
 
     // HUD용 슬롯 업데이트 브로드캐스트 (슬롯 인덱스 1=현재, 2=다음 고정)
     void BroadcastSlotUpdated();

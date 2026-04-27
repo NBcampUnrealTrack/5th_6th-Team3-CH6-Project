@@ -9,6 +9,7 @@
 #include "T3CombatComponent.generated.h"
 
 class AAICharacter;
+class UT3CommonSkillComponent;
 
 // 캐릭터 상태 ENUM
 UENUM(BlueprintType)
@@ -192,6 +193,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Skill")
 	UT3SkillComponentBase* GetSkillComponent() const { return SkillComp; }
 
+	void SetCommonSkillComponent(UT3CommonSkillComponent* InComp) { CommonSkillComp = InComp; }
+	UFUNCTION(BlueprintCallable, Category = "Boss Skill")
+	UT3CommonSkillComponent* GetCommonSkillComponent() const { return CommonSkillComp; }
+
 private:
 	// 현재 선택된 인덱스들
 	int32 CurrentSkillSlot = 1;
@@ -206,6 +211,9 @@ private:
 	// 캐싱된 컴포넌트
 	UPROPERTY()
 	class UT3SkillComponentBase* SkillComp;
+
+	UPROPERTY()
+	UT3CommonSkillComponent* CommonSkillComp;
 
 	UPROPERTY()
 	class UT3ItemUseComponent* ItemComp;
@@ -238,6 +246,7 @@ private:
 
 	// 록온 변수
 	bool bIsLockOn = false;
+	float DefaultSocketOffsetZ = 0.f;
 
 	// 록온 타깃 식별 태그
 	UPROPERTY(EditAnywhere, Category = "Combat|LockOn")

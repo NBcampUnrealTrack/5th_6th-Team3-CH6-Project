@@ -33,6 +33,10 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_ExecutingPattern);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_SuperArmor);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_ParryWindow);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_Disengaging);
+// 회피(롤) i-frame 구간 — TakeDamage에서 데미지 0 처리
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_Invulnerable);
+// 막기(블록) 자세 — TakeDamage에서 정면/후방 배율로 데미지 경감
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_Blocking);
 // 플레이어가 보스 공격을 패링 성공했을 때 외부 알림
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnParriedByPlayer);
 
@@ -40,6 +44,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnParriedByPlayer);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_Event_StunRecovered);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_Event_ActionCountDepleted);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_Event_ParriedByPlayer);
+// 막기 중 피격 + 리액션 확률 굴림 성공 시 송신 — ST에서 빠른 반격/회피로 트랜지션
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_Event_BlockReaction);
 
 // ============================================================
 // AT3MidBossMonster
@@ -120,6 +126,36 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "MidBoss|State")
 	bool IsDisengaging() const;
+
+	// 롤 i-frame 활성 여부 (몽타주의 ANS_BossInvulnerable이 토글)
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "MidBoss|State")
+	bool IsInvulnerable() const;
+
+	// 막기 자세 활성 여부 (Block STT 노드가 토글)
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "MidBoss|State")
+	bool IsBlocking() const;
+
+	// 피격이 보스 정면(앞 반구)에서 들어왔는지 — 막기 정면/후방 배율 분기용
+	// DamageCauser nullptr 또는 좌표 동일 시 true 반환 (안전 기본값)
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "MidBoss|Combat")
+	bool IsHitFromFront(const AActor* DamageCauser) const;
+
+	// --- 막기 시퀀스 (STT_Block에서 트리거) ---
+	// In → Loop(자기 자신 무한) → 외부 RequestEnd → Out → Idle
+	// 단계 전환은 OnBlockMontageBlendingOut 콜백이 BlendingOut 시점에 다음 PlayAnimMontage 호출 → 자연 크로스페이드
+	// CurrentBlockPhase / bBlockEndRequested는 BlueprintReadOnly로 노출되어 STT가 폴링
+
+	// 막기 시퀀스 시작 — InEntry 재생 + BlendingOut 콜백 등록 + Phase=In + BlockHitsCount 리셋
+	UFUNCTION(BlueprintCallable, Category = "MidBoss|Defense")
+	void StartBlockSequence();
+
+	// 종료 요청 — bBlockEndRequested=true 만 set. 다음 BlendingOut 시점에 OnBlockMontageBlendingOut이 Out 진입
+	UFUNCTION(BlueprintCallable, Category = "MidBoss|Defense")
+	void RequestEndBlockSequence();
+
+	// 외부 인터럽트(BlockReaction 이벤트, 사망 등) — 즉시 정리. Stop + 태그 제거 + Phase=Idle
+	UFUNCTION(BlueprintCallable, Category = "MidBoss|Defense")
+	void StopBlockSequence();
 
 	// --- 보스 정보 & 스탯 ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Info")
@@ -246,6 +282,21 @@ public:
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
 		AController* EventInstigator, AActor* DamageCauser) override;
 
+	// --- 막기 데미지 배율 ---
+	// 정면 피격 시 들어오는 데미지 배율 (0 = 완전 무효, 0.1 = 90% 경감, 1 = 풀데미지)
+	// Unparryable / Unblockable 공격은 이 배율 무시하고 풀데미지
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Defense", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float BlockDamageMultiplier_Front = 0.1f;
+
+	// 후방(뒤 반구) 피격 시 들어오는 데미지 배율 — 뒤잡 메커니즘 도입 전까지는 정면과 같은 값 사용 권장
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Defense", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float BlockDamageMultiplier_Back = 0.1f;
+
+	// 막기 중 피격 시 리액션 발동 확률 (0 = 비활성, 1 = 항상 발동)
+	// 발동 성공 시 Boss.Event.BlockReaction 이벤트 송신 → ST에서 빠른 반격 패턴으로 트랜지션
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Defense", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float BlockReactionChance = 0.0f;
+
 	UFUNCTION(BlueprintCallable, Category = "MidBoss|Combat")
 	void PlayAdditiveHitReaction(AActor* DamageCauser = nullptr);
 
@@ -256,8 +307,10 @@ public:
 	void RecoverFromStun();
 
 	// --- AoE (장판기) ---
+	// DamageType 미지정(nullptr) 시 UT3DamageType_Base로 fallback — BP 하위호환
 	UFUNCTION(BlueprintCallable, Category = "MidBoss|Combat")
-	void ExecuteAoEDamage(float Radius, float DamageAmount, EHitIntensity Intensity = EHitIntensity::Heavy);
+	void ExecuteAoEDamage(float Radius, float DamageAmount, EHitIntensity Intensity = EHitIntensity::Heavy,
+		TSubclassOf<UT3DamageType_Base> DamageType = nullptr);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Skill")
 	float AoERadius = 500.f;
@@ -368,6 +421,35 @@ public:
 	// 보스별 스켈레톤이 다르므로 캐릭터에 두고 ST는 Boss->BackStepMontage 참조
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Animation")
 	TObjectPtr<UAnimMontage> BackStepMontage;
+
+	// --- 8방향 회피 (TestRoll ST Task에서 참조) ---
+	// 인덱스 순서: 0=0°(F) / 1=45°(FR) / 2=90°(R) / 3=135°(BR) / 4=180°(B) / 5=225°(BL) / 6=270°(L) / 7=315°(FL)
+	// 보스별 스켈레톤/애셋이 다르므로 캐릭터에 두고 ST는 Boss->RollMontages_8Dir 참조 (BackStepMontage와 동일 패턴)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Animation")
+	TArray<TObjectPtr<UAnimMontage>> RollMontages_8Dir;
+
+	// 방향별 루트모션 거리 배율 — 인덱스는 RollMontages_8Dir와 동일
+	// 비어있거나 인덱스 미존재 시 1.0 처리 (앞구르기는 크게, 뒷/옆구르기는 짧게 조절용)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Animation")
+	TArray<float> RollDirectionScales;
+
+	// --- 막기 (Block STT Task에서 참조) ---
+	// 보스별 스켈레톤/애셋이 다르므로 캐릭터에 두고 STT는 Boss->BlockMontageData 참조 (RollMontages_8Dir와 동일 패턴)
+	// In/Loop/Out 3 Entry 슬롯 — 같은 몽타주 다른 섹션이든 짜집기든 자유 (단계 전환은 BlendingOut 자연 크로스페이드)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Animation")
+	FBlockMontageData BlockMontageData;
+
+	// 현재 막기 자세 진입 후 막아낸 피격 횟수 (Block STT EnterState에서 캐시, TakeDamage에서 막기 성공 시 ++)
+	UPROPERTY(BlueprintReadOnly, Category = "MidBoss|Defense")
+	int32 BlockHitsCount = 0;
+
+	// 현재 막기 시퀀스 단계 — STT_Block이 폴링하여 Idle 도달 시 Succeeded 처리
+	UPROPERTY(BlueprintReadOnly, Category = "MidBoss|Defense")
+	EBlockPhase CurrentBlockPhase = EBlockPhase::Idle;
+
+	// 종료 요청 플래그 — RequestEndBlockSequence가 set, 다음 BlendingOut 시점에 Out으로 전환
+	UPROPERTY(BlueprintReadOnly, Category = "MidBoss|Defense")
+	bool bBlockEndRequested = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Combat")
 	float StunDuration = 3.0f;
@@ -508,6 +590,24 @@ public:
 	// region: Private (내부 상태 / 내부 함수)
 	// ============================================================
 private:
+#pragma region Private_Core
+
+	// 생성자 분해 헬퍼 — CDO 생성 시점 호출
+	void ConfigureRotationSettings();
+	void CreateLockOnWidget();
+
+	// BeginPlay 분해 헬퍼 — 초기화 순서(록온 → 무기 → 스탯/태그/Modifier → 디졸브 → 트리거 → Broadcast → 로그) 유지
+	void AttachLockOnWidgetToSocket();
+	void BindWeaponComponent();
+	void InitializeStatsAndTags();
+	void SetupDissolveTimeline();
+
+	// Tick 분해 헬퍼 — 매 프레임 호출 (MoveToTarget 보간 / AI SetFocus + 회전 속도 분기)
+	void UpdateMoveToTargetInterpolation(float DeltaTime);
+	void UpdateAIFocusAndRotation();
+
+#pragma endregion Private_Core
+
 #pragma region Private_Flow
 
 	bool bIsActivated = false;
@@ -522,6 +622,14 @@ private:
 	void OnIntroMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
 	void StartBossLogic();
+
+	// ActivateBoss 분해 헬퍼 — 활성화 순서(트리거 비활성 → BGM → HPBar → Broadcast → 로그 → 인트로) 유지
+	void PlayBossBGM();
+	void ShowBossHPBar();
+	void PlayIntroMontageOrStart();
+
+	// 사망 후 물리/이동 차단 — 캡슐 콜리전 off + CharacterMovement DisableMovement
+	void DisablePhysicsAndMovement();
 
 	UPROPERTY()
 	TObjectPtr<UAudioComponent> BGMAudioComponent;
@@ -561,11 +669,33 @@ private:
 
 	void PlayCurrentChainMontage();
 
+	// 섹션 콤보 동적 다음 섹션 설정 — PlayCurrentChainMontage 첫 진입 / HandleNextComboNotify 공유
+	void SetupDynamicNextSection(UAnimInstance* AnimInst, UAnimMontage* SectionMontage,
+		const FMidBossAttackPattern& PatternData, int32 CurrentIdx) const;
+
+	// 섹션 콤보 첫 진입 (Idx==0) — PlayAnimMontage + 동적 섹션 설정 + OnMontageEnded 바인딩
+	void PlaySectionComboFirstEntry(const FMidBossAttackPattern& PatternData,
+		const FPatternMontageData& MontageData);
+
+	// 일반 체인 모드 — PlayAnimMontage + 단일 섹션 격리 + OnChainBlendingOut 바인딩
+	// ReactionPlayRateMultiplier — 패턴 단위 PlayRate 가속 배율 (막기 리액션 등에서 1.0 외 값)
+	void PlayChainMontageEntry(const FPatternMontageData& MontageData, float ReactionPlayRateMultiplier = 1.f);
+
 	UFUNCTION()
 	void OnMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
 	// 체인 모드: 블렌드아웃 시작 시 다음 몽타주 겹쳐 재생
 	void OnChainBlendingOut(UAnimMontage* Montage, bool bInterrupted);
+
+	// 막기 시퀀스: BlendingOut 시점에 다음 단계 PlayAnimMontage 호출 → 자연 크로스페이드
+	// In→Loop / Loop→Loop 자기루프 (bBlockEndRequested 시 Loop→Out) / Out→Idle 전환 처리
+	void OnBlockMontageBlendingOut(UAnimMontage* Montage, bool bInterrupted);
+
+	// 막기 단계 진입 헬퍼 — Entry PlayAnimMontage + BlendingOut 콜백 재등록 + Phase 갱신
+	void PlayBlockEntry(const FBlockMontageEntry& Entry, EBlockPhase NewPhase);
+
+	// OnChainBlendingOut / OnMontageEnded 공통 prelude — 종료/인터럽트 처리, 호출자 early-return 여부 반환
+	bool HandleChainCallbackPrelude(bool bInterrupted, const TCHAR* InterruptLogPrefix);
 
 	void AdvanceChainOrComplete();
 	void RegisterCooldown(FName PatternName, float CooldownSeconds);
@@ -573,8 +703,46 @@ private:
 
 	bool ShouldTriggerNotify(FName NotifyName) const;
 
+	// ShouldTriggerNotify 1단계 — 노티파이 타입별 기본 확률 조회 (Slow/Fast/Step)
+	float GetBaseNotifyChance(FName NotifyName, const FMidBossAttackPattern& PatternData) const;
+
+	// ShouldTriggerNotify 2단계 — 거리/HP 등 NotifyModifier에 넘길 컨텍스트 빌드
+	FNotifyModifierContext BuildNotifyModifierContext(FName NotifyName) const;
+
+	// GetAvailablePatterns / GetAllAvailablePatterns 공통 필터 — Stage/쿨다운 + ExtraFilter
+	TArray<FName> CollectAvailablePatterns(TFunctionRef<bool(const FMidBossAttackPattern&)> ExtraFilter) const;
+
 	// 현재 체인 엔트리의 데미지/강도/타입 조회
 	void GetCurrentHitData(float& OutDamage, EHitIntensity& OutIntensity, TSubclassOf<UT3DamageType_Base>& OutDamageType) const;
+
+	// ============================================================
+	// 노티파이 공통 헬퍼 — HandlePatternNotify에서 사용
+	// ============================================================
+
+	// 현재 체인 엔트리의 PlayRate × CurrentAttackAnimRate [× ExtraMultiplier] 적용
+	void ApplyCurrentChainPlayRate(UAnimInstance* AnimInst, UAnimMontage* Montage, float ExtraMultiplier = 1.0f) const;
+
+	// ShouldTriggerNotify + RecordNotifyResult 쌍 처리 — 발동 시 OnTriggered 람다 실행
+	void ProcessProbabilisticNotify(FName NotifyName, TFunctionRef<void()> OnTriggered);
+
+	// 무기 판정 노티파이 공통 분기 — AttackStart/End, WideAttackStart/End, BodyAttackStart/End
+	void SetWeaponCollisionByNotify(FName NotifyName, bool bEnabled);
+
+	// ============================================================
+	// 노티파이 분기별 핸들러
+	// ============================================================
+
+	void HandleDropWeaponNotify();
+	void HandleSlowNotify(UAnimInstance* AnimInst, UAnimMontage* Montage);
+	void HandleFastNotify(UAnimInstance* AnimInst, UAnimMontage* Montage);
+	void HandleNormalNotify(UAnimInstance* AnimInst, UAnimMontage* Montage);
+	void HandleStepNotify(UAnimInstance* AnimInst, UAnimMontage* Montage);
+	void HandleSpawnProjectileNotify();
+	void HandleGroundSlamPreviewNotify();
+	void HandleGroundSlamNotify();
+	void HandleParryWindowNotify(bool bOpen);
+	void HandleWarpTargetNotify();
+	void HandleNextComboNotify(UAnimInstance* AnimInst, UAnimMontage* Montage);
 
 #pragma endregion Private_Pattern
 
@@ -594,6 +762,18 @@ private:
 
 	UFUNCTION()
 	void OnWeaponHit(AActor* HitActor);
+
+	// 보스 사운드 공통 재생 헬퍼 — nullptr 가드 + SoundVolume × Mult + Attenuation 일원화
+	void PlayBossSoundAt(USoundBase* Sound, const FVector& Loc, float VolumeMultiplier) const;
+
+	// StateTree 이벤트 전송 헬퍼 — StateTreeComponent nullptr 가드 일원화
+	void SendStateTreeStateEvent(FGameplayTag Tag) const;
+
+	// 피격 피드백 묶음 — HitSound(레이트리밋) + 카메라 쉐이크 + 히트 리액션(조건부)
+	void PlayHitFeedback(const FVector& HitLoc, AActor* DamageCauser);
+
+	// 사망 상태 진입 — 태그/HP clamp/패턴 캔슬/델리게이트/StateTree 이벤트/사망 시퀀스
+	void EnterDeathState();
 
 #pragma endregion Private_Combat
 
@@ -645,6 +825,12 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "MidBoss|Movement")
 	float GetDefaultMaxWalkSpeed() const { return DefaultMaxWalkSpeed; }
 
+	// 비-공격-체인 몽타주 재생 진입점 (이동: BackStep/Roll/Dash Run, 리액션: HitReact/Stun 등)
+	// BaseRate를 LastMoveBaseRate에 캐시 후 (BaseRate * CurrentMoveAnimRate)로 재생 — 슬로우 변경 시 실시간 갱신 가능
+	// 호출 측은 BaseRate만 넘기고 슬로우 곱셈은 신경쓰지 말 것 (raw PlayAnimMontage 금지)
+	UFUNCTION(BlueprintCallable, Category = "MidBoss|Movement")
+	float PlayMoveMontageWithSlow(UAnimMontage* Montage, float BaseRate = 1.f);
+
 private:
 	// 외부 슬로우/가속 영향 (천사 장신구 등) — 절대 배율, 누적되지 않음
 	float CurrentMoveAnimRate = 1.f;
@@ -657,8 +843,20 @@ private:
 	// 실제 MaxWalkSpeed = ActiveBaseWalkSpeed * CurrentMoveAnimRate
 	float ActiveBaseWalkSpeed = 0.f;
 
+	// 마지막 이동 계열 몽타주의 BaseRate (PlayMoveMontageWithSlow 호출 시 캐시)
+	// 슬로우 실시간 갱신 시 PlayRate = LastMoveBaseRate * CurrentMoveAnimRate 재계산용 — 누적 방지
+	float LastMoveBaseRate = 1.f;
+
+	// 헬퍼 통과한 몽타주만 슬로우 추적 — Intro/Death 등 raw PlayAnimMontage는 자동 제외 (시네마틱 보존)
+	// 약참조: 몽타주 GC되거나 다른 몽타주로 교체되면 자동 무효화
+	TWeakObjectPtr<UAnimMontage> SlowManagedMontage;
+
 	// CharacterMovement->MaxWalkSpeed에 (ActiveBaseWalkSpeed * CurrentMoveAnimRate) 적용 — 단일 계산 진입점
 	void ApplyCurrentWalkSpeed();
+
+	// 진행 중 이동 계열 몽타주에 (LastMoveBaseRate * CurrentMoveAnimRate) 적용 — 단일 계산 진입점
+	// SetAnimationSpeedMultiplier에서 슬로우 진입/이탈 시 즉시 갱신 위해 호출
+	void ApplyCurrentMoveMontagePlayRate(UAnimInstance* AnimInst, UAnimMontage* Montage) const;
 
 #pragma endregion
 };

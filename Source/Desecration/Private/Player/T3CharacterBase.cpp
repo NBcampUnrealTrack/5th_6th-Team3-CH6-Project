@@ -14,6 +14,7 @@
 #include "Player/T3CharacterDataAsset.h"
 #include "Player/T3DamageTypes.h"
 #include "Player/T3SkillComponentBase.h"
+#include "Player/T3CommonSkillComponent.h"
 #include "Equipment/T3PlayerEquipmentComponent.h"
 #include "GameSystem/T3GameInstance.h"
 #include "GameSystem/T3GameMode.h"
@@ -129,6 +130,22 @@ void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)
 				if (CombatComponent)
 				{
 					CombatComponent->SetSkillComponent(NewSkillComp);
+				}
+
+				// 보스 스킬 컴포넌트 생성 및 연결
+				if (CommonSkillComponentClass && !CommonSkillComponent)
+				{
+					CommonSkillComponent = NewObject<UT3CommonSkillComponent>(this, CommonSkillComponentClass);
+					CommonSkillComponent->RegisterComponent();
+
+					// 클래스 스킬 컴포넌트에서 보스 스킬 데이터를 조회할 수 있도록 링크
+					NewSkillComp->LinkedCommonSkillComp = CommonSkillComponent;
+
+					// CombatComponent에도 전달 (실행 라우팅용)
+					if (CombatComponent)
+					{
+						CombatComponent->SetCommonSkillComponent(CommonSkillComponent);
+					}
 				}
 
 				FTimerHandle WidgetInitTimerHandle;
@@ -864,8 +881,127 @@ float AT3CharacterBase::GetAttackPowerPreview(ET3StatType StatType, int32 Target
 
 void AT3CharacterBase::SetWeaponLevel(float CurrentWeaponLevel)
 {
-	 WeaponLevel = CurrentWeaponLevel; 
-	 BroadcastStatChange(ET3StatType::Attack); 
+	 WeaponLevel = CurrentWeaponLevel;
+	 BroadcastStatChange(ET3StatType::Attack);
+}
+
+void AT3CharacterBase::ModifyCoreStatByDelta(ET3StatType StatType, int32 Delta)
+{
+	if (Delta == 0) return;
+
+	const bool bIncreasing = Delta > 0;
+	const int32 AbsDelta = FMath::Abs(Delta);
+
+	for (int32 i = 0; i < AbsDelta; ++i)
+	{
+		switch (StatType)
+		{
+		case ET3StatType::Vigor:
+		{
+			if (bIncreasing)
+			{
+				float Increase = 15.f + (Vigor * 0.7f);
+				if (Vigor >= 30) Increase /= 3.f;
+				Increase = FMath::CeilToFloat(Increase);
+				Vigor++;
+				MaxHP += Increase;
+				CurrentHP += Increase;
+			}
+			else
+			{
+				Vigor--;
+				float Decrease = 15.f + (Vigor * 0.7f);
+				if (Vigor >= 30) Decrease /= 3.f;
+				Decrease = FMath::CeilToFloat(Decrease);
+				MaxHP = FMath::Max(1.f, MaxHP - Decrease);
+				CurrentHP = FMath::Min(CurrentHP, MaxHP);
+			}
+			break;
+		}
+		case ET3StatType::Endurance:
+		{
+			if (bIncreasing)
+			{
+				float Increase = 10.f + (Endurance * 0.5f);
+				if (Endurance >= 30) Increase /= 3.f;
+				Increase = FMath::CeilToFloat(Increase);
+				Endurance++;
+				MaxStamina += Increase;
+				CurrentStamina += Increase;
+			}
+			else
+			{
+				Endurance--;
+				float Decrease = 10.f + (Endurance * 0.5f);
+				if (Endurance >= 30) Decrease /= 3.f;
+				Decrease = FMath::CeilToFloat(Decrease);
+				MaxStamina = FMath::Max(1.f, MaxStamina - Decrease);
+				CurrentStamina = FMath::Min(CurrentStamina, MaxStamina);
+			}
+			break;
+		}
+		case ET3StatType::Mind:
+		{
+			if (bIncreasing)
+			{
+				float Increase = 10.f + (Mind * 0.7f);
+				if (Mind >= 30) Increase /= 3.f;
+				Increase = FMath::CeilToFloat(Increase);
+				Mind++;
+				MaxMana += Increase;
+				CurrentMana += Increase;
+			}
+			else
+			{
+				Mind--;
+				float Decrease = 10.f + (Mind * 0.7f);
+				if (Mind >= 30) Decrease /= 3.f;
+				Decrease = FMath::CeilToFloat(Decrease);
+				MaxMana = FMath::Max(1.f, MaxMana - Decrease);
+				CurrentMana = FMath::Min(CurrentMana, MaxMana);
+			}
+			break;
+		}
+		case ET3StatType::Strength:
+			bIncreasing ? Strength++ : Strength--;
+			break;
+		case ET3StatType::Intelligence:
+			bIncreasing ? Intelligence++ : Intelligence--;
+			break;
+		default:
+			break;
+		}
+	}
+
+	// Strength/Intelligence는 AdditionalAttack 재계산
+	if (StatType == ET3StatType::Strength || StatType == ET3StatType::Intelligence)
+	{
+		if (CheckCharacterData())
+		{
+			const int32 StatToUse = (CharacterData->PrimaryDamageType == EDamageType::Physical) ? Strength : Intelligence;
+			if (StatToUse <= 30)
+			{
+				AdditionalAttack = FMath::CeilToFloat(StatToUse * (1.0f + WeaponLevel));
+			}
+			else
+			{
+				AdditionalAttack = FMath::CeilToFloat((30.f * (1.0f + WeaponLevel)) + ((StatToUse - 30) * 5.f));
+			}
+		}
+		BroadcastStatChange(ET3StatType::Attack);
+	}
+	else
+	{
+		switch (StatType)
+		{
+		case ET3StatType::Vigor:    BroadcastStatChange(ET3StatType::HP);      break;
+		case ET3StatType::Endurance: BroadcastStatChange(ET3StatType::Stamina); break;
+		case ET3StatType::Mind:     BroadcastStatChange(ET3StatType::MP);       break;
+		default: break;
+		}
+	}
+
+	OnCoreStatChanged.Broadcast(StatType, Delta);
 }
 
 int32 AT3CharacterBase::GetCalculatedLevel() const
