@@ -60,7 +60,9 @@ bool AT3MidBossMonster::ExecutePattern(FName PatternName)
 
 	// 패턴 실행 시작
 	CurrentPatternName = PatternName;
-	CurrentChainIndex = 0;
+	// StartSectionIndex 적용 — 막기 리액션 등에서 앞쪽 N개 엔트리를 스킵하고 빠르게 진입
+	// 범위 밖 값은 클램프 (마지막 엔트리만 남기는 케이스 허용)
+	CurrentChainIndex = FMath::Clamp(PatternData->StartSectionIndex, 0, PatternData->MontageChain.Num() - 1);
 	ConsecutiveDisengageCount = 0;
 	AddStateTag(TAG_Boss_State_ExecutingPattern);
 
@@ -114,14 +116,15 @@ void AT3MidBossMonster::CancelCurrentPattern()
 // 패턴 검색
 // ============================================================
 
-TArray<FName> AT3MidBossMonster::GetAvailablePatterns(EMidBossPatternCategory Category) const
+TArray<FName> AT3MidBossMonster::CollectAvailablePatterns(TFunctionRef<bool(const FMidBossAttackPattern&)> ExtraFilter) const
 {
 	TArray<FName> Result;
 	for (const FMidBossAttackPattern& Pattern : AttackPatterns)
 	{
-		if (Pattern.Category == Category
-			&& BossStage >= Pattern.RequiredStage
-			&& IsPatternOffCooldown(Pattern.PatternName))
+		// 공통: Stage 충족 + 쿨다운 OFF + 호출자별 추가 필터
+		if (BossStage >= Pattern.RequiredStage
+			&& IsPatternOffCooldown(Pattern.PatternName)
+			&& ExtraFilter(Pattern))
 		{
 			Result.Add(Pattern.PatternName);
 		}
@@ -129,18 +132,17 @@ TArray<FName> AT3MidBossMonster::GetAvailablePatterns(EMidBossPatternCategory Ca
 	return Result;
 }
 
+TArray<FName> AT3MidBossMonster::GetAvailablePatterns(EMidBossPatternCategory Category) const
+{
+	return CollectAvailablePatterns([Category](const FMidBossAttackPattern& Pattern)
+	{
+		return Pattern.Category == Category;
+	});
+}
+
 TArray<FName> AT3MidBossMonster::GetAllAvailablePatterns() const
 {
-	TArray<FName> Result;
-	for (const FMidBossAttackPattern& Pattern : AttackPatterns)
-	{
-		if (BossStage >= Pattern.RequiredStage
-			&& IsPatternOffCooldown(Pattern.PatternName))
-		{
-			Result.Add(Pattern.PatternName);
-		}
-	}
-	return Result;
+	return CollectAvailablePatterns([](const FMidBossAttackPattern&) { return true; });
 }
 
 bool AT3MidBossMonster::GetPatternData(FName PatternName, FMidBossAttackPattern& OutData) const
@@ -165,11 +167,7 @@ void AT3MidBossMonster::HandlePatternNotify(FName NotifyName)
 	// --- 상태 무관 노티파이 (사망 몽타주 등에서도 동작) ---
 	if (Name.Equals(TEXT("DropWeapon")))
 	{
-		if (WeaponComponent)
-		{
-			WeaponComponent->DropWeapon();
-			UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 노티파이로 무기 드롭"));
-		}
+		HandleDropWeaponNotify();
 		return;
 	}
 
@@ -191,252 +189,253 @@ void AT3MidBossMonster::HandlePatternNotify(FName NotifyName)
 	UAnimMontage* CurrentMontage = AnimInstance->GetCurrentActiveMontage();
 
 	// --- 배속 제어 (확률 적용 대상) ---
-	if (Name.Equals(TEXT("Slow")))
-	{
-		const bool bTriggered = ShouldTriggerNotify(NotifyName);
-		if (bTriggered)
-		{
-			// 보정기에서 범위 내 랜덤 배율 조회 → 몽타주 기본 PlayRate에 곱
-			const float Multiplier = NotifyModifier ? NotifyModifier->GetSlowRate(CurrentPatternName) : 0.1f;
-			const FMidBossAttackPattern* SlowPatternData = FindPatternData(CurrentPatternName);
-			const float BaseRate = (SlowPatternData && SlowPatternData->MontageChain.IsValidIndex(CurrentChainIndex))
-				? SlowPatternData->MontageChain[CurrentChainIndex].PlayRate : 1.0f;
-			// 천사 장신구 슬로우 누적 곱
-			AnimInstance->Montage_SetPlayRate(CurrentMontage, BaseRate * Multiplier * CurrentAttackAnimRate);
-		}
-		// Pity 결과 기록
-		if (NotifyModifier)
-		{
-			NotifyModifier->RecordNotifyResult(NotifyName, bTriggered);
-		}
-	}
-	else if (Name.Equals(TEXT("Fast")))
-	{
-		const bool bTriggered = ShouldTriggerNotify(NotifyName);
-		if (bTriggered)
-		{
-			// 보정기에서 범위 내 랜덤 배율 조회 → 몽타주 기본 PlayRate에 곱
-			const float FastMultiplier = NotifyModifier ? NotifyModifier->GetFastRate(CurrentPatternName) : 2.0f;
-			const FMidBossAttackPattern* FastPatternData = FindPatternData(CurrentPatternName);
-			const float FastBaseRate = (FastPatternData && FastPatternData->MontageChain.IsValidIndex(CurrentChainIndex))
-				? FastPatternData->MontageChain[CurrentChainIndex].PlayRate : 1.0f;
-			// 천사 장신구 슬로우 누적 곱
-			AnimInstance->Montage_SetPlayRate(CurrentMontage, FastBaseRate * FastMultiplier * CurrentAttackAnimRate);
-		}
-		if (NotifyModifier)
-		{
-			NotifyModifier->RecordNotifyResult(NotifyName, bTriggered);
-		}
-	}
-	else if (Name.Equals(TEXT("Normal")))
-	{
-		// 속도 복구 — 몽타주의 원래 PlayRate로 복원 (몽타주 에디터 Rate Scale 유지)
-		const FMidBossAttackPattern* PatternData = FindPatternData(CurrentPatternName);
-		if (PatternData && PatternData->MontageChain.IsValidIndex(CurrentChainIndex))
-		{
-			// 천사 장신구 슬로우 누적 곱
-			AnimInstance->Montage_SetPlayRate(CurrentMontage, PatternData->MontageChain[CurrentChainIndex].PlayRate * CurrentAttackAnimRate);
-		}
-	}
+	if (Name.Equals(TEXT("Slow")))                   { HandleSlowNotify(AnimInstance, CurrentMontage); }
+	else if (Name.Equals(TEXT("Fast")))              { HandleFastNotify(AnimInstance, CurrentMontage); }
+	else if (Name.Equals(TEXT("Normal")))            { HandleNormalNotify(AnimInstance, CurrentMontage); }
 	// --- 이동 + 속도 복구 (확률 적용) ---
-	else if (Name.StartsWith(TEXT("Step")))
+	else if (Name.StartsWith(TEXT("Step")))          { HandleStepNotify(AnimInstance, CurrentMontage); }
+	// --- 무기 판정 ON/OFF (항상 실행) ---
+	else if (Name.Equals(TEXT("AttackStart")))       { SetWeaponCollisionByNotify(NotifyName, true); }
+	else if (Name.Equals(TEXT("AttackEnd")))         { SetWeaponCollisionByNotify(NotifyName, false); }
+	else if (Name.Equals(TEXT("WideAttackStart")))   { SetWeaponCollisionByNotify(NotifyName, true); }
+	else if (Name.Equals(TEXT("WideAttackEnd")))     { SetWeaponCollisionByNotify(NotifyName, false); }
+	else if (Name.Equals(TEXT("BodyAttackStart")))   { SetWeaponCollisionByNotify(NotifyName, true); }
+	else if (Name.Equals(TEXT("BodyAttackEnd")))     { SetWeaponCollisionByNotify(NotifyName, false); }
+	// --- 투사체/AoE/패링/워프/콤보 ---
+	else if (Name.Equals(TEXT("SpawnProjectile")))   { HandleSpawnProjectileNotify(); }
+	else if (Name.Equals(TEXT("GroundSlamPreview"))) { HandleGroundSlamPreviewNotify(); }
+	else if (Name.Equals(TEXT("GroundSlam")))        { HandleGroundSlamNotify(); }
+	else if (Name.Equals(TEXT("ParryWindowStart")))  { HandleParryWindowNotify(true); }
+	else if (Name.Equals(TEXT("ParryWindowEnd")))    { HandleParryWindowNotify(false); }
+	else if (Name.Equals(TEXT("WarpTarget")))        { HandleWarpTargetNotify(); }
+	else if (Name.Equals(TEXT("NextCombo")))         { HandleNextComboNotify(AnimInstance, CurrentMontage); }
+}
+
+// ============================================================
+// 노티파이 공통 헬퍼
+// ============================================================
+
+void AT3MidBossMonster::ApplyCurrentChainPlayRate(UAnimInstance* AnimInst, UAnimMontage* Montage, float ExtraMultiplier) const
+{
+	if (!AnimInst || !Montage)
 	{
-		const bool bTriggered = ShouldTriggerNotify(FName(TEXT("Step")));
-		if (bTriggered)
-		{
-			// 속도 복구 — 몽타주의 원래 PlayRate로 복원 (몽타주 에디터 Rate Scale 유지)
-			const FMidBossAttackPattern* StepPatternData = FindPatternData(CurrentPatternName);
-			if (StepPatternData && StepPatternData->MontageChain.IsValidIndex(CurrentChainIndex))
-			{
-				// 천사 장신구 슬로우 누적 곱
-				AnimInstance->Montage_SetPlayRate(CurrentMontage, StepPatternData->MontageChain[CurrentChainIndex].PlayRate * CurrentAttackAnimRate);
-			}
-			// 보정기에서 범위 내 랜덤 거리/시간 조회
-			const float StepDist = NotifyModifier ? NotifyModifier->GetStepDistance(CurrentPatternName) : 200.f;
-			const float StepDur = NotifyModifier ? NotifyModifier->GetStepDuration(CurrentPatternName) : 0.1f;
-			MoveToTarget(StepDur, StepDist);
-		}
-		if (NotifyModifier)
-		{
-			NotifyModifier->RecordNotifyResult(FName(TEXT("Step")), bTriggered);
-		}
+		return;
 	}
-	// --- 판정 ON/OFF (항상 실행) ---
-	else if (Name.Equals(TEXT("AttackStart")))
+
+	const FMidBossAttackPattern* PatternData = FindPatternData(CurrentPatternName);
+	const float BaseRate = (PatternData && PatternData->MontageChain.IsValidIndex(CurrentChainIndex))
+		? PatternData->MontageChain[CurrentChainIndex].PlayRate : 1.0f;
+
+	// 천사 장신구 슬로우 누적 곱
+	AnimInst->Montage_SetPlayRate(Montage, BaseRate * ExtraMultiplier * CurrentAttackAnimRate);
+}
+
+void AT3MidBossMonster::ProcessProbabilisticNotify(FName NotifyName, TFunctionRef<void()> OnTriggered)
+{
+	const bool bTriggered = ShouldTriggerNotify(NotifyName);
+	if (bTriggered)
+	{
+		OnTriggered();
+	}
+	// Pity 결과 기록
+	if (NotifyModifier)
+	{
+		NotifyModifier->RecordNotifyResult(NotifyName, bTriggered);
+	}
+}
+
+void AT3MidBossMonster::SetWeaponCollisionByNotify(FName NotifyName, bool bEnabled)
+{
+	const FString Name = NotifyName.ToString();
+
+	if (Name.Equals(TEXT("AttackStart")))
 	{
 		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: AttackStart 노티파이 수신 (WeaponComponent: %s)"),
 			WeaponComponent ? TEXT("유효") : TEXT("nullptr"));
-		if (WeaponComponent) { WeaponComponent->SetAttackCollisionEnabled(true); }
+		if (WeaponComponent) { WeaponComponent->SetAttackCollisionEnabled(bEnabled); }
 	}
 	else if (Name.Equals(TEXT("AttackEnd")))
 	{
 		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: AttackEnd 노티파이 수신 — 전체 판정 OFF"));
 		if (WeaponComponent)
 		{
-			WeaponComponent->SetAttackCollisionEnabled(false);
+			WeaponComponent->SetAttackCollisionEnabled(bEnabled);
 			WeaponComponent->SetWideCollisionEnabled(false);
 			WeaponComponent->SetBodyAttackCollisionEnabled(false);
 		}
 	}
-	// --- 투사체 스폰 (검기) — 카운터 패턴이면 스킵 ---
-	else if (Name.Equals(TEXT("SpawnProjectile")))
+	else if (Name.Equals(TEXT("WideAttackStart")) || Name.Equals(TEXT("WideAttackEnd")))
 	{
-		const FMidBossAttackPattern* PatternData = FindPatternData(CurrentPatternName);
-		const bool bIsCounterPattern = PatternData && PatternData->bHasParryWindow;
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 노티파이 수신"), *Name);
+		if (WeaponComponent) { WeaponComponent->SetWideCollisionEnabled(bEnabled); }
+	}
+	else if (Name.Equals(TEXT("BodyAttackStart")) || Name.Equals(TEXT("BodyAttackEnd")))
+	{
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 노티파이 수신"), *Name);
+		if (WeaponComponent) { WeaponComponent->SetBodyAttackCollisionEnabled(bEnabled); }
+	}
+}
 
-		if (bIsCounterPattern)
+// ============================================================
+// 노티파이 분기별 핸들러
+// ============================================================
+
+void AT3MidBossMonster::HandleDropWeaponNotify()
+{
+	if (WeaponComponent)
+	{
+		WeaponComponent->DropWeapon();
+		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 노티파이로 무기 드롭"));
+	}
+}
+
+void AT3MidBossMonster::HandleSlowNotify(UAnimInstance* AnimInst, UAnimMontage* Montage)
+{
+	ProcessProbabilisticNotify(FName(TEXT("Slow")), [&]()
+	{
+		// 보정기에서 범위 내 랜덤 배율 조회 → 몽타주 기본 PlayRate에 곱
+		const float Multiplier = NotifyModifier ? NotifyModifier->GetSlowRate(CurrentPatternName) : 0.1f;
+		ApplyCurrentChainPlayRate(AnimInst, Montage, Multiplier);
+	});
+}
+
+void AT3MidBossMonster::HandleFastNotify(UAnimInstance* AnimInst, UAnimMontage* Montage)
+{
+	ProcessProbabilisticNotify(FName(TEXT("Fast")), [&]()
+	{
+		// 보정기에서 범위 내 랜덤 배율 조회 → 몽타주 기본 PlayRate에 곱
+		const float Multiplier = NotifyModifier ? NotifyModifier->GetFastRate(CurrentPatternName) : 2.0f;
+		ApplyCurrentChainPlayRate(AnimInst, Montage, Multiplier);
+	});
+}
+
+void AT3MidBossMonster::HandleNormalNotify(UAnimInstance* AnimInst, UAnimMontage* Montage)
+{
+	// 속도 복구 — 몽타주의 원래 PlayRate로 복원 (몽타주 에디터 Rate Scale 유지)
+	ApplyCurrentChainPlayRate(AnimInst, Montage);
+}
+
+void AT3MidBossMonster::HandleStepNotify(UAnimInstance* AnimInst, UAnimMontage* Montage)
+{
+	ProcessProbabilisticNotify(FName(TEXT("Step")), [&]()
+	{
+		// 속도 복구 — 몽타주의 원래 PlayRate로 복원 (몽타주 에디터 Rate Scale 유지)
+		ApplyCurrentChainPlayRate(AnimInst, Montage);
+		// 보정기에서 범위 내 랜덤 거리/시간 조회
+		const float StepDist = NotifyModifier ? NotifyModifier->GetStepDistance(CurrentPatternName) : 200.f;
+		const float StepDur = NotifyModifier ? NotifyModifier->GetStepDuration(CurrentPatternName) : 0.1f;
+		MoveToTarget(StepDur, StepDist);
+	});
+}
+
+void AT3MidBossMonster::HandleSpawnProjectileNotify()
+{
+	const FMidBossAttackPattern* PatternData = FindPatternData(CurrentPatternName);
+	const bool bIsCounterPattern = PatternData && PatternData->bHasParryWindow;
+
+	if (bIsCounterPattern)
+	{
+		if (bParrySucceeded)
 		{
-			if (bParrySucceeded)
-			{
-				// 플레이어가 때림 → 반격 휘두르기 (검기 안 나감, 근접 판정으로 대체)
-				UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 카운터 발동 — 검기 스킵, 근접 반격"));
-			}
-			else
-			{
-				// 안 때림 → 기 모으다 그냥 종료 (공격 안 함)
-				UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 카운터 패턴 — 반격 미발동, 검기 스킵"));
-			}
+			// 플레이어가 때림 → 반격 휘두르기 (검기 안 나감, 근접 판정으로 대체)
+			UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 카운터 발동 — 검기 스킵, 근접 반격"));
 		}
 		else
 		{
-			// 일반 검기 패턴 — 투사체 발사
-			SpawnBossProjectile();
+			// 안 때림 → 기 모으다 그냥 종료 (공격 안 함)
+			UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: 카운터 패턴 — 반격 미발동, 검기 스킵"));
 		}
 	}
-	// --- AoE 프리뷰 (범위 표시만, 데미지 없음) ---
-	else if (Name.Equals(TEXT("GroundSlamPreview")))
+	else
 	{
-		const FVector AoECenter = GetActorLocation() - FVector(0.0, 0.0, static_cast<double>(GetCapsuleComponent()->GetScaledCapsuleHalfHeight()));
+		// 일반 검기 패턴 — 투사체 발사
+		SpawnBossProjectile();
+	}
+}
 
-		if (AoEPreviewEffect)
-		{
-			const FVector ScaleVec = FVector(AoEEffectScale);
-			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-				this, AoEPreviewEffect, AoECenter, GetActorRotation(), ScaleVec);
-		}
+void AT3MidBossMonster::HandleGroundSlamPreviewNotify()
+{
+	const FVector AoECenter = GetActorLocation() - FVector(0.0, 0.0, static_cast<double>(GetCapsuleComponent()->GetScaledCapsuleHalfHeight()));
+
+	if (AoEPreviewEffect)
+	{
+		const FVector ScaleVec = FVector(AoEEffectScale);
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			this, AoEPreviewEffect, AoECenter, GetActorRotation(), ScaleVec);
+	}
 
 #if WITH_EDITOR
-		// 디버그 범위 표시 (노란색) — 이펙트 유무와 무관하게 항상 표시
-		DrawDebugSphere(GetWorld(), AoECenter, AoERadius, 24,
-			FColor::Yellow, false, 1.5f, 0, 3.f);
+	// 디버그 범위 표시 (노란색) — 이펙트 유무와 무관하게 항상 표시
+	DrawDebugSphere(GetWorld(), AoECenter, AoERadius, 24,
+		FColor::Yellow, false, 1.5f, 0, 3.f);
 #endif
 
-		// 프리뷰 경고 사운드
-		if (AoEPreviewSound)
-		{
-			UGameplayStatics::PlaySoundAtLocation(
-				this, AoEPreviewSound, AoECenter, FRotator::ZeroRotator,
-				SoundVolume * AoEPreviewVolumeMultiplier, 1.f, 0.f, SoundAttenuationSettings);
-		}
+	// 프리뷰 경고 사운드
+	PlayBossSoundAt(AoEPreviewSound, AoECenter, AoEPreviewVolumeMultiplier);
 
-		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: GroundSlamPreview — 범위 표시 (반경:%.0f)"), AoERadius);
-	}
-	// --- AoE 장판기 발동 ---
-	else if (Name.Equals(TEXT("GroundSlam")))
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: GroundSlamPreview — 범위 표시 (반경:%.0f)"), AoERadius);
+}
+
+void AT3MidBossMonster::HandleGroundSlamNotify()
+{
+	float AoEDamage = 20.f;
+	EHitIntensity AoEIntensity = EHitIntensity::Heavy;
+	TSubclassOf<UT3DamageType_Base> AoEDmgType = nullptr;
+	GetCurrentHitData(AoEDamage, AoEIntensity, AoEDmgType);
+	ExecuteAoEDamage(AoERadius, AoEDamage, AoEIntensity, AoEDmgType);
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: GroundSlam 노티파이 — AoE 발동 (반경:%.0f, 데미지:%.0f)"),
+		AoERadius, AoEDamage);
+}
+
+void AT3MidBossMonster::HandleParryWindowNotify(bool bOpen)
+{
+	if (bOpen)
 	{
-		float AoEDamage = 20.f;
-		EHitIntensity AoEIntensity = EHitIntensity::Heavy;
-		TSubclassOf<UT3DamageType_Base> AoEDmgType = nullptr;
-		GetCurrentHitData(AoEDamage, AoEIntensity, AoEDmgType);
-		ExecuteAoEDamage(AoERadius, AoEDamage, AoEIntensity);
-		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: GroundSlam 노티파이 — AoE 발동 (반경:%.0f, 데미지:%.0f)"),
-			AoERadius, AoEDamage);
-	}
-	// --- 패링 윈도우 ON/OFF — bHasParryWindow 체크 ---
-	else if (Name.Equals(TEXT("ParryWindowStart")))
-	{
+		// bHasParryWindow 체크 — 카운터 패턴만 윈도우 오픈
 		const FMidBossAttackPattern* PatternData = FindPatternData(CurrentPatternName);
 		if (PatternData && PatternData->bHasParryWindow)
 		{
 			OpenParryWindow();
 		}
 	}
-	else if (Name.Equals(TEXT("ParryWindowEnd")))
+	else
 	{
 		CloseParryWindow();
 	}
-	// --- 모션 워프 스냅샷 (ANS_MotionWarping 시작 프레임에 배치) ---
-	else if (Name.Equals(TEXT("WarpTarget")))
-	{
-		UpdateMotionWarpTarget();
-		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: WarpTarget 노티파이 — 워프 위치 스냅샷"));
-	}
-	// --- 섹션 콤보: 다음 섹션 진입 시 데미지 데이터 인덱스 갱신 + 동적 섹션 전환 ---
-	else if (Name.Equals(TEXT("NextCombo")))
-	{
-		const FMidBossAttackPattern* PatternData = FindPatternData(CurrentPatternName);
-		if (PatternData && PatternData->bUseSectionCombo)
-		{
-			CurrentChainIndex++;
+}
 
-			if (PatternData->MontageChain.IsValidIndex(CurrentChainIndex))
-			{
-				// 새 섹션의 PlayRate 적용 — SetNextSection은 배속을 변경하지 않으므로 명시적 갱신
-				// 천사 장신구 슬로우 누적 곱
-				const FPatternMontageData& CurrentEntry = PatternData->MontageChain[CurrentChainIndex];
-				AnimInstance->Montage_SetPlayRate(CurrentMontage, CurrentEntry.PlayRate * CurrentAttackAnimRate);
+void AT3MidBossMonster::HandleWarpTargetNotify()
+{
+	UpdateMotionWarpTarget();
+	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: WarpTarget 노티파이 — 워프 위치 스냅샷"));
+}
 
-				// 동적 섹션 전환: 현재 섹션 → 다음 섹션 설정
-				// 같은 섹션 이름이 반복되어도 매 NextCombo마다 갱신하므로 정확한 다음 섹션 지정
-				UAnimMontage* SectionMontage = PatternData->MontageChain[0].Montage;
-				const int32 NextIndex = CurrentChainIndex + 1;
+void AT3MidBossMonster::HandleNextComboNotify(UAnimInstance* AnimInst, UAnimMontage* Montage)
+{
+	const FMidBossAttackPattern* PatternData = FindPatternData(CurrentPatternName);
+	if (!PatternData || !PatternData->bUseSectionCombo)
+	{
+		return;
+	}
 
-				if (PatternData->MontageChain.IsValidIndex(NextIndex))
-				{
-					const FPatternMontageData& NextEntry = PatternData->MontageChain[NextIndex];
-					const bool bNextIsSameMontage = (NextEntry.Montage == nullptr || NextEntry.Montage == SectionMontage);
+	CurrentChainIndex++;
 
-					if (bNextIsSameMontage && !CurrentEntry.SectionName.IsNone() && !NextEntry.SectionName.IsNone())
-					{
-						AnimInstance->Montage_SetNextSection(CurrentEntry.SectionName, NextEntry.SectionName, SectionMontage);
-					}
-					else
-					{
-						// 다른 몽타주 경계 — 현재 섹션에서 종료 → OnMontageEnded에서 체인 전환
-						if (!CurrentEntry.SectionName.IsNone())
-						{
-							AnimInstance->Montage_SetNextSection(CurrentEntry.SectionName, NAME_None, SectionMontage);
-						}
-					}
-				}
-				else
-				{
-					// 마지막 섹션 — 기본 연결 끊기
-					if (!CurrentEntry.SectionName.IsNone())
-					{
-						AnimInstance->Montage_SetNextSection(CurrentEntry.SectionName, NAME_None, SectionMontage);
-					}
-				}
-			}
+	if (PatternData->MontageChain.IsValidIndex(CurrentChainIndex))
+	{
+		// 새 섹션의 PlayRate 적용 — SetNextSection은 배속을 변경하지 않으므로 명시적 갱신
+		// 천사 장신구 슬로우 누적 곱
+		const FPatternMontageData& CurrentEntry = PatternData->MontageChain[CurrentChainIndex];
+		AnimInst->Montage_SetPlayRate(Montage, CurrentEntry.PlayRate * CurrentAttackAnimRate);
 
-			UE_LOG(LogDesecration, Log,
-				TEXT("T3_MidBoss: NextCombo — 섹션 진행 체인[%d] (패턴:'%s', 배속:%.1f)"),
-				CurrentChainIndex, *CurrentPatternName.ToString(),
-				PatternData->MontageChain.IsValidIndex(CurrentChainIndex) ? PatternData->MontageChain[CurrentChainIndex].PlayRate : -1.f);
-		}
+		// 동적 섹션 전환: 현재 섹션 → 다음 섹션 설정
+		// 같은 섹션 이름이 반복되어도 매 NextCombo마다 갱신하므로 정확한 다음 섹션 지정
+		SetupDynamicNextSection(AnimInst, PatternData->MontageChain[0].Montage, *PatternData, CurrentChainIndex);
 	}
-	// --- 넓은 판정 ON/OFF (대쉬 내려찍기 등) ---
-	else if (Name.Equals(TEXT("WideAttackStart")))
-	{
-		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: WideAttackStart 노티파이 수신"));
-		if (WeaponComponent) { WeaponComponent->SetWideCollisionEnabled(true); }
-	}
-	else if (Name.Equals(TEXT("WideAttackEnd")))
-	{
-		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: WideAttackEnd 노티파이 수신"));
-		if (WeaponComponent) { WeaponComponent->SetWideCollisionEnabled(false); }
-	}
-	// --- 팔 공격 판정 ON/OFF (맨손 타격 등) ---
-	else if (Name.Equals(TEXT("BodyAttackStart")))
-	{
-		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: BodyAttackStart 노티파이 수신"));
-		if (WeaponComponent) { WeaponComponent->SetBodyAttackCollisionEnabled(true); }
-	}
-	else if (Name.Equals(TEXT("BodyAttackEnd")))
-	{
-		UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: BodyAttackEnd 노티파이 수신"));
-		if (WeaponComponent) { WeaponComponent->SetBodyAttackCollisionEnabled(false); }
-	}
+
+	UE_LOG(LogDesecration, Log,
+		TEXT("T3_MidBoss: NextCombo — 섹션 진행 체인[%d] (패턴:'%s', 배속:%.1f)"),
+		CurrentChainIndex, *CurrentPatternName.ToString(),
+		PatternData->MontageChain.IsValidIndex(CurrentChainIndex) ? PatternData->MontageChain[CurrentChainIndex].PlayRate : -1.f);
 }
 
 bool AT3MidBossMonster::ShouldTriggerNotify(FName NotifyName) const
@@ -448,42 +447,13 @@ bool AT3MidBossMonster::ShouldTriggerNotify(FName NotifyName) const
 	}
 
 	// 1. 노티파이 타입별 기본 확률 조회
-	const FString Name = NotifyName.ToString();
-	float BaseChance = 1.0f;
-
-	if (Name.Equals(TEXT("Slow")))
-	{
-		BaseChance = PatternData->NotifyChances.SlowChance;
-	}
-	else if (Name.Equals(TEXT("Fast")))
-	{
-		BaseChance = PatternData->NotifyChances.FastChance;
-	}
-	else if (Name.Equals(TEXT("Step")))
-	{
-		BaseChance = PatternData->NotifyChances.StepChance;
-	}
+	const float BaseChance = GetBaseNotifyChance(NotifyName, *PatternData);
 
 	// 2. 보정기 적용 (거리/Pity/Usage/HP)
 	float ModifiedChance = BaseChance;
 	if (NotifyModifier)
 	{
-		FNotifyModifierContext Context;
-		Context.PatternName = CurrentPatternName;
-		Context.NotifyName = NotifyName;
-
-		// 거리 계산
-		if (CombatTarget)
-		{
-			Context.DistanceToTarget = FVector::Dist(GetActorLocation(), CombatTarget->GetActorLocation());
-		}
-
-		// HP 비율 계산
-		if (MidBossStats.MaxHP > 0.f)
-		{
-			Context.HPPercent = MidBossStats.CurrentHP / MidBossStats.MaxHP;
-		}
-
+		const FNotifyModifierContext Context = BuildNotifyModifierContext(NotifyName);
 		ModifiedChance = NotifyModifier->CalculateFinalChance(BaseChance, Context);
 	}
 
@@ -500,6 +470,48 @@ bool AT3MidBossMonster::ShouldTriggerNotify(FName NotifyName) const
 	}
 
 	return FMath::FRand() < FinalChance;
+}
+
+float AT3MidBossMonster::GetBaseNotifyChance(FName NotifyName, const FMidBossAttackPattern& PatternData) const
+{
+	const FString Name = NotifyName.ToString();
+
+	if (Name.Equals(TEXT("Slow")))
+	{
+		return PatternData.NotifyChances.SlowChance;
+	}
+	if (Name.Equals(TEXT("Fast")))
+	{
+		return PatternData.NotifyChances.FastChance;
+	}
+	if (Name.Equals(TEXT("Step")))
+	{
+		return PatternData.NotifyChances.StepChance;
+	}
+
+	// 그 외 노티파이는 항상 발동 (기본 확률 1.0)
+	return 1.0f;
+}
+
+FNotifyModifierContext AT3MidBossMonster::BuildNotifyModifierContext(FName NotifyName) const
+{
+	FNotifyModifierContext Context;
+	Context.PatternName = CurrentPatternName;
+	Context.NotifyName = NotifyName;
+
+	// 거리 계산
+	if (CombatTarget)
+	{
+		Context.DistanceToTarget = FVector::Dist(GetActorLocation(), CombatTarget->GetActorLocation());
+	}
+
+	// HP 비율 계산
+	if (MidBossStats.MaxHP > 0.f)
+	{
+		Context.HPPercent = MidBossStats.CurrentHP / MidBossStats.MaxHP;
+	}
+
+	return Context;
 }
 
 float AT3MidBossMonster::ModifyNotifyChance_Implementation(FName NotifyName, float BaseChance) const
@@ -612,62 +624,92 @@ void AT3MidBossMonster::PlayCurrentChainMontage()
 	// MotionWarping — 몽타주 시작 시 자동 호출 안 함
 	// 몽타주에 WarpTarget 노티파이를 배치하여 원하는 타이밍에 스냅샷
 
-	// === 섹션 콤보 모드: 첫 진입 시 섹션 체인 설정 ===
+	// 섹션 콤보 첫 진입 vs 일반 체인 모드 (섹션 콤보 후속의 다른 몽타주 포함)
 	if (PatternData->bUseSectionCombo && CurrentChainIndex == 0)
 	{
-		// 시작 섹션 지정하여 재생 — 천사 장신구 슬로우 누적 곱
-		const FName StartSection = MontageData.SectionName.IsNone() ? NAME_None : MontageData.SectionName;
-		PlayAnimMontage(MontageData.Montage, MontageData.PlayRate * CurrentAttackAnimRate, StartSection);
+		PlaySectionComboFirstEntry(*PatternData, MontageData);
+	}
+	else
+	{
+		// 리액션 배율은 패턴 단위로 전달 — 모든 체인 엔트리가 동일 가속을 적용받도록
+		PlayChainMontageEntry(MontageData, PatternData->ReactionPlayRateMultiplier);
+	}
+}
 
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		if (AnimInstance)
-		{
-			UAnimMontage* SectionMontage = MontageData.Montage;
+// ============================================================
+// 체인 몽타주 재생 헬퍼
+// ============================================================
 
-			// 동적 섹션 전환: 첫 번째 전환만 설정 (나머지는 NextCombo에서 동적 설정)
-			// 같은 섹션 이름이 반복될 때 SetNextSection 덮어쓰기 문제 방지
-			if (PatternData->MontageChain.Num() > 1)
-			{
-				const FPatternMontageData& Next = PatternData->MontageChain[1];
-				const bool bNextIsSameMontage = (Next.Montage == nullptr || Next.Montage == SectionMontage);
-				if (bNextIsSameMontage && !MontageData.SectionName.IsNone() && !Next.SectionName.IsNone())
-				{
-					AnimInstance->Montage_SetNextSection(MontageData.SectionName, Next.SectionName, SectionMontage);
-				}
-				else
-				{
-					// 다른 몽타주 경계 — 현재 섹션에서 종료
-					if (!MontageData.SectionName.IsNone())
-					{
-						AnimInstance->Montage_SetNextSection(MontageData.SectionName, NAME_None, SectionMontage);
-					}
-				}
-			}
-			else
-			{
-				// 섹션 1개뿐 — 기본 연결 끊기
-				if (!MontageData.SectionName.IsNone())
-				{
-					AnimInstance->Montage_SetNextSection(MontageData.SectionName, NAME_None, SectionMontage);
-				}
-			}
-
-			FOnMontageEnded EndDelegate;
-			EndDelegate.BindUObject(this, &AT3MidBossMonster::OnMontageEnded);
-			AnimInstance->Montage_SetEndDelegate(EndDelegate, SectionMontage);
-		}
-
-		UE_LOG(LogDesecration, Log,
-			TEXT("T3_MidBoss: 섹션 콤보 시작 — 패턴:'%s' 섹션:'%s' (배속:%.1f, 섹션 수:%d)"),
-			*CurrentPatternName.ToString(),
-			StartSection.IsNone() ? TEXT("Default") : *StartSection.ToString(),
-			MontageData.PlayRate, PatternData->MontageChain.Num());
+void AT3MidBossMonster::SetupDynamicNextSection(UAnimInstance* AnimInst, UAnimMontage* SectionMontage,
+	const FMidBossAttackPattern& PatternData, int32 CurrentIdx) const
+{
+	if (!AnimInst || !SectionMontage || !PatternData.MontageChain.IsValidIndex(CurrentIdx))
+	{
 		return;
 	}
 
-	// === 기존 체인 모드 (또는 섹션 콤보 후속의 다른 몽타주) === 천사 장신구 슬로우 누적 곱
+	const FPatternMontageData& CurrentEntry = PatternData.MontageChain[CurrentIdx];
+	if (CurrentEntry.SectionName.IsNone())
+	{
+		// 현재 섹션 이름이 없으면 SetNextSection 호출 자체가 무의미
+		return;
+	}
+
+	const int32 NextIndex = CurrentIdx + 1;
+
+	// 다음 인덱스가 있고 같은 몽타주(또는 nullptr)이며 섹션 이름이 있으면 → 체인
+	// 그 외 → 현재 섹션에서 종료 (NAME_None)
+	if (PatternData.MontageChain.IsValidIndex(NextIndex))
+	{
+		const FPatternMontageData& NextEntry = PatternData.MontageChain[NextIndex];
+		const bool bNextIsSameMontage = (NextEntry.Montage == nullptr || NextEntry.Montage == SectionMontage);
+
+		if (bNextIsSameMontage && !NextEntry.SectionName.IsNone())
+		{
+			AnimInst->Montage_SetNextSection(CurrentEntry.SectionName, NextEntry.SectionName, SectionMontage);
+			return;
+		}
+	}
+
+	// 다른 몽타주 경계 / 마지막 섹션 — 현재 섹션에서 종료
+	AnimInst->Montage_SetNextSection(CurrentEntry.SectionName, NAME_None, SectionMontage);
+}
+
+void AT3MidBossMonster::PlaySectionComboFirstEntry(const FMidBossAttackPattern& PatternData,
+	const FPatternMontageData& MontageData)
+{
+	// 시작 섹션 지정하여 재생 — 천사 장신구 슬로우 누적 곱 + 리액션 가속 배율
 	const FName StartSection = MontageData.SectionName.IsNone() ? NAME_None : MontageData.SectionName;
-	PlayAnimMontage(MontageData.Montage, MontageData.PlayRate * CurrentAttackAnimRate, StartSection);
+	const float FinalPlayRate = MontageData.PlayRate * CurrentAttackAnimRate * PatternData.ReactionPlayRateMultiplier;
+	PlayAnimMontage(MontageData.Montage, FinalPlayRate, StartSection);
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance)
+	{
+		UAnimMontage* SectionMontage = MontageData.Montage;
+
+		// 동적 섹션 전환: 첫 번째 전환만 설정 (나머지는 NextCombo에서 동적 설정)
+		// 같은 섹션 이름이 반복될 때 SetNextSection 덮어쓰기 문제 방지
+		SetupDynamicNextSection(AnimInstance, SectionMontage, PatternData, 0);
+
+		FOnMontageEnded EndDelegate;
+		EndDelegate.BindUObject(this, &AT3MidBossMonster::OnMontageEnded);
+		AnimInstance->Montage_SetEndDelegate(EndDelegate, SectionMontage);
+	}
+
+	UE_LOG(LogDesecration, Log,
+		TEXT("T3_MidBoss: 섹션 콤보 시작 — 패턴:'%s' 섹션:'%s' (최종배속:%.2f, 리액션×%.2f, 섹션 수:%d)"),
+		*CurrentPatternName.ToString(),
+		StartSection.IsNone() ? TEXT("Default") : *StartSection.ToString(),
+		FinalPlayRate, PatternData.ReactionPlayRateMultiplier, PatternData.MontageChain.Num());
+}
+
+void AT3MidBossMonster::PlayChainMontageEntry(const FPatternMontageData& MontageData, float ReactionPlayRateMultiplier)
+{
+	// 천사 장신구 슬로우 누적 곱 + 리액션 가속 배율
+	const FName StartSection = MontageData.SectionName.IsNone() ? NAME_None : MontageData.SectionName;
+	const float FinalPlayRate = MontageData.PlayRate * CurrentAttackAnimRate * ReactionPlayRateMultiplier;
+	PlayAnimMontage(MontageData.Montage, FinalPlayRate, StartSection);
 
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance)
@@ -685,17 +727,17 @@ void AT3MidBossMonster::PlayCurrentChainMontage()
 	}
 
 	UE_LOG(LogDesecration, Log,
-		TEXT("T3_MidBoss: 몽타주 재생 — 패턴:'%s' 체인[%d] (배속:%.1f, 데미지:%.0f, 섹션:'%s')"),
+		TEXT("T3_MidBoss: 몽타주 재생 — 패턴:'%s' 체인[%d] (최종배속:%.2f, 리액션×%.2f, 데미지:%.0f, 섹션:'%s')"),
 		*CurrentPatternName.ToString(), CurrentChainIndex,
-		MontageData.PlayRate, MontageData.Damage,
+		FinalPlayRate, ReactionPlayRateMultiplier, MontageData.Damage,
 		StartSection.IsNone() ? TEXT("None") : *StartSection.ToString());
 }
 
-void AT3MidBossMonster::OnChainBlendingOut(UAnimMontage* Montage, bool bInterrupted)
+bool AT3MidBossMonster::HandleChainCallbackPrelude(bool bInterrupted, const TCHAR* InterruptLogPrefix)
 {
 	if (!IsExecutingPattern())
 	{
-		return;
+		return true;
 	}
 
 	if (WeaponComponent)
@@ -708,9 +750,19 @@ void AT3MidBossMonster::OnChainBlendingOut(UAnimMontage* Montage, bool bInterrup
 	if (bInterrupted)
 	{
 		UE_LOG(LogDesecration, Log,
-			TEXT("T3_MidBoss: 체인 블렌드아웃 인터럽트 — 패턴:'%s' 체인[%d]"),
-			*CurrentPatternName.ToString(), CurrentChainIndex);
+			TEXT("T3_MidBoss: %s 인터럽트 — 패턴:'%s' 체인[%d]"),
+			InterruptLogPrefix, *CurrentPatternName.ToString(), CurrentChainIndex);
 		ResetPatternState();
+		return true;
+	}
+
+	return false;
+}
+
+void AT3MidBossMonster::OnChainBlendingOut(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (HandleChainCallbackPrelude(bInterrupted, TEXT("체인 블렌드아웃")))
+	{
 		return;
 	}
 
@@ -720,24 +772,8 @@ void AT3MidBossMonster::OnChainBlendingOut(UAnimMontage* Montage, bool bInterrup
 
 void AT3MidBossMonster::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	if (!IsExecutingPattern())
+	if (HandleChainCallbackPrelude(bInterrupted, TEXT("몽타주")))
 	{
-		return;
-	}
-
-	if (WeaponComponent)
-	{
-		WeaponComponent->SetAttackCollisionEnabled(false);
-		WeaponComponent->SetWideCollisionEnabled(false);
-	}
-	bIsMovingToTarget = false;
-
-	if (bInterrupted)
-	{
-		UE_LOG(LogDesecration, Log,
-			TEXT("T3_MidBoss: 몽타주 인터럽트 — 패턴:'%s' 체인[%d]"),
-			*CurrentPatternName.ToString(), CurrentChainIndex);
-		ResetPatternState();
 		return;
 	}
 
