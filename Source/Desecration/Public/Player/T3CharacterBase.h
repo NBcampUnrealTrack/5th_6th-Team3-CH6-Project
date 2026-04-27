@@ -14,10 +14,11 @@ class USpringArmComponent;
 class UCameraComponent;
 class UT3CombatComponent;
 class UDataTable;
-class UT3InventoryComponent; 
+class UT3InventoryComponent;
 class UT3PlayerEquipmentComponent;
 class UT3ItemUseComponent;
 class UT3CharacterDataAsset;
+class UT3CommonSkillComponent;
 
 
 UENUM(BlueprintType)
@@ -47,6 +48,7 @@ enum class ET3StatType : uint8
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnStatChangedDelegate, ET3StatType, StatType, float, CurrentValue, float, MaxValue);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCoreStatChangedDelegate, ET3StatType, StatType, int32, Delta);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnForcedMoveEndSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSellItemRequested, const FInventorySlot&, SlotData, const int32&, Count, EItemType, ItemType);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUndyingTriggered);
@@ -63,6 +65,11 @@ AT3CharacterBase();
 // 캐릭터 스탯 델리게이트 바인딩 함수
 UPROPERTY(BlueprintAssignable, Category = "Stat | Events")
 FOnStatChangedDelegate OnStatChanged;
+
+// 핵심 스탯(Vigor/Endurance/Mind/Strength/Intelligence) 변경 델리게이트
+// 룬 등 외부 시스템이 핵심 스탯을 변경할 때 파생 능력치(HP/Stamina/Mana/Attack)도 연동됨
+UPROPERTY(BlueprintAssignable, Category = "Stat | Events")
+FOnCoreStatChangedDelegate OnCoreStatChanged;
 
 // 강제 이동 완료 델리게이트 바인딩 함수
 UPROPERTY(BlueprintAssignable, Category = "Events")
@@ -133,6 +140,8 @@ public:
 	FORCEINLINE TObjectPtr <USpringArmComponent> GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE TObjectPtr <UCameraComponent> GetFollowCamera() const { return FollowCamera; }
 	FORCEINLINE TObjectPtr <UT3CombatComponent> GetCombatComponent() const { return CombatComponent; }
+	UFUNCTION(BlueprintPure, Category = "Boss Skill")
+	FORCEINLINE UT3CommonSkillComponent* GetCommonSkillComponent() const { return CommonSkillComponent; }
 
 	void Move(const FVector2D& Value);
 	void Look(const FVector2D& Value);
@@ -160,11 +169,19 @@ public:
 	bool bIsSuperArmor = false;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
-	TObjectPtr<UT3InventoryComponent> InventoryComponent; 
+	TObjectPtr<UT3InventoryComponent> InventoryComponent;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TObjectPtr<UT3ItemUseComponent> ItemUseComponent;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
 	TObjectPtr<UT3PlayerEquipmentComponent> EquipComp;
+
+	// BP에서 BP_T3CommonSkillComponent를 지정한다.
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Boss Skill")
+	TSubclassOf<UT3CommonSkillComponent> CommonSkillComponentClass;
+
+	// 보스 스킬 컴포넌트 (ApplyCharacterData에서 생성 및 링크)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Boss Skill")
+	TObjectPtr<UT3CommonSkillComponent> CommonSkillComponent;
 
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
 	void OnEquipmentStatsUpdated(float Atk, float Def, float WeaponLevel);
@@ -492,6 +509,11 @@ public:
 
 		UFUNCTION(BlueprintCallable, Category = "Stat|Logic")
 		void SetWeaponLevel(float CurrentWeaponLevel);
+
+		// 룬 등 외부 시스템용: 핵심 스탯을 Delta만큼 변경하고 파생 능력치를 자동 갱신
+		// Delta > 0이면 증가, Delta < 0이면 감소 (UpgradeStat과 동일한 공식 사용)
+		UFUNCTION(BlueprintCallable, Category = "Stat|Logic")
+		void ModifyCoreStatByDelta(ET3StatType StatType, int32 Delta);
 		
 
 

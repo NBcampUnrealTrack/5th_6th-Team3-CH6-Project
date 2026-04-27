@@ -19,6 +19,7 @@
 #include "DrawDebugHelpers.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Player/T3SkillComponentBase.h"
+#include "Player/T3CommonSkillComponent.h"
 #include "Player/T3LockOnTarget.h"
 #include "Components/WidgetComponent.h"
 #include "Monster/T3MonsterBase.h"
@@ -265,6 +266,7 @@ void UT3CombatComponent::ToggleLockOn()
 		SetComponentTickEnabled(true);
 
 		// 카메라 랙 설정
+		DefaultSocketOffsetZ = SpringArm->SocketOffset.Z;
 		SpringArm->bEnableCameraRotationLag = true;
 		SpringArm->bEnableCameraLag = true;
 		OwnerChar->GetCharacterMovement()->bOrientRotationToMovement = false;
@@ -354,7 +356,7 @@ void UT3CombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	// 바라보기 회전 
 	FVector CameraLocation = SpringArm->GetComponentLocation(); // 캐릭터 위치가 아닌 카메라 기준
 	FRotator LookAtRot = UKismetMathLibrary::FindLookAtRotation(CameraLocation, TargetLocation);
-	
+	LookAtRot.Roll = 0.f;
 	LookAtRot.Pitch = FMath::Clamp(LookAtRot.Pitch, -75.f, 20.f);
 	
 	// 2. ControlRotation에 직접 Set하는 대신 RInterpTo를 사용
@@ -520,7 +522,7 @@ void UT3CombatComponent::ResetLockOn()
 		SpringArm->bEnableCameraRotationLag = false;
 		SpringArm->bEnableCameraLag = false;
 		SpringArm->TargetArmLength = DefaultArmLength;
-		SpringArm->SocketOffset.Z = 50.f;
+		SpringArm->SocketOffset.Z = DefaultSocketOffsetZ;
 		OwnerPC->PlayerCameraManager->SetFOV(90.f);
 	}
 
@@ -561,6 +563,7 @@ void UT3CombatComponent::ExecuteHitLogic(AActor* DamageCauser, float Damage, con
 					TaoistSkill->SetEmpowermentState(true);
 				}
 			}
+			return;
 		}
 		// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Result: [EVADE] - Invincible Frame!"));
 
@@ -894,12 +897,12 @@ void UT3CombatComponent::ChangeActiveSlot(ESlotType Type)
 		int32 S1_ID = SkillComp->GetSkillIDBySlotIndex(1);
 		int32 S2_ID = SkillComp->GetSkillIDBySlotIndex(2);
 
-		// GetSkillDataByID가 Const 포인터나 레퍼런스를 반환하는지 확인 필수
-		FSkillData* Data1 = SkillComp->GetSkillDataByID(S1_ID);
+		// GetSkillDataFull: 직업 스킬(1~4)과 보스 스킬(5~8) 모두 조회
+		FSkillData* Data1 = SkillComp->GetSkillDataFull(S1_ID);
 		FSkillData SafeData1 = Data1 ? *Data1 : FSkillData();
 		SkillComp->OnSkillSlotUpdated.Broadcast(1, S1_ID, SafeData1);
 
-		FSkillData* Data2 = SkillComp->GetSkillDataByID(S2_ID);
+		FSkillData* Data2 = SkillComp->GetSkillDataFull(S2_ID);
 		FSkillData SafeData2 = Data2 ? *Data2 : FSkillData();
 		SkillComp->OnSkillSlotUpdated.Broadcast(2, S2_ID, SafeData2);
 	}
@@ -910,9 +913,23 @@ void UT3CombatComponent::ExecuteCurrentSlotAction(ESlotType Type)
 	switch (Type)
 	{
 	case ESlotType::Skill:
+	{
 		bIsBasicAttacking = false;
-		if (SkillComp) SkillComp->ExecuteSkill(CurrentSkillSlot);
+		if (!SkillComp) break;
+
+		int32 CurrentSkillID = SkillComp->GetSkillIDBySlotIndex(CurrentSkillSlot);
+		if (UT3CommonSkillComponent::IsBossSkillID(CurrentSkillID) && CommonSkillComp)
+		{
+			// 보스 스킬: CommonSkillComponent에서 실행
+			CommonSkillComp->ExecuteBossSkill(CurrentSkillID);
+		}
+		else
+		{
+			// 직업 스킬: 기존 방식
+			SkillComp->ExecuteSkill(CurrentSkillSlot);
+		}
 		break;
+	}
 	case ESlotType::Consumable:
 		// ItemComp->UseConsumable(CurrentConsumableSlot);
 		UE_LOG(LogTemp, Log, TEXT("Using Consumable Slot: %d"), CurrentConsumableSlot);
@@ -929,8 +946,20 @@ void UT3CombatComponent::ExecuteCurrentSlotAction_Completed(ESlotType Type)
 	switch (Type)
 	{
 	case ESlotType::Skill:
-		if (SkillComp) SkillComp->ExecuteSkill_Completed(CurrentSkillSlot);
+	{
+		if (!SkillComp) break;
+
+		int32 CurrentSkillID = SkillComp->GetSkillIDBySlotIndex(CurrentSkillSlot);
+		if (UT3CommonSkillComponent::IsBossSkillID(CurrentSkillID) && CommonSkillComp)
+		{
+			CommonSkillComp->ExecuteBossSkillCompleted(CurrentSkillID);
+		}
+		else
+		{
+			SkillComp->ExecuteSkill_Completed(CurrentSkillSlot);
+		}
 		break;
+	}
 	case ESlotType::Consumable:
 		break;
 	case ESlotType::Potion:

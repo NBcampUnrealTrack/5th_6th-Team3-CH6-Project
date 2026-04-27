@@ -71,9 +71,18 @@ protected:
 	
 	UFUNCTION(BlueprintCallable, Category="UI")
 	void SetInventoryOpen(bool bIsOpen);
-	
+
+	UFUNCTION(BlueprintCallable, Category="UI")
+	void SetSkillWindowOpen(bool bIsOpen);
+
 	UFUNCTION(BlueprintCallable, Category="UI")
 	void SetShopUIOpen(bool bIsOpen);
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<class UT3SkillWindowWidget> SkillWindowWidgetClass;
+
+	UPROPERTY(BlueprintReadOnly, Category = "UI")
+	TObjectPtr<class UT3SkillWindowWidget> SkillWindowWidget;
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUserWidget> CombatWidgetClass;
