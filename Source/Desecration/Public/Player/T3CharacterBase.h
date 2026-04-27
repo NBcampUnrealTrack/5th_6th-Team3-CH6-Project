@@ -337,6 +337,9 @@ public:
 	//스킬 사용 불가 변수
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ForceMove")
 	bool bIsSkillCanNotUse = false;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill")
+	bool bUsingSkill = false;
 
 #pragma region Rune
 public:

@@ -137,4 +137,7 @@ void AT3BossMonster::ApplyBonusDamage(float BonusDamage)
 
 void AT3BossMonster::SetAnimationSpeedMultiplier(float MoveAnimMultiplier, float AttackAnimMultiplier)
 {
+	BossStats.MoveSpeed = MoveAnimMultiplier;
+	BossStats.AttackSpeed = AttackAnimMultiplier;
+	OnBossActionSpeedChanged.Broadcast();
 }
