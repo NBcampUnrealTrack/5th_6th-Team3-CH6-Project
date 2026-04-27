@@ -141,6 +141,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Dissolve")
 	float WeaponDissolveDuration = 2.f;
 
+	// 디버그 — 무기/팔 판정 캡슐을 매 프레임 인게임에 표시 (Fallen Angel sphere처럼)
+	// ON: 위치 항상 표시, 콜리전 활성화 시 색상 강조 → BP 캡슐 모양과 실제 판정 위치 검증용
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Debug")
+	bool bShowDebugHitRange = false;
+
 private:
 	// 무기 드롭 여부
 	bool bIsWeaponDropped = false;
@@ -153,6 +158,12 @@ private:
 	bool bIsBlendingSocket = false;
 	float SocketBlendElapsed = 0.f;
 	FTransform SocketBlendStartRelative = FTransform::Identity;
+
+	// 첫 부착 시 BP 튜닝값 캐시 — 부모 스케일 보정 시 누적 분할 방지
+	// (RelLoc은 부모.WorldScale이 곱해져 위치가 어긋나므로 BP값 ÷ 부모스케일 적용)
+	bool bHitBoxBPLocCached = false;
+	FVector HitBoxBPRelLoc = FVector::ZeroVector;
+	FVector HitBoxWideBPRelLoc = FVector::ZeroVector;
 
 	// 스윙당 히트된 액터 (중복 히트 방지)
 	UPROPERTY()
@@ -178,4 +189,7 @@ private:
 
 	UFUNCTION()
 	void OnWeaponDissolveFinished();
+
+	// bShowDebugHitRange 가 ON 일 때 매 틱 호출 — 캡슐/구 위치 시각화 (DrawDebug)
+	void DrawDebugHitShapes() const;
 };

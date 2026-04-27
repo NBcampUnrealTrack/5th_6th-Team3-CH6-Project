@@ -264,6 +264,149 @@ struct DESECRATION_API FT3STT_Disengage : public FStateTreeTaskCommonBase
 };
 
 // ============================================================
+// Task: FT3STT_TestRoll
+// 임시 데모용 — 8방향 회피 모션 시각 검증 (Desmond 프로토타입)
+// 인덱스 순서: 0=0° / 1=45° / 2=90° / 3=135° / 4=180° / 5=225° / 6=270° / 7=315°
+//              (Forward / FR / R / BR / Backward / BL / L / FL)
+// 실제 회피 시스템(i-frame, 빈도 제어, 후속 공격)은 별도 구현 예정
+// ============================================================
+
+USTRUCT()
+struct FT3STT_TestRollInstanceData
+{
+	GENERATED_BODY()
+
+	// 8방향 몽타주 / 방향별 루트모션 배율은 Boss->RollMontages_8Dir / Boss->RollDirectionScales로 이동됨
+	// (BackStepMontage와 동일 패턴 — 캐릭터 애셋은 Boss 소유, Task는 참조만)
+
+	// true면 8방향 중 랜덤 선택 / false면 FixedDirectionYaw 사용
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	bool bRandomDirection = true;
+
+	// 보스 정면 기준 각도 (0/45/90/...) — bRandomDirection=false일 때만 사용
+	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (EditCondition = "!bRandomDirection"))
+	float FixedDirectionYaw = 0.f;
+
+	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "0.1"))
+	float PlayRate = 1.f;
+
+	// 루트모션 거리 배율 (마스터) — 몽타주 원본 기준 스케일
+	// 1.0 = 원본 거리, 0.5 = 절반, 1.5 = 1.5배, 0 = 제자리 (모션만 재생)
+	// 재생 속도(PlayRate)와 무관하게 이동 거리만 조절
+	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "0.0", ClampMax = "3.0"))
+	float RootMotionScale = 1.0f;
+
+	// 방향별 추가 배율은 Boss->RollDirectionScales로 이동됨 (최종 = RootMotionScale × Boss->RollDirectionScales[Idx])
+
+	// 롤 종료 후 다음 트랜지션까지 대기 (시각 검증/연속 롤 간격 시뮬용)
+	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "0.0"))
+	float PostRollDelay = 1.5f;
+
+	// i-frame 부여 — Boss.State.Invulnerable 태그를 몽타주 전체 구간에 적용
+	// (정식 무적 분기는 AT3MidBossMonster::TakeDamage 참조 — 데미지 0 처리)
+	// false 시 STT가 태그를 토글하지 않음 — 몽타주 ANS_BossInvulnerable 트랙으로 정밀 구간(5~45f) 제어할 때 사용
+	UPROPERTY(EditAnywhere, Category = "Parameter")
+	bool bUseInvulnerableTag = true;
+
+	UPROPERTY(EditAnywhere, Category = "Context")
+	TObjectPtr<AT3MidBossMonster> Boss = nullptr;
+
+	// 내부 상태
+	UPROPERTY()
+	TObjectPtr<UAnimMontage> ActiveRoll = nullptr;
+
+	UPROPERTY()
+	bool bRollEnded = false;
+
+	UPROPERTY()
+	float DelayElapsed = 0.f;
+
+	// ExitState에서 스케일 복원 여부 판단용 (EnterState에서 적용했을 때만 true)
+	UPROPERTY()
+	bool bAppliedScale = false;
+};
+
+USTRUCT(meta = (DisplayName = "Test Roll (Desmond)"))
+struct DESECRATION_API FT3STT_TestRoll : public FStateTreeTaskCommonBase
+{
+	GENERATED_BODY()
+
+	using FInstanceDataType = FT3STT_TestRollInstanceData;
+
+	virtual const UStruct* GetInstanceDataType() const override
+	{
+		return FT3STT_TestRollInstanceData::StaticStruct();
+	}
+
+	virtual EStateTreeRunStatus EnterState(FStateTreeExecutionContext& Context,
+		const FStateTreeTransitionResult& Transition) const override;
+	virtual EStateTreeRunStatus Tick(FStateTreeExecutionContext& Context,
+		const float DeltaTime) const override;
+	virtual void ExitState(FStateTreeExecutionContext& Context,
+		const FStateTreeTransitionResult& Transition) const override;
+};
+
+// ============================================================
+// Task: FT3STT_Block
+// 막기 시퀀스 트리거 — Boss->StartBlockSequence() 호출, In→Loop(자기루프)→Out 흐름은 Boss가 직접 관리
+// 종료 정책 (STT 측):
+//   1. MaxDuration 경과 → RequestEndBlockSequence (Loop가 다음 BlendingOut에 Out으로 전환)
+//   2. 막힘 횟수 도달 (MaxBlockHits>0) → RequestEndBlockSequence
+//   3. CurrentBlockPhase == Idle 도달 시 Succeeded 반환 (Out 끝까지 자연 종료)
+// 외부 인터럽트 (BlockReaction 이벤트 등 ST 트랜지션) → ExitState에서 StopBlockSequence 호출
+// ============================================================
+
+USTRUCT()
+struct FT3STT_BlockInstanceData
+{
+	GENERATED_BODY()
+
+	// 종료 요청 송신까지의 시간 (초) — 이 시간 경과 시 RequestEndBlockSequence 호출
+	// (실제 STT Succeeded는 Out 단계까지 끝나고 Phase=Idle 도달 시점)
+	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "0.1"))
+	float MaxDuration = 3.0f;
+
+	// 막아낸 횟수가 이 값에 도달하면 RequestEndBlockSequence (조기 종료)
+	// 0 = 무제한 (시간으로만 종료)
+	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "0"))
+	int32 MaxBlockHits = 2;
+
+	UPROPERTY(EditAnywhere, Category = "Context")
+	TObjectPtr<AT3MidBossMonster> Boss = nullptr;
+
+	// 내부 상태 — 진입 시점의 막힘 카운트 (델타 측정용, StartBlockSequence가 0으로 리셋하므로 보통 0)
+	UPROPERTY()
+	int32 InitialHitsCount = 0;
+
+	UPROPERTY()
+	float ElapsedTime = 0.f;
+
+	// RequestEndBlockSequence를 한 번만 호출하기 위한 플래그
+	UPROPERTY()
+	bool bEndRequested = false;
+};
+
+USTRUCT(meta = (DisplayName = "Block (Defense)"))
+struct DESECRATION_API FT3STT_Block : public FStateTreeTaskCommonBase
+{
+	GENERATED_BODY()
+
+	using FInstanceDataType = FT3STT_BlockInstanceData;
+
+	virtual const UStruct* GetInstanceDataType() const override
+	{
+		return FT3STT_BlockInstanceData::StaticStruct();
+	}
+
+	virtual EStateTreeRunStatus EnterState(FStateTreeExecutionContext& Context,
+		const FStateTreeTransitionResult& Transition) const override;
+	virtual EStateTreeRunStatus Tick(FStateTreeExecutionContext& Context,
+		const float DeltaTime) const override;
+	virtual void ExitState(FStateTreeExecutionContext& Context,
+		const FStateTreeTransitionResult& Transition) const override;
+};
+
+// ============================================================
 // Task: FT3STT_HandleDeath
 // 사망 상태 — StateTree 정지
 // ============================================================

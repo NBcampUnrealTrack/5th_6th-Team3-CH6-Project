@@ -81,25 +81,8 @@ void AT3MidBossMonster::ActivateBoss(AActor* Activator)
 		ExternalActivationTrigger->SetActorEnableCollision(false);
 	}
 
-	// BGM 재생 (2D — 공간 감쇠 없이 음악처럼 재생)
-	if (BossBGM)
-	{
-		BGMAudioComponent = UGameplayStatics::SpawnSound2D(this, BossBGM, BGMVolume);
-	}
-
-	// 보스 HP바 위젯 생성 (PlayerController 기반)
-	if (BossHPBarWidgetClass)
-	{
-		if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
-		{
-			BossHPBarWidget = CreateWidget<UT3MidBossHPBarWidget>(PC, BossHPBarWidgetClass);
-			if (BossHPBarWidget)
-			{
-				BossHPBarWidget->TargetBoss = this;
-				BossHPBarWidget->AddToViewport();
-			}
-		}
-	}
+	PlayBossBGM();
+	ShowBossHPBar();
 
 	OnMidBossActivated.Broadcast();
 
@@ -108,14 +91,49 @@ void AT3MidBossMonster::ActivateBoss(AActor* Activator)
 		BossBGM ? TEXT("O") : TEXT("X"),
 		BossHPBarWidget ? TEXT("O") : TEXT("X"));
 
-	// 인트로 몽타주 재생 → 완료 후 StateTree 시작
+	PlayIntroMontageOrStart();
+}
+
+// BGM 재생 (2D — 공간 감쇠 없이 음악처럼 재생)
+void AT3MidBossMonster::PlayBossBGM()
+{
+	if (BossBGM)
+	{
+		BGMAudioComponent = UGameplayStatics::SpawnSound2D(this, BossBGM, BGMVolume);
+	}
+}
+
+// 보스 HP바 위젯 생성 (PlayerController 기반)
+void AT3MidBossMonster::ShowBossHPBar()
+{
+	if (!BossHPBarWidgetClass)
+	{
+		return;
+	}
+
+	APlayerController* PC = GetWorld()->GetFirstPlayerController();
+	if (!PC)
+	{
+		return;
+	}
+
+	BossHPBarWidget = CreateWidget<UT3MidBossHPBarWidget>(PC, BossHPBarWidgetClass);
+	if (BossHPBarWidget)
+	{
+		BossHPBarWidget->TargetBoss = this;
+		BossHPBarWidget->AddToViewport();
+	}
+}
+
+// 인트로 몽타주 재생 → 완료 후 StateTree 시작 (몽타주 없거나 재생 실패 시 즉시 시작)
+void AT3MidBossMonster::PlayIntroMontageOrStart()
+{
 	if (IntroMontage)
 	{
 		const float Duration = PlayAnimMontage(IntroMontage);
 		if (Duration > 0.f)
 		{
-			UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-			if (AnimInstance)
+			if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
 			{
 				FOnMontageEnded EndDelegate;
 				EndDelegate.BindUObject(this, &AT3MidBossMonster::OnIntroMontageEnded);
@@ -127,7 +145,7 @@ void AT3MidBossMonster::ActivateBoss(AActor* Activator)
 		}
 	}
 
-	// 인트로 없으면 즉시 AI 로직 시작
+	// 인트로 없거나 재생 실패 시 즉시 AI 로직 시작
 	StartBossLogic();
 }
 
@@ -201,12 +219,15 @@ void AT3MidBossMonster::UpdateMotionWarpTarget()
 		return;
 	}
 
-	// 회전용 — 실시간 추적 (플레이어가 움직여도 방향을 따라감)
+	// 회전용 — gap-closer만 노티 시점 스냅샷, 그 외 패턴은 기존대로 실시간 추적
+	// gap-closer는 슬로우 중 보스가 플레이어를 따라 회전해서 어색하므로 시작 시 방향 잠금 (페널티 의도)
+	const FMidBossAttackPattern* RotPatternData = FindPatternData(CurrentPatternName);
+	const bool bGapCloser = RotPatternData && RotPatternData->Category == EMidBossPatternCategory::GapCloser;
 	MotionWarpingComponent->AddOrUpdateWarpTargetFromComponent(
 		MotionWarpTargetRotationName,
 		CombatTarget->GetRootComponent(),
 		NAME_None,
-		true,  // bFollowComponent — 회전은 실시간
+		!bGapCloser,
 		EWarpTargetLocationOffsetDirection::VectorFromTargetToOwner,
 		FVector::ZeroVector
 	);
@@ -269,13 +290,8 @@ void AT3MidBossMonster::BeginDeathSequence()
 	Tags.Remove(FName("Enemy"));
 	SetLockOnWidgetVisible(false);
 
-	// 사망 사운드 재생
-	if (DeathSound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(
-			this, DeathSound, GetActorLocation(), FRotator::ZeroRotator,
-			SoundVolume * DeathVolumeMultiplier, 1.f, 0.f, SoundAttenuationSettings);
-	}
+	// 사망 사운드 재생 (PlayBossSoundAt 헬퍼: nullptr 가드 + SoundVolume × Mult + Attenuation 일원화)
+	PlayBossSoundAt(DeathSound, GetActorLocation(), DeathVolumeMultiplier);
 
 	// BGM 페이드아웃
 	if (BGMAudioComponent && BGMAudioComponent->IsPlaying())
@@ -323,17 +339,7 @@ void AT3MidBossMonster::FinishDeathSequence()
 		WeaponComponent->DropWeapon();
 	}
 
-	// 캡슐 충돌 해제 — 플레이어 통과 가능
-	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
-	{
-		Capsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	}
-
-	// 이동 비활성화
-	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
-	{
-		MoveComp->DisableMovement();
-	}
+	DisablePhysicsAndMovement();
 
 	// AI 회전 정지
 	if (AAIController* AIC = Cast<AAIController>(GetController()))
@@ -362,6 +368,22 @@ void AT3MidBossMonster::FinishDeathSequence()
 
 	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 사망 연출 완료 (%.0f초 후 제거)"),
 		*BossDisplayName.ToString(), DeathCleanupDelay);
+}
+
+// 사망 후 물리/이동 완전 차단 — 캡슐 콜리전 off + CharacterMovement DisableMovement
+void AT3MidBossMonster::DisablePhysicsAndMovement()
+{
+	// 캡슐 충돌 해제 — 플레이어 통과 가능
+	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
+	{
+		Capsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+	// 이동 비활성화
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		MoveComp->DisableMovement();
+	}
 }
 
 // ============================================================
@@ -397,13 +419,8 @@ void AT3MidBossMonster::StartDissolve()
 		return;
 	}
 
-	// 디졸브 사운드 재생
-	if (DissolveSound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(
-			this, DissolveSound, GetActorLocation(), FRotator::ZeroRotator,
-			SoundVolume, 1.f, 0.f, SoundAttenuationSettings);
-	}
+	// 디졸브 사운드 재생 (VolumeMultiplier=1.0 → 원본 SoundVolume 그대로 유지)
+	PlayBossSoundAt(DissolveSound, GetActorLocation(), 1.0f);
 
 	DissolveTimeline->PlayFromStart();
 

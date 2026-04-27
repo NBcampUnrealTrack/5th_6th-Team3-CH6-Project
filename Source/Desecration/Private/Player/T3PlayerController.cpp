@@ -355,10 +355,7 @@ void AT3PlayerController::ToggleInventoryInput()
 			SetInventoryOpen(false);
 			
 			//인벤토리를 닫는 시점에서 인벤토리 저장
-			if (T3GameMode)
-			{
-				T3GameMode->SaveInventoryAndPotionLevel(OwnerChar);
-			}
+			SaveInventoryAndPotionLevel();
 		}
 		else if (!MainInventoryWidget->IsVisible() && !bIsShopUIOpen && !bIsUpgradeUIOpen)
 		{
@@ -550,6 +547,7 @@ void AT3PlayerController::SaveInventoryAndPotionLevel()
 {
 	if (T3GameMode)
 	{
-		T3GameMode->SaveInventoryAndPotionLevel(OwnerChar);
+		constexpr uint8 SaveTypes = static_cast<uint8>(ESaveType::Inventory) + static_cast<uint8>(ESaveType::Equipment);
+		T3GameMode->SaveGameV2_MultiType(OwnerChar, SaveTypes);
 	}
 }
