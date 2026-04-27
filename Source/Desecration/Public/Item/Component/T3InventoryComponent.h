@@ -404,4 +404,15 @@ private:
 	UFUNCTION(BlueprintCallable, Category = "Rune")
 	bool IsRuneEquipped(const FName& ItemName);
 #pragma endregion
+	
+#pragma region 보스룬
+	
+public:
+	UFUNCTION(BlueprintCallable, Category = "Inventory|BossRune")
+	bool UseBossRune(const FName& ItemID);
+	
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory|BossRune")
+	bool HasEtcItemByItemID(const FName& ItemID) const;
+	
+#pragma endregion
 };

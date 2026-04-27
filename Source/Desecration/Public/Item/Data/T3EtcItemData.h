@@ -12,4 +12,7 @@ struct FT3EtcItemData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
 	FT3ItemBaseData ItemData;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
+	int32 RuneFragmentValue = 0;
 };
