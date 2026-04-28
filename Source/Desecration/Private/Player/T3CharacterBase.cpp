@@ -205,16 +205,26 @@ void AT3CharacterBase::BeginPlay()
 	if (EquipComp)
 	{
 		EquipComp->OnEquipmentStatsChanged.AddDynamic(this, &AT3CharacterBase::OnEquipmentStatsUpdated);
+		// EquipComp::BeginPlay가 먼저 실행되어 초기 브로드캐스트를 못 받으므로 직접 초기화
+		OnEquipmentStatsUpdated(
+			EquipComp->GetCurrentAttackPower(),
+			EquipComp->GetCurrentDefensePower(),
+			EquipComp->WeaponInstance ? EquipComp->WeaponInstance->CurrentLevel : 0
+		);
 	}
 }
 
 void AT3CharacterBase::OnEquipmentStatsUpdated(float Atk, float Def, float CurrentWeaponLevel)
 {
-	SetAttackPower(Atk);
-	SetDefense(Def * 0.01);
-	SetWeaponLevel(CurrentWeaponLevel);
+	// AttackPower는 무기 기본값, AdditionalAttack은 스탯에서 별도 계산
+	AttackPower = Atk;
+	Defense = Def * 0.01f;
+	WeaponLevel = CurrentWeaponLevel;
+	// WeaponLevel이 바뀌면 스탯 공격력도 재계산 필요
+	RecalculateAdditionalAttack();
 
-	UE_LOG(LogTemp, Display, TEXT("Atk : %.1f, Def : %.1f, WeaponLevel : %.1f"), AttackPower, Defense, CurrentWeaponLevel);
+	UE_LOG(LogTemp, Display, TEXT("Atk : %.1f, Def : %.4f, WeaponLevel : %.1f, AddAtk : %.1f"),
+		AttackPower, Defense, WeaponLevel, AdditionalAttack);
 }
 
 
@@ -793,7 +803,7 @@ void AT3CharacterBase::UpgradeStat(ET3StatType StatType, int32 Amount)
 	BroadcastStatChange(StatType);
 	if (StatType == ET3StatType::Strength || StatType == ET3StatType::Intelligence)
 	{
-		BroadcastStatChange(ET3StatType::Attack);
+		RecalculateAdditionalAttack();
 	}
 }
 
@@ -881,8 +891,25 @@ float AT3CharacterBase::GetAttackPowerPreview(ET3StatType StatType, int32 Target
 
 void AT3CharacterBase::SetWeaponLevel(float CurrentWeaponLevel)
 {
-	 WeaponLevel = CurrentWeaponLevel;
-	 BroadcastStatChange(ET3StatType::Attack);
+	WeaponLevel = CurrentWeaponLevel;
+	RecalculateAdditionalAttack();
+}
+
+void AT3CharacterBase::RecalculateAdditionalAttack()
+{
+	if (!CheckCharacterData()) return;
+
+	const int32 StatToUse = (CharacterData->PrimaryDamageType == EDamageType::Physical) ? Strength : Intelligence;
+	if (StatToUse <= 30)
+	{
+		AdditionalAttack = FMath::CeilToFloat(StatToUse * (1.0f + WeaponLevel));
+	}
+	else
+	{
+		AdditionalAttack = FMath::CeilToFloat((30.f * (1.0f + WeaponLevel)) + ((StatToUse - 30) * 5.f));
+	}
+
+	BroadcastStatChange(ET3StatType::Attack);
 }
 
 void AT3CharacterBase::ModifyCoreStatByDelta(ET3StatType StatType, int32 Delta)
@@ -976,19 +1003,7 @@ void AT3CharacterBase::ModifyCoreStatByDelta(ET3StatType StatType, int32 Delta)
 	// Strength/Intelligence는 AdditionalAttack 재계산
 	if (StatType == ET3StatType::Strength || StatType == ET3StatType::Intelligence)
 	{
-		if (CheckCharacterData())
-		{
-			const int32 StatToUse = (CharacterData->PrimaryDamageType == EDamageType::Physical) ? Strength : Intelligence;
-			if (StatToUse <= 30)
-			{
-				AdditionalAttack = FMath::CeilToFloat(StatToUse * (1.0f + WeaponLevel));
-			}
-			else
-			{
-				AdditionalAttack = FMath::CeilToFloat((30.f * (1.0f + WeaponLevel)) + ((StatToUse - 30) * 5.f));
-			}
-		}
-		BroadcastStatChange(ET3StatType::Attack);
+		RecalculateAdditionalAttack();
 	}
 	else
 	{

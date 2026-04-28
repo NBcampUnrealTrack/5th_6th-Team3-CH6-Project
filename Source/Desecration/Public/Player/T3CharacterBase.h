@@ -305,6 +305,10 @@ protected:
 	UFUNCTION(BlueprintPure)
 	ERollDirection GetRollDirection(float Angle) const;
 
+	// 주 스탯(Strength 또는 Intelligence)으로 AdditionalAttack을 재계산
+	// UpgradeStat, ModifyCoreStatByDelta, SetWeaponLevel 모두 이 함수를 공유
+	void RecalculateAdditionalAttack();
+
 private:
 	// 내부 수치 계산 및 제한(Clamp)용 로직
 	void AddHP(float Amount);
