@@ -767,44 +767,44 @@ void UT3PlayerEquipmentComponent::ApplyAccessoryStatPointBonus(const FT3Accessor
 	switch (Row->AccessoryType)
 	{
 	case ET3AccessoryType::Vigor:
-		OwnerCharacter->SetVigor(OwnerCharacter->GetVigor() + StatPointBonus);
+		OwnerCharacter->ModifyCoreStatByDelta(ET3StatType::Vigor, StatPointBonus);
 		break;
 
 	case ET3AccessoryType::Endurance:
-		OwnerCharacter->SetEndurance(OwnerCharacter->GetEndurance() + StatPointBonus);
+		OwnerCharacter->ModifyCoreStatByDelta(ET3StatType::Endurance, StatPointBonus);
 		break;
 
 	case ET3AccessoryType::Mind:
-		OwnerCharacter->SetMind(OwnerCharacter->GetMind() + StatPointBonus);
+		OwnerCharacter->ModifyCoreStatByDelta(ET3StatType::Mind, StatPointBonus);
 		break;
 
 	case ET3AccessoryType::Strength:
-		OwnerCharacter->SetStrength(OwnerCharacter->GetStrength() + StatPointBonus);
+		OwnerCharacter->ModifyCoreStatByDelta(ET3StatType::Strength, StatPointBonus);
 		break;
 
 	case ET3AccessoryType::Intelligence:
-		OwnerCharacter->SetIntelligence(OwnerCharacter->GetIntelligence() + StatPointBonus);
+		OwnerCharacter->ModifyCoreStatByDelta(ET3StatType::Intelligence, StatPointBonus);
 		break;
 
 	case ET3AccessoryType::Balrog:
-		OwnerCharacter->SetVigor(OwnerCharacter->GetVigor() + StatPointBonus);
+		OwnerCharacter->ModifyCoreStatByDelta(ET3StatType::Vigor, StatPointBonus);
 		break;
 		
 	case ET3AccessoryType::Oni:
-		OwnerCharacter->SetEndurance(OwnerCharacter->GetEndurance() + StatPointBonus);
+		OwnerCharacter->ModifyCoreStatByDelta(ET3StatType::Endurance, StatPointBonus);
 		break;
 		
 	case ET3AccessoryType::FallenAngel:
-		OwnerCharacter->SetStrength(OwnerCharacter->GetStrength() + StatPointBonus);
-		OwnerCharacter->SetIntelligence(OwnerCharacter->GetIntelligence() + StatPointBonus);
+		OwnerCharacter->ModifyCoreStatByDelta(ET3StatType::Strength, StatPointBonus);
+		OwnerCharacter->ModifyCoreStatByDelta(ET3StatType::Intelligence, StatPointBonus);
 		break;
 		
 	case ET3AccessoryType::Dragon:
-		OwnerCharacter->SetVigor(OwnerCharacter->GetVigor() + StatPointBonus);
-		OwnerCharacter->SetEndurance(OwnerCharacter->GetEndurance() + StatPointBonus);
-		OwnerCharacter->SetMind(OwnerCharacter->GetMind() + StatPointBonus);
-		OwnerCharacter->SetStrength(OwnerCharacter->GetStrength() + StatPointBonus);
-		OwnerCharacter->SetIntelligence(OwnerCharacter->GetIntelligence() + StatPointBonus);
+		OwnerCharacter->ModifyCoreStatByDelta(ET3StatType::Vigor, StatPointBonus);
+		OwnerCharacter->ModifyCoreStatByDelta(ET3StatType::Endurance, StatPointBonus);
+		OwnerCharacter->ModifyCoreStatByDelta(ET3StatType::Mind, StatPointBonus);
+		OwnerCharacter->ModifyCoreStatByDelta(ET3StatType::Strength, StatPointBonus);
+		OwnerCharacter->ModifyCoreStatByDelta(ET3StatType::Intelligence, StatPointBonus);
 		break;
 		
 	default:

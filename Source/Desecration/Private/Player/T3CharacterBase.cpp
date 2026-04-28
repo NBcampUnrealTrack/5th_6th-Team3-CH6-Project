@@ -900,7 +900,7 @@ void AT3CharacterBase::ModifyCoreStatByDelta(ET3StatType StatType, int32 Delta)
 		{
 			if (bIncreasing)
 			{
-				float Increase = 15.f + (Vigor * 0.7f);
+				float Increase = (15.f + (Vigor * 0.7f)) / 3.f;
 				if (Vigor >= 30) Increase /= 3.f;
 				Increase = FMath::CeilToFloat(Increase);
 				Vigor++;
@@ -910,7 +910,7 @@ void AT3CharacterBase::ModifyCoreStatByDelta(ET3StatType StatType, int32 Delta)
 			else
 			{
 				Vigor--;
-				float Decrease = 15.f + (Vigor * 0.7f);
+				float Decrease = (15.f + (Vigor * 0.7f)) / 3.f;
 				if (Vigor >= 30) Decrease /= 3.f;
 				Decrease = FMath::CeilToFloat(Decrease);
 				MaxHP = FMath::Max(1.f, MaxHP - Decrease);
@@ -922,7 +922,7 @@ void AT3CharacterBase::ModifyCoreStatByDelta(ET3StatType StatType, int32 Delta)
 		{
 			if (bIncreasing)
 			{
-				float Increase = 10.f + (Endurance * 0.5f);
+				float Increase = (10.f + (Endurance * 0.5f)) / 2.f;
 				if (Endurance >= 30) Increase /= 3.f;
 				Increase = FMath::CeilToFloat(Increase);
 				Endurance++;
@@ -932,7 +932,7 @@ void AT3CharacterBase::ModifyCoreStatByDelta(ET3StatType StatType, int32 Delta)
 			else
 			{
 				Endurance--;
-				float Decrease = 10.f + (Endurance * 0.5f);
+				float Decrease = (10.f + (Endurance * 0.5f)) / 2.f;
 				if (Endurance >= 30) Decrease /= 3.f;
 				Decrease = FMath::CeilToFloat(Decrease);
 				MaxStamina = FMath::Max(1.f, MaxStamina - Decrease);
@@ -944,7 +944,7 @@ void AT3CharacterBase::ModifyCoreStatByDelta(ET3StatType StatType, int32 Delta)
 		{
 			if (bIncreasing)
 			{
-				float Increase = 10.f + (Mind * 0.7f);
+				float Increase = (10.f + (Mind * 0.7f)) / 2.f;
 				if (Mind >= 30) Increase /= 3.f;
 				Increase = FMath::CeilToFloat(Increase);
 				Mind++;
@@ -954,7 +954,7 @@ void AT3CharacterBase::ModifyCoreStatByDelta(ET3StatType StatType, int32 Delta)
 			else
 			{
 				Mind--;
-				float Decrease = 10.f + (Mind * 0.7f);
+				float Decrease = (10.f + (Mind * 0.7f)) / 2.f;
 				if (Mind >= 30) Decrease /= 3.f;
 				Decrease = FMath::CeilToFloat(Decrease);
 				MaxMana = FMath::Max(1.f, MaxMana - Decrease);
