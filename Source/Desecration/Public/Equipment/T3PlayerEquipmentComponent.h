@@ -191,13 +191,13 @@ protected:
 	int32 CachedAccessoryStatPointBonus = 0;
 	
 public:
-	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	UFUNCTION(BlueprintCallable, Category = "Equipment|Accessory")
 	void EquipAccessory(UT3TestItemInstance* NewItem);
 
-	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	UFUNCTION(BlueprintCallable, Category = "Equipment|Accessory")
 	void UnequipAccessory();
 
-	UFUNCTION(BlueprintCallable, Category = "Upgrade")
+	UFUNCTION(BlueprintCallable, Category = "Equipment|Accessory")
 	bool TryUpgradeAccessory(int32 MaxAllowedLevel);
 
 	UFUNCTION(BlueprintCallable, Category = "Equipment|Save")
@@ -209,7 +209,7 @@ public:
 	UFUNCTION()
 	void SetOniAccessoryEquipped(bool IsEquipped);
 	
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, Category = "Equipment|Accessory")
 	bool GetOniAccessoryEquipped() const;
 	
 	UPROPERTY(BlueprintAssignable)
