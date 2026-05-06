@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
 #include "GameplayTagContainer.h"
-#include "CharacterTrajectoryComponent.h"
+#include "T3CharacterTrajectoryComponent.h"
 #include "T3CharacterAnimInstance.generated.h"
 
 
@@ -29,7 +29,7 @@ protected:
 	FGameplayTag CurrentLocomotionState;
 	
 	UPROPERTY(Transient)
-	TObjectPtr<UCharacterTrajectoryComponent> TrajectoryComponent;
+	TObjectPtr<UT3CharacterTrajectoryComponent> TrajectoryComponent;
 	
 	float CurrentSpeed;
 	float FutureSpeed;
