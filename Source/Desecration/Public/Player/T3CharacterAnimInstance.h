@@ -31,7 +31,7 @@ public:
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Locomotion|Tuning")
-	float SpeedThreshold = 10.0f;
+	float SpeedThreshold = 20.0f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Locomotion|Tuning")
 	float FutureSampleTime = 0.3f;

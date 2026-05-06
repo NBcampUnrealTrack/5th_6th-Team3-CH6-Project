@@ -57,6 +57,20 @@ void UT3CharacterAnimInstance::DetermineLocomotionState()
 		return;
 	}
 	
+	if (CurrentLocomotionState == ELocomotionState::Starts)
+	{
+		if (CurrentSpeed >= SpeedThreshold)
+		{
+			CurrentLocomotionState = ELocomotionState::Loop;
+			return;
+		}
+		if (FutureSpeed < SpeedThreshold)
+		{
+			CurrentLocomotionState = ELocomotionState::Plants;
+			return;
+		}
+	}
+	
 	if (CurrentSpeed > SpeedThreshold && FutureSpeed < SpeedThreshold)
 	{
 		CurrentLocomotionState = ELocomotionState::Plants;
