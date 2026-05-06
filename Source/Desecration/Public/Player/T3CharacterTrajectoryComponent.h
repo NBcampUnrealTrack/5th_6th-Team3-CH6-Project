@@ -14,4 +14,6 @@ class DESECRATION_API UT3CharacterTrajectoryComponent : public UCharacterTraject
 {
 	GENERATED_BODY()
 	
+public:
+	const FTransformTrajectory& GetTrajectoryData() const { return Trajectory; };
 };
