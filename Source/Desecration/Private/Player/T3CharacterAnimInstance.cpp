@@ -47,16 +47,16 @@ void UT3CharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecond
 
 void UT3CharacterAnimInstance::DetermineLocomotionState()
 {
-	if (CurrentLocomotionState == Tag_Plants)
+	if (CurrentLocomotionState == ELocomotionState::Plants)
 	{
 		if (CurrentSpeed < 5.0f)
 		{
-			CurrentLocomotionState = Tag_Idle;
+			CurrentLocomotionState = ELocomotionState::Idle;
 			return;
 		}
 		if (FutureSpeed > SpeedThreshold)
 		{
-			CurrentLocomotionState = Tag_Starts;
+			CurrentLocomotionState = ELocomotionState::Starts;
 			return;
 		}
 		return;
@@ -64,19 +64,19 @@ void UT3CharacterAnimInstance::DetermineLocomotionState()
 	
 	if (CurrentSpeed > SpeedThreshold && FutureSpeed < SpeedThreshold)
 	{
-		CurrentLocomotionState = Tag_Plants;
+		CurrentLocomotionState = ELocomotionState::Plants;
 	}
 	else if (CurrentSpeed < SpeedThreshold && FutureSpeed > SpeedThreshold)
 	{
-		CurrentLocomotionState = Tag_Starts;
+		CurrentLocomotionState = ELocomotionState::Starts;
 	}
 	else if (CurrentSpeed > SpeedThreshold)
 	{
-		CurrentLocomotionState = Tag_Loop;
+		CurrentLocomotionState = ELocomotionState::Loop;
 	}
 	else
 	{
-		CurrentLocomotionState = Tag_Idle;
+		CurrentLocomotionState = ELocomotionState::Idle;
 	}
 }
 
