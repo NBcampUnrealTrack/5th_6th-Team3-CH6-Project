@@ -22,7 +22,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Locomotion|Tuning")
 	float SpeedThreshold = 20.0f;
 	
-	UPROPERTY(EditDefualtsOnly, Category = "Locomotion|Tuning")
+	UPROPERTY(EditDefaultsOnly, Category = "Locomotion|Tuning")
 	float FutureSampleTime = 0.3f;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Locomotion|State")
