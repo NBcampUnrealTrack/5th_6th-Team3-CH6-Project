@@ -6,11 +6,6 @@
 #include "GameFrameWork/Character.h"
 #include "VerseVM/VVMRuntimeError.h"
 
-const FGameplayTag Tag_Idle = FGameplayTag::RequestGameplayTag(FName("State.Locomotion.Idle"));
-const FGameplayTag Tag_Starts = FGameplayTag::RequestGameplayTag(FName("State.Locomotion.Starts"));
-const FGameplayTag Tag_Loop = FGameplayTag::RequestGameplayTag(FName("State.Locomotion.Loop"));
-const FGameplayTag Tag_Plants = FGameplayTag::RequestGameplayTag(FName("State.Locomotion.Plants"));
-
 
 void UT3CharacterAnimInstance::NativeInitializeAnimation()
 {
@@ -21,7 +16,7 @@ void UT3CharacterAnimInstance::NativeInitializeAnimation()
 		TrajectoryComponent = OwnerChar->FindComponentByClass<UT3CharacterTrajectoryComponent>();
 	}
 	
-	CurrentLocomotionState = Tag_Idle;
+	CurrentLocomotionState = ELocomotionState::Idle;
 }
 
 void UT3CharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
