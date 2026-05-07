@@ -50,11 +50,7 @@ struct DESECRATION_API FT3PlayerInputState
 public:
 
 
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
-	bool bWantsToMove = false;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
-	bool bWantsToStop = false;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")
 	bool bWantsToRoll = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerInputState")

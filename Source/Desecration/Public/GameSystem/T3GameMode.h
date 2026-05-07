@@ -36,7 +36,7 @@ public:
 	 * @details 각 매개변수 중 필수가 아닌 것은 저장 범위에 따라 적절하게 값을 넣거나 무시하면 됩니다.
 	 * @param Character : (필수) 현재 조종중인 캐릭터
 	 * @param SaveType : (필수) 저장 범위
-	 * @param LevelName : 저장하려는 레벨(맵) 이름, 맵 저장시에 사용하며 타이틀 및 클래스 선택 레벨로 지정하면 무시됨
+	 * @param LevelName : 저장하려는 레벨(맵) 이름, 타이틀 및 클래스 선택 레벨로 지정하면 무시됨
 	 * @param TargetLocation : 저장하려는 맵 내의 위치
 	 * @param TargetRotation : 저장시 캐릭터의 회전값
 	 * @return true : 저장 성공
