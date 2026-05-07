@@ -12,7 +12,7 @@
 // 패턴 실행
 // ============================================================
 
-bool AT3MidBossMonster::ExecutePattern(FName PatternName)
+bool AT3MidBossMonster::ExecutePattern(FName PatternName, bool bAsReaction)
 {
 	// 블로킹 태그 일괄 체크 (Dead, Stunned, ExecutingPattern 중 하나라도 있으면 실행 불가)
 	FGameplayTagContainer BlockingTags;
@@ -61,8 +61,12 @@ bool AT3MidBossMonster::ExecutePattern(FName PatternName)
 	// 패턴 실행 시작
 	CurrentPatternName = PatternName;
 	// StartSectionIndex 적용 — 막기 리액션 등에서 앞쪽 N개 엔트리를 스킵하고 빠르게 진입
+	// 리액션 모드(bAsReaction=true) + bAllowAsReaction + ReactionStartSectionOverride>=0 조합이면 오버라이드 우선
 	// 범위 밖 값은 클램프 (마지막 엔트리만 남기는 케이스 허용)
-	CurrentChainIndex = FMath::Clamp(PatternData->StartSectionIndex, 0, PatternData->MontageChain.Num() - 1);
+	const int32 RawStartIndex = (bAsReaction && PatternData->bAllowAsReaction && PatternData->ReactionStartSectionOverride >= 0)
+		? PatternData->ReactionStartSectionOverride
+		: PatternData->StartSectionIndex;
+	CurrentChainIndex = FMath::Clamp(RawStartIndex, 0, PatternData->MontageChain.Num() - 1);
 	ConsecutiveDisengageCount = 0;
 	AddStateTag(TAG_Boss_State_ExecutingPattern);
 

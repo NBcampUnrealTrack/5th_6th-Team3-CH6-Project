@@ -37,6 +37,11 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_Disengaging);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_Invulnerable);
 // 막기(블록) 자세 — TakeDamage에서 정면/후방 배율로 데미지 경감
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_Blocking);
+// 막기 직후 짧은 윈도우 (~0.5초) — Consideration이 리액션 패턴(StartSectionIndex>0 + ReactionPlayRateMultiplier>1) 가중치 부풀림
+// (※ 기존 ParryWindow 카운터 패턴과 무관 — 그쪽은 원거리 공격 모방 시 근접 접근하는 별도 스킬)
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_PostBlock);
+// 회피 직후 짧은 윈도우 (~0.5초) — Consideration이 리액션 패턴 가중치 부풀림 (※ 기존 카운터 패턴과 무관)
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_State_PostRoll);
 // 플레이어가 보스 공격을 패링 성공했을 때 외부 알림
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnParriedByPlayer);
 
@@ -111,6 +116,11 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "MidBoss|State")
 	bool HasStateTag(FGameplayTag Tag) const;
+
+	// 일정 시간 후 자동 제거되는 상태 태그 부여 (PostBlock/PostRoll 같은 짧은 윈도우용)
+	// 같은 태그가 이미 활성 상태면 타이머만 갱신(연장). Duration<=0이면 즉시 부여 후 다음 틱 제거.
+	UFUNCTION(BlueprintCallable, Category = "MidBoss|State")
+	void ApplyTransientStateTag(FGameplayTag Tag, float Duration);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "MidBoss|State")
 	bool IsDead() const;
@@ -241,8 +251,10 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "MidBoss|Modifier")
 	TObjectPtr<UMidBossNotifyModifier> NotifyModifier;
 
+	// bAsReaction=true면 PostBlock/PostRoll 직후 "리액션 패턴" 모드로 실행 — ReactionStartSectionOverride 적용.
+	// (※ ParryWindow 카운터 패턴과 무관 — 별도 메커니즘)
 	UFUNCTION(BlueprintCallable, Category = "MidBoss|Pattern")
-	bool ExecutePattern(FName PatternName);
+	bool ExecutePattern(FName PatternName, bool bAsReaction = false);
 
 	UFUNCTION(BlueprintCallable, Category = "MidBoss|Pattern")
 	void CancelCurrentPattern();
@@ -454,6 +466,36 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Combat")
 	float StunDuration = 3.0f;
 
+	// --- 경직치 게이지 (스테미너형) ---
+	// 다크나이트는 4개 값 모두 0으로 두면 자동 비활성. 데스몬드는 값 채워서 활성
+	// 누적 경로: ① Roll STT 진입(StaggerOnRoll) ② 막기 중 정면 피격(StaggerOnBlockedHit)
+	// 임계 도달 시 ApplyStun() 자동 호출 → 진입 시 CurrentStunGauge 0 초기화 (기존 인프라 재활용)
+
+	// Roll STT 1회 진입당 누적량 — 0이면 회피로 게이지 안 쌓음
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Stagger")
+	float StaggerOnRoll = 0.f;
+
+	// 막기 중 정면 피격 1회당 누적량 — TakeDamage StunAmount와 별도로 추가 누적 (가드는 HP 대신 게이지를 깎음)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Stagger")
+	float StaggerOnBlockedHit = 0.f;
+
+	// 초당 게이지 회복량 — 0이면 회복 없음 (다크나이트 기본값)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Stagger")
+	float StaggerRecoveryRate = 0.f;
+
+	// 마지막 누적 이벤트로부터 회복 시작까지 대기 시간(초)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Stagger")
+	float StaggerRecoveryDelay = 2.5f;
+
+	// 마지막 누적 시점 — Tick 회복 분기에서 Delay 비교용
+	UPROPERTY(BlueprintReadOnly, Category = "MidBoss|Stagger")
+	double LastStaggerEventTime = 0.0;
+
+	// 경직치 누적 헬퍼 — 누적/임계체크/시간갱신 일원화
+	// IsStunned/IsDead 가드 + Amount<=0 early-out 포함. 임계 도달 시 ApplyStun() 자동 호출
+	UFUNCTION(BlueprintCallable, Category = "MidBoss|Stagger")
+	void AddStunGauge(float Amount);
+
 #pragma endregion Combat
 
 	// ============================================================
@@ -602,9 +644,15 @@ private:
 	void InitializeStatsAndTags();
 	void SetupDissolveTimeline();
 
-	// Tick 분해 헬퍼 — 매 프레임 호출 (MoveToTarget 보간 / AI SetFocus + 회전 속도 분기)
+	// Tick 분해 헬퍼 — 매 프레임 호출 (MoveToTarget 보간 / AI SetFocus + 회전 속도 분기 / 경직치 회복)
 	void UpdateMoveToTargetInterpolation(float DeltaTime);
 	void UpdateAIFocusAndRotation();
+
+	// StaggerRecoveryRate>0 + Stunned/Dead 아님 + 마지막 누적으로부터 Delay 경과 시 게이지 감소
+	void UpdateStaggerRecovery(float DeltaTime);
+
+	// ApplyTransientStateTag로 부여된 태그의 자동 제거 타이머 — 태그별 1개 핸들 (재호출 시 갱신)
+	TMap<FGameplayTag, FTimerHandle> TransientStateTagHandles;
 
 #pragma endregion Private_Core
 

@@ -20,6 +20,9 @@ UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_State_ParryWindow, "Boss.State.ParryWindow");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_State_Disengaging, "Boss.State.Disengaging");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_State_Invulnerable, "Boss.State.Invulnerable");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_State_Blocking, "Boss.State.Blocking");
+// 막기/회피 직후 짧은 윈도우 — Consideration이 리액션 패턴 가중치 부풀림 (※ 기존 ParryWindow 카운터 패턴과 무관)
+UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_State_PostBlock, "Boss.State.PostBlock");
+UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_State_PostRoll, "Boss.State.PostRoll");
 // Gameplay Tag 네이티브 정의 — StateTree 전용 이벤트 태그 (대응 State 없음)
 UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_Event_StunRecovered, "Boss.Event.StunRecovered");
 UE_DEFINE_GAMEPLAY_TAG(TAG_Boss_Event_ActionCountDepleted, "Boss.Event.ActionCountDepleted");
@@ -93,6 +96,49 @@ void AT3MidBossMonster::RemoveStateTag(FGameplayTag Tag)
 bool AT3MidBossMonster::HasStateTag(FGameplayTag Tag) const
 {
 	return ActiveGameplayTags.HasTag(Tag);
+}
+
+void AT3MidBossMonster::ApplyTransientStateTag(FGameplayTag Tag, float Duration)
+{
+	if (!Tag.IsValid())
+	{
+		return;
+	}
+
+	// 즉시 부여 (이미 있어도 멱등)
+	ActiveGameplayTags.AddTag(Tag);
+
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	// 기존 핸들이 있으면 재호출 시 타이머 갱신 (연장) — 핸들 매니저에서 자동 무효화
+	FTimerHandle& Handle = TransientStateTagHandles.FindOrAdd(Tag);
+	World->GetTimerManager().ClearTimer(Handle);
+
+	if (Duration <= 0.f)
+	{
+		// 0/음수면 다음 틱에 즉시 제거 (사실상 즉시)
+		World->GetTimerManager().SetTimerForNextTick([WeakThis = TWeakObjectPtr<AT3MidBossMonster>(this), Tag]()
+		{
+			if (AT3MidBossMonster* Self = WeakThis.Get())
+			{
+				Self->ActiveGameplayTags.RemoveTag(Tag);
+				Self->TransientStateTagHandles.Remove(Tag);
+			}
+		});
+		return;
+	}
+
+	World->GetTimerManager().SetTimer(Handle,
+		FTimerDelegate::CreateWeakLambda(this, [this, Tag]()
+		{
+			ActiveGameplayTags.RemoveTag(Tag);
+			TransientStateTagHandles.Remove(Tag);
+		}),
+		Duration, false);
 }
 
 bool AT3MidBossMonster::IsDead() const
@@ -292,6 +338,37 @@ void AT3MidBossMonster::Tick(float DeltaTime)
 
 	UpdateMoveToTargetInterpolation(DeltaTime);
 	UpdateAIFocusAndRotation();
+	UpdateStaggerRecovery(DeltaTime);
+}
+
+// 경직치 자연 회복 — Rate>0인 보스만 동작 (다크나이트는 0이라 early-out)
+// LastStaggerEventTime + Delay 이후부터 초당 Rate씩 감소
+void AT3MidBossMonster::UpdateStaggerRecovery(float DeltaTime)
+{
+	if (StaggerRecoveryRate <= 0.f || IsStunned() || IsDead())
+	{
+		return;
+	}
+
+	if (MidBossStats.CurrentStunGauge <= 0.f)
+	{
+		return;
+	}
+
+	const UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	const double Now = World->GetTimeSeconds();
+	if (Now - LastStaggerEventTime < StaggerRecoveryDelay)
+	{
+		return;
+	}
+
+	MidBossStats.CurrentStunGauge =
+		FMath::Max(0.f, MidBossStats.CurrentStunGauge - StaggerRecoveryRate * DeltaTime);
 }
 
 // MoveToTarget 보간 처리 — 지정 방향/속도로 bIsMovingToTarget 동안 AddActorWorldOffset

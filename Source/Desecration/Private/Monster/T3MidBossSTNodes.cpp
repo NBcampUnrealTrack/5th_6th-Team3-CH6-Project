@@ -62,8 +62,8 @@ EStateTreeRunStatus FT3STT_ExecutePattern::EnterState(
 		Data.CachedRequiredStage = PatternData.RequiredStage;
 	}
 
-	// 패턴 실행 시도
-	if (!Data.Boss->ExecutePattern(Data.PatternName))
+	// 패턴 실행 시도 (bAsReaction=true면 리액션 모드 — ReactionStartSectionOverride 적용)
+	if (!Data.Boss->ExecutePattern(Data.PatternName, Data.bAsReaction))
 	{
 		return EStateTreeRunStatus::Failed;
 	}
@@ -571,6 +571,9 @@ EStateTreeRunStatus FT3STT_TestRoll::EnterState(
 
 	Data.ActiveRoll = Roll;
 
+	// 경직치 누적 — 데스몬드처럼 StaggerOnRoll>0인 보스만 동작 (다크나이트는 0이라 헬퍼 내부에서 early-out)
+	Data.Boss->AddStunGauge(Data.Boss->StaggerOnRoll);
+
 	UE_LOG(LogDesecration, Log,
 		TEXT("T3_ST: TestRoll 시작 (Idx:%d, Angle:%.0f°, Duration:%.2f, Rate:%.2f, DistScale:%.2f[Master:%.2f × Dir:%.2f])"),
 		Idx, Idx * 45.f, Duration, Data.PlayRate,
@@ -649,6 +652,14 @@ void FT3STT_TestRoll::ExitState(
 		if (Data.ActiveRoll)
 		{
 			Data.Boss->StopAnimMontage(Data.ActiveRoll);
+		}
+
+		// 정상 Succeeded 시에만 PostRoll 윈도우 부여 — 인터럽트로 끊긴 경우 제외
+		// (bRollEnded=true && DelayElapsed>=PostRollDelay 도달이 정상 종료 조건)
+		const bool bNormalCompletion = Data.bRollEnded && (Data.DelayElapsed >= Data.PostRollDelay);
+		if (bNormalCompletion && Data.PostRollWindowDuration > 0.f)
+		{
+			Data.Boss->ApplyTransientStateTag(TAG_Boss_State_PostRoll, Data.PostRollWindowDuration);
 		}
 	}
 
@@ -744,11 +755,20 @@ void FT3STT_Block::ExitState(
 
 	if (Data.Boss)
 	{
+		// 정상 Succeeded 경로에선 Phase=Idle 도달 — 인터럽트면 그 외 단계
+		const bool bNormalCompletion = (Data.Boss->CurrentBlockPhase == EBlockPhase::Idle);
+
 		// 외부 인터럽트(BlockReaction 이벤트, 사망 등 ST 트랜지션)로 끊긴 경우 — 시퀀스 강제 정리
 		// 정상 Succeeded 경로에선 이미 Phase=Idle이라 StopBlockSequence가 early-return
-		if (Data.Boss->CurrentBlockPhase != EBlockPhase::Idle)
+		if (!bNormalCompletion)
 		{
 			Data.Boss->StopBlockSequence();
+		}
+
+		// 정상 종료 시에만 PostBlock 윈도우 부여 — 인터럽트(BlockReaction → 빠른 반격) 시 제외
+		if (bNormalCompletion && Data.PostBlockWindowDuration > 0.f)
+		{
+			Data.Boss->ApplyTransientStateTag(TAG_Boss_State_PostBlock, Data.PostBlockWindowDuration);
 		}
 	}
 
@@ -1120,4 +1140,70 @@ float FT3Consideration_ConsecutiveDisengagePenalty::GetScore(FStateTreeExecution
 
 	// PenaltyPerCount ^ Count (0.5^1=0.5, 0.5^2=0.25 ...)
 	return FMath::Pow(Data.PenaltyPerCount, static_cast<float>(Count));
+}
+
+// ============================================================
+// Consideration: FT3Consideration_ReactionWindow
+// bAllowAsReaction=true 패턴이 PostBlock/PostRoll 윈도우에서만 강하게 가중되도록 부풀림.
+// (※ ParryWindow 카운터 패턴과 무관)
+// ============================================================
+
+float FT3Consideration_ReactionWindow::GetScore(FStateTreeExecutionContext& Context) const
+{
+	const FT3Consideration_ReactionWindowInstanceData& Data = Context.GetInstanceData(*this);
+
+	if (!Data.Boss || Data.PatternName.IsNone())
+	{
+		// Boss/패턴 미바인딩 시 무영향 — 다른 Consideration이 판정
+		return 1.f;
+	}
+
+	const FMidBossAttackPattern* PatternData = Data.Boss->FindPatternData(Data.PatternName);
+	if (!PatternData)
+	{
+		return 1.f;
+	}
+
+	// 리액션 후보가 아닌 일반 패턴은 무영향
+	if (!PatternData->bAllowAsReaction)
+	{
+		return 1.f;
+	}
+
+	// 리액션 후보 — 윈도우 활성 여부로 분기
+	const bool bPostBlockActive = Data.bRespondToPostBlock && Data.Boss->HasStateTag(TAG_Boss_State_PostBlock);
+	const bool bPostRollActive = Data.bRespondToPostRoll && Data.Boss->HasStateTag(TAG_Boss_State_PostRoll);
+
+	return (bPostBlockActive || bPostRollActive) ? Data.BoostScore : Data.IdleScore;
+}
+
+// ============================================================
+// Consideration: FT3Consideration_GaugePressure
+// 스턴 게이지 ratio = Clamp(CurrentStunGauge / StunThreshold, 0, 1)
+// bInverse=true:  점수 = MinScore + (1 - MinScore) × (1 - ratio^Exponent)
+// bInverse=false: 점수 = MinScore + (1 - MinScore) × ratio^Exponent
+// ============================================================
+
+float FT3Consideration_GaugePressure::GetScore(FStateTreeExecutionContext& Context) const
+{
+	const FT3Consideration_GaugePressureInstanceData& Data = Context.GetInstanceData(*this);
+
+	if (!Data.Boss)
+	{
+		return 0.f;
+	}
+
+	const float Threshold = Data.Boss->MidBossStats.StunThreshold;
+	if (Threshold <= KINDA_SMALL_NUMBER)
+	{
+		// 임계치 미설정 — 영향 없게 1.0 반환 (다른 Consideration 판정에 맡김)
+		return 1.f;
+	}
+
+	const float Ratio = FMath::Clamp(Data.Boss->MidBossStats.CurrentStunGauge / Threshold, 0.f, 1.f);
+	const float Curve = FMath::Pow(Ratio, Data.Exponent);
+	const float NormalizedScore = Data.bInverse ? (1.f - Curve) : Curve;
+
+	const float MinClamped = FMath::Clamp(Data.MinScore, 0.f, 1.f);
+	return MinClamped + (1.f - MinClamped) * NormalizedScore;
 }

@@ -223,6 +223,18 @@ struct FMidBossAttackPattern
 	// 1.0 = 변화 없음, 1.5 = 50% 빠르게. MontageData.PlayRate × CurrentAttackAnimRate × 이 값
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0.1"))
 	float ReactionPlayRateMultiplier = 1.0f;
+
+	// true면 PostBlock/PostRoll 윈도우 활성 시 "리액션 패턴" 후보로 가중. false(기본)면 일반 패턴으로만 사용.
+	// (※ ParryWindow 카운터 패턴과 무관 — 별도 메커니즘)
+	// false인 패턴은 ReactionWindow Consideration이 가중 부풀림에서 제외 → 기존 Dark Knight 등 무영향
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bAllowAsReaction = false;
+
+	// bAsReaction=true로 실행 시에만 적용되는 시작 인덱스 오버라이드.
+	// -1(기본) = StartSectionIndex 그대로 사용. 0 이상이면 리액션 모드 한정으로 이 값 사용.
+	// 예: 일반 모드는 0번 엔트리부터, 리액션 모드는 2번 엔트리(빠른 진입)부터.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "-1", EditCondition = "bAllowAsReaction"))
+	int32 ReactionStartSectionOverride = -1;
 };
 
 // ============================================================

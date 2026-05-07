@@ -67,6 +67,11 @@ float AT3MidBossMonster::TakeDamage(float DamageAmount, FDamageEvent const& Dama
 				// 막기 성공 카운트 — STT_Block이 이 값을 폴링해서 종료 조건으로 사용
 				++BlockHitsCount;
 
+				// 경직치 누적 — 데스몬드처럼 StaggerOnBlockedHit>0인 보스만 동작
+				// "가드는 HP 대신 게이지를 깎는다"는 트레이드 — TakeDamage StunAmount와 별도 추가 누적
+				// 정면/후방 모두 막기 분기 안에 있어 자연스럽게 누적 (가드 뚫림 분기에서는 누적 X)
+				AddStunGauge(StaggerOnBlockedHit);
+
 				UE_LOG(LogDesecration, Log,
 					TEXT("T3_MidBoss: 막기 성공 (방향:%s, 배율:%.2f, 원본:%.0f → %.0f, 누적:%d회)"),
 					bFront ? TEXT("정면") : TEXT("후방"), Mult, DamageAmount, IncomingDamage, BlockHitsCount);
@@ -242,6 +247,31 @@ void AT3MidBossMonster::RecoverFromStun()
 	SendStateTreeStateEvent(TAG_Boss_Event_StunRecovered);
 
 	UE_LOG(LogDesecration, Log, TEXT("T3_MidBoss: %s 스턴 해제 (StateTree 이벤트 전송)"), *BossDisplayName.ToString());
+}
+
+// ============================================================
+// 경직치 게이지 누적 헬퍼 — Roll/Block 경로에서 호출
+// (TakeDamage 경로의 StunAmount 누적은 ApplyDamageToMidBoss에서 그대로 처리)
+// ============================================================
+
+void AT3MidBossMonster::AddStunGauge(float Amount)
+{
+	if (Amount <= 0.f || IsStunned() || IsDead())
+	{
+		return;
+	}
+
+	MidBossStats.CurrentStunGauge += Amount;
+	LastStaggerEventTime = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0;
+
+	UE_LOG(LogDesecration, Log,
+		TEXT("T3_MidBoss: 경직치 누적 (+%.1f → %.1f/%.1f)"),
+		Amount, MidBossStats.CurrentStunGauge, MidBossStats.StunThreshold);
+
+	if (MidBossStats.CurrentStunGauge >= MidBossStats.StunThreshold)
+	{
+		ApplyStun();
+	}
 }
 
 // ============================================================
