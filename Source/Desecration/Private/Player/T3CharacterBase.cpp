@@ -253,10 +253,9 @@ void AT3CharacterBase::Tick(float DeltaTime)
 	float FutureSpeed = FMath::Min(InputVector.Size2D(), 1.0f) * (GetCharacterMovement()->MaxWalkSpeed);
 	PlayerInputState.FutureSpeed = FutureSpeed;
 
-	PlayerInputState.bWantsToMove = (InputVector.Size() > KINDA_SMALL_NUMBER) && (FutureSpeed >= (CurrentGroundSpeed + 10.f));
+	
 	PlayerInputState.bIsMoving = CurrentGroundSpeed > 3.0f;
 	PlayerInputState.bIsInAir = GetCharacterMovement()->IsFalling();
-	PlayerInputState.bWantsToStop = PlayerInputState.bIsMoving && (FutureSpeed < KINDA_SMALL_NUMBER);
 	PlayerInputState.T3GaitState = (GetCharacterMovement()->MaxWalkSpeed > 400.0f) ? EGaitState::Run : EGaitState::Walk;
 	}
 

@@ -226,6 +226,7 @@ void UT3SkillWindowWidget::UpdateInfoPanel(int32 SkillID)
 	if (InfoSkillIcon && Data->SkillIcon)
 	{
 		InfoSkillIcon->SetBrushFromTexture(Data->SkillIcon);
+		InfoSkillIcon->SetVisibility(ESlateVisibility::Visible);
 	}
 }
 
