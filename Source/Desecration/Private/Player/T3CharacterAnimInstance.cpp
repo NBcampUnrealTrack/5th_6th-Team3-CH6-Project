@@ -25,8 +25,11 @@ void UT3CharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecond
 	
 	if (!TrajectoryComponent) return;
 	
-	FVector CurrentVelocity = GetOwningComponent()->GetComponentVelocity();
-	CurrentSpeed = CurrentVelocity.Length();
+	CurrentSpeed = 0.0f;
+	if (APawn* OwnerChar = TryGetPawnOwner())
+	{
+		CurrentSpeed = OwnerChar->GetVelocity().Length();
+	}
 	
 	const FTransformTrajectory& CurrentTrajectory = TrajectoryComponent->GetTrajectoryData();
 	float DeltaTime = 0.05f;
@@ -69,6 +72,7 @@ void UT3CharacterAnimInstance::DetermineLocomotionState()
 			CurrentLocomotionState = ELocomotionState::Plants;
 			return;
 		}
+		return;
 	}
 	
 	if (CurrentSpeed > SpeedThreshold && FutureSpeed < SpeedThreshold)
