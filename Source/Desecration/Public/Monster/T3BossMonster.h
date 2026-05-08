@@ -7,6 +7,7 @@
 #include "GameFramework/Actor.h"
 #include "Interface/T3Monster.h"
 #include "Player/T3LockOnTarget.h"
+#include "GameSystem/Interface/T3Poisonable.h"
 #include "T3BossMonster.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBossHitDelegate);
@@ -36,7 +37,7 @@ struct FBossMonsterStats
 };
 
 UCLASS()
-class DESECRATION_API AT3BossMonster : public ACharacter, public IT3LockOnTarget, public IT3Monster
+class DESECRATION_API AT3BossMonster : public ACharacter, public IT3LockOnTarget, public IT3Monster, public IT3Poisonable
 {
 	GENERATED_BODY()
 
@@ -122,6 +123,43 @@ private:
 
 public:
 	virtual void SetAnimationSpeedMultiplier(float MoveAnimMultiplier, float AttackAnimMultiplier) override;
-	
+
+#pragma endregion
+
+#pragma region Poison
+public:
+	// IT3Poisonable 구현
+	virtual void ApplyPoisonStack_Implementation(int32 Stacks) override;
+	virtual bool IsPoisoned_Implementation() const override;
+
+	// 독 최대 축적치 (보스 기본값 100)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Poison")
+	int32 MaxPoisonStack = 100;
+
+	// 독 활성화 시 초당 최대 HP 대비 데미지 비율 (0.01 = 1%)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Poison")
+	float PoisonDamagePercent = 0.01f;
+
+	// 독 지속 시간 (초)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Poison")
+	float PoisonDuration = 20.f;
+
+	// 독 데미지 틱 간격 (초)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Poison")
+	float PoisonTickInterval = 1.f;
+
+	// 독 VFX/SFX 에셋 묶음 — 에디터에서 한 곳에서 설정
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Poison|FX")
+	FT3PoisonFXConfig PoisonFX;
+
+private:
+	int32 CurrentPoisonStack = 0;
+	bool bIsPoisoned = false;
+	float PoisonRemainingTime = 0.f;
+	FTimerHandle PoisonTickTimerHandle;
+
+	void ActivatePoison();
+	void DeactivatePoison();
+	void PoisonTick();
 #pragma endregion
 };

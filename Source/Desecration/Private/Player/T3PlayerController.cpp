@@ -19,6 +19,7 @@
 #include "Player/Paladin/T3HolyGaugeWidget.h"
 #include "UI/T3ShopWidget.h"
 #include "UI/T3SkillWindowWidget.h"
+#include "UI/T3PoisonStackWidget.h"
 
 void AT3PlayerController::BeginPlay()
 {
@@ -106,6 +107,22 @@ void AT3PlayerController::BeginPlay()
 		{
 			LevelUpWidget->AddToViewport(99);
 			LevelUpWidget->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
+
+	if (IsValid(PoisonStackWidgetClass))
+	{
+		PoisonStackWidget = CreateWidget<UT3PoisonStackWidget>(this, PoisonStackWidgetClass);
+		if (PoisonStackWidget)
+		{
+			PoisonStackWidget->AddToViewport(97);
+			// 스택이 0이므로 처음엔 숨김 — BP_OnStackChanged에서 자동으로 제어됨
+			PoisonStackWidget->SetVisibility(ESlateVisibility::Collapsed);
+			// NativeConstruct 자동 바인딩 실패 대비 (캐릭터가 이미 확보된 상태이므로 명시적으로 바인딩)
+			if (IsValid(OwnerChar))
+			{
+				PoisonStackWidget->InitializeWidget(OwnerChar);
+			}
 		}
 	}
 

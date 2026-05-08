@@ -8,6 +8,7 @@
 #include "Monster/T3MidBossTypes.h"
 #include "Monster/T3MidBossNotifyModifier.h"
 #include "Player/T3LockOnTarget.h"
+#include "GameSystem/Interface/T3Poisonable.h"
 #include "Components/StateTreeComponent.h"
 #include "Components/TimelineComponent.h"
 #include "MotionWarpingComponent.h"
@@ -52,7 +53,7 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_Event_BlockReaction);
 // ============================================================
 
 UCLASS()
-class DESECRATION_API AT3MidBossMonster : public ACharacter, public IT3LockOnTarget, public IT3Monster
+class DESECRATION_API AT3MidBossMonster : public ACharacter, public IT3LockOnTarget, public IT3Monster, public IT3Poisonable
 {
 	GENERATED_BODY()
 
@@ -791,14 +792,51 @@ private:
 
 public:
 	virtual float GetHPPercent() const override;
-	
+
 	virtual ET3MonsterType GetMonsterType() const override;
-	
+
 	virtual void ApplyBonusDamage(float BonusDamage) override;
-	
+
 private:
 	ET3MonsterType MonsterType = ET3MonsterType::MiddleBoss;
 
+#pragma endregion
+
+#pragma region Poison
+public:
+	// IT3Poisonable 구현
+	virtual void ApplyPoisonStack_Implementation(int32 Stacks) override;
+	virtual bool IsPoisoned_Implementation() const override;
+
+	// 독 최대 축적치 (중간보스 기본값 100)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Poison")
+	int32 MaxPoisonStack = 100;
+
+	// 독 활성화 시 초당 최대 HP 대비 데미지 비율 (0.01 = 1%)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Poison")
+	float PoisonDamagePercent = 0.01f;
+
+	// 독 지속 시간 (초)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Poison")
+	float PoisonDuration = 20.f;
+
+	// 독 데미지 틱 간격 (초)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Poison")
+	float PoisonTickInterval = 1.f;
+
+	// 독 VFX/SFX 에셋 묶음 — 에디터에서 한 곳에서 설정
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Poison|FX")
+	FT3PoisonFXConfig PoisonFX;
+
+private:
+	int32 CurrentPoisonStack = 0;
+	bool bIsPoisoned = false;
+	float PoisonRemainingTime = 0.f;
+	FTimerHandle PoisonTickTimerHandle;
+
+	void ActivatePoison();
+	void DeactivatePoison();
+	void PoisonTick();
 #pragma endregion
 	
 #pragma region 장신구

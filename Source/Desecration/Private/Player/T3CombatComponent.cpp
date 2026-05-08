@@ -25,6 +25,7 @@
 #include "Monster/T3MonsterBase.h"
 #include "Player/Taoist/T3Taoist_SkillComponent.h"
 #include "Player/Taoist/T3FanWeapon.h"
+#include "GameSystem/Interface/T3Poisonable.h"
 
 
 UT3CombatComponent::UT3CombatComponent()
@@ -852,7 +853,16 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 	{
 		TargetActor->TakeDamage(DamageAmount, T3DamageEvent, AIPC, AIChar);
 	}
-	
+
+	// 기본 공격 + 독 룬 활성화 상태일 때 대상에게 독 스택 적용
+	if (bIsBasicAttack && OwnerChar && OwnerChar->IsPoisonAttackEnabled())
+	{
+		if (TargetActor->Implements<UT3Poisonable>())
+		{
+			IT3Poisonable::Execute_ApplyPoisonStack(TargetActor, OwnerChar->GetPoisonStacksPerHit());
+		}
+	}
+
 	if (SkillComp && DamageTypeClass)
 	{
 		if (DamageTypeClass->GetName().Contains(TEXT("BP_T3DamageType_ValkyriePassive")))

@@ -835,3 +835,108 @@ void AT3MidBossMonster::ApplyCurrentMoveMontagePlayRate(UAnimInstance* AnimInst,
 		AnimInst->Montage_SetPlayRate(Montage, LastMoveBaseRate * CurrentMoveAnimRate);
 	}
 }
+
+// ============================================================
+// 독 시스템 (IT3Poisonable 구현)
+// ============================================================
+
+void AT3MidBossMonster::ApplyPoisonStack_Implementation(int32 Stacks)
+{
+	// 독 활성화 중에는 스택 누적 없음
+	if (IsDead() || bIsPoisoned)
+	{
+		UE_LOG(LogDesecration, Verbose, TEXT("[독] %s — 스택 무시 (사망:%d, 독활성:%d)"),
+			*BossDisplayName.ToString(), IsDead(), bIsPoisoned);
+		return;
+	}
+
+	CurrentPoisonStack = FMath::Min(CurrentPoisonStack + Stacks, MaxPoisonStack);
+
+	UE_LOG(LogDesecration, Log, TEXT("[독] 중간보스 %s 스택 +%d → %d/%d"),
+		*BossDisplayName.ToString(), Stacks, CurrentPoisonStack, MaxPoisonStack);
+
+	if (CurrentPoisonStack >= MaxPoisonStack)
+	{
+		ActivatePoison();
+		CurrentPoisonStack = 0;
+	}
+}
+
+bool AT3MidBossMonster::IsPoisoned_Implementation() const
+{
+	return bIsPoisoned;
+}
+
+void AT3MidBossMonster::ActivatePoison()
+{
+	bIsPoisoned = true;
+	PoisonRemainingTime = PoisonDuration;
+
+	UE_LOG(LogDesecration, Warning, TEXT("[독] ★ 중간보스 %s 독 활성화! 지속 %.0f초, 초당 %.0f%% 데미지"),
+		*BossDisplayName.ToString(), PoisonDuration, PoisonDamagePercent * 100.f);
+
+	if (PoisonFX.ActivateEffect)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(), PoisonFX.ActivateEffect, GetActorLocation());
+	}
+	if (PoisonFX.ActivateSound)
+	{
+		PlayBossSoundAt(PoisonFX.ActivateSound, GetActorLocation(), 1.f);
+	}
+
+	GetWorld()->GetTimerManager().SetTimer(
+		PoisonTickTimerHandle,
+		this,
+		&AT3MidBossMonster::PoisonTick,
+		PoisonTickInterval,
+		true,
+		PoisonTickInterval
+	);
+}
+
+void AT3MidBossMonster::DeactivatePoison()
+{
+	bIsPoisoned = false;
+	GetWorld()->GetTimerManager().ClearTimer(PoisonTickTimerHandle);
+
+	UE_LOG(LogDesecration, Log, TEXT("[독] 중간보스 %s 독 해제"), *BossDisplayName.ToString());
+}
+
+void AT3MidBossMonster::PoisonTick()
+{
+	if (IsDead())
+	{
+		DeactivatePoison();
+		return;
+	}
+
+	const float PoisonDamage = MidBossStats.MaxHP * PoisonDamagePercent;
+	ApplyDamageToMidBoss(PoisonDamage, 0.f);
+
+	if (PoisonFX.TickEffect)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(), PoisonFX.TickEffect, GetActorLocation());
+	}
+	if (PoisonFX.TickSound)
+	{
+		PlayBossSoundAt(PoisonFX.TickSound, GetActorLocation(), 1.f);
+	}
+
+	UE_LOG(LogDesecration, Log, TEXT("[독] 중간보스 %s 독 데미지 %.1f (HP %.0f/%.0f) 남은시간 %.0f초"),
+		*BossDisplayName.ToString(), PoisonDamage,
+		MidBossStats.CurrentHP, MidBossStats.MaxHP, PoisonRemainingTime);
+
+	if (IsDead())
+	{
+		DeactivatePoison();
+		return;
+	}
+
+	PoisonRemainingTime -= PoisonTickInterval;
+	if (PoisonRemainingTime <= 0.f)
+	{
+		DeactivatePoison();
+	}
+}
