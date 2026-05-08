@@ -19,6 +19,7 @@
 #include "GameSystem/T3GameInstance.h"
 #include "GameSystem/T3GameMode.h"
 #include "Item/Data/T3ItemBaseData.h"
+#include "Kismet/GameplayStatics.h"
 #include "Player/T3PlayerController.h"
 #include "UI/T3HUDSlotWidget.h"
 #include "Player/Paladin/T3HolyGaugeWidget.h"
@@ -172,6 +173,50 @@ void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)
 	CurrentFootOffset = Data->FootOffset_Z;
 }
 
+void AT3CharacterBase::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	if (!Cast<AT3PlayerController>(NewController))
+	{
+		return;
+	}
+	
+	//레벨 스트리밍 : 지정한 레벨의 스트리밍 상태를 관리함
+	const TObjectPtr<ULevelStreaming> LevelStreaming = UGameplayStatics::GetStreamingLevel(GetWorld(), UT3GameInstance::GetCurrentLevelName());
+	if (!LevelStreaming)
+	{
+		return;
+	}
+	
+	RemoveGravityUntilWorldIsReady(LevelStreaming);
+}
+
+void AT3CharacterBase::RemoveGravityUntilWorldIsReady(const TObjectPtr<ULevelStreaming> LevelStreaming)
+{
+	if (!LevelStreaming)
+	{
+		return;
+	}
+	
+	//우선 캐릭터에게 적용된 중력 영향을 제거
+	const float OriginalGravity = GetCharacterMovement()->GravityScale;
+	GetCharacterMovement()->GravityScale = 0;
+	
+	//레벨이 완전히 로딩됐는지 확인하고 로딩 됐다면 캐릭터의 중력 되돌림
+	GetWorld()->GetTimerManager().SetTimer(WorldReadyTimer, FTimerDelegate::CreateLambda([&]()
+	{
+		if (!LevelStreaming->IsLevelLoaded())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("레벨 로딩 아직 안됨"));
+			return;
+		}
+		
+		UE_LOG(LogTemp, Warning, TEXT("레벨 로딩 완료"));
+		GetCharacterMovement()->GravityScale = OriginalGravity;
+		GetWorld()->GetTimerManager().ClearTimer(WorldReadyTimer);
+	}),0.25f, true);
+}
 
 void AT3CharacterBase::BeginPlay()
 {
