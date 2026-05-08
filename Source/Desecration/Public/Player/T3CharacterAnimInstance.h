@@ -29,19 +29,32 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Locomotion|State")
 	ELocomotionState CurrentLocomotionState = ELocomotionState::Idle;
 	
+	UPROPERTY(BlueprintReadOnly, Category = "Locomotion|State")
+	float CurrentSpeed;
+	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Locomotion|Tuning")
-	float SpeedThreshold = 20.0f;
+	float SpeedThreshold = 100.0f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Locomotion|Tuning")
 	float FutureSampleTime = 0.3f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Locomotion|Tuning")
+	float MinStartsTime = 0.5;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Locomotion|Tuning")
+	float MinPlantsTime = 0.3f;
+	
+	float StateElapsedTime = 0.0f;
+	
+	void SetLocomotionState(ELocomotionState NewState);
 	
 
 	
 	UPROPERTY(Transient)
 	TObjectPtr<UT3CharacterTrajectoryComponent> TrajectoryComponent;
 	
-	float CurrentSpeed;
+
 	float FutureSpeed;
 	
 	void DetermineLocomotionState();

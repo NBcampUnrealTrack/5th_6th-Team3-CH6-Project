@@ -25,6 +25,8 @@ void UT3CharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecond
 	
 	if (!TrajectoryComponent) return;
 	
+	StateElapsedTime += DeltaSeconds;
+	
 	CurrentSpeed = 0.0f;
 	if (APawn* OwnerChar = TryGetPawnOwner())
 	{
@@ -39,22 +41,32 @@ void UT3CharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecond
 	FutureSpeed = (FutureSample2.Position - FutureSample1.Position).Length()/DeltaTime;
 	
 	DetermineLocomotionState();
+}
 
-	
+void UT3CharacterAnimInstance::SetLocomotionState(ELocomotionState NewState)
+{
+	if (CurrentLocomotionState != NewState)
+	{
+		CurrentLocomotionState = NewState;
+		StateElapsedTime = 0.0f;
+	}
 }
 
 void UT3CharacterAnimInstance::DetermineLocomotionState()
 {
 	if (CurrentLocomotionState == ELocomotionState::Plants)
 	{
-		if (CurrentSpeed < 5.0f)
+		if (FutureSpeed >= SpeedThreshold)
 		{
-			CurrentLocomotionState = ELocomotionState::Idle;
+			SetLocomotionState(ELocomotionState::Starts);
 			return;
 		}
-		if (FutureSpeed > SpeedThreshold)
+		
+		if (StateElapsedTime < MinPlantsTime) return;
+		
+		if (CurrentSpeed < SpeedThreshold)
 		{
-			CurrentLocomotionState = ELocomotionState::Starts;
+			SetLocomotionState(ELocomotionState::Idle);
 			return;
 		}
 		return;
@@ -62,34 +74,38 @@ void UT3CharacterAnimInstance::DetermineLocomotionState()
 	
 	if (CurrentLocomotionState == ELocomotionState::Starts)
 	{
-		if (CurrentSpeed >= SpeedThreshold)
-		{
-			CurrentLocomotionState = ELocomotionState::Loop;
-			return;
-		}
 		if (FutureSpeed < SpeedThreshold)
 		{
-			CurrentLocomotionState = ELocomotionState::Plants;
+			SetLocomotionState(ELocomotionState::Plants);
 			return;
 		}
+		
+		if (StateElapsedTime < MinStartsTime) return;
+		
+		if (CurrentSpeed >= SpeedThreshold)
+		{
+			SetLocomotionState(ELocomotionState::Loop);
+			return;
+		}
+
 		return;
 	}
 	
 	if (CurrentSpeed > SpeedThreshold && FutureSpeed < SpeedThreshold)
 	{
-		CurrentLocomotionState = ELocomotionState::Plants;
+		SetLocomotionState(ELocomotionState::Plants);
 	}
 	else if (CurrentSpeed < SpeedThreshold && FutureSpeed > SpeedThreshold)
 	{
-		CurrentLocomotionState = ELocomotionState::Starts;
+		SetLocomotionState(ELocomotionState::Starts);
 	}
 	else if (CurrentSpeed > SpeedThreshold)
 	{
-		CurrentLocomotionState = ELocomotionState::Loop;
+		SetLocomotionState(ELocomotionState::Loop);
 	}
 	else
 	{
-		CurrentLocomotionState = ELocomotionState::Idle;
+		SetLocomotionState(ELocomotionState::Idle);
 	}
 }
 
