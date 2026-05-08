@@ -10,6 +10,10 @@
 #include "Framework/Application/SlateApplication.h" // Slate 관련
 #include "Kismet/KismetInternationalizationLibrary.h"
 
+#pragma region static 변수 초기화
+ELevelName UT3GameInstance::CurrentLevel = ELevelName::Title;
+#pragma endregion
+
 FText UT3GameInstance::GetTextFromTable(const FString& Namespace, const FString& Key)
 {
 	FText ReturnValue;
@@ -20,6 +24,50 @@ FText UT3GameInstance::GetTextFromTable(const FString& Namespace, const FString&
 FString UT3GameInstance::GetStringFromTable(const FString& Namespace, const FString& Key)
 {
 	return GetTextFromTable(Namespace, Key).ToString();
+}
+
+FName UT3GameInstance::GetLevelName(const ELevelName LevelName)
+{
+	//이 함수에 사용된 각 레벨별 이름은 ELevelName의 정의에서 사용된 DisplayName과 동일해야 합니다.
+	
+	FName ReturnValue;
+	switch (LevelName)
+	{
+	case ELevelName::Title:
+		ReturnValue = TEXT("T3TitleLevel");
+		break;
+	case ELevelName::SelectClass:
+		ReturnValue = TEXT("T3SelectClassLevel");
+		break;
+	case ELevelName::Tutorial:
+		ReturnValue = TEXT("T3_TutrorialMaps");
+		break;
+	case ELevelName::Town:
+		ReturnValue = TEXT("T3Town");
+		break;
+	case ELevelName::Castle_1:
+		ReturnValue = TEXT("T3Castle_1");
+		break;
+	case ELevelName::Mountain:
+		ReturnValue = TEXT("T3MF");
+		break;
+	case ELevelName::Cathedral:
+		ReturnValue = TEXT("T3_CathedralMaps2");
+		break;
+	case ELevelName::Dragon:
+		ReturnValue = TEXT("T3_DragonMap");
+		break;
+	default:
+		ReturnValue = FName();
+		break;
+	}
+	
+	return ReturnValue;
+}
+
+FName UT3GameInstance::GetCurrentLevelName()
+{
+	return GetLevelName(CurrentLevel);
 }
 
 void UT3GameInstance::Init()
