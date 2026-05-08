@@ -71,6 +71,12 @@ void UT3SkillWindowWidget::InitializeWidget(AT3CharacterBase* InCharacter)
 	ClassSkillComp->OnSkillEquipStateChanged.AddDynamic(this, &UT3SkillWindowWidget::HandleSkillEquipStateChanged);
 	ClassSkillComp->OnSkillUnlockStateChanged.AddDynamic(this, &UT3SkillWindowWidget::HandleSkillUnlockStateChanged);
 
+	if (CommonSkillComp)
+	{
+		CommonSkillComp->OnSkillEquipStateChanged.AddDynamic(this, &UT3SkillWindowWidget::HandleSkillEquipStateChanged);
+		CommonSkillComp->OnSkillUnlockStateChanged.AddDynamic(this, &UT3SkillWindowWidget::HandleSkillUnlockStateChanged);
+	}
+
 	if (GridSlots.IsEmpty())
 	{
 		BuildEquippedRow();
@@ -155,7 +161,14 @@ void UT3SkillWindowWidget::RefreshEquippedRow()
 		FSkillData* Data = GetSkillDataByID(ID);
 		FSkillData SafeData = Data ? *Data : FSkillData();
 
-		bool bUnlocked = (ID != 0) && ClassSkillComp->IsSkillUnlocked(ID);
+		bool bUnlocked = false;
+		if (ID != 0)
+		{
+			if (UT3CommonSkillComponent::IsBossSkillID(ID) && CommonSkillComp)
+				bUnlocked = CommonSkillComp->IsSkillUnlocked(ID);
+			else
+				bUnlocked = ClassSkillComp->IsSkillUnlocked(ID);
+		}
 		SkillSlot->SetupSlot(ID, SafeData, bUnlocked, /*bEquipped=*/ID != 0);
 		SkillSlot->SetSelectedState(ID != 0 && ID == SelectedSkillID);
 	}
@@ -186,8 +199,22 @@ void UT3SkillWindowWidget::RefreshSkillGrid()
 		FSkillData* Data = GetSkillDataByID(ID);
 		FSkillData SafeData = Data ? *Data : FSkillData();
 
-		bool bUnlocked = (ID != 0) && ClassSkillComp->IsSkillUnlocked(ID);
-		bool bEquipped = (ID != 0) && ClassSkillComp->IsSkillEquipped(ID);
+		bool bUnlocked = false;
+		bool bEquipped = false;
+		if (ID != 0)
+		{
+			// 보스 스킬(5~8)은 CommonSkillComp에서 해금 여부 확인
+			if (UT3CommonSkillComponent::IsBossSkillID(ID) && CommonSkillComp)
+			{
+				bUnlocked = CommonSkillComp->IsSkillUnlocked(ID);
+			}
+			else
+			{
+				bUnlocked = ClassSkillComp->IsSkillUnlocked(ID);
+			}
+			// 장착 여부는 항상 ClassSkillComp.EquippedSkillIDs 기준
+			bEquipped = ClassSkillComp->IsSkillEquipped(ID);
+		}
 
 		SkillSlot->SetupSlot(ID, SafeData, bUnlocked, bEquipped);
 		SkillSlot->SetSelectedState(ID != 0 && ID == SelectedSkillID);
@@ -269,6 +296,11 @@ void UT3SkillWindowWidget::UnbindDelegates()
 		ClassSkillComp->OnSkillEquipStateChanged.RemoveDynamic(this, &UT3SkillWindowWidget::HandleSkillEquipStateChanged);
 		ClassSkillComp->OnSkillUnlockStateChanged.RemoveDynamic(this, &UT3SkillWindowWidget::HandleSkillUnlockStateChanged);
 	}
+	if (CommonSkillComp)
+	{
+		CommonSkillComp->OnSkillEquipStateChanged.RemoveDynamic(this, &UT3SkillWindowWidget::HandleSkillEquipStateChanged);
+		CommonSkillComp->OnSkillUnlockStateChanged.RemoveDynamic(this, &UT3SkillWindowWidget::HandleSkillUnlockStateChanged);
+	}
 }
 
 // ─────────────────────────────────────────────
@@ -290,7 +322,16 @@ void UT3SkillWindowWidget::OnGridSlotClicked(int32 SkillID)
 	}
 
 	// 잠긴 스킬은 아무것도 하지 않음
-	if (!OwnerCharacter || !ClassSkillComp || !ClassSkillComp->IsSkillUnlocked(SkillID)) return;
+	bool bIsUnlocked = false;
+	if (UT3CommonSkillComponent::IsBossSkillID(SkillID) && CommonSkillComp)
+	{
+		bIsUnlocked = CommonSkillComp->IsSkillUnlocked(SkillID);
+	}
+	else if (ClassSkillComp)
+	{
+		bIsUnlocked = ClassSkillComp->IsSkillUnlocked(SkillID);
+	}
+	if (!OwnerCharacter || !bIsUnlocked) return;
 
 	SelectedSkillID = SkillID;
 
