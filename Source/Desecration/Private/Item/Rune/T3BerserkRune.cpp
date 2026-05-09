@@ -29,9 +29,15 @@ void UT3BerserkRune::OnUnsocketed_Implementation(AT3CharacterBase* OwnerChar)
 	}
 	
 	OwnerChar->GetWorldTimerManager().ClearTimer(ActiveTimerHandle);
-	
+
 	OwnerChar->RemoveRuneAttackBonus(this);
-	
+
+	if (IsValid(ActiveEffect))
+	{
+		ActiveEffect->DeactivateImmediate();
+		ActiveEffect = nullptr;
+	}
+
 	CachedOwner = nullptr;
 }
 
@@ -80,7 +86,7 @@ void UT3BerserkRune::Activate()
 		
 		Owner->SetRuneAttackBonus(this, Bonus);
 
-		PlayTriggerEffect(Owner);
+		ActiveEffect = PlayTriggerEffect(Owner, NAME_None, false);
 
 		Owner->GetWorldTimerManager().SetTimer(
 			ActiveTimerHandle,
@@ -106,9 +112,15 @@ void UT3BerserkRune::Deactivate()
 	{
 		return;
 	}
-	
+
 	Owner->SetRuneAttackBonus(this, 0.0);
-	
+
+	if (IsValid(ActiveEffect))
+	{
+		ActiveEffect->DeactivateImmediate();
+		ActiveEffect = nullptr;
+	}
+
 	UE_LOG(LogTemp, Warning, TEXT("광폭 룬 효과 끝남"));
 }
 
