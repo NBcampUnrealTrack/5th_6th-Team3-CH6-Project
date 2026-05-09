@@ -1,6 +1,7 @@
 #include "Item/Rune/T3BerserkRune.h"
 
 #include "Equipment/T3PlayerEquipmentComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Player/T3CombatComponent.h"
 
 void UT3BerserkRune::OnSocketed_Implementation(AT3CharacterBase* OwnerChar)
@@ -78,7 +79,9 @@ void UT3BerserkRune::Activate()
 		float Bonus = FMath::RoundToFloat(Owner->EquipComp->GetCurrentAttackPower() * (ValueByGrade / 100.0f) * 10.0f) / 10.0f;
 		
 		Owner->SetRuneAttackBonus(this, Bonus);
-		
+
+		PlayTriggerEffect(Owner);
+
 		Owner->GetWorldTimerManager().SetTimer(
 			ActiveTimerHandle,
 			this,
