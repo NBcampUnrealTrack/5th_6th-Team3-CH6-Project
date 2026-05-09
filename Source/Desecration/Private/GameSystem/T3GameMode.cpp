@@ -37,7 +37,7 @@ void AT3GameMode::MakeLostMoneyActors()
 	{
 		//이 레벨에 해당되는 것만 생성
 		FLostMoney LostMoney = LostMoneyInfo.Value;
-		if (LostMoney.LevelName != UT3GameInstance::GetCurrentLevel())
+		if (LostMoney.LevelName != T3GameInstance->GetCurrentLevel())
 		{
 			continue;
 		}
@@ -420,7 +420,7 @@ bool AT3GameMode::YouHaveBeenCorrupted(const AT3CharacterBase* Character) const
 	
 	//잃어버린 재화 정보
 	const int32 LostAmount = Character->InventoryComponent->GetMoney();
-	const FLostMoney NewLostMoney = FLostMoney(UT3GameInstance::GetCurrentLevel(), Character->GetActorLocation(), LostAmount);
+	const FLostMoney NewLostMoney = FLostMoney(T3GameInstance->GetCurrentLevel(), Character->GetActorLocation(), LostAmount);
 	T3GameInstance->GetSavedGameData()->AddLostMoney(NewLostMoney);
 
 	//마지막 저장 위치로

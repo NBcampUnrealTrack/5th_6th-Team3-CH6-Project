@@ -63,24 +63,7 @@ public:
 	 */
 	UFUNCTION(Blueprintpure)
 	static FString GetStringFromTable(const FString& Namespace, const FString& Key);
-
-	//지정한 ELevelName을 FName으로 (에셋에서의 이름)
-	UFUNCTION(Blueprintpure)
-	static FName GetLevelName(const ELevelName LevelName);
 	
-	//현재 레벨 (FName)
-	UFUNCTION(Blueprintpure)
-	static FName GetCurrentLevelName();
-	
-	//현재 레벨 (ELevelName)
-	UFUNCTION(BlueprintPure)
-	static ELevelName GetCurrentLevel() { return CurrentLevel; }
-
-protected:
-	//현재 레벨
-	static ELevelName CurrentLevel;
-	
-public:
 	virtual void Init() override;
 	
 protected:
@@ -182,6 +165,10 @@ public:
 	UFUNCTION(BlueprintPure)
 	bool GetSavePointTransform(ELevelName LevelName, FName SavePointID, FVector& OutLocation, FRotator& OutRotation);
 	
+	//현재 레벨
+	UFUNCTION(BlueprintPure)
+	FORCEINLINE ELevelName GetCurrentLevel() const { return CurrentLevel; }
+
 	//저장된 게임
 	FORCEINLINE TObjectPtr<UT3SaveGame> GetSavedGameData() { return SavedGameData; }
 	
@@ -235,6 +222,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Level Settings")
 	TMap<ELevelName, TSoftObjectPtr<UWorld>> LevelMap;
 	
+	//현재 레벨
+	ELevelName CurrentLevel = ELevelName::Title;
+
 	//저장, 불러오기에 사용할 슬롯 이름
 	const FString SAVE_GAME_NAME = TEXT("SaveSlot1");
 	const FString SAVE_USER_SETTINGS_NAME = TEXT("UserSettings");
