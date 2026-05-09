@@ -22,6 +22,7 @@
 #include "Player/T3PlayerController.h"
 #include "UI/T3HUDSlotWidget.h"
 #include "Player/Paladin/T3HolyGaugeWidget.h"
+#include "WorldPartition/WorldPartitionSubsystem.h"
 
 
 AT3CharacterBase::AT3CharacterBase()
@@ -172,6 +173,43 @@ void AT3CharacterBase::ApplyCharacterData(UT3CharacterDataAsset* Data)
 	CurrentFootOffset = Data->FootOffset_Z;
 }
 
+void AT3CharacterBase::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+	
+	//T3 플레이어 컨트롤러가 정상적으로 빙의한 경우에만 작동
+	if (Cast<AT3PlayerController>(NewController))
+	{
+		//우선 캐릭터에게 적용된 중력 영향을 제거
+		TempSaveGravity = GetCharacterMovement()->GravityScale;
+		GetCharacterMovement()->GravityScale = 0;
+		
+		//지속적으로 맵 생성을 확인하고 중력 영향을 되돌린다.
+		constexpr float RepeatDelay = 0.25f;
+		GetWorld()->GetTimerManager().SetTimer(
+			WorldReadyTimer, FTimerDelegate::CreateUObject(this, &ThisClass::RestoreGravityUntilWorldIsReady), RepeatDelay, true);
+	}
+}
+
+void AT3CharacterBase::RestoreGravityUntilWorldIsReady()
+{	
+	const TObjectPtr<UWorldPartitionSubsystem> WorldPartitionSubsystem = UWorld::GetSubsystem<UWorldPartitionSubsystem>(GetWorld());
+	if (!WorldPartitionSubsystem)
+	{
+		return;
+	}
+
+	const TObjectPtr<AT3PlayerController> T3PlayerController = Cast<AT3PlayerController>(GetController());
+	if (!T3PlayerController || !WorldPartitionSubsystem->IsStreamingCompleted(T3PlayerController))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("레벨 로딩 아직 안됨"));
+		return;
+	}
+		
+	UE_LOG(LogTemp, Warning, TEXT("레벨 로딩 완료"));
+	GetCharacterMovement()->GravityScale = TempSaveGravity;
+	GetWorld()->GetTimerManager().ClearTimer(WorldReadyTimer);
+}
 
 void AT3CharacterBase::BeginPlay()
 {
