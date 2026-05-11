@@ -17,6 +17,7 @@ class AT3CharacterBase;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnEquipmentStatsChanged, float, NewAttackPower, float, NewDefensePower, float, NewWeaponLevel);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRuneSocketChanged);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAccessoryChanged);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnOniAccessoryEquipped, bool, IsEquipped);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class DESECRATION_API UT3PlayerEquipmentComponent : public UActorComponent
@@ -215,5 +216,7 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnAccessoryChanged OnAccessoryChanged;
 	
+	UPROPERTY(BlueprintAssignable)
+	FOnOniAccessoryEquipped OnOniAccessoryEquipped;
 #pragma endregion
 };
