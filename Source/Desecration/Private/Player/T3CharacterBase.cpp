@@ -187,11 +187,11 @@ void AT3CharacterBase::PossessedBy(AController* NewController)
 		//지속적으로 맵 생성을 확인하고 중력 영향을 되돌린다.
 		constexpr float RepeatDelay = 0.25f;
 		GetWorld()->GetTimerManager().SetTimer(
-			WorldReadyTimer, FTimerDelegate::CreateUObject(this, &ThisClass::RestoreGravityUntilWorldIsReady), RepeatDelay, true);
+			WorldReadyTimer, FTimerDelegate::CreateUObject(this, &ThisClass::RestoreGravityWhenWorldIsReady), RepeatDelay, true);
 	}
 }
 
-void AT3CharacterBase::RestoreGravityUntilWorldIsReady()
+void AT3CharacterBase::RestoreGravityWhenWorldIsReady()
 {	
 	const TObjectPtr<UWorldPartitionSubsystem> WorldPartitionSubsystem = UWorld::GetSubsystem<UWorldPartitionSubsystem>(GetWorld());
 	if (!WorldPartitionSubsystem)

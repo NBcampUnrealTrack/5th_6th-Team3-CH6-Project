@@ -130,8 +130,8 @@ protected:
 	
 	void ApplyCharacterData(UT3CharacterDataAsset* Data);
 
-	//게임 시작시 레벨 로딩이 완료될때까지 중력을 비활성화
-	void RestoreGravityUntilWorldIsReady();
+	//레벨 로딩이 완료되면 중력 영향 되돌림
+	void RestoreGravityWhenWorldIsReady();
 	//RestoreGravityUntilWorldIsReady함수용 타이머 핸들
 	FTimerHandle WorldReadyTimer;
 	//RestoreGravityUntilWorldIsReady함수용 임시 저장 변수
