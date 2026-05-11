@@ -307,11 +307,6 @@ struct FT3STT_TestRollInstanceData
 	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "0.0"))
 	float PostRollDelay = 1.5f;
 
-	// 정상 Succeeded 시 Boss에 TAG_Boss_State_PostRoll를 이 시간만큼 부여 (Reaction Consideration용)
-	// 0 = 비활성 (※ "리액션 패턴"용. 기존 ParryWindow 카운터와 무관)
-	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "0.0"))
-	float PostRollWindowDuration = 0.5f;
-
 	// i-frame 부여 — Boss.State.Invulnerable 태그를 몽타주 전체 구간에 적용
 	// (정식 무적 분기는 AT3MidBossMonster::TakeDamage 참조 — 데미지 0 처리)
 	// false 시 STT가 태그를 토글하지 않음 — 몽타주 ANS_BossInvulnerable 트랙으로 정밀 구간(5~45f) 제어할 때 사용
@@ -380,11 +375,6 @@ struct FT3STT_BlockInstanceData
 	// 0 = 무제한 (시간으로만 종료)
 	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "0"))
 	int32 MaxBlockHits = 2;
-
-	// 정상 Succeeded 시 Boss에 TAG_Boss_State_PostBlock를 이 시간만큼 부여 (Reaction Consideration용)
-	// 0 = 비활성 (※ "리액션 패턴"용. 기존 ParryWindow 카운터와 무관)
-	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "0.0"))
-	float PostBlockWindowDuration = 0.5f;
 
 	UPROPERTY(EditAnywhere, Category = "Context")
 	TObjectPtr<AT3MidBossMonster> Boss = nullptr;

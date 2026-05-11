@@ -4,6 +4,8 @@
 #include "Monster/T3BossWeaponComponent.h"
 #include "Desecration.h"
 #include "AIController.h"
+#include "DrawDebugHelpers.h"            // [DEBUG:StaggerGauge] 제거 시 함께 삭제
+#include "Components/CapsuleComponent.h" // [DEBUG:StaggerGauge] 제거 시 함께 삭제
 
 #include "Components/TimelineComponent.h"
 #include "Components/WidgetComponent.h"
@@ -339,6 +341,7 @@ void AT3MidBossMonster::Tick(float DeltaTime)
 	UpdateMoveToTargetInterpolation(DeltaTime);
 	UpdateAIFocusAndRotation();
 	UpdateStaggerRecovery(DeltaTime);
+	DrawDebugStaggerGauge(DeltaTime); // [DEBUG:StaggerGauge] 제거 시 이 줄 삭제
 }
 
 // 경직치 자연 회복 — Rate>0인 보스만 동작 (다크나이트는 0이라 early-out)
@@ -370,6 +373,68 @@ void AT3MidBossMonster::UpdateStaggerRecovery(float DeltaTime)
 	MidBossStats.CurrentStunGauge =
 		FMath::Max(0.f, MidBossStats.CurrentStunGauge - StaggerRecoveryRate * DeltaTime);
 }
+
+// ============================================================
+// [DEBUG:StaggerGauge] BEGIN — 디자이너 튜닝용 임시 디버그 (출시 전 제거)
+// 제거 시: 이 함수 본체 + .h 의 bShowDebugStaggerGauge / DrawDebugStaggerGauge 선언
+//          + Tick 의 DrawDebugStaggerGauge 호출 + 위 두 #include 모두 일괄 삭제
+// 머리 위 텍스트로 경직치 가시화 (DrawDebugString + 비율 바를 ASCII로 표현)
+// Duration 인자에 DeltaTime+여유 → 다음 틱 호출 전 자동 소거 → 누적 잔상 방지
+// ============================================================
+void AT3MidBossMonster::DrawDebugStaggerGauge(float DeltaTime) const
+{
+	if (!bShowDebugStaggerGauge || IsDead())
+	{
+		return;
+	}
+
+	const UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	const float Threshold = MidBossStats.StunThreshold;
+	const float Current = MidBossStats.CurrentStunGauge;
+	const float Ratio = (Threshold > 0.f) ? FMath::Clamp(Current / Threshold, 0.f, 1.f) : 0.f;
+
+	// 게이지 비율에 따라 색상 단계: 0~50% 녹색, 50~75% 노랑, 75%~ 빨강, Stunned 자홍
+	FColor Color = FColor::Green;
+	if (IsStunned()) Color = FColor::Magenta;
+	else if (Ratio >= 0.75f) Color = FColor::Red;
+	else if (Ratio >= 0.50f) Color = FColor::Yellow;
+
+	// 머리 위 위치 — Capsule HalfHeight + 여유 60 (대략 보스 캡슐 위)
+	FVector HeadLocation = GetActorLocation();
+	if (const UCapsuleComponent* Capsule = GetCapsuleComponent())
+	{
+		HeadLocation.Z += Capsule->GetScaledCapsuleHalfHeight() + 60.f;
+	}
+	else
+	{
+		HeadLocation.Z += 200.f;
+	}
+
+	// ASCII 비율 바 (20칸): █ 채움 / · 빈칸
+	constexpr int32 BarSize = 20;
+	const int32 Filled = FMath::RoundToInt(Ratio * BarSize);
+	FString Bar;
+	Bar.Reserve(BarSize + 2);
+	Bar.AppendChar(TEXT('['));
+	for (int32 i = 0; i < BarSize; ++i)
+	{
+		Bar.AppendChar(i < Filled ? TEXT('#') : TEXT('.'));
+	}
+	Bar.AppendChar(TEXT(']'));
+
+	const FString Text = FString::Printf(
+		TEXT("Stagger %.1f / %.1f  (%.0f%%)\n%s%s"),
+		Current, Threshold, Ratio * 100.f, *Bar,
+		IsStunned() ? TEXT("  [STUNNED]") : TEXT(""));
+
+	DrawDebugString(World, HeadLocation, Text, nullptr, Color, DeltaTime + 0.05f, true, 1.2f);
+}
+// [DEBUG:StaggerGauge] END
 
 // MoveToTarget 보간 처리 — 지정 방향/속도로 bIsMovingToTarget 동안 AddActorWorldOffset
 void AT3MidBossMonster::UpdateMoveToTargetInterpolation(float DeltaTime)

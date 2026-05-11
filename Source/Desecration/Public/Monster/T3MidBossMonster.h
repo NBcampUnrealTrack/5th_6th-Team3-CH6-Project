@@ -53,6 +53,18 @@ UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_Event_ParriedByPlayer);
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Boss_Event_BlockReaction);
 
 // ============================================================
+// 리액션 트리거 소스 — Roll/Block 정상 종료로 "다음 공격은 리액션 모드" 플래그가 설정된 출처.
+// ExecutePattern 성공 시 None으로 소모됨. 시간 기반 만료 없음 (다음 공격 1회 = 1소모).
+// ============================================================
+UENUM(BlueprintType)
+enum class EBossReactionSource : uint8
+{
+	None		UMETA(DisplayName = "None"),
+	FromBlock	UMETA(DisplayName = "After Block"),
+	FromRoll	UMETA(DisplayName = "After Roll"),
+};
+
+// ============================================================
 // AT3MidBossMonster
 // ============================================================
 
@@ -463,6 +475,11 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "MidBoss|Defense")
 	bool bBlockEndRequested = false;
 
+	// 현재 활성 막기 몽타주 캐시 — PlayBlockEntry에서 set / StopBlockSequence가 이 몽타주만 외과적으로 정지
+	// (StopAllMontages 사용 시 동시에 진입한 다른 몽타주(예: 스턴 진입)까지 죽이는 부작용 방지)
+	UPROPERTY()
+	TObjectPtr<UAnimMontage> CurrentBlockMontage;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Combat")
 	float StunDuration = 3.0f;
 
@@ -495,6 +512,27 @@ public:
 	// IsStunned/IsDead 가드 + Amount<=0 early-out 포함. 임계 도달 시 ApplyStun() 자동 호출
 	UFUNCTION(BlueprintCallable, Category = "MidBoss|Stagger")
 	void AddStunGauge(float Amount);
+
+	// [DEBUG:StaggerGauge] 디자이너 튜닝용 임시 디버그. 제거 시 `[DEBUG:StaggerGauge]` 태그 grep 후 일괄 삭제
+	// 보스 머리 위에 경직치 게이지 텍스트 + 비율 바 매 틱 표시. 출시 전 토글 OFF 또는 코드 제거.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Stagger")
+	bool bShowDebugStaggerGauge = false;
+
+	// 리액션 트리거 — Roll/Block 정상 종료 시 세팅, 다음 ExecutePattern 1회로 소모.
+	// 시간 만료 없음 — 다음 공격이 발사되기 전까지 유지. ReactionWindow Consideration / ExecutePattern 자동감지가 이 필드를 읽음.
+	UPROPERTY(BlueprintReadOnly, Category = "MidBoss|Reaction")
+	EBossReactionSource PendingReactionSource = EBossReactionSource::None;
+
+	// [DEBUG:ReactionTest] 리액션 패턴 흐름 검증용. 제거 시 `[DEBUG:ReactionTest]` 태그 grep 후 일괄 삭제
+	// 막기/회피(Roll/Block) 정상 종료 직후 DebugReactionPatternName 패턴을 bAsReaction=true로 강제 실행.
+	// → ReactionStartSectionOverride / ReactionSectionNameOverride 발동 검증용. 출시 전 토글 OFF.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Debug")
+	bool bDebugForceReactionAfterDefense = false;
+
+	// [DEBUG:ReactionTest] 강제 실행할 패턴 이름. bAllowAsReaction=true로 BP 등록되어 있어야 의미 있음.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Debug",
+		meta = (EditCondition = "bDebugForceReactionAfterDefense"))
+	FName DebugReactionPatternName = NAME_None;
 
 #pragma endregion Combat
 
@@ -651,6 +689,9 @@ private:
 	// StaggerRecoveryRate>0 + Stunned/Dead 아님 + 마지막 누적으로부터 Delay 경과 시 게이지 감소
 	void UpdateStaggerRecovery(float DeltaTime);
 
+	// [DEBUG:StaggerGauge] bShowDebugStaggerGauge ON 일 때 매 틱 — 머리 위 텍스트 시각화
+	void DrawDebugStaggerGauge(float DeltaTime) const;
+
 	// ApplyTransientStateTag로 부여된 태그의 자동 제거 타이머 — 태그별 1개 핸들 (재호출 시 갱신)
 	TMap<FGameplayTag, FTimerHandle> TransientStateTagHandles;
 
@@ -711,6 +752,10 @@ private:
 
 	FName CurrentPatternName = NAME_None;
 	int32 CurrentChainIndex = 0;
+
+	// 현재 실행 중인 패턴이 리액션 모드(ExecutePattern bAsReaction=true)로 진입했는지
+	// PlaySectionComboFirstEntry가 ReactionSectionNameOverride 적용 여부 판단에 사용
+	bool bIsCurrentPatternReaction = false;
 
 	UPROPERTY()
 	TMap<FName, double> PatternCooldownExpireMap;

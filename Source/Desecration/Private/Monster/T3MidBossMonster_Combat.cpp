@@ -214,6 +214,7 @@ void AT3MidBossMonster::ApplyStun()
 	CancelCurrentPattern();
 
 	// 스턴 몽타주 재생 — 헬퍼 통과로 슬로우 존 실시간 갱신 적용
+	// (막기 진행 중이었다면 ST의 Block ExitState → StopBlockSequence가 활성 막기 몽타주만 외과적으로 정지하므로 충돌 없음)
 	if (StunMontage)
 	{
 		PlayMoveMontageWithSlow(StunMontage, 1.f);
@@ -307,6 +308,9 @@ void AT3MidBossMonster::PlayBlockEntry(const FBlockMontageEntry& Entry, EBlockPh
 		AnimInst->Montage_SetBlendingOutDelegate(BlendOutDelegate, Entry.Montage);
 	}
 
+	// 활성 막기 몽타주 캐싱 — StopBlockSequence가 외과적으로 이 몽타주만 정지
+	CurrentBlockMontage = Entry.Montage;
+
 	CurrentBlockPhase = NewPhase;
 
 	UE_LOG(LogDesecration, Log,
@@ -366,10 +370,15 @@ void AT3MidBossMonster::StopBlockSequence()
 		return;
 	}
 
-	// 진행 중인 막기 몽타주 즉시 정지 (인터럽트 — BlockReaction 이벤트, 사망, 스턴 등)
-	if (UAnimInstance* AnimInst = GetMesh() ? GetMesh()->GetAnimInstance() : nullptr)
+	// 활성 막기 몽타주만 외과적으로 정지 — 동시에 재생된 다른 몽타주(예: 스턴 진입 직후)는 보존
+	// (StopAllMontages 사용 시 ApplyStun이 방금 시작한 StunMontage까지 같이 죽는 부작용 있어서 캐시 기반으로 전환)
+	if (CurrentBlockMontage)
 	{
-		AnimInst->StopAllMontages(0.2f);
+		if (UAnimInstance* AnimInst = GetMesh() ? GetMesh()->GetAnimInstance() : nullptr)
+		{
+			AnimInst->Montage_Stop(0.2f, CurrentBlockMontage);
+		}
+		CurrentBlockMontage = nullptr;
 	}
 
 	RemoveStateTag(TAG_Boss_State_Blocking);
@@ -419,6 +428,7 @@ void AT3MidBossMonster::OnBlockMontageBlendingOut(UAnimMontage* Montage, bool bI
 		RemoveStateTag(TAG_Boss_State_Blocking);
 		CurrentBlockPhase = EBlockPhase::Idle;
 		bBlockEndRequested = false;
+		CurrentBlockMontage = nullptr;
 		UE_LOG(LogDesecration, Log,
 			TEXT("T3_MidBoss: 막기 시퀀스 정상 종료 — 누적 피격수 %d"), BlockHitsCount);
 		break;

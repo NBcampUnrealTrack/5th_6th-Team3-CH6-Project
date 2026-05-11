@@ -62,8 +62,13 @@ EStateTreeRunStatus FT3STT_ExecutePattern::EnterState(
 		Data.CachedRequiredStage = PatternData.RequiredStage;
 	}
 
-	// 패턴 실행 시도 (bAsReaction=true면 리액션 모드 — ReactionStartSectionOverride 적용)
-	if (!Data.Boss->ExecutePattern(Data.PatternName, Data.bAsReaction))
+	// 리액션 모드 자동 감지 — bAsReaction 명시 OR PendingReactionSource 활성 시 리액션 진입.
+	// (Why: BP의 모든 ExecutePattern 노드를 bAsReaction=true로 토글하지 않아도 Roll/Block 종료 후 1회 자동 적용. ExecutePattern 본체에서 None으로 소모됨)
+	const bool bResolvedReaction = Data.bAsReaction
+		|| Data.Boss->PendingReactionSource != EBossReactionSource::None;
+
+	// 패턴 실행 시도 (리액션 모드면 ReactionStartSectionOverride / ReactionSectionNameOverride 적용)
+	if (!Data.Boss->ExecutePattern(Data.PatternName, bResolvedReaction))
 	{
 		return EStateTreeRunStatus::Failed;
 	}
@@ -654,12 +659,24 @@ void FT3STT_TestRoll::ExitState(
 			Data.Boss->StopAnimMontage(Data.ActiveRoll);
 		}
 
-		// 정상 Succeeded 시에만 PostRoll 윈도우 부여 — 인터럽트로 끊긴 경우 제외
+		// 정상 Succeeded 시에만 리액션 트리거 세팅 — 인터럽트로 끊긴 경우 제외
 		// (bRollEnded=true && DelayElapsed>=PostRollDelay 도달이 정상 종료 조건)
 		const bool bNormalCompletion = Data.bRollEnded && (Data.DelayElapsed >= Data.PostRollDelay);
-		if (bNormalCompletion && Data.PostRollWindowDuration > 0.f)
+		if (bNormalCompletion)
 		{
-			Data.Boss->ApplyTransientStateTag(TAG_Boss_State_PostRoll, Data.PostRollWindowDuration);
+			Data.Boss->PendingReactionSource = EBossReactionSource::FromRoll;
+			UE_LOG(LogDesecration, Log, TEXT("T3_ST: Roll 정상 종료 → PendingReactionSource=FromRoll 세팅"));
+		}
+
+		// [DEBUG:ReactionTest] Roll 정상 종료 시 강제 리액션 패턴 — 디버그 토글 ON일 때만
+		if (bNormalCompletion
+			&& Data.Boss->bDebugForceReactionAfterDefense
+			&& !Data.Boss->DebugReactionPatternName.IsNone())
+		{
+			UE_LOG(LogDesecration, Warning,
+				TEXT("T3_ST: [DEBUG:ReactionTest] Roll 종료 → 강제 리액션 패턴 '%s' 실행"),
+				*Data.Boss->DebugReactionPatternName.ToString());
+			Data.Boss->ExecutePattern(Data.Boss->DebugReactionPatternName, true);
 		}
 	}
 
@@ -765,10 +782,22 @@ void FT3STT_Block::ExitState(
 			Data.Boss->StopBlockSequence();
 		}
 
-		// 정상 종료 시에만 PostBlock 윈도우 부여 — 인터럽트(BlockReaction → 빠른 반격) 시 제외
-		if (bNormalCompletion && Data.PostBlockWindowDuration > 0.f)
+		// 정상 종료 시에만 리액션 트리거 세팅 — 인터럽트(BlockReaction → 빠른 반격) 시 제외
+		if (bNormalCompletion)
 		{
-			Data.Boss->ApplyTransientStateTag(TAG_Boss_State_PostBlock, Data.PostBlockWindowDuration);
+			Data.Boss->PendingReactionSource = EBossReactionSource::FromBlock;
+			UE_LOG(LogDesecration, Log, TEXT("T3_ST: Block 정상 종료 → PendingReactionSource=FromBlock 세팅"));
+		}
+
+		// [DEBUG:ReactionTest] Block 정상 종료 시 강제 리액션 패턴 — 디버그 토글 ON일 때만
+		if (bNormalCompletion
+			&& Data.Boss->bDebugForceReactionAfterDefense
+			&& !Data.Boss->DebugReactionPatternName.IsNone())
+		{
+			UE_LOG(LogDesecration, Warning,
+				TEXT("T3_ST: [DEBUG:ReactionTest] Block 종료 → 강제 리액션 패턴 '%s' 실행"),
+				*Data.Boss->DebugReactionPatternName.ToString());
+			Data.Boss->ExecutePattern(Data.Boss->DebugReactionPatternName, true);
 		}
 	}
 
@@ -1170,9 +1199,11 @@ float FT3Consideration_ReactionWindow::GetScore(FStateTreeExecutionContext& Cont
 		return 1.f;
 	}
 
-	// 리액션 후보 — 윈도우 활성 여부로 분기
-	const bool bPostBlockActive = Data.bRespondToPostBlock && Data.Boss->HasStateTag(TAG_Boss_State_PostBlock);
-	const bool bPostRollActive = Data.bRespondToPostRoll && Data.Boss->HasStateTag(TAG_Boss_State_PostRoll);
+	// 리액션 후보 — PendingReactionSource로 분기 (Roll/Block 직후 1회만 활성)
+	const bool bPostBlockActive = Data.bRespondToPostBlock
+		&& Data.Boss->PendingReactionSource == EBossReactionSource::FromBlock;
+	const bool bPostRollActive = Data.bRespondToPostRoll
+		&& Data.Boss->PendingReactionSource == EBossReactionSource::FromRoll;
 
 	return (bPostBlockActive || bPostRollActive) ? Data.BoostScore : Data.IdleScore;
 }
