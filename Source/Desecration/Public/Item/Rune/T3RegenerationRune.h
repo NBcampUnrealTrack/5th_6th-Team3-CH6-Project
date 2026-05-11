@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Item/Rune/T3RuneBase.h"
+#include "NiagaraComponent.h"
 #include "T3RegenerationRune.generated.h"
 
 UCLASS()
@@ -20,6 +21,9 @@ private:
 	TWeakObjectPtr<AT3CharacterBase> CachedOwner;
 
 	FTimerHandle RegenerationHPTimerHandle;
+
+	UPROPERTY()
+	TObjectPtr<UNiagaraComponent> ActiveEffect;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Value")
 	float HealAmountNormal = 1.0f;

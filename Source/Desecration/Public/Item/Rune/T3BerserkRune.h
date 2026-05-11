@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Item/Rune/T3RuneBase.h"
+#include "NiagaraComponent.h"
 #include "T3BerserkRune.generated.h"
 
 UCLASS()
@@ -36,8 +37,11 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Value")
 	float OnHitAttackBonusPercentLegendary = 30.0f;
 	
+	UPROPERTY()
+	TObjectPtr<UNiagaraComponent> ActiveEffect;
+
 	uint8 bIsCooldown : 1 = false;
-	
+
 	FTimerHandle ActiveTimerHandle;
 	FTimerHandle CooldownTimerHandle;
 	

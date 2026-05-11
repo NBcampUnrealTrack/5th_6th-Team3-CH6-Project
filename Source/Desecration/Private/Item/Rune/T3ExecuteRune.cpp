@@ -3,6 +3,7 @@
 #include "Desecration.h"
 #include "Equipment/T3EquipmentTypes.h"
 #include "Monster/Interface/T3Monster.h"
+#include "NiagaraFunctionLibrary.h"
 
 void UT3ExecuteRune::OnSocketed_Implementation(AT3CharacterBase* OwnerChar)
 {
@@ -70,7 +71,9 @@ void UT3ExecuteRune::CheckExecution(AActor* HitTarget, float DamageDealt)
 		if (Monster->GetHPPercent() <= ValueByGrade / 100.0f)
 		{
 			Monster->ApplyBonusDamage(99999.0f);
-				
+
+			PlayTriggerEffect(HitTarget);
+
 			UE_LOG(LogItem, Warning, TEXT("잡몹 처형"));
 		}
 	}
@@ -80,9 +83,11 @@ void UT3ExecuteRune::CheckExecution(AActor* HitTarget, float DamageDealt)
 		if (Monster->GetHPPercent() <= ValueByGrade / 100.0f)
 		{
 			float Bonus = DamageDealt * BossAttackBonusPercentByGrade / 100.0f;
-			
+
 			Monster->ApplyBonusDamage(Bonus);
-			
+
+			PlayTriggerEffect(HitTarget);
+
 			UE_LOG(LogItem, Log, TEXT("추가 데미지 : %.1f"), Bonus);
 		}
 		UE_LOG(LogItem, Log, TEXT("보스 호출 테스트"));
