@@ -24,6 +24,7 @@ class DESECRATION_API UT3CharacterAnimInstance : public UAnimInstance
 	
 public:
 	virtual void NativeInitializeAnimation() override;
+	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 	virtual void NativeThreadSafeUpdateAnimation(float DeltaSeconds) override;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Locomotion|State")

@@ -19,6 +19,16 @@ void UT3CharacterAnimInstance::NativeInitializeAnimation()
 	CurrentLocomotionState = ELocomotionState::Idle;
 }
 
+void UT3CharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
+{
+	Super::NativeUpdateAnimation(DeltaSeconds);
+	
+	if (APawn* OwnerChar = TryGetPawnOwner())
+	{
+		CurrentSpeed = OwnerChar->GetVelocity().Length();
+	}
+}
+
 void UT3CharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeThreadSafeUpdateAnimation(DeltaSeconds);
@@ -26,12 +36,6 @@ void UT3CharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecond
 	if (!TrajectoryComponent) return;
 	
 	StateElapsedTime += DeltaSeconds;
-	
-	CurrentSpeed = 0.0f;
-	if (APawn* OwnerChar = TryGetPawnOwner())
-	{
-		CurrentSpeed = OwnerChar->GetVelocity().Length();
-	}
 	
 	const FTransformTrajectory& CurrentTrajectory = TrajectoryComponent->GetTrajectoryData();
 	float DeltaTime = 0.05f;
