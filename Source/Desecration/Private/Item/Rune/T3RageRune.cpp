@@ -25,7 +25,7 @@ void UT3RageRune::OnSocketed_Implementation(AT3CharacterBase* OwnerChar)
 
 void UT3RageRune::OnUnsocketed_Implementation(AT3CharacterBase* OwnerChar)
 {
-	if (!IsValid(OwnerChar))SS
+	if (!IsValid(OwnerChar))
 	{
 		return;
 	}
