@@ -1,4 +1,6 @@
 #include "Item/Rune/T3RuneBase.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 
 void UT3RuneBase::OnSocketed_Implementation(AT3CharacterBase* OwnerChar)
 {
@@ -24,4 +26,29 @@ float UT3RuneBase::GetCooldownRemaining() const
 
 void UT3RuneBase::RestoreCooldown(float RemainingTime)
 {
+}
+
+UNiagaraComponent* UT3RuneBase::PlayTriggerEffect(AActor* Target, FName SocketName, bool bAutoDestroy)
+{
+    if (!TriggerEffect || !IsValid(Target))
+    {
+        return nullptr;
+    }
+
+    USkeletalMeshComponent* Mesh = Target->FindComponentByClass<USkeletalMeshComponent>();
+
+    if (!IsValid(Mesh))
+    {
+        return nullptr;
+    }
+
+    return UNiagaraFunctionLibrary::SpawnSystemAttached(
+        TriggerEffect,
+        Mesh,
+        SocketName,
+        FVector::ZeroVector,
+        FRotator::ZeroRotator,
+        EAttachLocation::SnapToTarget,
+        bAutoDestroy
+    );
 }
