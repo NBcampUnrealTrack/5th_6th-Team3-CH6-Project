@@ -738,6 +738,8 @@ void UT3PlayerEquipmentComponent::GetAccessorySaveData(FT3AccessorySaveData& Out
 void UT3PlayerEquipmentComponent::SetOniAccessoryEquipped(bool IsEquipped)
 {
 	bOniAccessoryEquipped = IsEquipped;
+	
+	OnOniAccessoryEquipped.Broadcast(bOniAccessoryEquipped);
 }
 
 bool UT3PlayerEquipmentComponent::GetOniAccessoryEquipped() const

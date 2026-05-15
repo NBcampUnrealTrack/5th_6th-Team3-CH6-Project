@@ -1,6 +1,7 @@
 #include "Item/Rune/T3BerserkRune.h"
 
 #include "Equipment/T3PlayerEquipmentComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Player/T3CombatComponent.h"
 
 void UT3BerserkRune::OnSocketed_Implementation(AT3CharacterBase* OwnerChar)
@@ -28,9 +29,15 @@ void UT3BerserkRune::OnUnsocketed_Implementation(AT3CharacterBase* OwnerChar)
 	}
 	
 	OwnerChar->GetWorldTimerManager().ClearTimer(ActiveTimerHandle);
-	
+
 	OwnerChar->RemoveRuneAttackBonus(this);
-	
+
+	if (IsValid(ActiveEffect))
+	{
+		ActiveEffect->DeactivateImmediate();
+		ActiveEffect = nullptr;
+	}
+
 	CachedOwner = nullptr;
 }
 
@@ -78,7 +85,9 @@ void UT3BerserkRune::Activate()
 		float Bonus = FMath::RoundToFloat(Owner->EquipComp->GetCurrentAttackPower() * (ValueByGrade / 100.0f) * 10.0f) / 10.0f;
 		
 		Owner->SetRuneAttackBonus(this, Bonus);
-		
+
+		ActiveEffect = PlayTriggerEffect(Owner, NAME_None, false);
+
 		Owner->GetWorldTimerManager().SetTimer(
 			ActiveTimerHandle,
 			this,
@@ -103,9 +112,15 @@ void UT3BerserkRune::Deactivate()
 	{
 		return;
 	}
-	
+
 	Owner->SetRuneAttackBonus(this, 0.0);
-	
+
+	if (IsValid(ActiveEffect))
+	{
+		ActiveEffect->DeactivateImmediate();
+		ActiveEffect = nullptr;
+	}
+
 	UE_LOG(LogTemp, Warning, TEXT("광폭 룬 효과 끝남"));
 }
 
