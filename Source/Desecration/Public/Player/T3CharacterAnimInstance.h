@@ -41,7 +41,7 @@ protected:
 	float FutureSampleTime = 0.3f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Locomotion|Tuning")
-	float MinStartsTime = 0.5;
+	float MinStartsTime = 0.3;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Locomotion|Tuning")
 	float MinPlantsTime = 0.3f;
