@@ -25,14 +25,6 @@ void UT3DisplaySettings::OnParentConstruct()
 	}
 	ResolutionComboBox->OnSelectionChanged.AddDynamic(this, &ThisClass::OnSelectionChangedResolutionComboBox);
 	
-	//화면 모드 콤보 박스
-	for (const FString& Key : SCREEN_MODE_KEY_STRINGS)
-	{
-		FString OptionString = UT3GameInstance::GetStringFromTable(NAMESPACE_NAME, Key);
-		ScreenModeComboBox->AddOption(OptionString);
-	}
-	ScreenModeComboBox->OnSelectionChanged.AddDynamic(this, &ThisClass::OnSelectionChangedScreenModeComboBox);
-	
 	//그래픽 품질 콤보 박스
 	for (const FString& Key : GRAPHIC_KEY_STRINGS)
 	{
@@ -40,6 +32,9 @@ void UT3DisplaySettings::OnParentConstruct()
 		GraphicQualityComboBox->AddOption(OptionString);
 	}
 	GraphicQualityComboBox->OnSelectionChanged.AddDynamic(this, &ThisClass::OnSelectionChangedGraphicQualityComboBox);
+	
+	//전체 화면 체크 박스
+	FullscreenCheckBox->OnCheckStateChanged.AddDynamic(this, &ThisClass::OnCheckStateChangedFullscreenCheckBox);
 	
 	//수직 동기화 체크 박스
 	VSyncCheckBox->OnCheckStateChanged.AddDynamic(this, &ThisClass::OnCheckStateChangedVSyncCheckBox);
@@ -54,16 +49,16 @@ void UT3DisplaySettings::InitializeSettingsPanel()
 		ResolutionComboBox->SetSelectedOption(TargetOption);
 	}
 	
-	//화면 모드
-	{
-		const int32 TargetIndex = GameUserSettings->GetFullscreenMode();
-		ScreenModeComboBox->SetSelectedIndex(TargetIndex);
-	}
-	
 	//그래픽 품질
 	{
 		const int32 TargetIndex = GameUserSettings->GetOverallScalabilityLevel();
 		GraphicQualityComboBox->SetSelectedIndex(TargetIndex);
+	}
+	
+	//전체 화면
+	{
+		const bool bFullscreen = GameUserSettings->GetFullscreenMode() == EWindowMode::Type::WindowedFullscreen;
+		FullscreenCheckBox->SetCheckedState(bFullscreen ? ECheckBoxState::Checked : ECheckBoxState::Unchecked);
 	}
 	
 	//수직 동기화
@@ -75,25 +70,17 @@ void UT3DisplaySettings::InitializeSettingsPanel()
 
 void UT3DisplaySettings::ReinitializeByChangeLanguage()
 {
-	//콤보 박스의 선택 기억 (해상도 콤보박스 제외)
-	const int32 TempIndex1 = ScreenModeComboBox->GetSelectedIndex();
-	const int32 TempIndex2 = GraphicQualityComboBox->GetSelectedIndex();
+	//그래픽 품질 콤보 박스의 선택 기억
+	const int32 TempIndex = GraphicQualityComboBox->GetSelectedIndex();
 	//콤보 박스를 비우고 다시 채우기
-	ScreenModeComboBox->ClearOptions();
 	GraphicQualityComboBox->ClearOptions();
-	for (const FString& Key : SCREEN_MODE_KEY_STRINGS)
-	{
-		FString OptionString = UT3GameInstance::GetStringFromTable(NAMESPACE_NAME, Key);
-		ScreenModeComboBox->AddOption(OptionString);
-	}
 	for (const FString& Key : GRAPHIC_KEY_STRINGS)
 	{
 		FString OptionString = UT3GameInstance::GetStringFromTable(NAMESPACE_NAME, Key);
 		GraphicQualityComboBox->AddOption(OptionString);
 	}
 	//다시 채운뒤 선택 원복
-	ScreenModeComboBox->SetSelectedIndex(TempIndex1);
-	GraphicQualityComboBox->SetSelectedIndex(TempIndex2);
+	GraphicQualityComboBox->SetSelectedIndex(TempIndex);
 }
 
 void UT3DisplaySettings::OnSelectionChangedResolutionComboBox(FString SelectedItem, ESelectInfo::Type SelectionType)
@@ -110,18 +97,6 @@ void UT3DisplaySettings::OnSelectionChangedResolutionComboBox(FString SelectedIt
 	SetResolution(SelectedResolution);
 }
 
-void UT3DisplaySettings::OnSelectionChangedScreenModeComboBox(FString SelectedItem, ESelectInfo::Type SelectionType)
-{
-	//코드에 의한 변경은 무시
-	if (SelectionType == ESelectInfo::Type::Direct)
-	{
-		return;
-	}
-	
-	const int32 SelectedIndex = ScreenModeComboBox->GetSelectedIndex();
-	SetWindowMode(static_cast<EWindowMode::Type>(SelectedIndex));
-}
-
 void UT3DisplaySettings::OnSelectionChangedGraphicQualityComboBox(FString SelectedItem, ESelectInfo::Type SelectionType)
 {
 	//코드에 의한 변경은 무시
@@ -132,6 +107,12 @@ void UT3DisplaySettings::OnSelectionChangedGraphicQualityComboBox(FString Select
 	
 	const int32 SelectedIndex = GraphicQualityComboBox->GetSelectedIndex();
 	SetGraphicQuality(SelectedIndex);
+}
+
+void UT3DisplaySettings::OnCheckStateChangedFullscreenCheckBox(bool bIsChecked)
+{
+	//true : WindowedFullScreen, false : Windowed
+	SetWindowMode(bIsChecked ? EWindowMode::Type::WindowedFullscreen : EWindowMode::Type::Windowed);
 }
 
 void UT3DisplaySettings::OnCheckStateChangedVSyncCheckBox(bool bIsChecked)
