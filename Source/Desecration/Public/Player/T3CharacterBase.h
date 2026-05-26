@@ -169,6 +169,8 @@ public:
 	void OnActivatePotion();
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnInteract();
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnCombatStateSwitch();
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Death")
 	bool bIsDead = false;
