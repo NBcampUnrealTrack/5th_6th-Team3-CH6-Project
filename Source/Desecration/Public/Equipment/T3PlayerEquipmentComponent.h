@@ -17,6 +17,7 @@ class AT3CharacterBase;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnEquipmentStatsChanged, float, NewAttackPower, float, NewDefensePower, float, NewWeaponLevel);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRuneSocketChanged);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAccessoryChanged);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnOniAccessoryEquipped, bool, IsEquipped);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class DESECRATION_API UT3PlayerEquipmentComponent : public UActorComponent
@@ -191,13 +192,13 @@ protected:
 	int32 CachedAccessoryStatPointBonus = 0;
 	
 public:
-	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	UFUNCTION(BlueprintCallable, Category = "Equipment|Accessory")
 	void EquipAccessory(UT3TestItemInstance* NewItem);
 
-	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	UFUNCTION(BlueprintCallable, Category = "Equipment|Accessory")
 	void UnequipAccessory();
 
-	UFUNCTION(BlueprintCallable, Category = "Upgrade")
+	UFUNCTION(BlueprintCallable, Category = "Equipment|Accessory")
 	bool TryUpgradeAccessory(int32 MaxAllowedLevel);
 
 	UFUNCTION(BlueprintCallable, Category = "Equipment|Save")
@@ -209,11 +210,13 @@ public:
 	UFUNCTION()
 	void SetOniAccessoryEquipped(bool IsEquipped);
 	
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, Category = "Equipment|Accessory")
 	bool GetOniAccessoryEquipped() const;
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnAccessoryChanged OnAccessoryChanged;
 	
+	UPROPERTY(BlueprintAssignable)
+	FOnOniAccessoryEquipped OnOniAccessoryEquipped;
 #pragma endregion
 };

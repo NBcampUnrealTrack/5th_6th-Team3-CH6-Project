@@ -1,6 +1,7 @@
 #include "Item/Rune/T3RegenerationRune.h"
 
 #include "Equipment/T3EquipmentTypes.h"
+#include "NiagaraFunctionLibrary.h"
 
 void UT3RegenerationRune::OnSocketed_Implementation(AT3CharacterBase* OwnerChar)
 {
@@ -16,15 +17,17 @@ void UT3RegenerationRune::OnSocketed_Implementation(AT3CharacterBase* OwnerChar)
 	float CurrentHP = OwnerChar->GetCurrentHP();
 	float MaxHP = OwnerChar->GetMaxHP();
 
-	if (CurrentHP / MaxHP < RecoveryTargetHPPercentByGrade / 100.0f)
+	if (!OwnerChar->bIsDead && CurrentHP / MaxHP < RecoveryTargetHPPercentByGrade / 100.0f)
 	{
 		FTimerDelegate TimerDelegate;
 		TimerDelegate.BindUObject(OwnerChar, &AT3CharacterBase::RestoreHP, ValueByGrade);
-		
+
 		OwnerChar->GetWorldTimerManager().SetTimer(RegenerationHPTimerHandle,
 			TimerDelegate,
 			RecoveryInterval,
 			true);
+
+		ActiveEffect = PlayTriggerEffect(OwnerChar, NAME_None, false);
 	}
 }
 
@@ -38,7 +41,13 @@ void UT3RegenerationRune::OnUnsocketed_Implementation(AT3CharacterBase* OwnerCha
 	OwnerChar->OnStatChanged.RemoveDynamic(this, &UT3RegenerationRune::RegenerationHP);
 
 	OwnerChar->GetWorldTimerManager().ClearTimer(RegenerationHPTimerHandle);
-	
+
+	if (IsValid(ActiveEffect))
+	{
+		ActiveEffect->DeactivateImmediate();
+		ActiveEffect = nullptr;
+	}
+
 	CachedOwner = nullptr;
 }
 
@@ -54,10 +63,30 @@ void UT3RegenerationRune::RegenerationHP(ET3StatType StatType, float CurrentHP, 
 	{
 		return;
 	}
-	
+
+	if (Owner->bIsDead || CurrentHP <= 0.f)
+	{
+		Owner->GetWorldTimerManager().ClearTimer(RegenerationHPTimerHandle);
+
+		if (IsValid(ActiveEffect))
+		{
+			ActiveEffect->DeactivateImmediate();
+			ActiveEffect = nullptr;
+		}
+
+		return;
+	}
+
 	if (CurrentHP / MaxHP >= RecoveryTargetHPPercentByGrade / 100.0f)
 	{
 		Owner->GetWorldTimerManager().ClearTimer(RegenerationHPTimerHandle);
+
+		if (IsValid(ActiveEffect))
+		{
+			ActiveEffect->DeactivateImmediate();
+			ActiveEffect = nullptr;
+		}
+
 		return;
 	}
 	
@@ -74,6 +103,8 @@ void UT3RegenerationRune::RegenerationHP(ET3StatType StatType, float CurrentHP, 
 		TimerDelegate,
 		RecoveryInterval,
 		true);
+
+	ActiveEffect = PlayTriggerEffect(Owner, NAME_None, false);
 }
 
 void UT3RegenerationRune::SetGrade(ET3RuneGrade InGrade)
