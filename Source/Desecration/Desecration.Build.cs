@@ -24,7 +24,8 @@ public class Desecration : ModuleRules
             "Niagara",
             "GameplayTags",
             "MotionWarping",
-            "ApplicationCore"
+            "ApplicationCore",
+            "MotionTrajectory"
         });
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

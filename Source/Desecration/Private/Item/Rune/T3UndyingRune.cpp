@@ -1,6 +1,7 @@
 #include "Item/Rune/T3UndyingRune.h"
 
 #include "Equipment/T3EquipmentTypes.h"
+#include "NiagaraFunctionLibrary.h"
 
 void UT3UndyingRune::OnSocketed_Implementation(AT3CharacterBase* OwnerChar)
 {
@@ -56,7 +57,9 @@ void UT3UndyingRune::Activate()
 	Owner->SetIsUndyingState(false);
 	
 	RestoreHealthFromUndying(Owner);
-	
+
+	PlayTriggerEffect(Owner);
+
 	Owner->GetWorldTimerManager().SetTimer(
 		CooldownTimerHandle,
 		this,
