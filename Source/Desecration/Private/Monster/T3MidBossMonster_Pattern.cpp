@@ -78,10 +78,15 @@ bool AT3MidBossMonster::ExecutePattern(FName PatternName, bool bAsReaction)
 		NotifyModifier->RecordPatternUsage(PatternName);
 	}
 
+	const TCHAR* SourceLabel =
+		PendingReactionSource == EBossReactionSource::FromBlock ? TEXT("FromBlock") :
+		PendingReactionSource == EBossReactionSource::FromRoll  ? TEXT("FromRoll")  : TEXT("None");
 	UE_LOG(LogDesecration, Log,
-		TEXT("T3_MidBoss: 패턴 실행 시작 — '%s' (체인 수: %d, Reaction:%d, ConsumedSource:%d)"),
-		*PatternName.ToString(), PatternData->MontageChain.Num(),
-		bAsReaction ? 1 : 0, static_cast<int32>(PendingReactionSource));
+		TEXT("T3_MidBoss: 패턴 실행 시작 — '%s' [%s] (체인 수: %d, Source:%s)"),
+		*PatternName.ToString(),
+		bAsReaction ? TEXT("리액션") : TEXT("일반"),
+		PatternData->MontageChain.Num(),
+		SourceLabel);
 
 	// 리액션 트리거 1회 소모 — 다음 공격까지 영향 없게 즉시 None으로 클리어
 	PendingReactionSource = EBossReactionSource::None;

@@ -355,10 +355,12 @@ struct DESECRATION_API FT3STT_TestRoll : public FStateTreeTaskCommonBase
 // Task: FT3STT_Block
 // 막기 시퀀스 트리거 — Boss->StartBlockSequence() 호출, In→Loop(자기루프)→Out 흐름은 Boss가 직접 관리
 // 종료 정책 (STT 측):
-//   1. MaxDuration 경과 → RequestEndBlockSequence (Loop가 다음 BlendingOut에 Out으로 전환)
-//   2. 막힘 횟수 도달 (MaxBlockHits>0) → RequestEndBlockSequence
+//   1. 막힘 횟수가 ResolvedHitThreshold 도달 → RequestEndBlockSequence (가드 정상 종료, PostBlock 경로)
+//      ※ ResolvedHitThreshold는 EnterState에서 RandRange(BlockReactionMinHits, BlockReactionMaxHits)로 1회 추첨
+//   2. MaxDuration 경과 → RequestEndBlockSequence (Loop가 다음 BlendingOut에 Out으로 전환 → PostBlock 경로)
 //   3. CurrentBlockPhase == Idle 도달 시 Succeeded 반환 (Out 끝까지 자연 종료)
-// 외부 인터럽트 (BlockReaction 이벤트 등 ST 트랜지션) → ExitState에서 StopBlockSequence 호출
+// 정상 종료 시 ExitState에서 PendingReactionSource=FromBlock 세팅 → 다음 ExecutePattern이 리액션 모드
+// 외부 인터럽트 (사망/스턴 등 ST 트랜지션) → ExitState에서 StopBlockSequence 호출
 // ============================================================
 
 USTRUCT()
@@ -366,15 +368,19 @@ struct FT3STT_BlockInstanceData
 {
 	GENERATED_BODY()
 
-	// 종료 요청 송신까지의 시간 (초) — 이 시간 경과 시 RequestEndBlockSequence 호출
+	// 종료 요청 송신까지의 시간 (초) — 이 시간 경과 시 RequestEndBlockSequence 호출 (PostBlock 정상 경로)
 	// (실제 STT Succeeded는 Out 단계까지 끝나고 Phase=Idle 도달 시점)
 	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "0.1"))
 	float MaxDuration = 3.0f;
 
-	// 막아낸 횟수가 이 값에 도달하면 RequestEndBlockSequence (조기 종료)
-	// 0 = 무제한 (시간으로만 종료)
-	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "0"))
-	int32 MaxBlockHits = 2;
+	// 가드 풀림 임계치 추첨 범위 — EnterState에서 RandRange(Min, Max)로 1회 결정.
+	// 막힌(또는 가드 뚫린) 누적 피격수가 그 값에 도달하면 RequestEndBlockSequence (PostBlock 정상 경로).
+	// MaxDuration과 별도 축 — 둘 중 먼저 도달한 조건이 가드를 풀어줌.
+	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "1"))
+	int32 BlockReactionMinHits = 1;
+
+	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "1"))
+	int32 BlockReactionMaxHits = 3;
 
 	UPROPERTY(EditAnywhere, Category = "Context")
 	TObjectPtr<AT3MidBossMonster> Boss = nullptr;
@@ -382,6 +388,10 @@ struct FT3STT_BlockInstanceData
 	// 내부 상태 — 진입 시점의 막힘 카운트 (델타 측정용, StartBlockSequence가 0으로 리셋하므로 보통 0)
 	UPROPERTY()
 	int32 InitialHitsCount = 0;
+
+	// EnterState에서 RandRange(Min, Max)로 추첨된 임계치 — Tick이 이 값을 폴링
+	UPROPERTY()
+	int32 ResolvedHitThreshold = 0;
 
 	UPROPERTY()
 	float ElapsedTime = 0.f;
@@ -611,6 +621,40 @@ struct DESECRATION_API FT3STC_DistanceToTarget : public FStateTreeConditionCommo
 	virtual const UStruct* GetInstanceDataType() const override
 	{
 		return FT3STC_DistanceToTargetInstanceData::StaticStruct();
+	}
+
+	virtual bool TestCondition(FStateTreeExecutionContext& Context) const override;
+};
+
+// ============================================================
+// Condition: FT3STC_StunGaugeBelow
+// 스턴 게이지가 임계 비율 미만일 때만 true — 회피/구르기 진입 차단용
+// 비율 = CurrentStunGauge / StunThreshold (StunThreshold<=0이면 항상 true)
+// ============================================================
+
+USTRUCT()
+struct FT3STC_StunGaugeBelowInstanceData
+{
+	GENERATED_BODY()
+
+	// 허용 최대 비율 — Ratio < MaxRatio이면 true (예: 0.6 = 게이지 60% 미만일 때만 통과)
+	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float MaxRatio = 0.6f;
+
+	UPROPERTY(EditAnywhere, Category = "Context")
+	TObjectPtr<AT3MidBossMonster> Boss = nullptr;
+};
+
+USTRUCT(meta = (DisplayName = "Stun Gauge Below Ratio"))
+struct DESECRATION_API FT3STC_StunGaugeBelow : public FStateTreeConditionCommonBase
+{
+	GENERATED_BODY()
+
+	using FInstanceDataType = FT3STC_StunGaugeBelowInstanceData;
+
+	virtual const UStruct* GetInstanceDataType() const override
+	{
+		return FT3STC_StunGaugeBelowInstanceData::StaticStruct();
 	}
 
 	virtual bool TestCondition(FStateTreeExecutionContext& Context) const override;

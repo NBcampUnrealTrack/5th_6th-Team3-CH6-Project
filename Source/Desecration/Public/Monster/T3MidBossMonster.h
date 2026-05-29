@@ -523,6 +523,12 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "MidBoss|Reaction")
 	EBossReactionSource PendingReactionSource = EBossReactionSource::None;
 
+	// 리액션 윈도우 활성 시(=PendingReactionSource != None) 다음 패턴을 리액션 모드로 실행할 확률 [0..1].
+	// ExecutePattern 진입 시점에 FRand()로 1회 판정. 0=항상 일반, 1=항상 리액션, 0.7=70% 리액션 / 30% 일반.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Reaction",
+		meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float ReactionApplyChance = 0.7f;
+
 	// [DEBUG:ReactionTest] 리액션 패턴 흐름 검증용. 제거 시 `[DEBUG:ReactionTest]` 태그 grep 후 일괄 삭제
 	// 막기/회피(Roll/Block) 정상 종료 직후 DebugReactionPatternName 패턴을 bAsReaction=true로 강제 실행.
 	// → ReactionStartSectionOverride / ReactionSectionNameOverride 발동 검증용. 출시 전 토글 OFF.
@@ -533,6 +539,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Debug",
 		meta = (EditCondition = "bDebugForceReactionAfterDefense"))
 	FName DebugReactionPatternName = NAME_None;
+
+	// [DEBUG:ReactionWindow] ReactionWindow Consideration 점수 계산 가시화 토글.
+	// ON 시 패턴 후보 평가마다 분기별 (일반/Boost/Idle) 로그 출력. 출시 전 토글 OFF 또는 코드 제거.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Debug")
+	bool bDebugLogReactionWindow = false;
 
 #pragma endregion Combat
 
@@ -860,7 +871,10 @@ private:
 	void PlayBossSoundAt(USoundBase* Sound, const FVector& Loc, float VolumeMultiplier) const;
 
 	// StateTree 이벤트 전송 헬퍼 — StateTreeComponent nullptr 가드 일원화
+	// STT(FT3STT_Block::Tick의 BlockReaction 송신)에서도 호출하므로 public 노출
+public:
 	void SendStateTreeStateEvent(FGameplayTag Tag) const;
+private:
 
 	// 피격 피드백 묶음 — HitSound(레이트리밋) + 카메라 쉐이크 + 히트 리액션(조건부)
 	void PlayHitFeedback(const FVector& HitLoc, AActor* DamageCauser);
