@@ -23,8 +23,13 @@ void UT3ConfirmPanel::NativeDestruct()
 
 void UT3ConfirmPanel::ShowConfirmPanel(const FString& Content, const bool bNeedCancelButton)
 {
+	ShowConfirmPanel(FText::FromString(Content), bNeedCancelButton);
+}
+
+void UT3ConfirmPanel::ShowConfirmPanel(const FText& Content, const bool bNeedCancelButton)
+{
 	SetVisibility(ESlateVisibility::Visible);
-	ContentText->SetText(FText::FromString(Content));
+	ContentText->SetText(Content);
 	
 	//취소 버튼
 	CancelButton->SetVisibility(bNeedCancelButton ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);

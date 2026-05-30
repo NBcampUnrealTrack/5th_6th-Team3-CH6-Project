@@ -24,6 +24,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ShowConfirmPanel(UPARAM() const FString& Content, const bool bNeedCancelButton = true);
 	
+	//패널 띄우기
+    //확인 버튼 동작을 등록하려면 호출마다 OnClickConfirmButtonAction에 바인딩 필요
+	void ShowConfirmPanel(UPARAM() const FText& Content, const bool bNeedCancelButton = true);
+	
 private:
 	//확인 버튼
 	UFUNCTION()
