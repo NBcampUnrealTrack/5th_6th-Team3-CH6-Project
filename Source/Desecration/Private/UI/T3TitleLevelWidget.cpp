@@ -42,7 +42,7 @@ void UT3TitleLevelWidget::OnClickNewGameButton()
 	//저장된 게임이 있는 경우 패널을 통해 물어보기
 	if (TitlePlayerController->DoesSavedDataExist())
 	{
-		ConfirmPanel->ShowConfirmPanel(UT3GameInstance::GetStringFromTable(NAMESPACE_NAME, CheckNewGame));
+		ConfirmPanel->ShowConfirmPanel(UT3GameInstance::GetTextFromTable(NAMESPACE_NAME, CheckNewGame));
 		ConfirmPanel->OnClickConfirmButtonAction.AddDynamic(TitlePlayerController, &AT3TitlePlayerController::MoveToSelectClassLevel);
 		return;
 	}
@@ -58,7 +58,7 @@ void UT3TitleLevelWidget::OnClickLoadButton()
 		return;
 	}
 	
-	ConfirmPanel->ShowConfirmPanel(UT3GameInstance::GetStringFromTable(NAMESPACE_NAME, LoadGameMessage));
+	ConfirmPanel->ShowConfirmPanel(UT3GameInstance::GetTextFromTable(NAMESPACE_NAME, LoadGameMessage));
 	ConfirmPanel->OnClickConfirmButtonAction.AddDynamic(TitlePlayerController, &AT3TitlePlayerController::MoveToLastSavedLevel);
 }
 
@@ -70,7 +70,7 @@ void UT3TitleLevelWidget::OnClickSettingsButton()
 
 void UT3TitleLevelWidget::OnClickQuitButton()
 {
-	ConfirmPanel->ShowConfirmPanel(UT3GameInstance::GetStringFromTable(NAMESPACE_NAME, QuitGameMessage));
+	ConfirmPanel->ShowConfirmPanel(UT3GameInstance::GetTextFromTable(NAMESPACE_NAME, QuitGameMessage));
 	ConfirmPanel->OnClickConfirmButtonAction.AddDynamic(TitlePlayerController, &AT3TitlePlayerController::QuitGame);
 }
 
