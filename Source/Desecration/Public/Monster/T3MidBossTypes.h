@@ -223,6 +223,26 @@ struct FMidBossAttackPattern
 	// 1.0 = 변화 없음, 1.5 = 50% 빠르게. MontageData.PlayRate × CurrentAttackAnimRate × 이 값
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0.1"))
 	float ReactionPlayRateMultiplier = 1.0f;
+
+	// true면 PostBlock/PostRoll 윈도우 활성 시 "리액션 패턴" 후보로 가중. false(기본)면 일반 패턴으로만 사용.
+	// (※ ParryWindow 카운터 패턴과 무관 — 별도 메커니즘)
+	// false인 패턴은 ReactionWindow Consideration이 가중 부풀림에서 제외 → 기존 Dark Knight 등 무영향
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bAllowAsReaction = false;
+
+	// bAsReaction=true로 실행 시에만 적용되는 시작 인덱스 오버라이드.
+	// -1(기본) = StartSectionIndex 그대로 사용. 0 이상이면 리액션 모드 한정으로 이 값 사용.
+	// 예: 일반 모드는 0번 엔트리부터, 리액션 모드는 2번 엔트리(빠른 진입)부터.
+	// ※ 체인형 패턴(bUseSectionCombo=false) 전용. 섹션 콤보는 ReactionSectionNameOverride 사용.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "-1", EditCondition = "bAllowAsReaction"))
+	int32 ReactionStartSectionOverride = -1;
+
+	// 섹션 콤보 패턴(bUseSectionCombo=true) 한정 — 리액션 모드 진입 시 시작할 섹션 이름.
+	// NAME_None(기본) = MontageChain[0].SectionName 그대로 사용. 지정 시 해당 섹션부터 재생.
+	// 예: 일반 모드는 Wind_Up 섹션부터, 리액션 모드는 Strike 섹션부터 (윈드업 스킵).
+	// ※ ReactionStartSectionOverride(체인 인덱스용)와 별개 메커니즘 — 섹션 콤보는 MontageChain[0]만 몽타주이므로 인덱스 점프 불가, 섹션 점프만 가능.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (EditCondition = "bAllowAsReaction"))
+	FName ReactionSectionNameOverride = NAME_None;
 };
 
 // ============================================================
