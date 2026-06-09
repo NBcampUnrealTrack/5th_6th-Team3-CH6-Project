@@ -58,34 +58,33 @@ float AT3MidBossMonster::TakeDamage(float DamageAmount, FDamageEvent const& Dama
 		// 막기 — Unparryable / Unblockable이면 가드 뚫림 (풀데미지), 아니면 정면/후방 배율 적용
 		if (IsBlocking())
 		{
+			// 막기 시퀀스 동안 받은 모든 피격 카운트 (막든/뚫리든 무관) — STT_Block이 BlockReaction 임계치 폴링용
+			++BlockHitsCount;
+
 			if (!bUnparryable && !bUnblockable)
 			{
 				const bool bFront = IsHitFromFront(DamageCauser);
 				const float Mult = bFront ? BlockDamageMultiplier_Front : BlockDamageMultiplier_Back;
 				IncomingDamage = DamageAmount * Mult;
 
-				// 막기 성공 카운트 — STT_Block이 이 값을 폴링해서 종료 조건으로 사용
-				++BlockHitsCount;
+				// 경직치 누적 — 데스몬드처럼 StaggerOnBlockedHit>0인 보스만 동작
+				// "가드는 HP 대신 게이지를 깎는다"는 트레이드 — TakeDamage StunAmount와 별도 추가 누적
+				// 막아낸 비용 의미라 가드 뚫림 분기에서는 누적 X (어차피 풀데미지 받음)
+				AddStunGauge(StaggerOnBlockedHit);
 
 				UE_LOG(LogDesecration, Log,
 					TEXT("T3_MidBoss: 막기 성공 (방향:%s, 배율:%.2f, 원본:%.0f → %.0f, 누적:%d회)"),
 					bFront ? TEXT("정면") : TEXT("후방"), Mult, DamageAmount, IncomingDamage, BlockHitsCount);
 
-				// 막기 리액션 굴림 — 성공 시 ST에 이벤트 송신 (빠른 반격 패턴 트랜지션 트리거)
-				// Unparry/Unblock 으로 가드 뚫린 분기에서는 굴리지 않음 (정상 막기에서만 반응)
-				if (BlockReactionChance > 0.f && FMath::FRand() < BlockReactionChance)
-				{
-					SendStateTreeStateEvent(TAG_Boss_Event_BlockReaction);
-					UE_LOG(LogDesecration, Log,
-						TEXT("T3_MidBoss: 막기 리액션 발동 (확률:%.2f) → BlockReaction 이벤트 송신"),
-						BlockReactionChance);
-				}
+				// BlockReaction 이벤트 송신은 FT3STT_Block::Tick이 ResolvedHitThreshold 도달 시 책임짐.
+				// (Combat 측 매 hit FRand 굴림 모델 제거 — 진입 시 1회 RandRange 추첨 모델로 단일화)
+				// BlockReactionChance 변수는 BP 데이터 보존 차원에서 헤더에 유지 (정리 라운드에서 제거 예정)
 			}
 			else
 			{
 				UE_LOG(LogDesecration, Log,
-					TEXT("T3_MidBoss: 가드 뚫림 (Unparry:%d Unblock:%d, 풀데미지:%.0f)"),
-					bUnparryable ? 1 : 0, bUnblockable ? 1 : 0, DamageAmount);
+					TEXT("T3_MidBoss: 가드 뚫림 (Unparry:%d Unblock:%d, 풀데미지:%.0f, 누적:%d회)"),
+					bUnparryable ? 1 : 0, bUnblockable ? 1 : 0, DamageAmount, BlockHitsCount);
 			}
 		}
 	}
@@ -208,7 +207,12 @@ void AT3MidBossMonster::ApplyStun()
 	MidBossStats.CurrentStunGauge = 0.f;
 	CancelCurrentPattern();
 
+	// 리액션 트리거 클리어 — Stun 3초 텀 후 "회피/막기 직후 반격"은 시맨틱 깨짐
+	// (Roll/Block 정상 종료 직후 Stun이 끼면, 회복 후 첫 공격이 리액션 가속으로 나오는 부조리 방지)
+	PendingReactionSource = EBossReactionSource::None;
+
 	// 스턴 몽타주 재생 — 헬퍼 통과로 슬로우 존 실시간 갱신 적용
+	// (막기 진행 중이었다면 ST의 Block ExitState → StopBlockSequence가 활성 막기 몽타주만 외과적으로 정지하므로 충돌 없음)
 	if (StunMontage)
 	{
 		PlayMoveMontageWithSlow(StunMontage, 1.f);
@@ -245,6 +249,31 @@ void AT3MidBossMonster::RecoverFromStun()
 }
 
 // ============================================================
+// 경직치 게이지 누적 헬퍼 — Roll/Block 경로에서 호출
+// (TakeDamage 경로의 StunAmount 누적은 ApplyDamageToMidBoss에서 그대로 처리)
+// ============================================================
+
+void AT3MidBossMonster::AddStunGauge(float Amount)
+{
+	if (Amount <= 0.f || IsStunned() || IsDead())
+	{
+		return;
+	}
+
+	MidBossStats.CurrentStunGauge += Amount;
+	LastStaggerEventTime = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0;
+
+	UE_LOG(LogDesecration, Log,
+		TEXT("T3_MidBoss: 경직치 누적 (+%.1f → %.1f/%.1f)"),
+		Amount, MidBossStats.CurrentStunGauge, MidBossStats.StunThreshold);
+
+	if (MidBossStats.CurrentStunGauge >= MidBossStats.StunThreshold)
+	{
+		ApplyStun();
+	}
+}
+
+// ============================================================
 // 막기 시퀀스 (In → Loop → Out)
 // 단계 전환은 BlendingOut 시점 PlayAnimMontage 자연 크로스페이드로 처리
 // (체인 패턴의 OnChainBlendingOut 매커니즘과 동일 원리 — 섹션 콤보 토독 방지)
@@ -276,6 +305,9 @@ void AT3MidBossMonster::PlayBlockEntry(const FBlockMontageEntry& Entry, EBlockPh
 		BlendOutDelegate.BindUObject(this, &AT3MidBossMonster::OnBlockMontageBlendingOut);
 		AnimInst->Montage_SetBlendingOutDelegate(BlendOutDelegate, Entry.Montage);
 	}
+
+	// 활성 막기 몽타주 캐싱 — StopBlockSequence가 외과적으로 이 몽타주만 정지
+	CurrentBlockMontage = Entry.Montage;
 
 	CurrentBlockPhase = NewPhase;
 
@@ -336,10 +368,15 @@ void AT3MidBossMonster::StopBlockSequence()
 		return;
 	}
 
-	// 진행 중인 막기 몽타주 즉시 정지 (인터럽트 — BlockReaction 이벤트, 사망, 스턴 등)
-	if (UAnimInstance* AnimInst = GetMesh() ? GetMesh()->GetAnimInstance() : nullptr)
+	// 활성 막기 몽타주만 외과적으로 정지 — 동시에 재생된 다른 몽타주(예: 스턴 진입 직후)는 보존
+	// (StopAllMontages 사용 시 ApplyStun이 방금 시작한 StunMontage까지 같이 죽는 부작용 있어서 캐시 기반으로 전환)
+	if (CurrentBlockMontage)
 	{
-		AnimInst->StopAllMontages(0.2f);
+		if (UAnimInstance* AnimInst = GetMesh() ? GetMesh()->GetAnimInstance() : nullptr)
+		{
+			AnimInst->Montage_Stop(0.2f, CurrentBlockMontage);
+		}
+		CurrentBlockMontage = nullptr;
 	}
 
 	RemoveStateTag(TAG_Boss_State_Blocking);
@@ -389,6 +426,7 @@ void AT3MidBossMonster::OnBlockMontageBlendingOut(UAnimMontage* Montage, bool bI
 		RemoveStateTag(TAG_Boss_State_Blocking);
 		CurrentBlockPhase = EBlockPhase::Idle;
 		bBlockEndRequested = false;
+		CurrentBlockMontage = nullptr;
 		UE_LOG(LogDesecration, Log,
 			TEXT("T3_MidBoss: 막기 시퀀스 정상 종료 — 누적 피격수 %d"), BlockHitsCount);
 		break;
@@ -722,6 +760,10 @@ void AT3MidBossMonster::EnterDeathState()
 	AddStateTag(TAG_Boss_State_Dead);
 	MidBossStats.CurrentHP = 0.f;
 	CancelCurrentPattern();
+
+	// 리액션 트리거 클리어 — 현재는 ExecutePattern Dead 가드로 무영향이지만,
+	// 향후 다른 곳에서 PendingReactionSource를 검사할 때를 대비한 방어적 정리
+	PendingReactionSource = EBossReactionSource::None;
 	OnMidBossDeath.Broadcast();
 
 	// StateTree 이벤트 전송 — 즉시 Dead 상태로 전환 (State 태그를 이벤트로 겸용)

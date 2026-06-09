@@ -14,10 +14,6 @@ public:
 	//초기 설정
 	virtual void ResetGameData() override;
 	
-	//게임에 사용할 컨트롤러 값
-	UPROPERTY()
-	int32 UsingController;
-	
 	//수직 회전 반전
 	UPROPERTY()
 	bool bInvertVertical;
