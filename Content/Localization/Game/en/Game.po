@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Game\n"
-"POT-Creation-Date: 2026-06-01 03:24\n"
-"PO-Revision-Date: 2026-06-01 03:24\n"
+"POT-Creation-Date: 2026-06-10 14:18\n"
+"PO-Revision-Date: 2026-06-10 14:18\n"
 "Language-Team: \n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
@@ -41,6 +41,13 @@ msgctxt "ST_BeforeGamePlay,Message_YourName"
 msgid "당신의 이름은 무엇입니까?"
 msgstr "What's your name?"
 
+#. Key:	SelectCharacter
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_BeforeGamePlay.ST_BeforeGamePlay
+#: /Game/Desecration/System/StringTable/ST_BeforeGamePlay.ST_BeforeGamePlay
+msgctxt "ST_BeforeGamePlay,SelectCharacter"
+msgid "캐릭터 선택"
+msgstr "Select Character"
+
 #. Key:	Cancel
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_Common.ST_Common
 #: /Game/Desecration/System/StringTable/ST_Common.ST_Common
@@ -69,6 +76,13 @@ msgctxt "ST_Common,Class_Valkyrie"
 msgid "발키리"
 msgstr "Valkyrie"
 
+#. Key:	Close
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Common.ST_Common
+#: /Game/Desecration/System/StringTable/ST_Common.ST_Common
+msgctxt "ST_Common,Close"
+msgid "닫기"
+msgstr "Close"
+
 #. Key:	Confirm
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_Common.ST_Common
 #: /Game/Desecration/System/StringTable/ST_Common.ST_Common
@@ -76,12 +90,859 @@ msgctxt "ST_Common,Confirm"
 msgid "확인"
 msgstr "Confirm"
 
+#. Key:	KimTaeEun
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Credits.ST_Credits
+#: /Game/Desecration/System/StringTable/ST_Credits.ST_Credits
+msgctxt "ST_Credits,KimTaeEun"
+msgid "김태은"
+msgstr "Kim Tae Eun"
+
+#. Key:	LeeGyuJin
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Credits.ST_Credits
+#: /Game/Desecration/System/StringTable/ST_Credits.ST_Credits
+msgctxt "ST_Credits,LeeGyuJin"
+msgid "이규진"
+msgstr "Lee Gyu Jin"
+
+#. Key:	MoonSeungJae
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Credits.ST_Credits
+#: /Game/Desecration/System/StringTable/ST_Credits.ST_Credits
+msgctxt "ST_Credits,MoonSeungJae"
+msgid "문승재"
+msgstr "Moon Seung Jae"
+
+#. Key:	NoJaeUk
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Credits.ST_Credits
+#: /Game/Desecration/System/StringTable/ST_Credits.ST_Credits
+msgctxt "ST_Credits,NoJaeUk"
+msgid "노재욱"
+msgstr "No Jae Uk"
+
+#. Key:	ParkJinYeon
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Credits.ST_Credits
+#: /Game/Desecration/System/StringTable/ST_Credits.ST_Credits
+msgctxt "ST_Credits,ParkJinYeon"
+msgid "박진연"
+msgstr "Park Jin Yeon"
+
+#. Key:	ParkYeongBin
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Credits.ST_Credits
+#: /Game/Desecration/System/StringTable/ST_Credits.ST_Credits
+msgctxt "ST_Credits,ParkYeongBin"
+msgid "박영빈"
+msgstr "Park Yeong Bin"
+
+#. Key:	ShinJiYong
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Credits.ST_Credits
+#: /Game/Desecration/System/StringTable/ST_Credits.ST_Credits
+msgctxt "ST_Credits,ShinJiYong"
+msgid "신지용"
+msgstr "Shin Ji Yong"
+
+#. Key:	SonUCham
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Credits.ST_Credits
+#: /Game/Desecration/System/StringTable/ST_Credits.ST_Credits
+msgctxt "ST_Credits,SonUCham"
+msgid "손우참"
+msgstr "Son U Cham"
+
+#. Key:	WonYuYeon
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Credits.ST_Credits
+#: /Game/Desecration/System/StringTable/ST_Credits.ST_Credits
+msgctxt "ST_Credits,WonYuYeon"
+msgid "원유연"
+msgstr "Won Yu Yeon"
+
+#. Key:	YuYongSeon
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Credits.ST_Credits
+#: /Game/Desecration/System/StringTable/ST_Credits.ST_Credits
+msgctxt "ST_Credits,YuYongSeon"
+msgid "유용선"
+msgstr "Yu Yong Seon"
+
+#. Key:	Acc_Balrog
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+#: /Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+msgctxt "ST_Equiptment,Acc_Balrog"
+msgid "발록 장신구"
+msgstr "Balrog Charm"
+
+#. Key:	Acc_Endurance
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+#: /Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+msgctxt "ST_Equiptment,Acc_Endurance"
+msgid "기력 장신구"
+msgstr "Endurance Charm"
+
+#. Key:	Acc_Endurance1
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+#: /Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+msgctxt "ST_Equiptment,Acc_Endurance1"
+msgid "기력 장신구1"
+msgstr "Endurance Charm1"
+
+#. Key:	Acc_Endurance2
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+#: /Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+msgctxt "ST_Equiptment,Acc_Endurance2"
+msgid "기력 장신구2"
+msgstr "Endurance Charm2"
+
+#. Key:	Acc_Endurance3
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+#: /Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+msgctxt "ST_Equiptment,Acc_Endurance3"
+msgid "기력 장신구3"
+msgstr "Endurance Charm3"
+
+#. Key:	Acc_FallenAngel
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+#: /Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+msgctxt "ST_Equiptment,Acc_FallenAngel"
+msgid "타천사 장신구"
+msgstr "Fallen Angel Charm"
+
+#. Key:	Acc_Intelligence
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+#: /Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+msgctxt "ST_Equiptment,Acc_Intelligence"
+msgid "지력 장신구"
+msgstr "Intelligence Charm"
+
+#. Key:	Acc_Intelligence1
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+#: /Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+msgctxt "ST_Equiptment,Acc_Intelligence1"
+msgid "지력 장신구1"
+msgstr "Intelligence Charm1"
+
+#. Key:	Acc_Intelligence2
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+#: /Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+msgctxt "ST_Equiptment,Acc_Intelligence2"
+msgid "지력 장신구2"
+msgstr "Intelligence Charm2"
+
+#. Key:	Acc_Intelligence3
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+#: /Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+msgctxt "ST_Equiptment,Acc_Intelligence3"
+msgid "지력 장신구3"
+msgstr "Intelligence Charm3"
+
+#. Key:	Acc_Mind
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+#: /Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+msgctxt "ST_Equiptment,Acc_Mind"
+msgid "정신력 장신구"
+msgstr "Mind Charm"
+
+#. Key:	Acc_Mind1
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+#: /Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+msgctxt "ST_Equiptment,Acc_Mind1"
+msgid "정신력 장신구1"
+msgstr "Mind Charm1"
+
+#. Key:	Acc_Mind2
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+#: /Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+msgctxt "ST_Equiptment,Acc_Mind2"
+msgid "정신력 장신구2"
+msgstr "Mind Charm2"
+
+#. Key:	Acc_Mind3
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+#: /Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+msgctxt "ST_Equiptment,Acc_Mind3"
+msgid "정신력 장신구3"
+msgstr "Mind Charm3"
+
+#. Key:	Acc_Oni
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+#: /Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+msgctxt "ST_Equiptment,Acc_Oni"
+msgid "오니 장신구"
+msgstr "Oni Charm"
+
+#. Key:	Acc_Strength
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+#: /Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+msgctxt "ST_Equiptment,Acc_Strength"
+msgid "근력 장신구"
+msgstr "Strength Charm"
+
+#. Key:	Acc_Strength1
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+#: /Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+msgctxt "ST_Equiptment,Acc_Strength1"
+msgid "근력 장신구1"
+msgstr "Strength Charm1"
+
+#. Key:	Acc_Strength2
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+#: /Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+msgctxt "ST_Equiptment,Acc_Strength2"
+msgid "근력 장신구2"
+msgstr "Strength Charm2"
+
+#. Key:	Acc_Strength3
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+#: /Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+msgctxt "ST_Equiptment,Acc_Strength3"
+msgid "근력 장신구3"
+msgstr "Strength Charm3"
+
+#. Key:	Acc_Vigro
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+#: /Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+msgctxt "ST_Equiptment,Acc_Vigro"
+msgid "체력 장신구"
+msgstr "Vigro Charm"
+
+#. Key:	Acc_Vigro1
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+#: /Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+msgctxt "ST_Equiptment,Acc_Vigro1"
+msgid "체력 장신구1"
+msgstr "Vigro Charm1"
+
+#. Key:	Acc_Vigro2
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+#: /Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+msgctxt "ST_Equiptment,Acc_Vigro2"
+msgid "체력 장신구2"
+msgstr "Vigro Charm2"
+
+#. Key:	Acc_Vigro3
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+#: /Game/Desecration/System/StringTable/ST_Equiptment.ST_Equiptment
+msgctxt "ST_Equiptment,Acc_Vigro3"
+msgid "체력 장신구3"
+msgstr "Vigro Charm3"
+
+#. Key:	BerserkPotion
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
+#: /Game/Desecration/System/StringTable/ST_Item.ST_Item
+msgctxt "ST_Item,BerserkPotion"
+msgid "광전사 물약"
+msgstr "Berserker Potion"
+
+#. Key:	BerserkPotion_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
+#: /Game/Desecration/System/StringTable/ST_Item.ST_Item
+msgctxt "ST_Item,BerserkPotion_Content"
+msgid "10초간 공격력이 50% 증가하고 방어력이 50% 감소한다."
+msgstr "Increases attack power by 50% and decreases defense by 50% for 10 seconds."
+
+#. Key:	BossRune_Balrog
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
+#: /Game/Desecration/System/StringTable/ST_Item.ST_Item
+msgctxt "ST_Item,BossRune_Balrog"
+msgid "발록의 룬"
+msgstr "Rune of Balrog"
+
+#. Key:	BossRune_FallenAngel
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
+#: /Game/Desecration/System/StringTable/ST_Item.ST_Item
+msgctxt "ST_Item,BossRune_FallenAngel"
+msgid "타천사의 룬"
+msgstr "Rune of the Fallen Angel"
+
+#. Key:	BossRune_Oni
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
+#: /Game/Desecration/System/StringTable/ST_Item.ST_Item
+msgctxt "ST_Item,BossRune_Oni"
+msgid "오니의 룬"
+msgstr "Rune of the Oni"
+
+#. Key:	Bronze_Mirror
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
+#: /Game/Desecration/System/StringTable/ST_Item.ST_Item
+msgctxt "ST_Item,Bronze_Mirror"
+msgid "청동 거울"
+msgstr "Bronze Mirror"
+
+#. Key:	BronzeSword
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
+#: /Game/Desecration/System/StringTable/ST_Item.ST_Item
+msgctxt "ST_Item,BronzeSword"
+msgid "청동 검"
+msgstr "Bronze Sword"
+
+#. Key:	DefensePotion
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
+#: /Game/Desecration/System/StringTable/ST_Item.ST_Item
+msgctxt "ST_Item,DefensePotion"
+msgid "방어력 물약"
+msgstr "Defense Potion"
+
+#. Key:	DefensePotion_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
+#: /Game/Desecration/System/StringTable/ST_Item.ST_Item
+msgctxt "ST_Item,DefensePotion_Content"
+msgid "10초간 방어력이 20% 증가한다."
+msgstr "Increases defense by 20% for 10 seconds."
+
+#. Key:	HPPotion
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
+#: /Game/Desecration/System/StringTable/ST_Item.ST_Item
+msgctxt "ST_Item,HPPotion"
+msgid "체력 물약"
+msgstr "HP Potion"
+
+#. Key:	Idol_Moon
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
+#: /Game/Desecration/System/StringTable/ST_Item.ST_Item
+msgctxt "ST_Item,Idol_Moon"
+msgid "달의 우상"
+msgstr "Idol of the Moon"
+
+#. Key:	Memory_Balrog
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
+#: /Game/Desecration/System/StringTable/ST_Item.ST_Item
+msgctxt "ST_Item,Memory_Balrog"
+msgid "발록의 기억"
+msgstr "Memory of Barlog"
+
+#. Key:	Memory_Balrog_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
+#: /Game/Desecration/System/StringTable/ST_Item.ST_Item
+msgctxt "ST_Item,Memory_Balrog_Content"
+msgid "피의 요새의 군주였던 그는 강력한 악마 룬의 힘에 굴복했고 영지는 순식간의 악마의 성체가 되었다,"
+msgstr "Once the lord of the Blood Fortress, he succumbed to the power of a mighty Demonic Rune. In the blink of an eye, his domain was transformed into a demonic stronghold."
+
+#. Key:	Memory_FallenAngel
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
+#: /Game/Desecration/System/StringTable/ST_Item.ST_Item
+msgctxt "ST_Item,Memory_FallenAngel"
+msgid "타천사의 기억"
+msgstr "Memory of the Fallen Angel"
+
+#. Key:	Memory_FallenAngel_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
+#: /Game/Desecration/System/StringTable/ST_Item.ST_Item
+msgctxt "ST_Item,Memory_FallenAngel_Content"
+msgid "달에게 선택받지 못한 신도는 강력한 룬의 힘의 유혹을 참지 못했다."
+msgstr "A devotee forsaken by the Moon could not resist the temptation of a powerful rune's strength."
+
+#. Key:	Memory_Oni
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
+#: /Game/Desecration/System/StringTable/ST_Item.ST_Item
+msgctxt "ST_Item,Memory_Oni"
+msgid "오니의 기억"
+msgstr "Memory of the Oni"
+
+#. Key:	Memory_Oni_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
+#: /Game/Desecration/System/StringTable/ST_Item.ST_Item
+msgctxt "ST_Item,Memory_Oni_Content"
+msgid "무영봉의 높은 산 위에는 신선의 마을이 있다는 전설이 있다. 혼탁한 사기가 가득찬 이곳에는 과거의 정도를 찾아볼 수 없게 되었다."
+msgstr "Legend speaks of a village of immortals atop the towering peak known as the Shadowless Peak. Now, this land is shrouded in corrupted energies, and no trace of its former path remains."
+
+#. Key:	MPPotion
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
+#: /Game/Desecration/System/StringTable/ST_Item.ST_Item
+msgctxt "ST_Item,MPPotion"
+msgid "마나 물약"
+msgstr "MP Potion"
+
+#. Key:	PowerPotion
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
+#: /Game/Desecration/System/StringTable/ST_Item.ST_Item
+msgctxt "ST_Item,PowerPotion"
+msgid "공격력 물약"
+msgstr "Power Potion"
+
+#. Key:	PowerPotion_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
+#: /Game/Desecration/System/StringTable/ST_Item.ST_Item
+msgctxt "ST_Item,PowerPotion_Content"
+msgid "10초간 공격력이 20% 증가한다."
+msgstr "Increases attack power by 20% for 10 seconds."
+
+#. Key:	SpeedPotion
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
+#: /Game/Desecration/System/StringTable/ST_Item.ST_Item
+msgctxt "ST_Item,SpeedPotion"
+msgid "신속 물약"
+msgstr "Speed Potion"
+
+#. Key:	SpeedPotion_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
+#: /Game/Desecration/System/StringTable/ST_Item.ST_Item
+msgctxt "ST_Item,SpeedPotion_Content"
+msgid "10초간 이동속도가 20% 증가한다."
+msgstr "Increases movement speed by 20% for 10 seconds."
+
 #. Key:	Message_GoToTitle
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
 #: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
 msgctxt "ST_MainGame,Message_GoToTitle"
 msgid "타이틀로 돌아가시겠습니까?"
 msgstr "Do you want to return to the title?"
+
+#. Key:	BerserkRune_E
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,BerserkRune_E"
+msgid "빛나는 광폭의 룬"
+msgstr "Luminous Rune of Berserk"
+
+#. Key:	BerserkRune_E_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,BerserkRune_E_Content"
+msgid "피격시 5초간 공격력이 20% 증가한다."
+msgstr "Taking damage increases attack power by 20% for 5 seconds."
+
+#. Key:	BerserkRune_L
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,BerserkRune_L"
+msgid "찬란한 광폭의 룬"
+msgstr "Radiant Rune of Berserk"
+
+#. Key:	BerserkRune_L_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,BerserkRune_L_Content"
+msgid "피격시 5초간 공격력이 30% 증가한다."
+msgstr "Taking damage increases attack power by 30% for 5 seconds."
+
+#. Key:	BerserkRune_N
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,BerserkRune_N"
+msgid "빛바랜 광폭의 룬"
+msgstr "Faded Rune of Berserk"
+
+#. Key:	BerserkRune_N_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,BerserkRune_N_Content"
+msgid "피격시 5초간 공격력이 10% 증가한다."
+msgstr "Taking damage increases attack power by 10% for 5 seconds."
+
+#. Key:	EvasionRune_E
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,EvasionRune_E"
+msgid "빛나는 회피의 룬"
+msgstr "Luminous Rune of Evasion"
+
+#. Key:	EvasionRune_E_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,EvasionRune_E_Content"
+msgid "구르기의 속도가 50% 증가한다."
+msgstr "Increases dodge roll speed by 50%."
+
+#. Key:	EvasionRune_L
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,EvasionRune_L"
+msgid "찬란한 회피의 룬"
+msgstr "Radiant Rune of Evasion"
+
+#. Key:	EvasionRune_L_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,EvasionRune_L_Content"
+msgid "구르기의 속도가 70% 증가한다."
+msgstr "Increases dodge roll speed by 70%."
+
+#. Key:	EvasionRune_N
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,EvasionRune_N"
+msgid "빛바랜 회피의 룬"
+msgstr "Faded Rune of Evasion"
+
+#. Key:	EvasionRune_N_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,EvasionRune_N_Content"
+msgid "구르기의 속도가 30% 증가한다."
+msgstr "Increases dodge roll speed by 30%."
+
+#. Key:	ExecuteRune_E
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,ExecuteRune_E"
+msgid "빛나는 처형의 룬"
+msgstr "Luminous Rune of Execution"
+
+#. Key:	ExecuteRune_E_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,ExecuteRune_E_Content"
+msgid "체력이 20% 이하인 적을 처형한다. 강력한 적에겐 20% 추가 대미지가 적용된다."
+msgstr "Executes enemies with 20% HP or less. Against powerful enemies, deals 20% additional damage instead."
+
+#. Key:	ExecuteRune_L
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,ExecuteRune_L"
+msgid "찬란한 처형의 룬"
+msgstr "Radiant Rune of Execution"
+
+#. Key:	ExecuteRune_L_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,ExecuteRune_L_Content"
+msgid "체력이 30% 이하인 적을 처형한다. 강력한 적에겐 30% 추가 대미지가 적용된다."
+msgstr "Executes enemies with 30% HP or less. Against powerful enemies, deals 30% additional damage instead."
+
+#. Key:	ExecuteRune_N
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,ExecuteRune_N"
+msgid "빛바랜 처형의 룬"
+msgstr "Faded Rune of Execution"
+
+#. Key:	ExecuteRune_N_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,ExecuteRune_N_Content"
+msgid "체력이 10% 이하인 적을 처형한다. 강력한 적에겐 10% 추가 대미지가 적용된다."
+msgstr "Executes enemies with 10% HP or less. Against powerful enemies, deals 10% additional damage instead."
+
+#. Key:	PaladinRune_E
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,PaladinRune_E"
+msgid "빛나는 태양의 룬"
+msgstr "Luminous Rune of the Sun"
+
+#. Key:	PaladinRune_E_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,PaladinRune_E_Content"
+msgid "태양의 힘이 약하게 담겨 있는 룬. 태양의 전사는 신성한 힘을 35% 더 많이 얻는다."
+msgstr "A rune imbued with a faint trace of the Sun's power. The Sun Warrior gains 35% more divine power."
+
+#. Key:	PaladinRune_L
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,PaladinRune_L"
+msgid "찬란한 태양의 룬"
+msgstr "Radiant Rune of the Sun"
+
+#. Key:	PaladinRune_L_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,PaladinRune_L_Content"
+msgid "태양의 힘이 강하게 담겨 있는 룬. 태양의 전사는 신성한 힘을 50% 더 많이 얻고 각성시 공격속도가 50% 더 증가한다."
+msgstr "A rune imbued with the Sun's power in abundance. The Sun Warrior gains 50% more divine power, and attack speed during awakening is increased by an additional 50%."
+
+#. Key:	PaladinRune_N
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,PaladinRune_N"
+msgid "빛바랜 태양의 룬"
+msgstr "Faded Rune of the Sun"
+
+#. Key:	PaladinRune_N_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,PaladinRune_N_Content"
+msgid "태양의 힘이 약하게 담겨 있는 룬. 태양의 전사는 신성한 힘을 20% 더 많이 얻는다."
+msgstr "A rune imbued with a faint trace of the Sun's power. The Sun Warrior gains 20% more divine power."
+
+#. Key:	PotionRune_E
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,PotionRune_E"
+msgid "빛나는 물약의 룬"
+msgstr "Luminous Rune of Potions"
+
+#. Key:	PotionRune_E_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,PotionRune_E_Content"
+msgid "물약을 50% 빨리 마신다."
+msgstr "Drink potions 50% faster."
+
+#. Key:	PotionRune_L
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,PotionRune_L"
+msgid "찬란한 물약의 룬"
+msgstr "Radiant Rune of Potions"
+
+#. Key:	PotionRune_L_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,PotionRune_L_Content"
+msgid "물약을 70% 빨리 마신다."
+msgstr "Drink potions 70% faster."
+
+#. Key:	PotionRune_N
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,PotionRune_N"
+msgid "빛바랜 물약의 룬"
+msgstr "Faded Rune of Potions"
+
+#. Key:	PotionRune_N_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,PotionRune_N_Content"
+msgid "물약을 30% 빨리 마신다."
+msgstr "Drink potions 30% faster."
+
+#. Key:	RageRune_E
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,RageRune_E"
+msgid "빛나는 분노의 룬"
+msgstr "Luminous Rune of Rage"
+
+#. Key:	RageRune_E_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,RageRune_E_Content"
+msgid "체력이 10% 낮아질때마다 공격력이 4% 증가한다. 최대 5번까지 적용된다."
+msgstr "Attack power increases by 4% for every 10% of HP lost. Stacks up to 5 times."
+
+#. Key:	RageRune_L
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,RageRune_L"
+msgid "찬란한 분노의 룬"
+msgstr "Radiant Rune of Rage"
+
+#. Key:	RageRune_L_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,RageRune_L_Content"
+msgid "체력이 10% 낮아질때마다 공격력이 6% 증가한다. 최대 5번까지 적용된다."
+msgstr "Attack power increases by 6% for every 10% of HP lost. Stacks up to 5 times."
+
+#. Key:	RageRune_N
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,RageRune_N"
+msgid "빛바랜 분노의 룬"
+msgstr "Faded Rune of Rage"
+
+#. Key:	RageRune_N_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,RageRune_N_Content"
+msgid "체력이 10% 낮아질때마다 공격력이 2% 증가한다. 최대 5번까지 적용된다."
+msgstr "Attack power increases by 2% for every 10% of HP lost. Stacks up to 5 times."
+
+#. Key:	RegenerationRune_E
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,RegenerationRune_E"
+msgid "빛나는 회복의 룬"
+msgstr "Luminous Rune of Recovery"
+
+#. Key:	RegenerationRune_E_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,RegenerationRune_E_Content"
+msgid "최대 체력의 40%까지 초당 2씩 회복한다."
+msgstr "Restores 2 HP per second until reaching 40% of max HP."
+
+#. Key:	RegenerationRune_L
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,RegenerationRune_L"
+msgid "찬란한 회복의 룬"
+msgstr "Radiant Rune of Recovery"
+
+#. Key:	RegenerationRune_L_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,RegenerationRune_L_Content"
+msgid "최대 체력의 50%까지 초당 3씩 회복한다."
+msgstr "Restores 3 HP per second until reaching 50% of max HP."
+
+#. Key:	RegenerationRune_N
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,RegenerationRune_N"
+msgid "빛바랜 회복의 룬"
+msgstr "Faded Rune of Recovery"
+
+#. Key:	RegenerationRune_N_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,RegenerationRune_N_Content"
+msgid "최대 체력의 30%까지 초당 1씩 회복한다."
+msgstr "Restores 1 HP per second until reaching 30% of max HP."
+
+#. Key:	SmiteRune_E
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,SmiteRune_E"
+msgid "빛나는 강타의 룬"
+msgstr "Luminous Rune of Smite"
+
+#. Key:	SmiteRune_E_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,SmiteRune_E_Content"
+msgid "4번째 공격마다 50%의 추가 피해를 준다."
+msgstr "Every 4th attack deals 50% additional damage."
+
+#. Key:	SmiteRune_L
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,SmiteRune_L"
+msgid "찬란한 강타의 룬"
+msgstr "Radiant Rune of Smite"
+
+#. Key:	SmiteRune_L_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,SmiteRune_L_Content"
+msgid "4번째 공격마다 70%의 추가 피해를 준다."
+msgstr "Every 4th attack deals 70% additional damage."
+
+#. Key:	SmiteRune_N
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,SmiteRune_N"
+msgid "빛바랜 강타의 룬"
+msgstr "Faded Rune of Smite"
+
+#. Key:	SmiteRune_N_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,SmiteRune_N_Content"
+msgid "4번째 공격마다 30%의 추가 피해를 준다."
+msgstr "Every 4th attack deals 30% additional damage."
+
+#. Key:	TaoistRune_E
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,TaoistRune_E"
+msgid "빛나는 음양의 룬"
+msgstr "Luminous Rune of Yin and Yang"
+
+#. Key:	TaoistRune_E_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,TaoistRune_E_Content"
+msgid "자연의 기운이 약하게 담겨있는 룬. 분신의 공격력이 20% 증가한다."
+msgstr "A rune imbued with a faint trace of nature's energy. Clone attack power is increased by 20%."
+
+#. Key:	TaoistRune_L
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,TaoistRune_L"
+msgid "찬란한 음양의 룬"
+msgstr "Radiant Rune of Yin and Yang"
+
+#. Key:	TaoistRune_L_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,TaoistRune_L_Content"
+msgid "자연의 기운이 강하게 담겨있는 룬. 분신의 공격력이 30% 증가하고 분신이 한체 늘어난다."
+msgstr "A rune imbued with nature's energy in abundance. Clone attack power is increased by 30%, and the number of clones is increased by 1."
+
+#. Key:	TaoistRune_N
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,TaoistRune_N"
+msgid "빛바랜 음양의 룬"
+msgstr "Faded Rune of Yin and Yang"
+
+#. Key:	TaoistRune_N_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,TaoistRune_N_Content"
+msgid "자연의 기운이 약하게 담겨있는 룬. 분신의 공격력이 10% 증가한다."
+msgstr "A rune imbued with a faint trace of nature's energy. Clone attack power is increased by 10%."
+
+#. Key:	UndyingRune_E
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,UndyingRune_E"
+msgid "빛나는 불굴의 룬"
+msgstr "Luminous Rune of Indomitability"
+
+#. Key:	UndyingRune_E_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,UndyingRune_E_Content"
+msgid "죽음에 이르는 피해를 입을 시 최대 체력의 35%를 회복한다."
+msgstr "When receiving fatal damage, restore 35% of max HP instead of dying."
+
+#. Key:	UndyingRune_L
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,UndyingRune_L"
+msgid "찬란한 불굴의 룬"
+msgstr "Radiant Rune of Indomitability"
+
+#. Key:	UndyingRune_L_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,UndyingRune_L_Content"
+msgid "죽음에 이르는 피해를 입을 시 최대 체력의 50%를 회복한다."
+msgstr "When receiving fatal damage, restore 50% of max HP instead of dying."
+
+#. Key:	UndyingRune_N
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,UndyingRune_N"
+msgid "빛바랜 불굴의 룬"
+msgstr "Faded Rune of Indomitability"
+
+#. Key:	UndyingRune_N_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,UndyingRune_N_Content"
+msgid "죽음에 이르는 피해를 입을 시 최대 체력의 20%를 회복한다."
+msgstr "When receiving fatal damage, restore 20% of max HP instead of dying."
+
+#. Key:	ValkyrieRune_E
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,ValkyrieRune_E"
+msgid "빛나는 달의 룬"
+msgstr "Luminous Rune of the Moon"
+
+#. Key:	ValkyrieRune_E_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,ValkyrieRune_E_Content"
+msgid "달빛이 약하게 담겨있는 룬. 4번째 공격이 최대체력의 4% 만큼 추가로 회복한다."
+msgstr "A rune imbued with a faint trace of moonlight. Every 4th attack restores additional HP equal to 4% of max HP."
+
+#. Key:	ValkyrieRune_L
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,ValkyrieRune_L"
+msgid "찬란한 달의 룬"
+msgstr "Radiant Rune of the Moon"
+
+#. Key:	ValkyrieRune_L_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,ValkyrieRune_L_Content"
+msgid "달빛이 강하게 담겨있는 룬. 3번째 공격이 최대체력의 6% 만큼 추가로 회복한다."
+msgstr "A rune imbued with moonlight in abundance. Every 3rd attack restores additional HP equal to 6% of max HP."
+
+#. Key:	ValkyrieRune_N
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,ValkyrieRune_N"
+msgid "빛바랜 달의 룬"
+msgstr "Faded Rune of the Moon"
+
+#. Key:	ValkyrieRune_N_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,ValkyrieRune_N_Content"
+msgid "달빛이 약하게 담겨있는 룬. 4번째 공격이 최대체력의 2% 만큼 추가로 회복한다."
+msgstr "A rune imbued with a faint trace of moonlight. Every 4th attack restores additional HP equal to 2% of max HP."
 
 #. Key:	BGM
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_Settings.ST_Settings
