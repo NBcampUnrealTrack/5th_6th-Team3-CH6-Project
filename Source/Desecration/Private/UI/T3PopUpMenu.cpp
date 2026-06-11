@@ -91,7 +91,7 @@ void UT3PopUpMenu::OnClickSettingsButton()
 
 void UT3PopUpMenu::OnClickTitleButton()
 {
-	ConfirmPanel->ShowConfirmPanel(CheckGotoTitle);
+	ConfirmPanel->ShowConfirmPanel(UT3GameInstance::GetTextFromTable(NAMESPACE_NAME, CheckGotoTitle));
 	ConfirmPanel->OnClickConfirmButtonAction.AddDynamic(this, &ThisClass::GotoTitle);
 }
 

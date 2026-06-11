@@ -52,7 +52,7 @@ public:
 	 * @param Key 지정할 테이블에서 찾을 키 값
 	 * @return 지정한 키 값의 번역 결과 (FText)
 	 */
-	UFUNCTION(Blueprintpure)
+	UFUNCTION(Blueprintpure, Category = "Localization")
 	static FText GetTextFromTable(const FString& Namespace, const FString& Key);
 	
 	/** 
@@ -61,7 +61,7 @@ public:
 	 * @param Key 지정할 테이블에서 찾을 키 값
 	 * @return 지정한 키 값의 번역 결과 (FString)
 	 */
-	UFUNCTION(Blueprintpure)
+	UFUNCTION(Blueprintpure, Category = "Localization")
 	static FString GetStringFromTable(const FString& Namespace, const FString& Key);
 	
 	virtual void Init() override;

@@ -11,6 +11,7 @@
 #include "T3CharacterBase.generated.h"
 
 
+class AT3PlayerController;
 class USpringArmComponent;
 class UCameraComponent;
 class UT3CombatComponent;
@@ -88,12 +89,14 @@ FOnSellItemRequested OnSellItemRequested;
 UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory|Data") 
 TObjectPtr <UDataTable> ItemDataTable;
 
-protected:
+public:
 	virtual void BeginPlay() override;
-	virtual void PostInitializeComponents() override; // BeginPlay보다 앞선 초기화 지점
+	virtual void PostInitializeComponents() override; // BeginPlay보다 앞선 초기화 지점, 에디터 상태에서도 실행됨
+	virtual void PossessedBy(AController* NewController) override; // BeginPlay보다 앞선 초기화 지점 (2), 실행하여 빙의되어야 실행
 	virtual void Tick( float DeltaTime ) override;
 	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
 	
+protected:
 	/**
 	 * CharacterData가 null이면 게임 인스턴스를 통해 할당한다.
 	 * @return 이미 할당된 상태 또는 할당에 성공시 true, 그 외에는 false
@@ -131,6 +134,12 @@ protected:
 	
 	void ApplyCharacterData(UT3CharacterDataAsset* Data);
 
+	//레벨 로딩이 완료되면 중력 영향 되돌림
+	void RestoreGravityWhenWorldIsReady();
+	//RestoreGravityUntilWorldIsReady함수용 타이머 핸들
+	FTimerHandle WorldReadyTimer;
+	//RestoreGravityUntilWorldIsReady함수용 임시 저장 변수
+	float TempSaveGravity = 0;
 
 public:
 
@@ -164,6 +173,8 @@ public:
 	void OnActivatePotion();
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnInteract();
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnCombatStateSwitch();
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Death")
 	bool bIsDead = false;

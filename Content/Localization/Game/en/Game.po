@@ -1,0 +1,316 @@
+﻿# Game English translation.
+# Fill out your copyright notice in the Description page of Project Settings.
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: Game\n"
+"POT-Creation-Date: 2026-06-01 03:24\n"
+"PO-Revision-Date: 2026-06-01 03:24\n"
+"Language-Team: \n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. Key:	Message_CheckNewGame
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_BeforeGamePlay.ST_BeforeGamePlay
+#: /Game/Desecration/System/StringTable/ST_BeforeGamePlay.ST_BeforeGamePlay
+msgctxt "ST_BeforeGamePlay,Message_CheckNewGame"
+msgid "진행중인 게임이 사라집니다. 계속 하시겠습니까?"
+msgstr "The saved game data will be delete. Are you sure?"
+
+#. Key:	Message_LoadGame
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_BeforeGamePlay.ST_BeforeGamePlay
+#: /Game/Desecration/System/StringTable/ST_BeforeGamePlay.ST_BeforeGamePlay
+msgctxt "ST_BeforeGamePlay,Message_LoadGame"
+msgid "저장된 데이터를 불러오시겠습니까?"
+msgstr "Load from the saved data?"
+
+#. Key:	Message_QuitGame
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_BeforeGamePlay.ST_BeforeGamePlay
+#: /Game/Desecration/System/StringTable/ST_BeforeGamePlay.ST_BeforeGamePlay
+msgctxt "ST_BeforeGamePlay,Message_QuitGame"
+msgid "게임을 종료하시겠습니까?"
+msgstr "Do you want to quit the game?"
+
+#. Key:	Message_YourName
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_BeforeGamePlay.ST_BeforeGamePlay
+#: /Game/Desecration/System/StringTable/ST_BeforeGamePlay.ST_BeforeGamePlay
+msgctxt "ST_BeforeGamePlay,Message_YourName"
+msgid "당신의 이름은 무엇입니까?"
+msgstr "What's your name?"
+
+#. Key:	Cancel
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Common.ST_Common
+#: /Game/Desecration/System/StringTable/ST_Common.ST_Common
+msgctxt "ST_Common,Cancel"
+msgid "취소"
+msgstr "Cancel"
+
+#. Key:	Class_Paladin
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Common.ST_Common
+#: /Game/Desecration/System/StringTable/ST_Common.ST_Common
+msgctxt "ST_Common,Class_Paladin"
+msgid "팔라딘"
+msgstr "Paladin"
+
+#. Key:	Class_Taoist
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Common.ST_Common
+#: /Game/Desecration/System/StringTable/ST_Common.ST_Common
+msgctxt "ST_Common,Class_Taoist"
+msgid "도사"
+msgstr "Taoist"
+
+#. Key:	Class_Valkyrie
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Common.ST_Common
+#: /Game/Desecration/System/StringTable/ST_Common.ST_Common
+msgctxt "ST_Common,Class_Valkyrie"
+msgid "발키리"
+msgstr "Valkyrie"
+
+#. Key:	Confirm
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Common.ST_Common
+#: /Game/Desecration/System/StringTable/ST_Common.ST_Common
+msgctxt "ST_Common,Confirm"
+msgid "확인"
+msgstr "Confirm"
+
+#. Key:	Message_GoToTitle
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Message_GoToTitle"
+msgid "타이틀로 돌아가시겠습니까?"
+msgstr "Do you want to return to the title?"
+
+#. Key:	BGM
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+#: /Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+msgctxt "ST_Settings,BGM"
+msgid "배경음"
+msgstr "Music"
+
+#. Key:	CameraSpeed
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+#: /Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+msgctxt "ST_Settings,CameraSpeed"
+msgid "카메라 회전 속도"
+msgstr "Camera Rotation Speed"
+
+#. Key:	Controller
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+#: /Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+msgctxt "ST_Settings,Controller"
+msgid "컨트롤러"
+msgstr "Controller"
+
+#. Key:	DisplayMode
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+#: /Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+msgctxt "ST_Settings,DisplayMode"
+msgid "화면 모드"
+msgstr "Display Mode"
+
+#. Key:	Gamepad
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+#: /Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+msgctxt "ST_Settings,Gamepad"
+msgid "게임패드"
+msgstr "Gamepad"
+
+#. Key:	Graphic_Cinematic
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+#: /Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+msgctxt "ST_Settings,Graphic_Cinematic"
+msgid "최고"
+msgstr "Maximum"
+
+#. Key:	Graphic_Epic
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+#: /Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+msgctxt "ST_Settings,Graphic_Epic"
+msgid "매우 높음"
+msgstr "Very High"
+
+#. Key:	Graphic_High
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+#: /Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+msgctxt "ST_Settings,Graphic_High"
+msgid "높음"
+msgstr "High"
+
+#. Key:	Graphic_Low
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+#: /Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+msgctxt "ST_Settings,Graphic_Low"
+msgid "낮음"
+msgstr "Low"
+
+#. Key:	Graphic_Medium
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+#: /Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+msgctxt "ST_Settings,Graphic_Medium"
+msgid "보통"
+msgstr "Medium"
+
+#. Key:	GraphicQuality
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+#: /Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+msgctxt "ST_Settings,GraphicQuality"
+msgid "그래픽 품질"
+msgstr "Graphic Quality"
+
+#. Key:	InvertVerticalRotation
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+#: /Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+msgctxt "ST_Settings,InvertVerticalRotation"
+msgid "수직 회전 반전"
+msgstr "Invert Vertical Rotation"
+
+#. Key:	KeyboardAndMouse
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+#: /Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+msgctxt "ST_Settings,KeyboardAndMouse"
+msgid "키보드 및 마우스"
+msgstr "Keyboard And Mouse"
+
+#. Key:	KeyGuide
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+#: /Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+msgctxt "ST_Settings,KeyGuide"
+msgid "키 도움말 표시"
+msgstr "Controller Guide"
+
+#. Key:	Language
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+#: /Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+msgctxt "ST_Settings,Language"
+msgid "언어 (Language)"
+msgstr "Language"
+
+#. Key:	Resolution
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+#: /Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+msgctxt "ST_Settings,Resolution"
+msgid "해상도"
+msgstr "Resolution"
+
+#. Key:	SoundEffect
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+#: /Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+msgctxt "ST_Settings,SoundEffect"
+msgid "효과음"
+msgstr "Sound"
+
+#. Key:	VSync
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+#: /Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+msgctxt "ST_Settings,VSync"
+msgid "수직 동기화"
+msgstr "V-Sync"
+
+#. Key:	WindowMode_Fullscreen
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+#: /Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+msgctxt "ST_Settings,WindowMode_Fullscreen"
+msgid "전체 화면"
+msgstr "Fullscreen"
+
+#. Key:	WindowMode_Windowed
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+#: /Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+msgctxt "ST_Settings,WindowMode_Windowed"
+msgid "창 모드"
+msgstr "Windowed"
+
+#. Key:	WindowMode_WindowedFullscreen
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+#: /Game/Desecration/System/StringTable/ST_Settings.ST_Settings
+msgctxt "ST_Settings,WindowMode_WindowedFullscreen"
+msgid "전체 창 모드"
+msgstr "Borderless Window"
+
+#. Key:	Content_Action
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Tutorial.ST_Tutorial
+#: /Game/Desecration/System/StringTable/ST_Tutorial.ST_Tutorial
+msgctxt "ST_Tutorial,Content_Action"
+msgid "F키를 눌러서 각종 사물에 상호작용 할 수 있습니다."
+msgstr "Press F to interact with objects and other points of interest."
+
+#. Key:	Content_Battle
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Tutorial.ST_Tutorial
+#: /Game/Desecration/System/StringTable/ST_Tutorial.ST_Tutorial
+msgctxt "ST_Tutorial,Content_Battle"
+msgid "마우스 좌클릭으로 공격, 우클릭으로 막기를 사용합니다.\r\n스페이스 바를 눌러 회피를 시전합니다.\r\nTab키를 눌러 적에게 집중할 수 있습니다."
+msgstr "Left Mouse Button: Attack\r\nRight Mouse Button: Block\r\nPress Space Bar to dodge.\r\nPress Tab to lock onto an enemy."
+
+#. Key:	Content_Elite
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Tutorial.ST_Tutorial
+#: /Game/Desecration/System/StringTable/ST_Tutorial.ST_Tutorial
+msgctxt "ST_Tutorial,Content_Elite"
+msgid "강력한 악마를 상대할 시간입니다."
+msgstr "The time has come to face a powerful demon."
+
+#. Key:	Content_Move
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Tutorial.ST_Tutorial
+#: /Game/Desecration/System/StringTable/ST_Tutorial.ST_Tutorial
+msgctxt "ST_Tutorial,Content_Move"
+msgid "키보드 W,A,S,D로 이동하고 마우스를 움직여 화면을 전환합니다."
+msgstr "Move with W, A, S, D and look around by moving the mouse."
+
+#. Key:	Content_Save
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Tutorial.ST_Tutorial
+#: /Game/Desecration/System/StringTable/ST_Tutorial.ST_Tutorial
+msgctxt "ST_Tutorial,Content_Save"
+msgid "룬에 닿으면 영혼이 성수에 묶이게 됩니다."
+msgstr "Touch the rune, and your soul shall be bound to the Sacred Spring."
+
+#. Key:	Content_Skill
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Tutorial.ST_Tutorial
+#: /Game/Desecration/System/StringTable/ST_Tutorial.ST_Tutorial
+msgctxt "ST_Tutorial,Content_Skill"
+msgid "스킬은 Shift키로 슬롯 전환, Q키로 사용이 가능합니다.\r\n포션은 2번키로 슬롯 전환, 1번키로 사용이 가능합니다."
+msgstr "Press Shift to switch skill slots and Q to use the selected skill.\r\nPress 2 to switch potion slots and 1 to use the selected potion."
+
+#. Key:	Title_Action
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Tutorial.ST_Tutorial
+#: /Game/Desecration/System/StringTable/ST_Tutorial.ST_Tutorial
+msgctxt "ST_Tutorial,Title_Action"
+msgid "상호작용"
+msgstr "Interaction"
+
+#. Key:	Title_Battle
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Tutorial.ST_Tutorial
+#: /Game/Desecration/System/StringTable/ST_Tutorial.ST_Tutorial
+msgctxt "ST_Tutorial,Title_Battle"
+msgid "전투"
+msgstr "Battle"
+
+#. Key:	Title_Elite
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Tutorial.ST_Tutorial
+#: /Game/Desecration/System/StringTable/ST_Tutorial.ST_Tutorial
+msgctxt "ST_Tutorial,Title_Elite"
+msgid "악마의 안개"
+msgstr "Demonic Mist"
+
+#. Key:	Title_Move
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Tutorial.ST_Tutorial
+#: /Game/Desecration/System/StringTable/ST_Tutorial.ST_Tutorial
+msgctxt "ST_Tutorial,Title_Move"
+msgid "이동과 화면 전환"
+msgstr "Movement & Camera"
+
+#. Key:	Title_Save
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Tutorial.ST_Tutorial
+#: /Game/Desecration/System/StringTable/ST_Tutorial.ST_Tutorial
+msgctxt "ST_Tutorial,Title_Save"
+msgid "성수의 룬"
+msgstr "Rune of the Sacred Spring"
+
+#. Key:	Title_Skill
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Tutorial.ST_Tutorial
+#: /Game/Desecration/System/StringTable/ST_Tutorial.ST_Tutorial
+msgctxt "ST_Tutorial,Title_Skill"
+msgid "스킬과 포션"
+msgstr "Skills & Potions"
+

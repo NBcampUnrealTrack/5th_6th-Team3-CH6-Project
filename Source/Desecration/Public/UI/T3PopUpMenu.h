@@ -93,7 +93,10 @@ private:
 	UPROPERTY()
 	TObjectPtr<UT3GameInstance> T3GameInstance;
 	
-	//타이틀 버튼의 메세지
+	//타이틀 버튼의 메세지 (번역 키 값)
 	UPROPERTY(EditDefaultsOnly, Category = "Message", meta = (AllowPrivateAccess = true))
 	FString CheckGotoTitle;
+	
+	//번역 기능에 사용할 네임스페이스 이름
+	const FString NAMESPACE_NAME = TEXT("ST_MainGame");
 };
