@@ -30,5 +30,12 @@ public:
 	
 	virtual void ApplyBonusDamage(float BonusDamage) = 0;
 	
-	virtual void SetAnimationSpeedMultiplier(float MoveAnimMultiplier, float AttackAnimMultiplier) = 0;
+	// 외부 슬로우/가속 적용 진입점 (천사 장신구 등).
+	// MoveSpeedMultiplier  - CharacterMovement::MaxWalkSpeed에 곱
+	// MoveAnimMultiplier   - 이동 계열 몽타주 PlayRate에 곱 (구현체 별 처리)
+	// AttackAnimMultiplier - 공격 계열 몽타주 PlayRate에 곱 (AnimInstance/직접 곱셈)
+	virtual void SetAnimationSpeedMultiplier(
+		float MoveSpeedMultiplier,
+		float MoveAnimMultiplier,
+		float AttackAnimMultiplier) = 0;
 };

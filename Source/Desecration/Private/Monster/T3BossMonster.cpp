@@ -135,9 +135,13 @@ void AT3BossMonster::ApplyBonusDamage(float BonusDamage)
 	Damage(BonusDamage, 0.0f);
 }
 
-void AT3BossMonster::SetAnimationSpeedMultiplier(float MoveAnimMultiplier, float AttackAnimMultiplier)
+void AT3BossMonster::SetAnimationSpeedMultiplier(
+	float MoveSpeedMultiplier,
+	float /*MoveAnimMultiplier*/,
+	float AttackAnimMultiplier)
 {
-	BossStats.MoveSpeed = MoveAnimMultiplier;
+	// BossStats는 의미상 이동 속도/공격 속도를 보관 — MoveAnim(애님 PlayRate)은 보스 스탯 영역 밖이므로 미사용
+	BossStats.MoveSpeed = MoveSpeedMultiplier;
 	BossStats.AttackSpeed = AttackAnimMultiplier;
 	OnBossActionSpeedChanged.Broadcast();
 }

@@ -224,9 +224,9 @@ struct FMidBossAttackPattern
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0.1"))
 	float ReactionPlayRateMultiplier = 1.0f;
 
-	// true면 PostBlock/PostRoll 윈도우 활성 시 "리액션 패턴" 후보로 가중. false(기본)면 일반 패턴으로만 사용.
+	// true면 리액션 모드(ReactionStartSectionOverride / ReactionPlayRateMultiplier)를 지원. false(기본)면 일반 패턴으로만 실행.
 	// (※ ParryWindow 카운터 패턴과 무관 — 별도 메커니즘)
-	// false인 패턴은 ReactionWindow Consideration이 가중 부풀림에서 제외 → 기존 Dark Knight 등 무영향
+	// false인 패턴은 ExecutePattern이 확률 게이트 통과해도 변형 적용 X (그냥 일반 실행)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bAllowAsReaction = false;
 
