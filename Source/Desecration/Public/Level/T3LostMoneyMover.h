@@ -13,32 +13,32 @@ class DESECRATION_API AT3LostMoneyMover : public AActor
 	
 public:	
 	AT3LostMoneyMover();
-	
-	virtual void PostInitializeComponents() override;
 
 protected:
 	virtual void BeginPlay() override;
 
 private:
-	//액텨와 겹치면 실행
-	UFUNCTION()
-	void OnActorOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult);
+	//재화 옮기기
+	void MoveLostMoneyActors();
 	
 	//루트 컴포넌트
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	TObjectPtr<USceneComponent> RootComp;
 	
 	//잃어버린 재화를 감지할 콜리전
-	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = true))
+	UPROPERTY(VisibleInstanceOnly, meta = (AllowPrivateAccess = true))
 	TObjectPtr<UBoxComponent> CollisionBox;
 	
-	//잃어버린 재화를 옮길 위치
-	UPROPERTY(EditInstanceOnly, Category = "Lost Money", meta = (AllowPrivateAccess = true))
-	FVector MoveDestination;
+	//잃어버린 재화를 이 컴포넌트로 옮김
+	UPROPERTY(VisibleInstanceOnly, meta = (AllowPrivateAccess = true))
+	TObjectPtr<USceneComponent> DestinationComponent;
 	
 	//여러 개를 옮길 경우 각 재화 액터의 거리 (0이면 재화 액터의 콜리전으로 계산)
 	UPROPERTY(EditDefaultsOnly, Category = "Lost Money", meta = (AllowPrivateAccess = true))
 	float DistanceBetweenActors;
+	
+	//잃어버린 재화 옮기기 작업 예약용 핸들러
+	FTimerHandle MoveLostMoneyTimerHandle;
 	
 	//여러 개를 옮길 경우 1줄당 존재 가능한 액터 개수
 	int32 ActorCountPerLine;
