@@ -813,60 +813,6 @@ protected:
 };
 
 // ============================================================
-// Consideration: FT3Consideration_ReactionWindow
-// "리액션 패턴"(막기/회피 직후 빠른 반격) 가중치 부풀림 — bAllowAsReaction=true 패턴 전용
-// (※ ParryWindow 카운터 패턴과 무관 — 별도 메커니즘)
-// 동작:
-//   - 패턴 데이터의 bAllowAsReaction=false  → 1.0 (무영향, 일반 패턴은 그대로)
-//   - bAllowAsReaction=true + PostBlock/PostRoll 활성 → BoostScore (강하게 부풀림)
-//   - bAllowAsReaction=true + 윈도우 비활성 → IdleScore (보통 0 — 평소엔 후보 제외)
-// ============================================================
-
-USTRUCT()
-struct FT3Consideration_ReactionWindowInstanceData
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, Category = "Parameter")
-	FName PatternName = NAME_None;
-
-	// PostBlock/PostRoll 태그 활성 시 점수 — 1.0 초과면 부풀림 (가중 강화)
-	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "0.0"))
-	float BoostScore = 5.0f;
-
-	// 윈도우 비활성 시 점수 — 0.0이면 평소엔 후보 제외, >0이면 약하게 가능
-	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "0.0"))
-	float IdleScore = 0.0f;
-
-	// PostBlock 태그를 트리거로 인정 (false면 PostRoll만 인정)
-	UPROPERTY(EditAnywhere, Category = "Parameter")
-	bool bRespondToPostBlock = true;
-
-	// PostRoll 태그를 트리거로 인정 (false면 PostBlock만 인정)
-	UPROPERTY(EditAnywhere, Category = "Parameter")
-	bool bRespondToPostRoll = true;
-
-	UPROPERTY(EditAnywhere, Category = "Context")
-	TObjectPtr<AT3MidBossMonster> Boss = nullptr;
-};
-
-USTRUCT(meta = (DisplayName = "Reaction Window (Consideration)"))
-struct DESECRATION_API FT3Consideration_ReactionWindow : public FStateTreeConsiderationCommonBase
-{
-	GENERATED_BODY()
-
-	using FInstanceDataType = FT3Consideration_ReactionWindowInstanceData;
-
-	virtual const UStruct* GetInstanceDataType() const override
-	{
-		return FT3Consideration_ReactionWindowInstanceData::StaticStruct();
-	}
-
-protected:
-	virtual float GetScore(FStateTreeExecutionContext& Context) const override;
-};
-
-// ============================================================
 // Consideration: FT3Consideration_GaugePressure
 // 스턴 게이지 압력에 비례/반비례하여 점수 산출 — 게이지 누적 시 보스 행동 편향
 // 사용 예 (Desmond):
