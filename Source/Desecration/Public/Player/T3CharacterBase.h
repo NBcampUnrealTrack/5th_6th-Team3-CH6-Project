@@ -54,6 +54,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnForcedMoveEndSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSellItemRequested, const FInventorySlot&, SlotData, const int32&, Count, EItemType, ItemType);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUndyingTriggered);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDamageDealt, AActor*, HitTarget, float, DamageDealt);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnSmiteTriggered, FVector);
 
 UCLASS()
 class DESECRATION_API AT3CharacterBase : public ACharacter
@@ -374,8 +375,10 @@ public:
 #pragma region Rune
 public:
 	FOnUndyingTriggered OnUndyingTriggered;
-	
+
 	FOnDamageDealt OnDamageDealt;
+
+	FOnSmiteTriggered OnSmiteTriggered;
 	
     void SetRuneAttackBonus(UObject* RuneSource, float Bonus);
     

@@ -5,6 +5,8 @@
 #include "Player/T3CharacterBase.h"
 #include "T3RageRune.generated.h"
 
+class UNiagaraComponent;
+
 UCLASS()
 class DESECRATION_API UT3RageRune : public UT3RuneBase
 {
@@ -12,13 +14,16 @@ class DESECRATION_API UT3RageRune : public UT3RuneBase
 
 public:
 	virtual void OnSocketed_Implementation(AT3CharacterBase* OwnerChar) override;
-	
+
 	virtual void OnUnsocketed_Implementation(AT3CharacterBase* OwnerChar) override;
 
 	virtual void SetGrade(ET3RuneGrade InGrade) override;
-	
+
 private:
 	TWeakObjectPtr<AT3CharacterBase> CachedOwner;
+
+	UPROPERTY()
+	TObjectPtr<UNiagaraComponent> ActiveEffect;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Value")
 	float AttackBonusPerHPTenPercentNormal = 2.0f;
