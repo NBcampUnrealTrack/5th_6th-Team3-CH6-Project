@@ -33,12 +33,12 @@ private:
 	UPROPERTY(VisibleInstanceOnly, meta = (AllowPrivateAccess = true))
 	TObjectPtr<USceneComponent> DestinationComponent;
 	
-	//여러 개를 옮길 경우 각 재화 액터의 거리 (0이면 재화 액터의 콜리전으로 계산)
-	UPROPERTY(EditInstanceOnly, Category = "Lost Money", meta = (AllowPrivateAccess = true))
+	//여러 개를 옮길 경우 각 재화 액터의 거리 (0이면 잃어버린 재화 액터의 콜리전으로 계산)
+	UPROPERTY(EditInstanceOnly, Category = "Lost Money Actor", meta = (AllowPrivateAccess = true))
 	float DistanceBetweenActors;
 
 	//여러 개를 옮길 경우 1줄당 존재 가능한 액터 개수
-	UPROPERTY(EditInstanceOnly, Category = "Lost Money", meta = (AllowPrivateAccess = true))
+	UPROPERTY(EditInstanceOnly, Category = "Lost Money Actor", meta = (AllowPrivateAccess = true))
 	int32 ActorCountPerLine;
 	
 	//옮긴 재화 액터 개수
