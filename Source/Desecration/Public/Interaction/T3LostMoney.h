@@ -14,14 +14,18 @@ class DESECRATION_API AT3LostMoney : public AActor
 	
 public:	
 	AT3LostMoney();
+
+	virtual void PostInitializeComponents() override;
 	
 protected:
 	virtual void BeginPlay() override;
-	virtual void PostInitializeComponents() override;
 	
 public:
 	void SetLostMoneyID(const int32 ID);
 	void SetMoney(const int32 Amount);
+	
+	//콜리전 역할을 하는 구체
+	FORCEINLINE TObjectPtr<USphereComponent> GetCollisionSphere() const { return CollisionSphere; }
 
 private:
 	//액텨와 겹치면 실행
@@ -32,7 +36,7 @@ private:
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	TObjectPtr<USceneComponent> RootComp;
 	
-	//콜리전 역할을 하는 박스
+	//콜리전 역할을 하는 구체
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	TObjectPtr<USphereComponent> CollisionSphere;
 	

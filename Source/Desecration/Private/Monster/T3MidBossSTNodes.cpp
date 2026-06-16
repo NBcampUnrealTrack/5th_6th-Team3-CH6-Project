@@ -62,8 +62,25 @@ EStateTreeRunStatus FT3STT_ExecutePattern::EnterState(
 		Data.CachedRequiredStage = PatternData.RequiredStage;
 	}
 
-	// 패턴 실행 시도
-	if (!Data.Boss->ExecutePattern(Data.PatternName))
+	// 리액션 모드 자동 감지 — bAsReaction 명시 OR (윈도우 활성 + 확률 게이트 통과) 시 리액션 진입.
+	// (Why: BP의 모든 ExecutePattern 노드를 bAsReaction=true로 토글하지 않아도 Roll/Block 종료 후 자동 적용.
+	//  단 매번 100% 리액션이면 단조롭기에 ReactionApplyChance로 1회 코인플립 — 같은 패턴이 리액션/일반 모드로 분배됨.
+	//  ExecutePattern 본체에서 PendingReactionSource는 항상 None으로 소모됨 — 확률 실패 시에도 윈도우는 소진)
+	const bool bReactionWindowActive = Data.Boss->PendingReactionSource != EBossReactionSource::None;
+	const bool bReactionRolled = bReactionWindowActive
+		&& FMath::FRand() < Data.Boss->ReactionApplyChance;
+	const bool bResolvedReaction = Data.bAsReaction || bReactionRolled;
+
+	if (bReactionWindowActive)
+	{
+		UE_LOG(LogDesecration, Log,
+			TEXT("T3_ST: ReactionGate — 윈도우 활성, Chance:%.2f, 결과:%s"),
+			Data.Boss->ReactionApplyChance,
+			bReactionRolled ? TEXT("리액션 적용") : TEXT("일반 실행"));
+	}
+
+	// 패턴 실행 시도 (리액션 모드면 ReactionStartSectionOverride / ReactionSectionNameOverride 적용)
+	if (!Data.Boss->ExecutePattern(Data.PatternName, bResolvedReaction))
 	{
 		return EStateTreeRunStatus::Failed;
 	}
@@ -373,6 +390,10 @@ EStateTreeRunStatus FT3STT_Disengage::EnterState(
 	// Disengaging 상태 태그 설정 (히트리액션 무시용)
 	Data.Boss->AddStateTag(TAG_Boss_State_Disengaging);
 
+	// 리액션 트리거 클리어 — Disengage(BackStep/Strafe)는 거리 벌리기/숨고르기 페이즈라
+	// 회피 직후 반격 시맨틱과 어긋남. Disengage 후 첫 공격은 일반 모드로 진입해야 함
+	Data.Boss->PendingReactionSource = EBossReactionSource::None;
+
 	// 연속 Disengage 카운터 증가
 	Data.Boss->ConsecutiveDisengageCount++;
 
@@ -571,6 +592,9 @@ EStateTreeRunStatus FT3STT_TestRoll::EnterState(
 
 	Data.ActiveRoll = Roll;
 
+	// 경직치 누적 — 데스몬드처럼 StaggerOnRoll>0인 보스만 동작 (다크나이트는 0이라 헬퍼 내부에서 early-out)
+	Data.Boss->AddStunGauge(Data.Boss->StaggerOnRoll);
+
 	UE_LOG(LogDesecration, Log,
 		TEXT("T3_ST: TestRoll 시작 (Idx:%d, Angle:%.0f°, Duration:%.2f, Rate:%.2f, DistScale:%.2f[Master:%.2f × Dir:%.2f])"),
 		Idx, Idx * 45.f, Duration, Data.PlayRate,
@@ -650,6 +674,26 @@ void FT3STT_TestRoll::ExitState(
 		{
 			Data.Boss->StopAnimMontage(Data.ActiveRoll);
 		}
+
+		// 정상 Succeeded 시에만 리액션 트리거 세팅 — 인터럽트로 끊긴 경우 제외
+		// (bRollEnded=true && DelayElapsed>=PostRollDelay 도달이 정상 종료 조건)
+		const bool bNormalCompletion = Data.bRollEnded && (Data.DelayElapsed >= Data.PostRollDelay);
+		if (bNormalCompletion)
+		{
+			Data.Boss->PendingReactionSource = EBossReactionSource::FromRoll;
+			UE_LOG(LogDesecration, Log, TEXT("T3_ST: Roll 정상 종료 → PendingReactionSource=FromRoll 세팅"));
+		}
+
+		// [DEBUG:ReactionTest] Roll 정상 종료 시 강제 리액션 패턴 — 디버그 토글 ON일 때만
+		if (bNormalCompletion
+			&& Data.Boss->bDebugForceReactionAfterDefense
+			&& !Data.Boss->DebugReactionPatternName.IsNone())
+		{
+			UE_LOG(LogDesecration, Warning,
+				TEXT("T3_ST: [DEBUG:ReactionTest] Roll 종료 → 강제 리액션 패턴 '%s' 실행"),
+				*Data.Boss->DebugReactionPatternName.ToString());
+			Data.Boss->ExecutePattern(Data.Boss->DebugReactionPatternName, true);
+		}
 	}
 
 	Data.ActiveRoll = nullptr;
@@ -686,9 +730,14 @@ EStateTreeRunStatus FT3STT_Block::EnterState(
 	Data.Boss->StartBlockSequence();
 	Data.InitialHitsCount = Data.Boss->BlockHitsCount; // (보통 0 — 델타 측정용)
 
+	// BlockReaction 임계치 추첨 — Min/Max 안전 보정 후 RandRange
+	const int32 ClampedMin = FMath::Max(1, Data.BlockReactionMinHits);
+	const int32 ClampedMax = FMath::Max(ClampedMin, Data.BlockReactionMaxHits);
+	Data.ResolvedHitThreshold = FMath::RandRange(ClampedMin, ClampedMax);
+
 	UE_LOG(LogDesecration, Log,
-		TEXT("T3_ST: Block 진입 (MaxDuration:%.2f, MaxHits:%d)"),
-		Data.MaxDuration, Data.MaxBlockHits);
+		TEXT("T3_ST: Block 진입 (MaxDuration:%.2f, 임계치추첨:%d회 [Min:%d, Max:%d])"),
+		Data.MaxDuration, Data.ResolvedHitThreshold, ClampedMin, ClampedMax);
 
 	return EStateTreeRunStatus::Running;
 }
@@ -715,22 +764,31 @@ EStateTreeRunStatus FT3STT_Block::Tick(
 
 	Data.ElapsedTime += DeltaTime;
 
-	// 종료 조건 평가 — 한 번만 RequestEndBlockSequence 호출 (이후엔 Idle 도달 대기)
-	if (!Data.bEndRequested)
+	// 1) BlockReaction 임계치 도달 — 가드 정상 종료 (RequestEndBlockSequence)
+	//    가드 정상 종료 → ExitState에서 PendingReactionSource=FromBlock 세팅
+	//    → 다음 ExecutePattern이 ReactionApplyChance 확률 게이트로 리액션/일반 모드 분배
+	if (!Data.bEndRequested
+		&& Data.ResolvedHitThreshold > 0
+		&& Data.Boss->BlockHitsCount >= Data.ResolvedHitThreshold)
 	{
-		const bool bDurationOver = (Data.ElapsedTime >= Data.MaxDuration);
-		const bool bHitsOver = (Data.MaxBlockHits > 0 && Data.Boss->BlockHitsCount >= Data.MaxBlockHits);
+		UE_LOG(LogDesecration, Log,
+			TEXT("T3_ST: Block 임계치 도달 → 가드 종료 요청 (막힘:%d/%d, 경과:%.2f초)"),
+			Data.Boss->BlockHitsCount, Data.ResolvedHitThreshold, Data.ElapsedTime);
 
-		if (bDurationOver || bHitsOver)
-		{
-			UE_LOG(LogDesecration, Log,
-				TEXT("T3_ST: Block 종료 요청 (시간초과:%d, 횟수초과:%d, 경과:%.2f초, 막힘:%d/%d)"),
-				bDurationOver ? 1 : 0, bHitsOver ? 1 : 0,
-				Data.ElapsedTime, Data.Boss->BlockHitsCount, Data.MaxBlockHits);
+		Data.Boss->RequestEndBlockSequence();
+		Data.bEndRequested = true;
+		return EStateTreeRunStatus::Running;
+	}
 
-			Data.Boss->RequestEndBlockSequence();
-			Data.bEndRequested = true;
-		}
+	// 2) MaxDuration 시간 초과 — 정상 PostBlock 경로 (RequestEndBlockSequence → Out → Idle)
+	if (!Data.bEndRequested && Data.ElapsedTime >= Data.MaxDuration)
+	{
+		UE_LOG(LogDesecration, Log,
+			TEXT("T3_ST: Block 시간초과 종료 요청 (경과:%.2f초, 막힘:%d/%d)"),
+			Data.ElapsedTime, Data.Boss->BlockHitsCount, Data.ResolvedHitThreshold);
+
+		Data.Boss->RequestEndBlockSequence();
+		Data.bEndRequested = true;
 	}
 
 	return EStateTreeRunStatus::Running;
@@ -744,11 +802,32 @@ void FT3STT_Block::ExitState(
 
 	if (Data.Boss)
 	{
+		// 정상 Succeeded 경로에선 Phase=Idle 도달 — 인터럽트면 그 외 단계
+		const bool bNormalCompletion = (Data.Boss->CurrentBlockPhase == EBlockPhase::Idle);
+
 		// 외부 인터럽트(BlockReaction 이벤트, 사망 등 ST 트랜지션)로 끊긴 경우 — 시퀀스 강제 정리
 		// 정상 Succeeded 경로에선 이미 Phase=Idle이라 StopBlockSequence가 early-return
-		if (Data.Boss->CurrentBlockPhase != EBlockPhase::Idle)
+		if (!bNormalCompletion)
 		{
 			Data.Boss->StopBlockSequence();
+		}
+
+		// 정상 종료 시에만 리액션 트리거 세팅 — 인터럽트(BlockReaction → 빠른 반격) 시 제외
+		if (bNormalCompletion)
+		{
+			Data.Boss->PendingReactionSource = EBossReactionSource::FromBlock;
+			UE_LOG(LogDesecration, Log, TEXT("T3_ST: Block 정상 종료 → PendingReactionSource=FromBlock 세팅"));
+		}
+
+		// [DEBUG:ReactionTest] Block 정상 종료 시 강제 리액션 패턴 — 디버그 토글 ON일 때만
+		if (bNormalCompletion
+			&& Data.Boss->bDebugForceReactionAfterDefense
+			&& !Data.Boss->DebugReactionPatternName.IsNone())
+		{
+			UE_LOG(LogDesecration, Warning,
+				TEXT("T3_ST: [DEBUG:ReactionTest] Block 종료 → 강제 리액션 패턴 '%s' 실행"),
+				*Data.Boss->DebugReactionPatternName.ToString());
+			Data.Boss->ExecutePattern(Data.Boss->DebugReactionPatternName, true);
 		}
 	}
 
@@ -1030,6 +1109,39 @@ bool FT3STC_DistanceToTarget::TestCondition(FStateTreeExecutionContext& Context)
 }
 
 // ============================================================
+// Condition: FT3STC_StunGaugeBelow
+// 스턴 게이지 비율이 MaxRatio 미만일 때만 true — Rolling 진입 차단용
+// ratio = CurrentStunGauge / StunThreshold (StunThreshold<=0이면 항상 통과)
+// ============================================================
+
+bool FT3STC_StunGaugeBelow::TestCondition(FStateTreeExecutionContext& Context) const
+{
+	const FT3STC_StunGaugeBelowInstanceData& Data = Context.GetInstanceData(*this);
+
+	if (!Data.Boss)
+	{
+		UE_LOG(LogDesecration, Warning, TEXT("T3_ST: StunGaugeBelow — Boss가 바인딩되지 않음"));
+		return false;
+	}
+
+	const float Threshold = Data.Boss->MidBossStats.StunThreshold;
+	if (Threshold <= KINDA_SMALL_NUMBER)
+	{
+		// StunThreshold 미설정 보스는 항상 통과 (게이지 시스템 비활성)
+		return true;
+	}
+
+	const float Ratio = Data.Boss->MidBossStats.CurrentStunGauge / Threshold;
+	const bool bResult = Ratio < Data.MaxRatio;
+
+	UE_LOG(LogDesecration, Verbose,
+		TEXT("T3_ST: StunGaugeBelow(%.2f < %.2f) = %s"),
+		Ratio, Data.MaxRatio, bResult ? TEXT("true") : TEXT("false"));
+
+	return bResult;
+}
+
+// ============================================================
 // Consideration: FT3Consideration_DisengageUrge
 // ActionCount 기반 — 패턴 많이 할수록 Disengage 확률 상승
 // ============================================================
@@ -1120,4 +1232,35 @@ float FT3Consideration_ConsecutiveDisengagePenalty::GetScore(FStateTreeExecution
 
 	// PenaltyPerCount ^ Count (0.5^1=0.5, 0.5^2=0.25 ...)
 	return FMath::Pow(Data.PenaltyPerCount, static_cast<float>(Count));
+}
+
+// ============================================================
+// Consideration: FT3Consideration_GaugePressure
+// 스턴 게이지 ratio = Clamp(CurrentStunGauge / StunThreshold, 0, 1)
+// bInverse=true:  점수 = MinScore + (1 - MinScore) × (1 - ratio^Exponent)
+// bInverse=false: 점수 = MinScore + (1 - MinScore) × ratio^Exponent
+// ============================================================
+
+float FT3Consideration_GaugePressure::GetScore(FStateTreeExecutionContext& Context) const
+{
+	const FT3Consideration_GaugePressureInstanceData& Data = Context.GetInstanceData(*this);
+
+	if (!Data.Boss)
+	{
+		return 0.f;
+	}
+
+	const float Threshold = Data.Boss->MidBossStats.StunThreshold;
+	if (Threshold <= KINDA_SMALL_NUMBER)
+	{
+		// 임계치 미설정 — 영향 없게 1.0 반환 (다른 Consideration 판정에 맡김)
+		return 1.f;
+	}
+
+	const float Ratio = FMath::Clamp(Data.Boss->MidBossStats.CurrentStunGauge / Threshold, 0.f, 1.f);
+	const float Curve = FMath::Pow(Ratio, Data.Exponent);
+	const float NormalizedScore = Data.bInverse ? (1.f - Curve) : Curve;
+
+	const float MinClamped = FMath::Clamp(Data.MinScore, 0.f, 1.f);
+	return MinClamped + (1.f - MinClamped) * NormalizedScore;
 }

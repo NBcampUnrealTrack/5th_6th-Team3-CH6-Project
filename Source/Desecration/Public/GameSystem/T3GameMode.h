@@ -146,6 +146,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Test")
 	void InstantSave();
 	
+public:
+	FORCEINLINE bool GetSpawnLostMoneyEnd() const { return bSpawnLostMoneyEnd; }
+	
 private:
 	//잃어버린 재화 액터
 	UPROPERTY(EditDefaultsOnly, Category = "Game Over", meta = (AllowPrivateAccess = true))
@@ -154,4 +157,7 @@ private:
 	//게임 인스턴스
 	UPROPERTY()
 	TObjectPtr<UT3GameInstance> T3GameInstance;
+	
+	//잃어버린 재화 생성 완료 여부
+	bool bSpawnLostMoneyEnd = false;
 };

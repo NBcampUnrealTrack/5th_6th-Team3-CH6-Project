@@ -111,22 +111,38 @@ private:
 	
 #pragma region 장신구
 public:
-	// IT3Monster 인터페이스 구현
-	virtual void SetAnimationSpeedMultiplier(float MoveAnimMultiplier, float AttackAnimMultiplier) override;
-
-	// 엔진 기본 몽타주 재생 함수를 오버라이드하여 새 몽타주 재생 시 배율 강제 적용
-	virtual float PlayAnimMontage(class UAnimMontage* AnimMontage, float InPlayRate = 1.f, FName StartSectionName = NAME_None) override;
+	// IT3Monster 인터페이스 구현 (3-arg)
+	virtual void SetAnimationSpeedMultiplier(
+		float MoveSpeedMultiplier,
+		float MoveAnimMultiplier,
+		float AttackAnimMultiplier) override;
 
 	// 현재 저장된 공격 애니메이션 배율 반환
+	// UT3MonsterAnimInstance::Montage_PlayInternal에서 이 값을 곱해 BP/C++ 양쪽 진입을 일괄 처리한다.
 	UFUNCTION(BlueprintCallable, Category = "Combat|Accessory")
 	float GetCurrentAttackRate() const { return CurrentAttackRate; }
 
+	// 현재 저장된 이동 애니메이션 배율 반환 (필요 시 BP에서 이동 몽타주 PlayRate 핀에 연결)
+	UFUNCTION(BlueprintCallable, Category = "Combat|Accessory")
+	float GetCurrentMoveAnimRate() const { return CurrentMoveAnimRate; }
+
+	// 현재 저장된 이동 속도 배율 반환 (디버깅/노출용)
+	UFUNCTION(BlueprintCallable, Category = "Combat|Accessory")
+	float GetCurrentMoveSpeedRate() const { return CurrentMoveSpeedRate; }
+
 private:
-	// 현재 적용된 배율 (기본값 1.0)
-	float CurrentMoveRate = 1.f;
+	// 외부 슬로우 영향 (1.0 = 영향 없음) — 절대 배율, 누적되지 않음
+	float CurrentMoveSpeedRate = 1.f;
+	float CurrentMoveAnimRate = 1.f;
 	float CurrentAttackRate = 1.f;
 
-	// 현재 재생 중인 몽타주의 속도를 즉시 업데이트하는 내부 헬퍼
+	// 슬로우 미적용 상태의 MaxWalkSpeed (BeginPlay 시 캐시) — 복원 기준값
+	float DefaultMaxWalkSpeed = 0.f;
+
+	// MaxWalkSpeed = DefaultMaxWalkSpeed × CurrentMoveSpeedRate — 단일 계산 진입점
+	void ApplyCurrentWalkSpeed();
+
+	// 현재 재생 중인 몽타주의 속도를 즉시 업데이트하는 내부 헬퍼 (재생 도중 슬로우 진입 시)
 	void UpdateActiveMontagePlayRate();
 #pragma endregion
 };

@@ -41,6 +41,12 @@ void AT3MonsterBase::BeginPlay()
 	// 헬스 컴포넌트 부착 및 초기화
 	HealthComponent = FindComponentByClass<UT3HealthComponent>();
 
+	// 천사 장신구 슬로우 복원 기준값 캐시 — BP CDO에서 설정한 값을 보존
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		DefaultMaxWalkSpeed = MoveComp->MaxWalkSpeed;
+	}
+
 	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
 	{
 		Capsule->OnComponentBeginOverlap.AddDynamic(this, &AT3MonsterBase::OnCapsuleBeginOverlap);
@@ -86,25 +92,17 @@ float AT3MonsterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 	return ActualDamage;
 }
 
-float AT3MonsterBase::PlayAnimMontage(UAnimMontage* AnimMontage, float InPlayRate, FName StartSectionName)
-{
-	// 장신구로 설정한 CurrentAttackRate를 곱해서 최종 속도를 결정합니다.
-	float FinalPlayRate = InPlayRate * CurrentAttackRate;
-
-	return Super::PlayAnimMontage(AnimMontage, FinalPlayRate, StartSectionName);
-}
-
 void AT3MonsterBase::UpdateActiveMontagePlayRate()
 {
+	// 신규 Montage_Play 호출은 UT3MonsterAnimInstance가 일괄 처리하지만,
+	// 이미 재생 중인 몽타주에 슬로우가 들어온 경우는 별도로 즉시 반영해야 한다.
 	UAnimInstance* AnimInst = GetMesh() ? GetMesh()->GetAnimInstance() : nullptr;
 	if (!AnimInst) return;
 
-	// 현재 재생 중인 모든 몽타주에 대해 루프를 돌며 속도를 강제합니다.
 	if (UAnimMontage* ActiveMontage = AnimInst->GetCurrentActiveMontage())
 	{
 		AnimInst->Montage_SetPlayRate(ActiveMontage, CurrentAttackRate);
 	}
-
 }
 
 void AT3MonsterBase::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
@@ -227,12 +225,31 @@ void AT3MonsterBase::ApplyBonusDamage(float BonusDamage)
 	}
 }
 
-void AT3MonsterBase::SetAnimationSpeedMultiplier(float MoveAnimMultiplier, float AttackAnimMultiplier)
+void AT3MonsterBase::SetAnimationSpeedMultiplier(
+	float MoveSpeedMultiplier,
+	float MoveAnimMultiplier,
+	float AttackAnimMultiplier)
 {
-	// 1. 배율 데이터 갱신
-	CurrentMoveRate = MoveAnimMultiplier;
-	CurrentAttackRate = AttackAnimMultiplier;
+	// 1. 배율 데이터 갱신 — 절대 배율로 덮어써서 누적 방지 (멱등)
+	CurrentMoveSpeedRate = FMath::Max(MoveSpeedMultiplier, 0.f);
+	CurrentMoveAnimRate = FMath::Max(MoveAnimMultiplier, 0.f);
+	CurrentAttackRate = FMath::Max(AttackAnimMultiplier, 0.f);
 
-	// 2. 현재 재생 중인 몽타주 속도 즉시 반영 (도중 감속)
+	UE_LOG(LogTemp, Warning, TEXT("T3_Monster[%s]: SetAnimSpeedMul Move=%.2f, MoveAnim=%.2f, AttackAnim=%.2f"),
+		*GetName(), CurrentMoveSpeedRate, CurrentMoveAnimRate, CurrentAttackRate);
+
+	// 2. MaxWalkSpeed 단일 진입점 갱신
+	ApplyCurrentWalkSpeed();
+
+	// 3. 현재 재생 중인 몽타주 속도 즉시 반영 (재생 도중 슬로우 진입)
 	UpdateActiveMontagePlayRate();
+}
+
+void AT3MonsterBase::ApplyCurrentWalkSpeed()
+{
+	// MaxWalkSpeed = Default × 외부 슬로우 배율 — 천사 등 모든 외부 호출이 이 한 곳을 거침
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		MoveComp->MaxWalkSpeed = DefaultMaxWalkSpeed * CurrentMoveSpeedRate;
+	}
 }

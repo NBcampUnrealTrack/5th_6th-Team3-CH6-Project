@@ -43,10 +43,10 @@ private:
 	void OnSelectionChangedResolutionComboBox(FString SelectedItem, ESelectInfo::Type SelectionType);
 	
 	UFUNCTION()
-	void OnSelectionChangedScreenModeComboBox(FString SelectedItem, ESelectInfo::Type SelectionType);
+	void OnSelectionChangedGraphicQualityComboBox(FString SelectedItem, ESelectInfo::Type SelectionType);
 	
 	UFUNCTION()
-	void OnSelectionChangedGraphicQualityComboBox(FString SelectedItem, ESelectInfo::Type SelectionType);
+	void OnCheckStateChangedFullscreenCheckBox(bool bIsChecked);
 	
 	UFUNCTION()
 	void OnCheckStateChangedVSyncCheckBox(bool bIsChecked);
@@ -66,14 +66,14 @@ private:
 	//해상도 설정
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
 	TObjectPtr<UComboBoxString> ResolutionComboBox;
-	
-	//화면 모드 설정
-	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
-	TObjectPtr<UComboBoxString> ScreenModeComboBox;
-	
+
 	//그래픽 품질 설정
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
 	TObjectPtr<UComboBoxString> GraphicQualityComboBox;
+	
+	//전체 화면 체크 박스
+	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
+	TObjectPtr<UCheckBox> FullscreenCheckBox;
 	
 	//수직 동기화 체크 박스
 	UPROPERTY(meta = (AllowPrivateAccess = true, BindWidget))
@@ -98,9 +98,6 @@ private:
 		FResolution(TEXT("1920 x 1080"), 1920, 1080),
 		FResolution(TEXT("1920 x 1200"), 1920, 1200)
 	};
-	
-	//화면 모드에 사용할 번역 키 값
-	const TArray<FString> SCREEN_MODE_KEY_STRINGS = { TEXT("WindowMode_Fullscreen"), TEXT("WindowMode_WindowedFullscreen"), TEXT("WindowMode_Windowed") };
 	
 	//그래픽 품질에 사용할 번역 키 값
 	const TArray<FString> GRAPHIC_KEY_STRINGS =
