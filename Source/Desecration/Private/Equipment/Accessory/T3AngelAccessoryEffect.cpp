@@ -9,6 +9,8 @@ void UT3AngelAccessoryEffect::OnEquipped_Implementation(AT3CharacterBase* OwnerC
 {
 	CachedOwner = OwnerChar;
 
+	PlayEquipEffect(OwnerChar);
+
 	AuraSphere = NewObject<USphereComponent>(OwnerChar);
 	AuraSphere->InitSphereRadius(SlowRadius);
 	AuraSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
@@ -85,6 +87,8 @@ void UT3AngelAccessoryEffect::RestoreMonster(int32 Index)
 
 void UT3AngelAccessoryEffect::OnUnequipped_Implementation(AT3CharacterBase* OwnerChar)
 {
+	StopEquipEffect();
+
 	if (IsValid(AuraSphere))
 	{
 		AuraSphere->DestroyComponent();
