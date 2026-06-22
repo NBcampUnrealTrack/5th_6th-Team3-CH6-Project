@@ -9,7 +9,9 @@
 void UT3BalrogAccessoryEffect::OnEquipped_Implementation(AT3CharacterBase* OwnerChar)
 {
 	CachedOwner = OwnerChar;
-	
+
+	PlayEquipEffect(OwnerChar);
+
 	OwnerChar->GetWorldTimerManager().SetTimer(
 		DamageTimerHandle,
 		this,
@@ -59,5 +61,8 @@ void UT3BalrogAccessoryEffect::PerformDamage()
 void UT3BalrogAccessoryEffect::OnUnequipped_Implementation(AT3CharacterBase* OwnerChar)
 {
 	OwnerChar->GetWorldTimerManager().ClearTimer(DamageTimerHandle);
+
+	StopEquipEffect();
+
 	CachedOwner = nullptr;
 }

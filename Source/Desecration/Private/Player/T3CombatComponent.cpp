@@ -859,6 +859,8 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 				ActualDamage = DamageAmount * OwnerChar->GetSmiteMultiplier();
 
 				OwnerChar->SetSmiteCounter(0);
+
+				OwnerChar->OnSmiteTriggered.Broadcast(TargetActor->GetActorLocation());
 			}
 			else
 			{
@@ -885,6 +887,8 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 				ActualDamage = DamageAmount * OwnerChar->GetSmiteMultiplier();
 
 				OwnerChar->SetSmiteCounter(0);
+
+				OwnerChar->OnSmiteTriggered.Broadcast(TargetActor->GetActorLocation());
 			}
 			else
 			{

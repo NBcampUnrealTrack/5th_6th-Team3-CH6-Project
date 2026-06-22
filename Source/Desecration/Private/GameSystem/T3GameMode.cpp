@@ -24,6 +24,7 @@ void AT3GameMode::BeginPlay()
 	
 	//이 레벨에서 잃어버린 재화 생성
 	MakeLostMoneyActors();
+	bSpawnLostMoneyEnd = true;
 }
 
 void AT3GameMode::MakeLostMoneyActors()

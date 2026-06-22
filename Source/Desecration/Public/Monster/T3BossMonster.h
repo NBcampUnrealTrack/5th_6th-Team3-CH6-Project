@@ -122,7 +122,10 @@ private:
 #pragma region 장신구
 
 public:
-	virtual void SetAnimationSpeedMultiplier(float MoveAnimMultiplier, float AttackAnimMultiplier) override;
+	virtual void SetAnimationSpeedMultiplier(
+		float MoveSpeedMultiplier,
+		float MoveAnimMultiplier,
+		float AttackAnimMultiplier) override;
 
 #pragma endregion
 

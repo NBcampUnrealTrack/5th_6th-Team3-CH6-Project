@@ -791,9 +791,13 @@ void AT3MidBossMonster::ApplyBonusDamage(float BonusDamage)
 	TakeDamage(BonusDamage, DamageEvent, nullptr, nullptr);
 }
 
-void AT3MidBossMonster::SetAnimationSpeedMultiplier(float MoveAnimMultiplier, float AttackAnimMultiplier)
+void AT3MidBossMonster::SetAnimationSpeedMultiplier(
+	float MoveSpeedMultiplier,
+	float MoveAnimMultiplier,
+	float AttackAnimMultiplier)
 {
-	// 천사 장신구가 매 1초마다 호출 → 절대 배율로 덮어써서 누적 방지 (멱등)
+	// 천사 장신구가 sphere 진입/이탈 시 호출 → 절대 배율로 덮어써서 누적 방지 (멱등)
+	CurrentMoveSpeedRate = FMath::Max(MoveSpeedMultiplier, 0.f);
 	CurrentMoveAnimRate = FMath::Max(MoveAnimMultiplier, 0.f);
 	CurrentAttackAnimRate = FMath::Max(AttackAnimMultiplier, 0.f);
 
@@ -838,8 +842,8 @@ void AT3MidBossMonster::SetAnimationSpeedMultiplier(float MoveAnimMultiplier, fl
 		}
 	}
 
-	UE_LOG(LogDesecration, Verbose, TEXT("T3_MidBoss: 애님 배율 변경 — Move=%.2f, Attack=%.2f"),
-		CurrentMoveAnimRate, CurrentAttackAnimRate);
+	UE_LOG(LogDesecration, Warning, TEXT("T3_MidBoss: 애님 배율 변경 — MoveSpeed=%.2f, MoveAnim=%.2f, AttackAnim=%.2f"),
+		CurrentMoveSpeedRate, CurrentMoveAnimRate, CurrentAttackAnimRate);
 }
 
 void AT3MidBossMonster::SetActiveBaseWalkSpeed(float NewBaseSpeed)
@@ -851,10 +855,11 @@ void AT3MidBossMonster::SetActiveBaseWalkSpeed(float NewBaseSpeed)
 
 void AT3MidBossMonster::ApplyCurrentWalkSpeed()
 {
-	// MaxWalkSpeed = 베이스 × 외부 슬로우 배율 — 천사/STNodes 모든 호출이 이 한 곳을 거침
+	// MaxWalkSpeed = 베이스 × 외부 이동 슬로우 배율 — 천사/STNodes 모든 호출이 이 한 곳을 거침
+	// MoveSpeed와 MoveAnim는 별도 슬롯: 속도는 CurrentMoveSpeedRate로, 몽타주 PlayRate는 CurrentMoveAnimRate로 분리
 	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
 	{
-		MoveComp->MaxWalkSpeed = ActiveBaseWalkSpeed * CurrentMoveAnimRate;
+		MoveComp->MaxWalkSpeed = ActiveBaseWalkSpeed * CurrentMoveSpeedRate;
 	}
 }
 

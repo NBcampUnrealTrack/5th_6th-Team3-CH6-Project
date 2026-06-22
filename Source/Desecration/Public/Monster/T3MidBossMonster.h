@@ -520,7 +520,7 @@ public:
 	bool bShowDebugStaggerGauge = false;
 
 	// 리액션 트리거 — Roll/Block 정상 종료 시 세팅, 다음 ExecutePattern 1회로 소모.
-	// 시간 만료 없음 — 다음 공격이 발사되기 전까지 유지. ReactionWindow Consideration / ExecutePattern 자동감지가 이 필드를 읽음.
+	// 시간 만료 없음 — 다음 공격이 발사되기 전까지 유지. ExecutePattern이 ReactionApplyChance 확률 게이트로 리액션/일반 모드 분배.
 	UPROPERTY(BlueprintReadOnly, Category = "MidBoss|Reaction")
 	EBossReactionSource PendingReactionSource = EBossReactionSource::None;
 
@@ -540,11 +540,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Debug",
 		meta = (EditCondition = "bDebugForceReactionAfterDefense"))
 	FName DebugReactionPatternName = NAME_None;
-
-	// [DEBUG:ReactionWindow] ReactionWindow Consideration 점수 계산 가시화 토글.
-	// ON 시 패턴 후보 평가마다 분기별 (일반/Boost/Idle) 로그 출력. 출시 전 토글 OFF 또는 코드 제거.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MidBoss|Debug")
-	bool bDebugLogReactionWindow = false;
 
 #pragma endregion Combat
 
@@ -949,7 +944,10 @@ private:
 #pragma region 장신구
 
 public:
-	virtual void SetAnimationSpeedMultiplier(float MoveAnimMultiplier, float AttackAnimMultiplier) override;
+	virtual void SetAnimationSpeedMultiplier(
+		float MoveSpeedMultiplier,
+		float MoveAnimMultiplier,
+		float AttackAnimMultiplier) override;
 
 	// 외부 장신구가 적용한 공격 애님 배율 (1.0 = 영향 없음) — 패턴 PlayRate 계산에 곱해짐
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "MidBoss|Accessory")
@@ -958,6 +956,10 @@ public:
 	// 외부 장신구가 적용한 이동 애님 배율 (1.0 = 영향 없음) — BackStep 등 이동 몽타주에 곱해짐
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "MidBoss|Accessory")
 	float GetMoveAnimRateMultiplier() const { return CurrentMoveAnimRate; }
+
+	// 외부 장신구가 적용한 이동 속도 배율 (1.0 = 영향 없음) — MaxWalkSpeed에 곱해짐
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "MidBoss|Accessory")
+	float GetMoveSpeedRateMultiplier() const { return CurrentMoveSpeedRate; }
 
 	// STNodes(Strafe/Dash 등)가 베이스 이동 속도를 푸시할 때 사용 — 내부에서 MaxWalkSpeed = NewBase * MoveRate 적용
 	// 호출 측은 이전 GetActiveBaseWalkSpeed() 값을 캐시해뒀다가 종료 시 다시 SetActiveBaseWalkSpeed로 복원
@@ -978,6 +980,7 @@ public:
 
 private:
 	// 외부 슬로우/가속 영향 (천사 장신구 등) — 절대 배율, 누적되지 않음
+	float CurrentMoveSpeedRate = 1.f;
 	float CurrentMoveAnimRate = 1.f;
 	float CurrentAttackAnimRate = 1.f;
 

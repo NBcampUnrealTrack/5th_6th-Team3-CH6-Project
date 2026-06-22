@@ -9,6 +9,8 @@ void UT3AngelAccessoryEffect::OnEquipped_Implementation(AT3CharacterBase* OwnerC
 {
 	CachedOwner = OwnerChar;
 
+	PlayEquipEffect(OwnerChar);
+
 	AuraSphere = NewObject<USphereComponent>(OwnerChar);
 	AuraSphere->InitSphereRadius(SlowRadius);
 	AuraSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
@@ -32,7 +34,9 @@ void UT3AngelAccessoryEffect::OnOverlapBegin(UPrimitiveComponent* OverlappedComp
 		return;
 	}
 
-	Monster->SetAnimationSpeedMultiplier(MoveAnimSlowAmount, AttackAnimSlowAmount);
+	// IT3Monster 인터페이스가 3-arg(MoveSpeed, MoveAnim, AttackAnim)로 변경됨.
+	// MoveSpeed는 아래 MaxWalkSpeed 직접 곱셈 로직이 담당하므로 1.f(노옵) 전달.
+	Monster->SetAnimationSpeedMultiplier(1.f, MoveAnimSlowAmount, AttackAnimSlowAmount);
 
 	float OriginalSpeed = 0.f;
 
@@ -69,7 +73,7 @@ void UT3AngelAccessoryEffect::RestoreMonster(int32 Index)
 	{
 		if (IT3Monster* Monster = Cast<IT3Monster>(SlowedMonsters[Index].Get()))
 		{
-			Monster->SetAnimationSpeedMultiplier(1.f, 1.f);
+			Monster->SetAnimationSpeedMultiplier(1.f, 1.f, 1.f);
 		}
 
 		if (ACharacter* MonsterChar = Cast<ACharacter>(SlowedMonsters[Index].Get()))
@@ -85,6 +89,8 @@ void UT3AngelAccessoryEffect::RestoreMonster(int32 Index)
 
 void UT3AngelAccessoryEffect::OnUnequipped_Implementation(AT3CharacterBase* OwnerChar)
 {
+	StopEquipEffect();
+
 	if (IsValid(AuraSphere))
 	{
 		AuraSphere->DestroyComponent();

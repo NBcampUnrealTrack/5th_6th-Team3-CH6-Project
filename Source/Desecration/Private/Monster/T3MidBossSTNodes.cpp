@@ -766,7 +766,7 @@ EStateTreeRunStatus FT3STT_Block::Tick(
 
 	// 1) BlockReaction 임계치 도달 — 가드 정상 종료 (RequestEndBlockSequence)
 	//    가드 정상 종료 → ExitState에서 PendingReactionSource=FromBlock 세팅
-	//    → 다음 ExecutePattern이 자동으로 리액션 모드로 작동 (ReactionWindow Consideration이 점수 부풀림)
+	//    → 다음 ExecutePattern이 ReactionApplyChance 확률 게이트로 리액션/일반 모드 분배
 	if (!Data.bEndRequested
 		&& Data.ResolvedHitThreshold > 0
 		&& Data.Boss->BlockHitsCount >= Data.ResolvedHitThreshold)
@@ -1232,71 +1232,6 @@ float FT3Consideration_ConsecutiveDisengagePenalty::GetScore(FStateTreeExecution
 
 	// PenaltyPerCount ^ Count (0.5^1=0.5, 0.5^2=0.25 ...)
 	return FMath::Pow(Data.PenaltyPerCount, static_cast<float>(Count));
-}
-
-// ============================================================
-// Consideration: FT3Consideration_ReactionWindow
-// bAllowAsReaction=true 패턴이 PostBlock/PostRoll 윈도우에서만 강하게 가중되도록 부풀림.
-// (※ ParryWindow 카운터 패턴과 무관)
-// ============================================================
-
-float FT3Consideration_ReactionWindow::GetScore(FStateTreeExecutionContext& Context) const
-{
-	const FT3Consideration_ReactionWindowInstanceData& Data = Context.GetInstanceData(*this);
-
-	if (!Data.Boss || Data.PatternName.IsNone())
-	{
-		// Boss/패턴 미바인딩 시 무영향 — 다른 Consideration이 판정
-		return 1.f;
-	}
-
-	const FMidBossAttackPattern* PatternData = Data.Boss->FindPatternData(Data.PatternName);
-	if (!PatternData)
-	{
-		return 1.f;
-	}
-
-	// 리액션 후보가 아닌 일반 패턴은 무영향
-	if (!PatternData->bAllowAsReaction)
-	{
-		// [DEBUG:ReactionWindow] 일반 패턴 — 무영향 (1.0)
-		if (Data.Boss->bDebugLogReactionWindow)
-		{
-			UE_LOG(LogDesecration, Log,
-				TEXT("[DEBUG:ReactionWindow] Pattern=%s, 일반 패턴(bAllowAsReaction=false) → 1.0"),
-				*Data.PatternName.ToString());
-		}
-		return 1.f;
-	}
-
-	// 리액션 후보 — PendingReactionSource로 분기 (Roll/Block 직후 1회만 활성)
-	const bool bPostBlockActive = Data.bRespondToPostBlock
-		&& Data.Boss->PendingReactionSource == EBossReactionSource::FromBlock;
-	const bool bPostRollActive = Data.bRespondToPostRoll
-		&& Data.Boss->PendingReactionSource == EBossReactionSource::FromRoll;
-
-	const bool bBoosted = bPostBlockActive || bPostRollActive;
-	const float Score = bBoosted ? Data.BoostScore : Data.IdleScore;
-
-	// [DEBUG:ReactionWindow] 리액션 후보 — Boost/Idle 분기 로그
-	if (Data.Boss->bDebugLogReactionWindow)
-	{
-		const TCHAR* SourceText =
-			Data.Boss->PendingReactionSource == EBossReactionSource::FromBlock ? TEXT("FromBlock") :
-			Data.Boss->PendingReactionSource == EBossReactionSource::FromRoll  ? TEXT("FromRoll")  :
-			TEXT("None");
-
-		UE_LOG(LogDesecration, Log,
-			TEXT("[DEBUG:ReactionWindow] Pattern=%s, Source=%s, RespondBlock:%d RespondRoll:%d → %s(%.2f)"),
-			*Data.PatternName.ToString(),
-			SourceText,
-			Data.bRespondToPostBlock ? 1 : 0,
-			Data.bRespondToPostRoll ? 1 : 0,
-			bBoosted ? TEXT("Boost") : TEXT("Idle"),
-			Score);
-	}
-
-	return Score;
 }
 
 // ============================================================

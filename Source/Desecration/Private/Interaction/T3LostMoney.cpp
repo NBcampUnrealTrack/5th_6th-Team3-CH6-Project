@@ -13,18 +13,18 @@ AT3LostMoney::AT3LostMoney()
 	CollisionSphere->SetupAttachment(RootComp);
 }
 
-void AT3LostMoney::BeginPlay()
-{
-	Super::BeginPlay();
-	
-	T3GameMode = Cast<AT3GameMode>(GetWorld()->GetAuthGameMode());
-}
-
 void AT3LostMoney::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 	
 	CollisionSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnActorOverlap);
+}
+
+void AT3LostMoney::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	T3GameMode = Cast<AT3GameMode>(GetWorld()->GetAuthGameMode());
 }
 
 void AT3LostMoney::SetLostMoneyID(const int32 ID)
