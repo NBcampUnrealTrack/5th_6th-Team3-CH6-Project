@@ -449,6 +449,11 @@ public:
 	FORCEINLINE void SetPoisonAttackEnabled(bool bEnabled) { bPoisonAttackEnabled = bEnabled; }
 	FORCEINLINE int32 GetPoisonStacksPerHit() const { return PoisonStacksPerHit; }
 
+	// 오니 장신구 장착/해제 델리게이트(EquipComp->OnOniAccessoryEquipped) 바인딩용
+	// 장착 시 독 공격 활성화, 해제 시 비활성화
+	UFUNCTION()
+	void OnOniAccessoryEquippedChanged(bool bEquipped);
+
 	// === 독 수신 상태 (IT3Poisonable 구현) ===
 
 	// 독 활성화/비활성화 이벤트 — UI에서 독 오버레이 효과 on/off 바인딩용

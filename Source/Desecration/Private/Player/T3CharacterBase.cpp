@@ -252,6 +252,10 @@ void AT3CharacterBase::BeginPlay()
 			EquipComp->GetCurrentDefensePower(),
 			EquipComp->WeaponInstance ? EquipComp->WeaponInstance->CurrentLevel : 0
 		);
+
+		// 오니 장신구 장착 상태에 따라 독 공격 활성화 동기화
+		EquipComp->OnOniAccessoryEquipped.AddDynamic(this, &AT3CharacterBase::OnOniAccessoryEquippedChanged);
+		OnOniAccessoryEquippedChanged(EquipComp->GetOniAccessoryEquipped());
 	}
 }
 
@@ -1102,6 +1106,14 @@ void AT3CharacterBase::Landed(const FHitResult& Hit)
 // ============================================================
 // 독 시스템 (IT3Poisonable 구현)
 // ============================================================
+
+void AT3CharacterBase::OnOniAccessoryEquippedChanged(bool bEquipped)
+{
+	SetPoisonAttackEnabled(bEquipped);
+
+	UE_LOG(LogTemp, Log, TEXT("[독] %s 오니 장신구 %s → 독 공격 %s"),
+		*GetName(), bEquipped ? TEXT("장착") : TEXT("해제"), bEquipped ? TEXT("활성화") : TEXT("비활성화"));
+}
 
 void AT3CharacterBase::ApplyPoisonStack_Implementation(int32 Stacks)
 {
