@@ -4,14 +4,126 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Game\n"
-"POT-Creation-Date: 2026-06-10 14:18\n"
-"PO-Revision-Date: 2026-06-10 14:18\n"
+"POT-Creation-Date: 2026-06-27 17:29\n"
+"PO-Revision-Date: 2026-06-27 17:29\n"
 "Language-Team: \n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. Key:	BloodCanyonFortress
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Area.ST_Area
+#: /Game/Desecration/System/StringTable/ST_Area.ST_Area
+msgctxt "ST_Area,BloodCanyonFortress"
+msgid "피의 협곡 요새"
+msgstr "The Blood Canyon Fortress"
+
+#. Key:	BloodCanyonFortress_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Area.ST_Area
+#: /Game/Desecration/System/StringTable/ST_Area.ST_Area
+msgctxt "ST_Area,BloodCanyonFortress_Content"
+msgid "왕을 섬기며 최전선에서 싸우던 전사들의 요새. 영광스러운 전사들은 마지막까지 충의를 저버리지 않았다."
+msgstr "A fortress of warriors who served their king and fought upon the front lines. These glorious warriors remained steadfast in their loyalty until the very end."
+
+#. Key:	ForgottenMoonTemple
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Area.ST_Area
+#: /Game/Desecration/System/StringTable/ST_Area.ST_Area
+msgctxt "ST_Area,ForgottenMoonTemple"
+msgid "잊혀진 달의 성전"
+msgstr "The Forgotten Temple of the Moon"
+
+#. Key:	ForgottenMoonTemple_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Area.ST_Area
+#: /Game/Desecration/System/StringTable/ST_Area.ST_Area
+msgctxt "ST_Area,ForgottenMoonTemple_Content"
+msgid "잊혀진 교단의 성전은 이제 은빛 그림자만을 머금은 채 빛을 잃은 신도들이 다시 차오를 만월의 때를 기다리는 요람이 되었다."
+msgstr "The temple of a forgotten order has become a cradle of silver shadows. There, devotees who have lost the Moon's light wait for the day when the full moon shall rise once more."
+
+#. Key:	IronGate
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Area.ST_Area
+#: /Game/Desecration/System/StringTable/ST_Area.ST_Area
+msgctxt "ST_Area,IronGate"
+msgid "철의 문"
+msgstr "Iron Gate"
+
+#. Key:	ManifestationBridge
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Area.ST_Area
+#: /Game/Desecration/System/StringTable/ST_Area.ST_Area
+msgctxt "ST_Area,ManifestationBridge"
+msgid "명현교"
+msgstr "Bridge of Manifestation"
+
+#. Key:	MoonForest
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Area.ST_Area
+#: /Game/Desecration/System/StringTable/ST_Area.ST_Area
+msgctxt "ST_Area,MoonForest"
+msgid "달의 숲"
+msgstr "Moonlit Forest"
+
+#. Key:	MoonLake
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Area.ST_Area
+#: /Game/Desecration/System/StringTable/ST_Area.ST_Area
+msgctxt "ST_Area,MoonLake"
+msgid "달이 잠긴 호수"
+msgstr "Lake of the Sunken Moon"
+
+#. Key:	MoonLand
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Area.ST_Area
+#: /Game/Desecration/System/StringTable/ST_Area.ST_Area
+msgctxt "ST_Area,MoonLand"
+msgid "달의 땅"
+msgstr "Moonbound Land"
+
+#. Key:	MountainMidway
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Area.ST_Area
+#: /Game/Desecration/System/StringTable/ST_Area.ST_Area
+msgctxt "ST_Area,MountainMidway"
+msgid "산 중턱"
+msgstr "Mountain Midway"
+
+#. Key:	SeaCloudMainHall
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Area.ST_Area
+#: /Game/Desecration/System/StringTable/ST_Area.ST_Area
+msgctxt "ST_Area,SeaCloudMainHall"
+msgid "운해각 본당"
+msgstr "Sea-Cloud Pavilion: Main Hall"
+
+#. Key:	SeaCloudPavilionGrounds
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Area.ST_Area
+#: /Game/Desecration/System/StringTable/ST_Area.ST_Area
+msgctxt "ST_Area,SeaCloudPavilionGrounds"
+msgid "운해각 연무장"
+msgstr "Sea-Cloud Pavilion: Traning Ground"
+
+#. Key:	ShadowlessSummit
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Area.ST_Area
+#: /Game/Desecration/System/StringTable/ST_Area.ST_Area
+msgctxt "ST_Area,ShadowlessSummit"
+msgid "무영봉"
+msgstr "The Shadowless Summit"
+
+#. Key:	ShadowlessSummit_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Area.ST_Area
+#: /Game/Desecration/System/StringTable/ST_Area.ST_Area
+msgctxt "ST_Area,ShadowlessSummit_Content"
+msgid "짙은 안개가 삼킨 봉우리. 그 끝에는 하늘의 섭리를 거슬러 영생을 탐하는 자들의 문파가 운집해있다."
+msgstr "A peak consumed by dense mists. At its heights gathers an order of seekers who defy the laws of heaven in pursuit of eternal life."
+
+#. Key:	TopOfSpire
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Area.ST_Area
+#: /Game/Desecration/System/StringTable/ST_Area.ST_Area
+msgctxt "ST_Area,TopOfSpire"
+msgid "첨탑 정상"
+msgstr "Spire Summit"
+
+#. Key:	UnityPlaza
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Area.ST_Area
+#: /Game/Desecration/System/StringTable/ST_Area.ST_Area
+msgctxt "ST_Area,UnityPlaza"
+msgid "화합의 광장"
+msgstr "Plaza of Unity"
 
 #. Key:	Message_CheckNewGame
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_BeforeGamePlay.ST_BeforeGamePlay
@@ -363,12 +475,26 @@ msgctxt "ST_Item,Bronze_Mirror"
 msgid "청동 거울"
 msgstr "Bronze Mirror"
 
+#. Key:	Bronze_Mirror_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
+#: /Game/Desecration/System/StringTable/ST_Item.ST_Item
+msgctxt "ST_Item,Bronze_Mirror_Content"
+msgid "무영봉 정상에 있는 강력한 두 가지 유물 중 하나. 무영봉의 달조차 두려워한다."
+msgstr "One of the two powerful relics atop the Shadowless Summit. Even the Sun of the Shadowless Summit fears its power."
+
 #. Key:	BronzeSword
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
 #: /Game/Desecration/System/StringTable/ST_Item.ST_Item
 msgctxt "ST_Item,BronzeSword"
 msgid "청동 검"
 msgstr "Bronze Sword"
+
+#. Key:	BronzeSword_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
+#: /Game/Desecration/System/StringTable/ST_Item.ST_Item
+msgctxt "ST_Item,BronzeSword_Content"
+msgid "무영봉 정상에 있는 강력한 두 가지 유물 중 하나. 무영봉의 태양조차 두려워한다."
+msgstr "One of the two powerful relics atop the Shadowless Summit. Even the Moon of the Shadowless Summit fears its power."
 
 #. Key:	DefensePotion
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
@@ -397,6 +523,13 @@ msgstr "HP Potion"
 msgctxt "ST_Item,Idol_Moon"
 msgid "달의 우상"
 msgstr "Idol of the Moon"
+
+#. Key:	Idol_Moon_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
+#: /Game/Desecration/System/StringTable/ST_Item.ST_Item
+msgctxt "ST_Item,Idol_Moon_Content"
+msgid "달의 화신을 조각한 우상. 우상이 길을 잃은 신도의 앞길을 비춰줄 것이다."
+msgstr "An idol carved in the likeness of the Moon's incarnation. It shall illuminate the path of devotees who have lost their way."
 
 #. Key:	Memory_Balrog
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
@@ -438,7 +571,7 @@ msgstr "Memory of the Oni"
 #: /Game/Desecration/System/StringTable/ST_Item.ST_Item
 msgctxt "ST_Item,Memory_Oni_Content"
 msgid "무영봉의 높은 산 위에는 신선의 마을이 있다는 전설이 있다. 혼탁한 사기가 가득찬 이곳에는 과거의 정도를 찾아볼 수 없게 되었다."
-msgstr "Legend speaks of a village of immortals atop the towering peak known as the Shadowless Peak. Now, this land is shrouded in corrupted energies, and no trace of its former path remains."
+msgstr "Legend speaks of a village of immortals atop the towering peak known as the Shadowless Summit. Now, this land is shrouded in corrupted energies, and no trace of its former path remains."
 
 #. Key:	MPPotion
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
@@ -475,12 +608,47 @@ msgctxt "ST_Item,SpeedPotion_Content"
 msgid "10초간 이동속도가 20% 증가한다."
 msgstr "Increases movement speed by 20% for 10 seconds."
 
+#. Key:	GetRunePower
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,GetRunePower"
+msgid "룬의 힘을 얻는다"
+msgstr "Claim the rune's power"
+
 #. Key:	Message_GoToTitle
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
 #: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
 msgctxt "ST_MainGame,Message_GoToTitle"
 msgid "타이틀로 돌아가시겠습니까?"
 msgstr "Do you want to return to the title?"
+
+#. Key:	Rest
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Rest"
+msgid "휴식한다"
+msgstr "Rest"
+
+#. Key:	RetrunToReality
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,RetrunToReality"
+msgid "현실로 돌아온다"
+msgstr "Return to the Reality"
+
+#. Key:	SacredSpring
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,SacredSpring"
+msgid "성수의 룬"
+msgstr "Rune of the Sacred Spring"
+
+#. Key:	TrevelRune
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,TrevelRune"
+msgid "룬을 타고 이동한다"
+msgstr "Traverse through the rune"
 
 #. Key:	BerserkRune_E
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
@@ -872,7 +1040,7 @@ msgstr "Luminous Rune of Indomitability"
 #: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
 msgctxt "ST_Rune,UndyingRune_E_Content"
 msgid "죽음에 이르는 피해를 입을 시 최대 체력의 35%를 회복한다."
-msgstr "When receiving fatal damage, restore 35% of max HP instead of dying."
+msgstr "When receiving fatal damage, restore 35% of max HP."
 
 #. Key:	UndyingRune_L
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
@@ -886,7 +1054,7 @@ msgstr "Radiant Rune of Indomitability"
 #: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
 msgctxt "ST_Rune,UndyingRune_L_Content"
 msgid "죽음에 이르는 피해를 입을 시 최대 체력의 50%를 회복한다."
-msgstr "When receiving fatal damage, restore 50% of max HP instead of dying."
+msgstr "When receiving fatal damage, restore 50% of max HP."
 
 #. Key:	UndyingRune_N
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
@@ -900,7 +1068,7 @@ msgstr "Faded Rune of Indomitability"
 #: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
 msgctxt "ST_Rune,UndyingRune_N_Content"
 msgid "죽음에 이르는 피해를 입을 시 최대 체력의 20%를 회복한다."
-msgstr "When receiving fatal damage, restore 20% of max HP instead of dying."
+msgstr "When receiving fatal damage, restore 20% of max HP."
 
 #. Key:	ValkyrieRune_E
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
