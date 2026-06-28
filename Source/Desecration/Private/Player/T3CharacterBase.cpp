@@ -22,6 +22,9 @@
 #include "Player/T3PlayerController.h"
 #include "UI/T3HUDSlotWidget.h"
 #include "Player/Paladin/T3HolyGaugeWidget.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "WorldPartition/WorldPartitionSubsystem.h"
 
 
@@ -249,6 +252,10 @@ void AT3CharacterBase::BeginPlay()
 			EquipComp->GetCurrentDefensePower(),
 			EquipComp->WeaponInstance ? EquipComp->WeaponInstance->CurrentLevel : 0
 		);
+
+		// 오니 장신구 장착 상태에 따라 독 공격 활성화 동기화
+		EquipComp->OnOniAccessoryEquipped.AddDynamic(this, &AT3CharacterBase::OnOniAccessoryEquippedChanged);
+		OnOniAccessoryEquippedChanged(EquipComp->GetOniAccessoryEquipped());
 	}
 }
 
@@ -561,6 +568,9 @@ void AT3CharacterBase::BroadcastStatChange(ET3StatType StatType)
 	case ET3StatType::MoveSpeed:
 		OnStatChanged.Broadcast(StatType, GetMoveSpeed(), -1.f);
 		break;
+	case ET3StatType::PoisonStack:
+		OnStatChanged.Broadcast(StatType, static_cast<float>(CurrentPoisonStack), static_cast<float>(MaxPoisonStack));
+		break;
 	default:
 		break;
 	}
@@ -625,6 +635,11 @@ void AT3CharacterBase::OnDeath()
 {
 	bMoveLock = true;
 	OnDeathAnimation();
+
+	// 독 타이머 정리
+	GetWorld()->GetTimerManager().ClearTimer(PoisonTickTimerHandle);
+	GetWorld()->GetTimerManager().ClearTimer(PoisonStackDecayTimerHandle);
+	bIsPoisoned = false;
 
 	EquipComp->ResetRunesForNewRun();
 
@@ -1085,5 +1100,186 @@ void AT3CharacterBase::Landed(const FHitResult& Hit)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("High Fall Detected: %f. Character Dies."), FallVelocityZ);
 		CombatComponent->RequestAttackDamage(this, 9999.f);
+	}
+}
+
+// ============================================================
+// 독 시스템 (IT3Poisonable 구현)
+// ============================================================
+
+void AT3CharacterBase::OnOniAccessoryEquippedChanged(bool bEquipped)
+{
+	SetPoisonAttackEnabled(bEquipped);
+
+	UE_LOG(LogTemp, Log, TEXT("[독] %s 오니 장신구 %s → 독 공격 %s"),
+		*GetName(), bEquipped ? TEXT("장착") : TEXT("해제"), bEquipped ? TEXT("활성화") : TEXT("비활성화"));
+}
+
+void AT3CharacterBase::ApplyPoisonStack_Implementation(int32 Stacks)
+{
+	// 독 활성화 중에는 스택 누적 없음
+	if (bIsDead || bIsPoisoned)
+	{
+		UE_LOG(LogTemp, Verbose, TEXT("[독] %s — 스택 무시 (사망:%d, 독활성:%d)"),
+			*GetName(), bIsDead, bIsPoisoned);
+		return;
+	}
+
+	const bool bWasZero = (CurrentPoisonStack == 0);
+	CurrentPoisonStack = FMath::Min(CurrentPoisonStack + Stacks, MaxPoisonStack);
+	BroadcastStatChange(ET3StatType::PoisonStack);
+
+	UE_LOG(LogTemp, Log, TEXT("[독] %s 스택 +%d → %d/%d"),
+		*GetName(), Stacks, CurrentPoisonStack, MaxPoisonStack);
+
+	// 스택이 처음 쌓이기 시작하면 자연 감소 타이머 시작
+	if (bWasZero && CurrentPoisonStack > 0)
+	{
+		GetWorld()->GetTimerManager().SetTimer(
+			PoisonStackDecayTimerHandle,
+			this,
+			&AT3CharacterBase::PoisonStackDecayTick,
+			1.f,
+			true
+		);
+	}
+
+	if (CurrentPoisonStack >= MaxPoisonStack)
+	{
+		ActivatePoison(); // OnPoisonActivated(true) 브로드캐스트 → 위젯은 이걸로 제어
+		CurrentPoisonStack = 0;
+		// 독 활성화 시 스택=0 방송 생략 — 0을 보내면 BP_OnStackChanged가 위젯을 즉시 숨김
+	}
+}
+
+bool AT3CharacterBase::IsPoisoned_Implementation() const
+{
+	return bIsPoisoned;
+}
+
+void AT3CharacterBase::ActivatePoison()
+{
+	bIsPoisoned = true;
+	PoisonRemainingTime = PoisonDuration;
+	OnPoisonActivated.Broadcast(true);
+
+	UE_LOG(LogTemp, Warning, TEXT("[독] ★ %s 독 활성화! 지속 %.0f초, 초당 %.0f%% 데미지"),
+		*GetName(), PoisonDuration, PoisonDamagePercent * 100.f);
+
+	// 독 아우라 이펙트 (지속)
+	if (PoisonFX.ActivateEffect && GetMesh())
+	{
+		ActivePoisonEffectComp = UNiagaraFunctionLibrary::SpawnSystemAttached(
+			PoisonFX.ActivateEffect,
+			GetMesh(),
+			NAME_None,
+			FVector::ZeroVector,
+			FRotator::ZeroRotator,
+			EAttachLocation::SnapToTarget,
+			false  // 수동으로 비활성화하여 정확한 타이밍 제어
+		);
+	}
+
+	// 독 활성화 사운드
+	if (PoisonFX.ActivateSound)
+	{
+		UGameplayStatics::SpawnSoundAttached(PoisonFX.ActivateSound, GetMesh());
+	}
+
+	BP_OnPoisonStarted();
+
+	// 스택 감소 타이머 중지 (스택은 0으로 리셋됨)
+	GetWorld()->GetTimerManager().ClearTimer(PoisonStackDecayTimerHandle);
+
+	GetWorld()->GetTimerManager().SetTimer(
+		PoisonTickTimerHandle,
+		this,
+		&AT3CharacterBase::PoisonTick,
+		PoisonTickInterval,
+		true,
+		PoisonTickInterval
+	);
+}
+
+void AT3CharacterBase::DeactivatePoison()
+{
+	bIsPoisoned = false;
+	GetWorld()->GetTimerManager().ClearTimer(PoisonTickTimerHandle);
+	OnPoisonActivated.Broadcast(false);
+
+	// 아우라 이펙트 중지
+	if (ActivePoisonEffectComp)
+	{
+		ActivePoisonEffectComp->Deactivate();
+		ActivePoisonEffectComp = nullptr;
+	}
+
+	BP_OnPoisonEnded();
+
+	UE_LOG(LogTemp, Log, TEXT("[독] %s 독 해제"), *GetName());
+}
+
+void AT3CharacterBase::PoisonTick()
+{
+	if (bIsDead)
+	{
+		DeactivatePoison();
+		return;
+	}
+
+	const float PoisonDamage = MaxHP * PoisonDamagePercent;
+	SetCurrentHP(CurrentHP - PoisonDamage);
+
+	// 틱 이펙트
+	if (PoisonFX.TickEffect)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(), PoisonFX.TickEffect, GetActorLocation());
+	}
+
+	// 틱 사운드
+	if (PoisonFX.TickSound)
+	{
+		UGameplayStatics::SpawnSoundAtLocation(this, PoisonFX.TickSound, GetActorLocation());
+	}
+
+	BP_OnPoisonTick(PoisonDamage);
+
+	UE_LOG(LogTemp, Log, TEXT("[독] %s 독 데미지 %.1f (HP %.0f/%.0f) 남은시간 %.0f초"),
+		*GetName(), PoisonDamage, CurrentHP, MaxHP, PoisonRemainingTime);
+
+	if (CurrentHP <= 0.f && !bIsDead)
+	{
+		bIsDead = true;
+		OnDeath();
+		return;
+	}
+
+	PoisonRemainingTime -= PoisonTickInterval;
+	if (PoisonRemainingTime <= 0.f)
+	{
+		DeactivatePoison();
+	}
+}
+
+void AT3CharacterBase::PoisonStackDecayTick()
+{
+	if (CurrentPoisonStack <= 0)
+	{
+		CurrentPoisonStack = 0;
+		GetWorld()->GetTimerManager().ClearTimer(PoisonStackDecayTimerHandle);
+		BroadcastStatChange(ET3StatType::PoisonStack);
+		return;
+	}
+
+	CurrentPoisonStack = FMath::Max(0, CurrentPoisonStack - FMath::RoundToInt(PoisonStackDecayRate));
+	BroadcastStatChange(ET3StatType::PoisonStack);
+
+	UE_LOG(LogTemp, Verbose, TEXT("[독] %s 스택 감소 → %d/%d"),
+		*GetName(), CurrentPoisonStack, MaxPoisonStack);
+
+	if (CurrentPoisonStack == 0)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(PoisonStackDecayTimerHandle);
 	}
 }

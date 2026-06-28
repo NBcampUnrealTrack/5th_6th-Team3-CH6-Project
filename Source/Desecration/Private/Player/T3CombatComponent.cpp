@@ -25,6 +25,7 @@
 #include "Monster/T3MonsterBase.h"
 #include "Player/Taoist/T3Taoist_SkillComponent.h"
 #include "Player/Taoist/T3FanWeapon.h"
+#include "GameSystem/Interface/T3Poisonable.h"
 
 
 UT3CombatComponent::UT3CombatComponent()
@@ -255,6 +256,9 @@ void UT3CombatComponent::ToggleLockOn()
 		return;
 	}
 
+	// CombatState가 아닐 때는 록온을 새로 걸 수 없음
+	if (!OwnerChar->PlayerInputState.bIsCombatState) return;
+
 	CurrentTarget = FindBestTarget();
 	// 인터페이스를 상속받았는지 확인 (안전한 캐스팅)
 	IT3LockOnTarget* LockOnInterface = Cast<IT3LockOnTarget>(CurrentTarget);
@@ -263,10 +267,15 @@ void UT3CombatComponent::ToggleLockOn()
 		bIsLockOn = true;
 		OwnerChar->PlayerInputState.bIsLockOn = true;
 		OwnerPC->SetIgnoreLookInput(true);
+		bIsCameraResetting = false; // 해제 보간 도중 재록온 시 보간 취소
 		SetComponentTickEnabled(true);
 
 		// 카메라 랙 설정
 		DefaultSocketOffsetZ = SpringArm->SocketOffset.Z;
+		if (OwnerPC->PlayerCameraManager)
+		{
+			DefaultFOV = OwnerPC->PlayerCameraManager->GetFOVAngle();
+		}
 		SpringArm->bEnableCameraRotationLag = true;
 		SpringArm->bEnableCameraLag = true;
 		OwnerChar->GetCharacterMovement()->bOrientRotationToMovement = false;
@@ -286,7 +295,15 @@ void UT3CombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 
 	if (!bIsLockOn || !IsValid(CurrentTarget) || !OwnerChar || !OwnerPC || !SpringArm)
 	{
-		ResetLockOn();
+		// 록온이 풀린 상태에서는 카메라 보간 복귀만 처리
+		if (bIsCameraResetting)
+		{
+			TickCameraReset(DeltaTime);
+		}
+		else
+		{
+			ResetLockOn();
+		}
 		return;
 	}
 
@@ -518,15 +535,48 @@ void UT3CombatComponent::ResetLockOn()
 
 		OwnerChar->GetCharacterMovement()->bOrientRotationToMovement = true;
 		OwnerChar->GetCharacterMovement()->bUseControllerDesiredRotation = false;
-
-		SpringArm->bEnableCameraRotationLag = false;
-		SpringArm->bEnableCameraLag = false;
-		SpringArm->TargetArmLength = DefaultArmLength;
-		SpringArm->SocketOffset.Z = DefaultSocketOffsetZ;
-		OwnerPC->PlayerCameraManager->SetFOV(90.f);
 	}
 
-	SetComponentTickEnabled(false); // 틱 중지하여 자원 절약
+	// 카메라 값(암 길이/소켓 오프셋/FOV)은 즉시 되돌리지 않고
+	// TickCameraReset에서 기본값으로 보간 복귀시킨 뒤 카메라 랙을 끈다
+	if (SpringArm && OwnerPC && OwnerPC->PlayerCameraManager)
+	{
+		bIsCameraResetting = true;
+		SetComponentTickEnabled(true);
+	}
+	else
+	{
+		SetComponentTickEnabled(false); // 틱 중지하여 자원 절약
+	}
+}
+
+void UT3CombatComponent::TickCameraReset(float DeltaTime)
+{
+	if (!SpringArm || !OwnerPC || !OwnerPC->PlayerCameraManager)
+	{
+		bIsCameraResetting = false;
+		SetComponentTickEnabled(false);
+		return;
+	}
+
+	SpringArm->TargetArmLength = FMath::FInterpTo(SpringArm->TargetArmLength, DefaultArmLength, DeltaTime, CameraResetInterpSpeed);
+	SpringArm->SocketOffset.Z = FMath::FInterpTo(SpringArm->SocketOffset.Z, DefaultSocketOffsetZ, DeltaTime, CameraResetInterpSpeed);
+
+	const float CurrentFOV = OwnerPC->PlayerCameraManager->GetFOVAngle();
+	OwnerPC->PlayerCameraManager->SetFOV(FMath::FInterpTo(CurrentFOV, DefaultFOV, DeltaTime, CameraResetInterpSpeed));
+
+	// 기본값에 거의 도달하면 카메라 랙을 끄고 보간 종료
+	const bool bArmLengthDone = FMath::IsNearlyEqual(SpringArm->TargetArmLength, DefaultArmLength, 1.f);
+	const bool bSocketOffsetDone = FMath::IsNearlyEqual(SpringArm->SocketOffset.Z, DefaultSocketOffsetZ, 1.f);
+	const bool bFOVDone = FMath::IsNearlyEqual(CurrentFOV, DefaultFOV, 0.5f);
+
+	if (bArmLengthDone && bSocketOffsetDone && bFOVDone)
+	{
+		SpringArm->bEnableCameraRotationLag = false;
+		SpringArm->bEnableCameraLag = false;
+		bIsCameraResetting = false;
+		SetComponentTickEnabled(false);
+	}
 }
 
 // ========== 전투 로직 ===============
@@ -856,7 +906,16 @@ void UT3CombatComponent::RequestAttackDamage(AActor* TargetActor, float DamageAm
 	{
 		TargetActor->TakeDamage(DamageAmount, T3DamageEvent, AIPC, AIChar);
 	}
-	
+
+	// 기본 공격 + 독 룬 활성화 상태일 때 대상에게 독 스택 적용
+	if (bIsBasicAttack && OwnerChar && OwnerChar->IsPoisonAttackEnabled())
+	{
+		if (TargetActor->Implements<UT3Poisonable>())
+		{
+			IT3Poisonable::Execute_ApplyPoisonStack(TargetActor, OwnerChar->GetPoisonStacksPerHit());
+		}
+	}
+
 	if (SkillComp && DamageTypeClass)
 	{
 		if (DamageTypeClass->GetName().Contains(TEXT("BP_T3DamageType_ValkyriePassive")))
