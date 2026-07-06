@@ -10,6 +10,8 @@
 #include "Blueprint/UserWidget.h"
 #include "Components/WidgetComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "Kismet/GameplayStatics.h"
 
 void AT3BossMonster::BeginPlay()
 {
@@ -144,4 +146,111 @@ void AT3BossMonster::SetAnimationSpeedMultiplier(
 	BossStats.MoveSpeed = MoveSpeedMultiplier;
 	BossStats.AttackSpeed = AttackAnimMultiplier;
 	OnBossActionSpeedChanged.Broadcast();
+}
+
+// ============================================================
+// 독 시스템 (IT3Poisonable 구현)
+// ============================================================
+
+void AT3BossMonster::ApplyPoisonStack_Implementation(int32 Stacks)
+{
+	// 독 활성화 중이거나 사망 시 스택 누적 없음
+	if (BossStats.CurrentHP <= 0.f || bIsPoisoned)
+	{
+		UE_LOG(LogItem, Verbose, TEXT("[독] 보스 %s — 스택 무시 (HP:%.0f, 독활성:%d)"),
+			*BossName, BossStats.CurrentHP, bIsPoisoned);
+		return;
+	}
+
+	CurrentPoisonStack = FMath::Min(CurrentPoisonStack + Stacks, MaxPoisonStack);
+
+	UE_LOG(LogItem, Log, TEXT("[독] 보스 %s 스택 +%d → %d/%d"),
+		*BossName, Stacks, CurrentPoisonStack, MaxPoisonStack);
+
+	if (CurrentPoisonStack >= MaxPoisonStack)
+	{
+		ActivatePoison();
+		CurrentPoisonStack = 0;
+	}
+}
+
+bool AT3BossMonster::IsPoisoned_Implementation() const
+{
+	return bIsPoisoned;
+}
+
+void AT3BossMonster::ActivatePoison()
+{
+	bIsPoisoned = true;
+	PoisonRemainingTime = PoisonDuration;
+
+	UE_LOG(LogItem, Warning, TEXT("[독] ★ 보스 %s 독 활성화! 지속 %.0f초, 초당 %.0f%% 데미지"),
+		*BossName, PoisonDuration, PoisonDamagePercent * 100.f);
+
+	if (PoisonFX.ActivateEffect)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(), PoisonFX.ActivateEffect, GetActorLocation());
+	}
+	if (PoisonFX.ActivateSound)
+	{
+		UGameplayStatics::SpawnSoundAtLocation(this, PoisonFX.ActivateSound, GetActorLocation());
+	}
+
+	GetWorld()->GetTimerManager().SetTimer(
+		PoisonTickTimerHandle,
+		this,
+		&AT3BossMonster::PoisonTick,
+		PoisonTickInterval,
+		true,
+		PoisonTickInterval
+	);
+}
+
+void AT3BossMonster::DeactivatePoison()
+{
+	bIsPoisoned = false;
+	GetWorld()->GetTimerManager().ClearTimer(PoisonTickTimerHandle);
+
+	UE_LOG(LogItem, Log, TEXT("[독] 보스 %s 독 해제"), *BossName);
+}
+
+void AT3BossMonster::PoisonTick()
+{
+	if (BossStats.CurrentHP <= 0.f)
+	{
+		DeactivatePoison();
+		return;
+	}
+
+	// 독 데미지는 슈퍼아머 패턴 무시 (상태이상이므로 항상 적용)
+	const float PoisonDamage = BossStats.MaxHP * PoisonDamagePercent;
+	BossStats.CurrentHP = FMath::Max(0.f, BossStats.CurrentHP - PoisonDamage);
+	OnBossDamaged.Broadcast();
+
+	if (PoisonFX.TickEffect)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(), PoisonFX.TickEffect, GetActorLocation());
+	}
+	if (PoisonFX.TickSound)
+	{
+		UGameplayStatics::SpawnSoundAtLocation(this, PoisonFX.TickSound, GetActorLocation());
+	}
+
+	UE_LOG(LogItem, Log, TEXT("[독] 보스 %s 독 데미지 %.1f (HP %.0f/%.0f) 남은시간 %.0f초"),
+		*BossName, PoisonDamage, BossStats.CurrentHP, BossStats.MaxHP, PoisonRemainingTime);
+
+	if (BossStats.CurrentHP <= 0.f)
+	{
+		OnBossDeath.Broadcast();
+		DeactivatePoison();
+		return;
+	}
+
+	PoisonRemainingTime -= PoisonTickInterval;
+	if (PoisonRemainingTime <= 0.f)
+	{
+		DeactivatePoison();
+	}
 }

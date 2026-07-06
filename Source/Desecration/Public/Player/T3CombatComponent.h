@@ -152,6 +152,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LockOn")
 	float MaxArmLength = 2000.f; // 보스가 높이 뜰 때 멀어질 최대 거리
 
+	// 록온 해제 후 카메라(암 길이/소켓 오프셋/FOV)가 기본값으로 복귀하는 보간 속도
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LockOn")
+	float CameraResetInterpSpeed = 5.0f;
+
 	AActor* GetCurrentTarget() const { return CurrentTarget; }
 
 	void UpdateLockOnWidgetScale();
@@ -247,6 +251,11 @@ private:
 	// 록온 변수
 	bool bIsLockOn = false;
 	float DefaultSocketOffsetZ = 0.f;
+	float DefaultFOV = 90.f;
+
+	// 록온 해제 후 카메라 값을 기본값으로 보간 복귀 중인지 여부
+	bool bIsCameraResetting = false;
+	void TickCameraReset(float DeltaTime);
 
 	// 록온 타깃 식별 태그
 	UPROPERTY(EditAnywhere, Category = "Combat|LockOn")

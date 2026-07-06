@@ -7,6 +7,7 @@
 #include "T3PlayerInputState.h"
 #include "InputActionValue.h"
 #include "Item/Data/T3ItemBaseData.h"
+#include "GameSystem/Interface/T3Poisonable.h"
 #include "T3CharacterBase.generated.h"
 
 
@@ -20,6 +21,7 @@ class UT3PlayerEquipmentComponent;
 class UT3ItemUseComponent;
 class UT3CharacterDataAsset;
 class UT3CommonSkillComponent;
+class UNiagaraComponent;
 
 
 UENUM(BlueprintType)
@@ -34,6 +36,7 @@ enum class ET3StatType : uint8
 	CriticalChance  UMETA(DisplayName = "Critical Chance"),
 	CriticalDamage  UMETA(DisplayName = "Critical Damage"),
 	MoveSpeed       UMETA(DisplayName = "Move Speed"),
+	PoisonStack     UMETA(DisplayName = "Poison Stack"),
 
 	// --- 핵심 스탯 ---
 	// 체력 스탯 (HP량 결정)
@@ -54,10 +57,11 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnForcedMoveEndSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSellItemRequested, const FInventorySlot&, SlotData, const int32&, Count, EItemType, ItemType);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUndyingTriggered);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDamageDealt, AActor*, HitTarget, float, DamageDealt);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPoisonActivated, bool, bIsActive);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnSmiteTriggered, FVector);
 
 UCLASS()
-class DESECRATION_API AT3CharacterBase : public ACharacter
+class DESECRATION_API AT3CharacterBase : public ACharacter, public IT3Poisonable
 {
 	GENERATED_BODY()
 
@@ -170,6 +174,8 @@ public:
 	void OnActivatePotion();
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnInteract();
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnCombatStateSwitch();
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Death")
 	bool bIsDead = false;
@@ -429,7 +435,104 @@ private:
 
 	void RecalculateRuneBonus();
 #pragma endregion
-	
+
+#pragma region Poison
+public:
+	// === 독 공격 활성화 (독 룬 연동용) ===
+	// 테스트 시 에디터에서 직접 켜고 끄며 확인 가능
+	// 독 룬 장착 시 룬이 SetPoisonAttackEnabled(true)를 호출함
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Poison|Attack")
+	bool bPoisonAttackEnabled = false;
+
+	// 기본 공격 1회당 몬스터에 적용할 독 스택량
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Poison|Attack")
+	int32 PoisonStacksPerHit = 10;
+
+	FORCEINLINE bool IsPoisonAttackEnabled() const { return bPoisonAttackEnabled; }
+	FORCEINLINE void SetPoisonAttackEnabled(bool bEnabled) { bPoisonAttackEnabled = bEnabled; }
+	FORCEINLINE int32 GetPoisonStacksPerHit() const { return PoisonStacksPerHit; }
+
+	// 오니 장신구 장착/해제 델리게이트(EquipComp->OnOniAccessoryEquipped) 바인딩용
+	// 장착 시 독 공격 활성화, 해제 시 비활성화
+	UFUNCTION()
+	void OnOniAccessoryEquippedChanged(bool bEquipped);
+
+	// === 독 수신 상태 (IT3Poisonable 구현) ===
+
+	// 독 활성화/비활성화 이벤트 — UI에서 독 오버레이 효과 on/off 바인딩용
+	UPROPERTY(BlueprintAssignable, Category = "Poison|Events")
+	FOnPoisonActivated OnPoisonActivated;
+
+	// 현재 독 축적치 (0 ~ MaxPoisonStack). 0 초과 시 상태바에 표시
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Poison|State")
+	int32 CurrentPoisonStack = 0;
+
+	// 독 최대 축적치 (도달 시 독 활성화)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Poison|State")
+	int32 MaxPoisonStack = 100;
+
+	// 독 미활성 상태에서 초당 감소할 스택량
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Poison|State")
+	float PoisonStackDecayRate = 2.f;
+
+	// 독 활성화 시 초당 최대 HP 대비 데미지 비율 (0.02 = 2%)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Poison|State")
+	float PoisonDamagePercent = 0.02f;
+
+	// 독 지속 시간 (초)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Poison|State")
+	float PoisonDuration = 30.f;
+
+	// 독 데미지 틱 간격 (초)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Poison|State")
+	float PoisonTickInterval = 1.f;
+
+	// IT3Poisonable 구현
+	virtual void ApplyPoisonStack_Implementation(int32 Stacks) override;
+	virtual bool IsPoisoned_Implementation() const override;
+
+	UFUNCTION(BlueprintPure, Category = "Poison")
+	FORCEINLINE int32 GetCurrentPoisonStack() const { return CurrentPoisonStack; }
+
+	// bIsPoisoned 직접 접근용 (BlueprintNativeEvent IsPoisoned() 직접 호출 시 크래시 방지)
+	UFUNCTION(BlueprintPure, Category = "Poison")
+	FORCEINLINE bool GetIsPoisoned() const { return bIsPoisoned; }
+
+	// 독 VFX/SFX 에셋 묶음 — 에디터에서 한 곳에서 설정
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Poison|FX")
+	FT3PoisonFXConfig PoisonFX;
+
+	// --- BP 커스텀 연출 이벤트 ---
+
+	// 독 활성화 시 호출 (BP에서 추가 연출 구현)
+	UFUNCTION(BlueprintImplementableEvent, Category = "Poison")
+	void BP_OnPoisonStarted();
+
+	// 독 해제 시 호출
+	UFUNCTION(BlueprintImplementableEvent, Category = "Poison")
+	void BP_OnPoisonEnded();
+
+	// 독 틱 데미지마다 호출 (DamageAmount: 실제 적용된 데미지)
+	UFUNCTION(BlueprintImplementableEvent, Category = "Poison")
+	void BP_OnPoisonTick(float DamageAmount);
+
+private:
+	bool bIsPoisoned = false;
+	float PoisonRemainingTime = 0.f;
+
+	// 독 아우라 이펙트 컴포넌트 (해제 시 비활성화)
+	UPROPERTY()
+	TObjectPtr<UNiagaraComponent> ActivePoisonEffectComp;
+
+	FTimerHandle PoisonStackDecayTimerHandle;
+	FTimerHandle PoisonTickTimerHandle;
+
+	void ActivatePoison();
+	void DeactivatePoison();
+	void PoisonTick();
+	void PoisonStackDecayTick();
+#pragma endregion
+
 public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Defence")
 	void OnParry();
