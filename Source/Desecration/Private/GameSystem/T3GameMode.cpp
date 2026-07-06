@@ -238,14 +238,6 @@ bool AT3GameMode::SaveOnlySkill(const AT3CharacterBase* Character)
     return SaveGameV2(Character, ESaveType::Skill);
 }
 
-bool AT3GameMode::SaveOnlyStat(const AT3CharacterBase* Character)
-{	
-	//스탯 저장
-	//스탯 강화로 사용한 돈을 저장하기 위해 인벤토리에도 접근
-	constexpr uint8 SaveTypes = static_cast<uint8>(ESaveType::Stat) + static_cast<uint8>(ESaveType::Money);
-	return SaveGameV2_MultiType(Character, SaveTypes);
-}
-
 void AT3GameMode::LoadGame() const
 {
 	T3GameInstance->OpenLevelBySavedData();
