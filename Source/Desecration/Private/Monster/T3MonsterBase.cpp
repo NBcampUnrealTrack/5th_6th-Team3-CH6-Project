@@ -7,6 +7,8 @@
 #include "Blueprint/UserWidget.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "Kismet/GameplayStatics.h"
 
 
 AT3MonsterBase::AT3MonsterBase()
@@ -243,6 +245,110 @@ void AT3MonsterBase::SetAnimationSpeedMultiplier(
 
 	// 3. 현재 재생 중인 몽타주 속도 즉시 반영 (재생 도중 슬로우 진입)
 	UpdateActiveMontagePlayRate();
+}
+
+// ============================================================
+// 독 시스템 (IT3Poisonable 구현)
+// ============================================================
+
+void AT3MonsterBase::ApplyPoisonStack_Implementation(int32 Stacks)
+{
+	// 독 활성화 중에는 스택 누적 없음
+	if (bIsDead || bIsPoisoned)
+	{
+		UE_LOG(LogTemp, Verbose, TEXT("[독] %s — 스택 무시 (사망:%d, 독활성:%d)"),
+			*GetName(), bIsDead, bIsPoisoned);
+		return;
+	}
+
+	CurrentPoisonStack = FMath::Min(CurrentPoisonStack + Stacks, MaxPoisonStack);
+
+	UE_LOG(LogTemp, Log, TEXT("[독] %s 스택 +%d → %d/%d"),
+		*GetName(), Stacks, CurrentPoisonStack, MaxPoisonStack);
+
+	if (CurrentPoisonStack >= MaxPoisonStack)
+	{
+		ActivatePoison();
+		CurrentPoisonStack = 0;
+	}
+}
+
+bool AT3MonsterBase::IsPoisoned_Implementation() const
+{
+	return bIsPoisoned;
+}
+
+void AT3MonsterBase::ActivatePoison()
+{
+	bIsPoisoned = true;
+	PoisonRemainingTime = PoisonDuration;
+
+	UE_LOG(LogTemp, Warning, TEXT("[독] ★ %s 독 활성화! 지속 %.0f초, 초당 %.0f%% 데미지"),
+		*GetName(), PoisonDuration, PoisonDamagePercent * 100.f);
+
+	if (PoisonFX.ActivateEffect)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(), PoisonFX.ActivateEffect, GetActorLocation());
+	}
+	if (PoisonFX.ActivateSound)
+	{
+		UGameplayStatics::SpawnSoundAtLocation(this, PoisonFX.ActivateSound, GetActorLocation());
+	}
+
+	GetWorld()->GetTimerManager().SetTimer(
+		PoisonTickTimerHandle,
+		this,
+		&AT3MonsterBase::PoisonTick,
+		PoisonTickInterval,
+		true,
+		PoisonTickInterval
+	);
+}
+
+void AT3MonsterBase::DeactivatePoison()
+{
+	bIsPoisoned = false;
+	GetWorld()->GetTimerManager().ClearTimer(PoisonTickTimerHandle);
+
+	UE_LOG(LogTemp, Log, TEXT("[독] %s 독 해제"), *GetName());
+}
+
+void AT3MonsterBase::PoisonTick()
+{
+	if (bIsDead)
+	{
+		DeactivatePoison();
+		return;
+	}
+
+	if (HealthComponent)
+	{
+		const float PoisonDamage = HealthComponent->MaxHP * PoisonDamagePercent;
+		FT3DamageEvent DmgEvent;
+		HealthComponent->HandleTakeDamage(PoisonDamage, DmgEvent, nullptr, this);
+
+		if (PoisonFX.TickEffect)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+				GetWorld(), PoisonFX.TickEffect, GetActorLocation());
+		}
+		if (PoisonFX.TickSound)
+		{
+			UGameplayStatics::SpawnSoundAtLocation(this, PoisonFX.TickSound, GetActorLocation());
+		}
+
+		UE_LOG(LogTemp, Log, TEXT("[독] %s 독 데미지 %.1f (HP %.0f/%.0f) 남은시간 %.0f초"),
+			*GetName(), PoisonDamage,
+			HealthComponent->CurrentHP, HealthComponent->MaxHP,
+			PoisonRemainingTime);
+	}
+
+	PoisonRemainingTime -= PoisonTickInterval;
+	if (PoisonRemainingTime <= 0.f)
+	{
+		DeactivatePoison();
+	}
 }
 
 void AT3MonsterBase::ApplyCurrentWalkSpeed()

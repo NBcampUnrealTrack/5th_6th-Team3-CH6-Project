@@ -41,7 +41,7 @@ public:
 	 * @param TargetRotation : 저장시 캐릭터의 회전값
 	 * @return true : 저장 성공
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
+	UFUNCTION(BlueprintCallable, Category = "Saved Game Data", meta = (AutoCreateRefTerm = "TargetLocation, TargetRotation"))
 	bool SaveGameV2(
 		const AT3CharacterBase* Character,
 		const ESaveType SaveType,
@@ -59,7 +59,7 @@ public:
 	 * @param TargetRotation : 저장시 캐릭터의 회전값
 	 * @return true : 저장 성공
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")
+	UFUNCTION(BlueprintCallable, Category = "Saved Game Data", meta = (AutoCreateRefTerm = "TargetLocation, TargetRotation"))
 	bool SaveGameV2_MultiType(
 		const AT3CharacterBase* Character,
 		const TSet<ESaveType> SaveTypes,

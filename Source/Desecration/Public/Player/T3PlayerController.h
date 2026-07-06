@@ -13,6 +13,7 @@ class UInputMappingContext;
 class UInputAction;
 class UUserWidget;
 class UT3ShopWidget;
+class UT3PoisonStackWidget;
 
 UCLASS()
 class DESECRATION_API AT3PlayerController : public APlayerController
@@ -114,6 +115,13 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "UI")
 	TObjectPtr<UUserWidget> LevelUpWidget;
+
+	// 독 축적치 / 독 상태 위젯 (스택 0이면 숨김, 0 초과면 표시)
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UT3PoisonStackWidget> PoisonStackWidgetClass;
+
+	UPROPERTY(BlueprintReadOnly, Category = "UI")
+	TObjectPtr<UT3PoisonStackWidget> PoisonStackWidget;
 	
 public:
 	UPROPERTY(BlueprintReadOnly, Category = "UI")

@@ -24,8 +24,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Boss Skill | Data")
 	TMap<int32, FSkillData> BossSkillDataMap;
 
-	// 스킬 ID가 보스 스킬 범위인지 확인
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Boss Skill")
+	// 스킬 ID가 보스 스킬 범위인지 확인 (static이므로 UFUNCTION 없음)
 	static bool IsBossSkillID(int32 SkillID) { return SkillID >= BOSS_SKILL_ID_START; }
 
 	// CombatComponent에서 ID를 직접 전달하여 실행
