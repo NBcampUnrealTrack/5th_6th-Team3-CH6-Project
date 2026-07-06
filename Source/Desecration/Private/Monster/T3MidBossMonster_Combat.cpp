@@ -756,10 +756,14 @@ void AT3MidBossMonster::PlayHitFeedback(const FVector& HitLoc, AActor* DamageCau
 
 void AT3MidBossMonster::EnterDeathState()
 {
-	// 순서 보존: 태그 먼저 → HP clamp → 패턴 캔슬 → 델리게이트 → ST 이벤트 → 사망 시퀀스
+	// 순서 보존: 태그 먼저 → HP clamp → 패턴 캔슬 → 막기 정리 → 델리게이트 → ST 이벤트 → 사망 시퀀스
 	AddStateTag(TAG_Boss_State_Dead);
 	MidBossStats.CurrentHP = 0.f;
 	CancelCurrentPattern();
+
+	// 막기 중 사망 시 활성 BlockMontage가 DeathMontage 슬롯과 충돌해 데스 포즈가 묻히는 문제 차단
+	// ST의 Block ExitState 정리는 다음 틱에 발생 → 같은 프레임 BeginDeathSequence보다 늦음. 동기 정리 필수.
+	StopBlockSequence();
 
 	// 리액션 트리거 클리어 — 현재는 ExecutePattern Dead 가드로 무영향이지만,
 	// 향후 다른 곳에서 PendingReactionSource를 검사할 때를 대비한 방어적 정리
