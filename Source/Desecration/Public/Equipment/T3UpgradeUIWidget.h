@@ -159,4 +159,8 @@ private:
 	void OnSynthesizeClicked();
 	
 #pragma endregion
+
+private:
+	//번역 기능에 사용할 네임스페이스 이름
+	const FString NAMESPACE_NAME = TEXT("ST_MainGame");
 };

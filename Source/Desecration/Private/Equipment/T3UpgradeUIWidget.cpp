@@ -6,6 +6,7 @@
 #include "Components/Button.h"
 #include "Components/Image.h"
 #include "Components/Border.h"
+#include "GameSystem/T3GameInstance.h"
 #include "Item/Component/T3InventoryComponent.h"
 #include "Item/Data/T3RuneItemData.h"
 #include "Kismet/GameplayStatics.h"
@@ -206,11 +207,11 @@ void UT3UpgradeUIWidget::RefreshUI()
 	{
 		if (CurrentTab == ET3EquipmentType::Weapon)
 		{
-			Text_StatName->SetText(FText::FromString(FString::Printf(TEXT("공격력"))));
+			Text_StatName->SetText(UT3GameInstance::GetTextFromTable(NAMESPACE_NAME, TEXT("ATK")));
 		}
 		else
 		{
-			Text_StatName->SetText(FText::FromString(FString::Printf(TEXT("방어력"))));
+			Text_StatName->SetText(UT3GameInstance::GetTextFromTable(NAMESPACE_NAME, TEXT("DEF")));
 		}
 	}
 	
@@ -294,17 +295,18 @@ void UT3UpgradeUIWidget::RefreshUI()
 	}
 
 	// 강화석 보유량 표시 (현재 탭의 장비 타입 기준)
+	const FText FormatText = UT3GameInstance::GetTextFromTable(NAMESPACE_NAME, TEXT("Owned_Format_0"));//한국어 기준 "보유량 : {0}"
 	if (Txt_NormalStoneCount)
 	{
-		Txt_NormalStoneCount->SetText(FText::Format(FText::FromString(TEXT("보유량 : {0}")), FText::AsNumber(UpgradeStation->GetStoneCount(CurrentTab, ET3UpgradeStoneGrade::Normal))));
+		Txt_NormalStoneCount->SetText(FText::Format(FormatText, FText::AsNumber(UpgradeStation->GetStoneCount(CurrentTab, ET3UpgradeStoneGrade::Normal))));
 	}
 	if (Txt_EpicStoneCount)
 	{
-		Txt_EpicStoneCount->SetText(FText::Format(FText::FromString(TEXT("보유량 : {0}")), FText::AsNumber(UpgradeStation->GetStoneCount(CurrentTab, ET3UpgradeStoneGrade::Epic))));
+		Txt_EpicStoneCount->SetText(FText::Format(FormatText, FText::AsNumber(UpgradeStation->GetStoneCount(CurrentTab, ET3UpgradeStoneGrade::Epic))));
 	}
 	if (Txt_LegendaryStoneCount)
 	{
-		Txt_LegendaryStoneCount->SetText(FText::Format(FText::FromString(TEXT("보유량 : {0}")), FText::AsNumber(UpgradeStation->GetStoneCount(CurrentTab, ET3UpgradeStoneGrade::Legendary))));
+		Txt_LegendaryStoneCount->SetText(FText::Format(FormatText, FText::AsNumber(UpgradeStation->GetStoneCount(CurrentTab, ET3UpgradeStoneGrade::Legendary))));
 	}
 
 	// 강화 버튼 활성화/비활성화
