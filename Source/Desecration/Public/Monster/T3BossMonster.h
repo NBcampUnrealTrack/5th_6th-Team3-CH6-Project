@@ -55,7 +55,7 @@ public:
 	bool bSuperPattern = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-	FString BossName = "DefaultName";
+	FText BossName = FText::FromString(TEXT("DefaultName"));
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	float CurrentAttackRate = 1.0f;
