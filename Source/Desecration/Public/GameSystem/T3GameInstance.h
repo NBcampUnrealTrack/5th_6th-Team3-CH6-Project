@@ -192,6 +192,10 @@ public:
 	// 생성된 위젯 인스턴스를 보관 (GC 보호)
 	UPROPERTY()
 	TObjectPtr<UUserWidget> LoadingWidgetInstance;
+	
+	//마지막으로 로딩시 띄운 내용이 무엇인가
+	UPROPERTY(BlueprintReadWrite)
+	FText LastLoadingTip;
 
 private:
 	//현재 설정
