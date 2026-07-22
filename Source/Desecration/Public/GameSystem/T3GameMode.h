@@ -116,15 +116,6 @@ public:
 	UE_DEPRECATED(0, "[영빈] 세이브 로직 최적화를 했습니다. SaveGameV2 또는 SaveGameV2_MultiType 함수를 사용하세요.")
 	UFUNCTION(BlueprintCallable, Category = "Saved Game Data", meta = (DeprecatedFunction, DeprecationMessage = "[영빈] 세이브 로직 최적화를 했습니다. SaveGameV2 또는 SaveGameV2_MultiType 함수를 사용하세요."))
 	bool SaveOnlySkill(const AT3CharacterBase* Character);
-
-	/**
-	 * 스탯만 저장하기
-	 * @return true : 저장 성공
-	 * @deprecated [영빈] 세이브 로직 최적화를 했습니다. SaveGameV2 또는 SaveGameV2_MultiType 함수를 사용하세요.
-	 */
-	UE_DEPRECATED(0, "[영빈] 세이브 로직 최적화를 했습니다. SaveGameV2 또는 SaveGameV2_MultiType 함수를 사용하세요.")
-	UFUNCTION(BlueprintCallable, Category = "Saved Game Data", meta = (DeprecatedFunction, DeprecationMessage = "[영빈] 세이브 로직 최적화를 했습니다. SaveGameV2 또는 SaveGameV2_MultiType 함수를 사용하세요."))
-	bool SaveOnlyStat(const AT3CharacterBase* Character);
 	
 	//게임 불러오기 : 현재 저장된 데이터에 기록된 맵으로 이동
 	UFUNCTION(BlueprintCallable, Category = "Saved Game Data")

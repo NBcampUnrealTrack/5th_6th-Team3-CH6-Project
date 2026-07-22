@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Game\n"
-"POT-Creation-Date: 2026-06-27 17:29\n"
-"PO-Revision-Date: 2026-06-27 17:29\n"
+"POT-Creation-Date: 2026-07-22 08:00\n"
+"PO-Revision-Date: 2026-07-22 08:00\n"
 "Language-Team: \n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
@@ -26,6 +26,13 @@ msgstr "The Blood Canyon Fortress"
 msgctxt "ST_Area,BloodCanyonFortress_Content"
 msgid "왕을 섬기며 최전선에서 싸우던 전사들의 요새. 영광스러운 전사들은 마지막까지 충의를 저버리지 않았다."
 msgstr "A fortress of warriors who served their king and fought upon the front lines. These glorious warriors remained steadfast in their loyalty until the very end."
+
+#. Key:	ForestHut
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Area.ST_Area
+#: /Game/Desecration/System/StringTable/ST_Area.ST_Area
+msgctxt "ST_Area,ForestHut"
+msgid "방치된 오두막 숲"
+msgstr "Abandoned Forest Hut"
 
 #. Key:	ForgottenMoonTemple
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_Area.ST_Area
@@ -82,6 +89,13 @@ msgstr "Moonbound Land"
 msgctxt "ST_Area,MountainMidway"
 msgid "산 중턱"
 msgstr "Mountain Midway"
+
+#. Key:	Sanctuary
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Area.ST_Area
+#: /Game/Desecration/System/StringTable/ST_Area.ST_Area
+msgctxt "ST_Area,Sanctuary"
+msgid "성역"
+msgstr "Sanctuary"
 
 #. Key:	SeaCloudMainHall
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_Area.ST_Area
@@ -160,6 +174,13 @@ msgctxt "ST_BeforeGamePlay,SelectCharacter"
 msgid "캐릭터 선택"
 msgstr "Select Character"
 
+#. Key:	Back
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Common.ST_Common
+#: /Game/Desecration/System/StringTable/ST_Common.ST_Common
+msgctxt "ST_Common,Back"
+msgid "돌아가기"
+msgstr "Back"
+
 #. Key:	Cancel
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_Common.ST_Common
 #: /Game/Desecration/System/StringTable/ST_Common.ST_Common
@@ -201,6 +222,34 @@ msgstr "Close"
 msgctxt "ST_Common,Confirm"
 msgid "확인"
 msgstr "Confirm"
+
+#. Key:	Decide
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Common.ST_Common
+#: /Game/Desecration/System/StringTable/ST_Common.ST_Common
+msgctxt "ST_Common,Decide"
+msgid "결정"
+msgstr " Decide"
+
+#. Key:	Get
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Common.ST_Common
+#: /Game/Desecration/System/StringTable/ST_Common.ST_Common
+msgctxt "ST_Common,Get"
+msgid "획득"
+msgstr "Get"
+
+#. Key:	Open
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Common.ST_Common
+#: /Game/Desecration/System/StringTable/ST_Common.ST_Common
+msgctxt "ST_Common,Open"
+msgid "열기"
+msgstr "Open"
+
+#. Key:	Talk
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Common.ST_Common
+#: /Game/Desecration/System/StringTable/ST_Common.ST_Common
+msgctxt "ST_Common,Talk"
+msgid " 대화"
+msgstr "Talk"
 
 #. Key:	KimTaeEun
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_Credits.ST_Credits
@@ -468,6 +517,13 @@ msgctxt "ST_Item,BossRune_Oni"
 msgid "오니의 룬"
 msgstr "Rune of the Oni"
 
+#. Key:	Bottle
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
+#: /Game/Desecration/System/StringTable/ST_Item.ST_Item
+msgctxt "ST_Item,Bottle"
+msgid "빈 병 (포션 개수 증가)"
+msgstr "Bottle (Increases potion capacity)"
+
 #. Key:	Bronze_Mirror
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
 #: /Game/Desecration/System/StringTable/ST_Item.ST_Item
@@ -509,6 +565,13 @@ msgstr "Defense Potion"
 msgctxt "ST_Item,DefensePotion_Content"
 msgid "10초간 방어력이 20% 증가한다."
 msgstr "Increases defense by 20% for 10 seconds."
+
+#. Key:	Herb
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
+#: /Game/Desecration/System/StringTable/ST_Item.ST_Item
+msgctxt "ST_Item,Herb"
+msgid "약초 (포션 효과 증가)"
+msgstr "Herb (Increases potion effectiveness)"
 
 #. Key:	HPPotion
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_Item.ST_Item
@@ -608,6 +671,132 @@ msgctxt "ST_Item,SpeedPotion_Content"
 msgid "10초간 이동속도가 20% 증가한다."
 msgstr "Increases movement speed by 20% for 10 seconds."
 
+#. Key:	ActivateRune
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,ActivateRune"
+msgid "룬을 작동시킨다"
+msgstr "Activate the Rune"
+
+#. Key:	Armor
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Armor"
+msgid "방어구"
+msgstr "Armor"
+
+#. Key:	ATK
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,ATK"
+msgid "공격력"
+msgstr "ATK"
+
+#. Key:	AttackPower
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,AttackPower"
+msgid "공격력"
+msgstr "ATTACK POWER"
+
+#. Key:	BaseAbility
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,BaseAbility"
+msgid "기초력"
+msgstr "BASE ABLITY"
+
+#. Key:	Buy
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Buy"
+msgid "구매"
+msgstr "Buy"
+
+#. Key:	BuyPrice
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,BuyPrice"
+msgid "구매가격 :"
+msgstr "Price :"
+
+#. Key:	BuyPrice_Format
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,BuyPrice_Format"
+msgid "구매 가격 : {BuyPrice}"
+msgstr "Price : {BuyPrice}"
+
+#. Key:	Consumable
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Consumable"
+msgid "소모품"
+msgstr "Consumable"
+
+#. Key:	DEF
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,DEF"
+msgid "방어력"
+msgstr "DEF"
+
+#. Key:	Defense
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Defense"
+msgid "방어력"
+msgstr "Defense"
+
+#. Key:	Endurance
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Endurance"
+msgid "기력"
+msgstr "END"
+
+#. Key:	Enhancement
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Enhancement"
+msgid "강화"
+msgstr "Enhancement"
+
+#. Key:	EnhancementLevel
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,EnhancementLevel"
+msgid "강화 레벨"
+msgstr "E.Level"
+
+#. Key:	EnhancementStone_E
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,EnhancementStone_E"
+msgid "중급 강화석"
+msgstr "Greater E. Stone"
+
+#. Key:	EnhancementStone_L
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,EnhancementStone_L"
+msgid "상급 강화석"
+msgstr "Superior E. Stone"
+
+#. Key:	EnhancementStone_N
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,EnhancementStone_N"
+msgid "하급 강화석"
+msgstr "Lesser E. Stone"
+
+#. Key:	Fusion
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Fusion"
+msgid "합성"
+msgstr "Fusion"
+
 #. Key:	GetRunePower
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
 #: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
@@ -615,12 +804,201 @@ msgctxt "ST_MainGame,GetRunePower"
 msgid "룬의 힘을 얻는다"
 msgstr "Claim the rune's power"
 
+#. Key:	Health
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Health"
+msgid "체력"
+msgstr "HEALTH"
+
+#. Key:	HP
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,HP"
+msgid "HP"
+msgstr "HP"
+
+#. Key:	InscribeTheRune
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,InscribeTheRune"
+msgid "룬에 영혼 조각을 새긴다"
+msgstr "Inscribe a soul fragment into the rune"
+
+#. Key:	Intelligence
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Intelligence"
+msgid "지력"
+msgstr "INT"
+
+#. Key:	IntoTheMist
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,IntoTheMist"
+msgid "안개 속으로 나아간다"
+msgstr "Step into the Mist"
+
+#. Key:	Inven_Acc
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Inven_Acc"
+msgid "장신구"
+msgstr "Accessory"
+
+#. Key:	Inven_Etc
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Inven_Etc"
+msgid "기타"
+msgstr "Misc."
+
+#. Key:	Level
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Level"
+msgid "레벨"
+msgstr "LEVEL"
+
+#. Key:	LevelUp
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,LevelUp"
+msgid "레벨 업"
+msgstr "LEVEL UP"
+
+#. Key:	Loading1
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Loading1"
+msgid "적의 대부분의 공격은 구르기로 피할 수 있습니다."
+msgstr "Most enemy attacks can be dodged by rolling."
+
+#. Key:	Loading2
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Loading2"
+msgid "이 세계에는 숨겨진 보물이 많습니다."
+msgstr "Many hidden treasures await throughout this world."
+
+#. Key:	Loading3
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Loading3"
+msgid "구르기를 사용해 적의 공격을 쉽게 피할 수 있습니다."
+msgstr "Use dodge rolls to evade enemy attacks with ease."
+
+#. Key:	Loading4
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Loading4"
+msgid "악마의 결정체로 장비를 강화 할 수 있습니다."
+msgstr "Use Demon crystals to enhance your equipment."
+
+#. Key:	Loading5
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Loading5"
+msgid "때로는 다른 길로 가는것이 현명할 수 있습니다."
+msgstr "Sometimes, choosing a different path is the wiser option."
+
+#. Key:	Mana
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Mana"
+msgid "마력"
+msgstr "MANA"
+
 #. Key:	Message_GoToTitle
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
 #: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
 msgctxt "ST_MainGame,Message_GoToTitle"
 msgid "타이틀로 돌아가시겠습니까?"
 msgstr "Do you want to return to the title?"
+
+#. Key:	Mind
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Mind"
+msgid "정신력"
+msgstr "MND"
+
+#. Key:	MP
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,MP"
+msgid "MP"
+msgstr "MP"
+
+#. Key:	NotActivate
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,NotActivate"
+msgid "작동하지 않는다"
+msgstr "It won't activate"
+
+#. Key:	OfferRelic
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,OfferRelic"
+msgid "유물을 바친다"
+msgstr "Offer the Relic"
+
+#. Key:	OpenForge
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,OpenForge"
+msgid "강화소 열기"
+msgstr "Open Forge"
+
+#. Key:	OpenShop
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,OpenShop"
+msgid "상점 열기"
+msgstr "Open Shop"
+
+#. Key:	Owned
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Owned"
+msgid "보유량"
+msgstr "Owned"
+
+#. Key:	Owned_Format_0
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Owned_Format_0"
+msgid "보유량 : {0}"
+msgstr "Owned : {0}"
+
+#. Key:	Owned_Format_Count
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Owned_Format_Count"
+msgid "보유량 : {Count}"
+msgstr "Owned : {Count}"
+
+#. Key:	PlaceIdolMoon
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,PlaceIdolMoon"
+msgid "달의 우상을 놓는다"
+msgstr "Place the Idol of the Moon"
+
+#. Key:	Price
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Price"
+msgid "가격"
+msgstr "Price"
+
+#. Key:	PullLever
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,PullLever"
+msgid "레버를 당긴다"
+msgstr "Pull the Lever"
 
 #. Key:	Rest
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
@@ -636,6 +1014,41 @@ msgctxt "ST_MainGame,RetrunToReality"
 msgid "현실로 돌아온다"
 msgstr "Return to the Reality"
 
+#. Key:	ReturnToSanctuary
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,ReturnToSanctuary"
+msgid "성역으로 돌아간다"
+msgstr "Return to the Sanctuary"
+
+#. Key:	Rune
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Rune"
+msgid "룬"
+msgstr "Rune"
+
+#. Key:	RuneFusion
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,RuneFusion"
+msgid "룬 합성"
+msgstr "Rune Fusion"
+
+#. Key:	RunesHeld
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,RunesHeld"
+msgid "소지 룬"
+msgstr "RUNES HELD"
+
+#. Key:	RunesRequired
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,RunesRequired"
+msgid "필요 룬"
+msgstr "RUNES REQUIRED"
+
 #. Key:	SacredSpring
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
 #: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
@@ -643,12 +1056,173 @@ msgctxt "ST_MainGame,SacredSpring"
 msgid "성수의 룬"
 msgstr "Rune of the Sacred Spring"
 
+#. Key:	Sell
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Sell"
+msgid "판매"
+msgstr "Sell"
+
+#. Key:	SellPrice
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,SellPrice"
+msgid "판매가격 :"
+msgstr "Price :"
+
+#. Key:	Shop
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Shop"
+msgid "상점"
+msgstr "Shop"
+
+#. Key:	Stamina
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Stamina"
+msgid "스태미나"
+msgstr "STAMINA"
+
+#. Key:	Stats
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Stats"
+msgid "능력치"
+msgstr "STATS"
+
+#. Key:	Strength
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Strength"
+msgid "근력"
+msgstr "STR"
+
+#. Key:	TotalBuyPrice
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,TotalBuyPrice"
+msgid "총 구매가격 :"
+msgstr "Total Price :"
+
+#. Key:	TotalSellPrice
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,TotalSellPrice"
+msgid "총 판매가격 :"
+msgstr "Total Price :"
+
 #. Key:	TrevelRune
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
 #: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
 msgctxt "ST_MainGame,TrevelRune"
 msgid "룬을 타고 이동한다"
 msgstr "Traverse through the rune"
+
+#. Key:	Vitality
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Vitality"
+msgid "생명력"
+msgstr "VIT"
+
+#. Key:	Weapon
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+#: /Game/Desecration/System/StringTable/ST_MainGame.ST_MainGame
+msgctxt "ST_MainGame,Weapon"
+msgid "무기"
+msgstr "Weapon"
+
+#. Key:	Barlog
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_NPC.ST_NPC
+#: /Game/Desecration/System/StringTable/ST_NPC.ST_NPC
+msgctxt "ST_NPC,Barlog"
+msgid "영겁의 화염을 두른 발록"
+msgstr "Balrog, Cloaked in the Eternal Flame"
+
+#. Key:	DarknessKnight
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_NPC.ST_NPC
+#: /Game/Desecration/System/StringTable/ST_NPC.ST_NPC
+msgctxt "ST_NPC,DarknessKnight"
+msgid "칠흑의 어둠 기사"
+msgstr "Knight of Ebon Darkness"
+
+#. Key:	Desmond_1
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_NPC.ST_NPC
+#: /Game/Desecration/System/StringTable/ST_NPC.ST_NPC
+msgctxt "ST_NPC,Desmond_1"
+msgid "......또다시 산 자의 발소리가 들리는군. 그 얼빠진 눈동자를 보니, 그대 또한 뜬구름 같은 소문에 휘말려 이곳까지 흘러든 모양이지"
+msgstr "...Once again, I hear the footsteps of the living. Judging by that vacant look in your eyes, you too must have drifted here, lured by hollow rumors."
+
+#. Key:	Desmond_2
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_NPC.ST_NPC
+#: /Game/Desecration/System/StringTable/ST_NPC.ST_NPC
+msgctxt "ST_NPC,Desmond_2"
+msgid "성수의 성지? 악마와 성전을 벌이는 고결한 터전이라 믿고 왔는가? 실상은 그대가 들은 말만큼 그리 아늑한 곳이 아니라네"
+msgstr "The Secred Spring's sanctuary? Did you come believing it to be a noble haven where demons are fought? The truth is far less comforting than the tales would have you believe."
+
+#. Key:	Desmond_3
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_NPC.ST_NPC
+#: /Game/Desecration/System/StringTable/ST_NPC.ST_NPC
+msgctxt "ST_NPC,Desmond_3"
+msgid "이곳에 영혼이 저당 잡힌 전사들은 악마의 기억을 찾아 바치지 않는 한, 영원히 해방될 수 없는 법"
+msgstr "The warriors whose souls are bound to this place shall never know freedom, unless they offer up the memories of Demons."
+
+#. Key:	Desmond_4
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_NPC.ST_NPC
+#: /Game/Desecration/System/StringTable/ST_NPC.ST_NPC
+msgctxt "ST_NPC,Desmond_4"
+msgid "자비로운 나무라 칭송받는 저 뿌리가 사실은 우리의 영혼을 강제로 묶어두고 있는 족쇄라는 사실이라네"
+msgstr "That root, praised by all as a merciful tree, is in truth nothing more than the shackle that binds our souls."
+
+#. Key:	Desmond_5
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_NPC.ST_NPC
+#: /Game/Desecration/System/StringTable/ST_NPC.ST_NPC
+msgctxt "ST_NPC,Desmond_5"
+msgid "정 나아가겠다면 저 너머 성수의 룬에 손을 얹게나. 그대의 영혼을 악마의 기억이 서린 심연으로 인도할 테니. 부디 죽음조차 허락되지 않는 이 굴레에서, 그대만은 무모한 승리를 거머쥐길 빌지"
+msgstr "If you still wish to press on, place your hand upon the Rune of the Secred Spring beyond. It will guide your soul into the abyss where the memories of Demons linger. I pray that you alone may seize a victory within this cycle where even death offers no release."
+
+#. Key:	Desmond_Bye
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_NPC.ST_NPC
+#: /Game/Desecration/System/StringTable/ST_NPC.ST_NPC
+msgctxt "ST_NPC,Desmond_Bye"
+msgid "....듣기 싫다면 붙잡지 않겠네"
+msgstr "...If my words weary you, I shall trouble you no further."
+
+#. Key:	Desmond_Name
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_NPC.ST_NPC
+#: /Game/Desecration/System/StringTable/ST_NPC.ST_NPC
+msgctxt "ST_NPC,Desmond_Name"
+msgid "피의 기사 데스몬드 경"
+msgstr "Sir Desmond, the Blood Knight"
+
+#. Key:	FuryKnight
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_NPC.ST_NPC
+#: /Game/Desecration/System/StringTable/ST_NPC.ST_NPC
+msgctxt "ST_NPC,FuryKnight"
+msgid "죽음의 분노 기사"
+msgstr "Knight of Death's Fury"
+
+#. Key:	Rakshasa
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_NPC.ST_NPC
+#: /Game/Desecration/System/StringTable/ST_NPC.ST_NPC
+msgctxt "ST_NPC,Rakshasa"
+msgid "나찰의 그림자"
+msgstr "Shadow of the Rakshasa"
+
+#. Key:	Raphael
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_NPC.ST_NPC
+#: /Game/Desecration/System/StringTable/ST_NPC.ST_NPC
+msgctxt "ST_NPC,Raphael"
+msgid "추락한 라파엘"
+msgstr "The Fallen Raphael"
+
+#. Key:	ThornKnight
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_NPC.ST_NPC
+#: /Game/Desecration/System/StringTable/ST_NPC.ST_NPC
+msgctxt "ST_NPC,ThornKnight"
+msgid "혹한의 가시 기사"
+msgstr "Knight of Frost Thorn"
 
 #. Key:	BerserkRune_E
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
@@ -943,6 +1517,27 @@ msgstr "Faded Rune of Recovery"
 msgctxt "ST_Rune,RegenerationRune_N_Content"
 msgid "최대 체력의 30%까지 초당 1씩 회복한다."
 msgstr "Restores 1 HP per second until reaching 30% of max HP."
+
+#. Key:	RichesRune_E
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,RichesRune_E"
+msgid "파손된 부의 룬"
+msgstr "Damaged Rune of Riches"
+
+#. Key:	RichesRune_L
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,RichesRune_L"
+msgid "찬란한 부의 룬"
+msgstr "Radiant Rune of Riches"
+
+#. Key:	RichesRune_N
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+#: /Game/Desecration/System/StringTable/ST_Rune.ST_Rune
+msgctxt "ST_Rune,RichesRune_N"
+msgid "조각난 부의 룬"
+msgstr "Broken Rune of Riches"
 
 #. Key:	SmiteRune_E
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_Rune.ST_Rune
@@ -1258,6 +1853,174 @@ msgstr "Windowed"
 msgctxt "ST_Settings,WindowMode_WindowedFullscreen"
 msgid "전체 창 모드"
 msgstr "Borderless Window"
+
+#. Key:	Endurance
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+#: /Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+msgctxt "ST_Skill,Endurance"
+msgid "불굴"
+msgstr "Indomitable Will"
+
+#. Key:	Endurance_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+#: /Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+msgctxt "ST_Skill,Endurance_Content"
+msgid "불굴의 의지로 적의 공격을 버텨낸다."
+msgstr "Endure enemy attacks through unwavering resolve."
+
+#. Key:	Judgement
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+#: /Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+msgctxt "ST_Skill,Judgement"
+msgid "태양 강림"
+msgstr "Solar Descent"
+
+#. Key:	Judgement_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+#: /Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+msgctxt "ST_Skill,Judgement_Content"
+msgid "태양의 신의 힘을 지상에 강림시킨다."
+msgstr "Call down the sacred power of the Sun upon the battlefield."
+
+#. Key:	LeafAttack
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+#: /Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+msgctxt "ST_Skill,LeafAttack"
+msgid "태양의 도약"
+msgstr "Sun Leap"
+
+#. Key:	LeafAttack_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+#: /Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+msgctxt "ST_Skill,LeafAttack_Content"
+msgid "태양의 힘을 받아 강력한 도약 공격을 한다."
+msgstr "Channel the Sun's power to perform a powerful leaping attack."
+
+#. Key:	LunarSlash
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+#: /Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+msgctxt "ST_Skill,LunarSlash"
+msgid "작은 달"
+msgstr "Lesser Moon"
+
+#. Key:	LunarSlash_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+#: /Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+msgctxt "ST_Skill,LunarSlash_Content"
+msgid "작은 달을 강림시켜 주위에 적에게 강력한 피해를 입힌다."
+msgstr "Call forth a lesser Moon, dealing heavy damage to nearby enemies."
+
+#. Key:	LunarSword
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+#: /Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+msgctxt "ST_Skill,LunarSword"
+msgid "달빛 검격"
+msgstr "Moonlit Blade"
+
+#. Key:	LunarSword_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+#: /Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+msgctxt "ST_Skill,LunarSword_Content"
+msgid "달빛을 검에 머금어 공격 범위가 증가한다."
+msgstr "Imbue your blade with moonlight, increasing its attack range."
+
+#. Key:	PowerStrike
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+#: /Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+msgctxt "ST_Skill,PowerStrike"
+msgid "월광참"
+msgstr "Moonlight Slash"
+
+#. Key:	PowerStrike_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+#: /Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+msgctxt "ST_Skill,PowerStrike_Content"
+msgid "달빛의 기운을 모아서 강력한 베기 공격을 한다. 달에 공격을 맞추면 강력한 충격을 퍼트린다."
+msgstr "Gather the power of moonlight to unleash a devastating slash. If the attack strikes the Moon, it releases a powerful shockwave."
+
+#. Key:	ShadowClone
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+#: /Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+msgctxt "ST_Skill,ShadowClone"
+msgid "분신술"
+msgstr "Clone Technique"
+
+#. Key:	ShadowClone_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+#: /Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+msgctxt "ST_Skill,ShadowClone_Content"
+msgid "부적의 힘으로 자신의 공격을 따라하는 환영분신을 2마리 소환한다."
+msgstr "Use the power of a talisman to summon two clones that mimic your attacks."
+
+#. Key:	ShieldStrike
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+#: /Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+msgctxt "ST_Skill,ShieldStrike"
+msgid "방패 타격"
+msgstr "Shield Bash"
+
+#. Key:	ShieldStrike_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+#: /Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+msgctxt "ST_Skill,ShieldStrike_Content"
+msgid "방패로 적을 타격하여 강한 충격을 준다."
+msgstr "Bash an enemy with your shield, dealing heavy impact."
+
+#. Key:	StrongWind
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+#: /Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+msgctxt "ST_Skill,StrongWind"
+msgid "강풍"
+msgstr "Gale"
+
+#. Key:	StrongWind_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+#: /Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+msgctxt "ST_Skill,StrongWind_Content"
+msgid "부채에 담긴 바람의 힘을 사용해 적을 타격한다."
+msgstr "Strike enemies with the wind imbued within your fan."
+
+#. Key:	SummonTiger
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+#: /Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+msgctxt "ST_Skill,SummonTiger"
+msgid "호아격"
+msgstr "Tiger Strike"
+
+#. Key:	SummonTiger_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+#: /Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+msgctxt "ST_Skill,SummonTiger_Content"
+msgid "범의 영혼을 소환해 날카로운 발톱으로 적을 찢는다."
+msgstr "Summon the spirit of a tiger to tear through enemies with razor-sharp claws."
+
+#. Key:	SwordWave
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+#: /Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+msgctxt "ST_Skill,SwordWave"
+msgid "태양의 타격"
+msgstr "Sun Strike"
+
+#. Key:	SwordWave_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+#: /Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+msgctxt "ST_Skill,SwordWave_Content"
+msgid "태양의 힘을 검에 담아 휘두른다."
+msgstr "Empower your blade with the Sun's power and deliver a mighty slash."
+
+#. Key:	TaoistDodge
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+#: /Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+msgctxt "ST_Skill,TaoistDodge"
+msgid "축지법"
+msgstr "Groundfold Step"
+
+#. Key:	TaoistDodge_Content
+#. SourceLocation:	/Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+#: /Game/Desecration/System/StringTable/ST_Skill.ST_Skill
+msgctxt "ST_Skill,TaoistDodge_Content"
+msgid "땅을 접어 달리는 기술. 적의 공격을 빠르게 회피한다."
+msgstr "Fold the earth beneath your feet to move instantly, swiftly evading enemy attacks."
 
 #. Key:	Content_Action
 #. SourceLocation:	/Game/Desecration/System/StringTable/ST_Tutorial.ST_Tutorial

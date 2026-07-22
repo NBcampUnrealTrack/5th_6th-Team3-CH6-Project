@@ -158,14 +158,14 @@ void AT3BossMonster::ApplyPoisonStack_Implementation(int32 Stacks)
 	if (BossStats.CurrentHP <= 0.f || bIsPoisoned)
 	{
 		UE_LOG(LogItem, Verbose, TEXT("[독] 보스 %s — 스택 무시 (HP:%.0f, 독활성:%d)"),
-			*BossName, BossStats.CurrentHP, bIsPoisoned);
+			*BossName.ToString(), BossStats.CurrentHP, bIsPoisoned);
 		return;
 	}
 
 	CurrentPoisonStack = FMath::Min(CurrentPoisonStack + Stacks, MaxPoisonStack);
 
 	UE_LOG(LogItem, Log, TEXT("[독] 보스 %s 스택 +%d → %d/%d"),
-		*BossName, Stacks, CurrentPoisonStack, MaxPoisonStack);
+		*BossName.ToString(), Stacks, CurrentPoisonStack, MaxPoisonStack);
 
 	if (CurrentPoisonStack >= MaxPoisonStack)
 	{
@@ -185,7 +185,7 @@ void AT3BossMonster::ActivatePoison()
 	PoisonRemainingTime = PoisonDuration;
 
 	UE_LOG(LogItem, Warning, TEXT("[독] ★ 보스 %s 독 활성화! 지속 %.0f초, 초당 %.0f%% 데미지"),
-		*BossName, PoisonDuration, PoisonDamagePercent * 100.f);
+		*BossName.ToString(), PoisonDuration, PoisonDamagePercent * 100.f);
 
 	if (PoisonFX.ActivateEffect)
 	{
@@ -212,7 +212,7 @@ void AT3BossMonster::DeactivatePoison()
 	bIsPoisoned = false;
 	GetWorld()->GetTimerManager().ClearTimer(PoisonTickTimerHandle);
 
-	UE_LOG(LogItem, Log, TEXT("[독] 보스 %s 독 해제"), *BossName);
+	UE_LOG(LogItem, Log, TEXT("[독] 보스 %s 독 해제"), *BossName.ToString());
 }
 
 void AT3BossMonster::PoisonTick()
@@ -239,7 +239,7 @@ void AT3BossMonster::PoisonTick()
 	}
 
 	UE_LOG(LogItem, Log, TEXT("[독] 보스 %s 독 데미지 %.1f (HP %.0f/%.0f) 남은시간 %.0f초"),
-		*BossName, PoisonDamage, BossStats.CurrentHP, BossStats.MaxHP, PoisonRemainingTime);
+		*BossName.ToString(), PoisonDamage, BossStats.CurrentHP, BossStats.MaxHP, PoisonRemainingTime);
 
 	if (BossStats.CurrentHP <= 0.f)
 	{
