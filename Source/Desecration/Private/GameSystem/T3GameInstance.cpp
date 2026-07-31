@@ -40,6 +40,8 @@ void UT3GameInstance::OnStart()
 {
 	Super::OnStart();
 	
+#if !WITH_EDITOR
+	//에디터가 아닌 환경에서는 마지막으로 실행한 위치로 창을 이동
 	if (GEngine && GEngine->GameViewport)
 	{
 		//저장된 위치로 창을 옮김
@@ -58,6 +60,7 @@ void UT3GameInstance::OnStart()
 			}));
 		}
 	}
+#endif
 }
 
 void UT3GameInstance::Shutdown()
