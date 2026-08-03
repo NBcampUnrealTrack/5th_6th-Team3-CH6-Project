@@ -219,25 +219,6 @@ bool AT3GameMode::SaveGameV2_MultiType(const AT3CharacterBase* Character, const 
 	return true;
 }
 
-bool AT3GameMode::SaveGame(const AT3CharacterBase* Character, const ELevelName LevelName, const bool bTemporarySave, const FVector TargetLocation, const FRotator TargetRotation)
-{
-	return SaveGameV2_MultiType(Character, 0, LevelName, TargetLocation, TargetRotation);
-}
-
-bool AT3GameMode::SaveInventoryAndPotionLevel(const AT3CharacterBase* Character)
-{
-	//인벤토리 저장
-	//기존 코드에는 장비에도 접근해서 장비 저장도 포함
-	constexpr uint8 SaveTypes = static_cast<uint8>(ESaveType::Inventory) + static_cast<uint8>(ESaveType::Equipment);
-	return SaveGameV2_MultiType(Character, SaveTypes);
-}
-
-bool AT3GameMode::SaveOnlySkill(const AT3CharacterBase* Character)
-{
-	//스킬 저장
-    return SaveGameV2(Character, ESaveType::Skill);
-}
-
 void AT3GameMode::LoadGame() const
 {
 	T3GameInstance->OpenLevelBySavedData();
